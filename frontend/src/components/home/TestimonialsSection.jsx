@@ -5,9 +5,13 @@ const TestimonialsSection = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [visibleCount, setVisibleCount] = useState(3);
+  const [isClient, setIsClient] = useState(false);
 
   // Determine how many cards are visible based on viewport (sm:1, md:2, lg+:3)
   useEffect(() => {
+    // Mark as client-side after hydration
+    setIsClient(true);
+    
     const computeVisible = () => {
       if (typeof window === 'undefined') return 3;
       const width = window.innerWidth;
@@ -24,16 +28,17 @@ const TestimonialsSection = () => {
       setCurrentIndex((idx) => Math.min(idx, maxIndex));
     };
 
-    applyVisible();
+    // Only apply visible count after client-side hydration
     if (typeof window !== 'undefined') {
+      applyVisible();
       window.addEventListener('resize', applyVisible);
       return () => window.removeEventListener('resize', applyVisible);
     }
   }, []);
 
-  // Auto-play functionality
+  // Auto-play functionality - only start after client-side hydration
   useEffect(() => {
-    if (!isAutoPlaying) return;
+    if (!isAutoPlaying || !isClient) return;
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => {
         const lastIndex = Math.max(0, featuredTestimonials.length - visibleCount);
@@ -41,7 +46,7 @@ const TestimonialsSection = () => {
       });
     }, 5000);
     return () => clearInterval(interval);
-  }, [isAutoPlaying, visibleCount]);
+  }, [isAutoPlaying, visibleCount, isClient]);
 
   const nextTestimonial = () => {
     setCurrentIndex((prevIndex) => {
