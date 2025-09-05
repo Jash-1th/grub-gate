@@ -1,0 +1,250 @@
+Prompt Guide for Building the Grub-Gate Frontend (JavaScript Edition)
+Follow these prompts sequentially to build the project foundation and the complete, SSR-aware homepage for Grub-Gate using React and plain JavaScript.
+
+Prompt 1: Project Initialization & Setup
+
+"Initialize a new project for 'Grub-Gate'. Create a root directory with two sub-directories: frontend and backend.
+
+Inside the frontend directory, perform the following setup:
+
+Scaffold a new React + JavaScript application using Vite.
+
+Install and configure Tailwind CSS for styling.
+
+Install the necessary dependencies for the server and routing: express and react-router-dom.
+
+Create a new directory at frontend/src/assets/images."
+
+Prompt 2: SSR Foundation Setup
+
+"Now, configure the Vite project in the frontend directory to support SSR for production while using CSR for development. Use JavaScript files (.js, .jsx).
+
+Create a server.js file in the frontend root directory with an Express server setup to handle server-side rendering.
+
+Create a server entry point at frontend/src/main.ssr.jsx which uses ReactDOMServer.renderToString and StaticRouter.
+
+Modify the client entry point at frontend/src/main.jsx to use ReactDOM.hydrateRoot and BrowserRouter.
+
+Update frontend/index.html to include the <!--ssr-outlet--> placeholder inside the root div.
+
+Create a vite.config.js file and configure it to handle both client and SSR builds.
+
+Update the scripts in frontend/package.json to include commands for dev, build, build:client, build:server, and start to orchestrate the entire process."
+
+Prompt 3: Core App Structure & Routing
+
+"Set up the basic application structure and routing within the frontend/src directory.
+
+Create two new folders: pages and components.
+
+Inside src/pages, create a file for our homepage: HomePage.jsx.
+
+Inside src/components, create three sub-folders: layout, common, and home.
+
+Update src/App.jsx to use react-router-dom. It should define a single route for / that renders the HomePage component. Also, render placeholder Header and Footer components that we will create next."
+
+Prompt 4: Layout & Reusable Components
+
+"Create the main layout and common reusable components.
+
+In src/components/layout, create Header.jsx and Footer.jsx.
+
+Header: Give it a white like background and color for the text is #800020; and while hovering on the login and signup button the button color should be #800020; and text inside that button should be white, a 'Grub-Gate' logo on the left, and navigation links ('Home', 'About Us', 'contact us' , 'FAQs') and login and signup 
+here grupgate logo should be on left most side and 'Home', 'About Us', 'contact us' , 'FAQs' should be middile and remaining login and signup  on the right mostside. 
+
+Footer: Give it a #800020; background with sections for 'About Us', 'Contact', and 'Social Media' links.
+
+In src/components/common, create a reusable GetStartedCTA.jsx component. It should have a prominent headline like 'Ready to Taste the Difference?' and a bright, eye-catching 'Order Now' button. Make it a full-width section with a distinct background color.
+
+Ensure all components use Tailwind CSS and (normal css with seperate files) for styling and are SSR-aware (no browser-specific APIs like window or localStorage outside of useEffect hooks)."
+
+Prompt 5: Homepage Section Components
+
+"Now, build the individual section components for the homepage inside the src/components/home directory.
+
+HeroSection.jsx:
+
+Use a full-screen container with a background image (use a placeholder from https://placehold.co/1920x1080 for now).
+
+In the center and middile add content with heading Your Daily Bite,Delivered Right?(after , the content should be in next line) and below this heading there shoulb be subheading Partnering with local restaurants to deliver fresh,
+chef-prepared meals — so you never have to cook.
+
+In the center and bottom(that means below subheading), add a button with a 'frosted glass' effect using Tailwind CSS (bg-black/30 backdrop-blur-sm).
+
+Inside the frosted glass box for this  primary CTA button with a text get started the background color of this button is  #800020;, text color should be white and when hover the back ground color should be white and text color should be  #800020; .
+
+WhyGrubGateSection.jsx:
+
+Create a section with a title like "Why Choose Grub-Gate?".
+
+Below the title, create a responsive 4-column grid.
+
+Each grid item should represent a benefit: 'Time-saving', 'Healthy', 'Tasty', and 'Affordable'.
+
+Each item should have an icon placeholder (use an emoji or simple Unicode character), the benefit title, and a short descriptive text.
+
+TestimonialsSection.jsx:
+
+Create a section with a title like "What Our Customers Say".
+
+Display 3 testimonial cards in a row (or a responsive flex container).
+create a left arrow and right arrow with color #800020; , at the end of page(hoeizontallu) when left arrow is cliked previous review should be visible with smooth effect and same for right arrow for the next one review should be visible (note that 3 reviews should be visible in a row) 
+
+Each card should contain:
+
+A circular placeholder for a user photo (https://placehold.co/100x100).
+
+A quote in blockquote format.
+
+
+The rating with stars user's name and location below the quote.
+
+and create another file regarding to home page that is About
+with heading Nearby Restaurants with color #800020;
+and subheading Order fresh meals from top-rated local spots! with color black
+for refer take this code 
+// src/components/NearbyRestaurants.jsx
+import React from 'react';
+import './NearbyRestaurants.css';
+
+const restaurants = [
+  {
+    name: 'Le Roi du Wonton',
+    image: 'https://media-cdn.tripadvisor.com/media/photo-s/0e/0a/7a/24/photo1jpg.jpg',
+    rating: 3.6,
+    description: 'Authentic wonton soups and dumplings.',
+  },
+  {
+    name: 'Restaurant Meilleur Choix',
+    image: 'https://media-cdn.tripadvisor.com/media/photo-p/1a/56/8e/83/restaurant-meilleur-choix.jpg',
+    rating: 4.0,
+    description: 'Versatile eatery with diverse dishes.',
+  },
+  {
+    name: 'Joe Beef',
+    image: 'https://www.joebeef.ca/images/hero-home.jpg',
+    rating: 4.3,
+    description: 'French market cuisine in a rustic setting.',
+  },
+  {
+    name: 'Toqué',
+    image: 'https://www.restaurant-toque.com/wp-content/uploads/2019/03/toque-salle-2.jpg',
+    rating: 4.3,
+    description: 'Upscale French fine dining.',
+  },
+  {
+    name: 'La Banquise',
+    image: 'https://labanquise.com/wp-content/uploads/2020/06/slider2-scaled.jpg',
+    rating: 4.3,
+    description: 'Famous for extensive poutine varieties.',
+  },
+  {
+    name: 'Au Pied de Cochon',
+    image: 'https://www.aupieddecochon.ca/assets/images/restaurant.jpg',
+    rating: 4.2,
+    description: 'Contemporary Québécois dishes.',
+  },
+  {
+    name: 'Schwartz’s Deli',
+    image: 'https://schwartzsdeli.com/wp-content/uploads/2020/10/Schwartz-s-Main-Pic.jpg',
+    rating: 4.3,
+    description: 'Iconic smoked meat sandwiches.',
+  },
+];
+
+
+const NearbyRestaurants = () => (
+  <section className="nearby-restaurants">
+    <h2>Nearby Restaurants</h2>
+    <p>Order fresh meals from top-rated local spots!</p>
+    <div className="restaurant-carousel">
+  {[...restaurants, ...restaurants].map((restaurant, index) => (
+    <div className="restaurant-card" key={index}>
+      <img src={restaurant.image} alt={restaurant.name} />
+      <div className="card-content">
+        <h3>{restaurant.name}</h3>
+        <p>{restaurant.description}</p>
+        <span>⭐ {restaurant.rating}</span>
+      </div>
+    </div>
+  ))}
+</div>
+  </section>
+);
+
+export default NearbyRestaurants;
+and css for this code is 
+/* src/components/NearbyRestaurants.css */
+.nearby-restaurants {
+    padding: 2rem;
+    background-color: #f9f9f9;
+    text-align: center;
+    overflow: hidden;
+  }
+  
+  .nearby-restaurants h2 {
+    margin-bottom: 0.5rem;
+  }
+  
+  .restaurant-carousel {
+    display: flex;
+    width: fit-content;
+    animation: scroll 60s linear infinite; /* slower for smooth */
+  }
+  
+  .restaurant-card {
+    flex: 0 0 auto;
+    width: 250px;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    margin-right: 1.5rem;
+  }
+  
+  .restaurant-card img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+  }
+  
+  .card-content {
+    padding: 1rem;
+  }
+  
+  .card-content h3 {
+    margin: 0.5rem 0;
+    font-size: 1.1rem;
+  }
+  
+  .card-content p {
+    font-size: 0.9rem;
+    color: #555;
+  }
+  
+  .card-content span {
+    display: block;
+    margin-top: 0.5rem;
+    font-weight: bold;
+    color: #ff9900;
+  }
+  
+  @keyframes scroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+  
+  .restaurant-carousel:hover {
+    animation-play-state: paused;
+  }
+  
+
+
+Finally, go to src/pages/HomePage.jsx and import and assemble all these new components in the correct order: HeroSection, WhyGrubGateSection, TestimonialsSection, and the reusable GetStartedCTA."
+
+Final Check
+After running these prompts, you will have a complete, well-structured homepage. You can test the development experience with npm run dev and preview the production SSR build with npm run build && npm run start. This integrated approach ensures your application is robust and ready for scaling.
