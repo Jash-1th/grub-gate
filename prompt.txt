@@ -350,3 +350,52 @@ The page should clearly and attractively explain the service process. It must in
 * Employ clean layouts, generous spacing, and a clear visual hierarchy to guide the user through the information.
 
 Please generate the complete, production-ready code for the `/how-it-works` page component, incorporating all necessary JSX, styling, and placeholder content while strictly adhering to all the requirements outlined above.
+
+CONTACT US PAGE:
+
+
+
+Hello Cursor AI. Your next assignment is to build the `/contact` page for my "GrubGate" web application.
+
+Before you begin, it is essential that you analyze my existing codebase, paying close attention to the structure of other pages like `/home` and `/about`. The new contact page must align perfectly with the established coding style, component architecture, and visual design of the application to ensure a consistent user experience.
+
+**Project Technical Stack & Constraints:**
+
+* **Framework:** React with Vite.
+* **Rendering:** The application uses a hybrid model with **Client-Side Rendering (CSR) in development** and **Server-Side Rendering (SSR) in production**. This is a critical consideration. You **must** write SSR-safe code to **prevent React hydration errors**. Avoid using browser-specific APIs (like `window` or `document`) outside of a `useEffect` hook.
+
+---
+
+## **`/contact` Page Requirements**
+
+### **1. Component Structure**
+
+* Create the new page component at a path consistent with the project's routing, such as `src/pages/Contact.jsx`.
+* The code must be well-structured, clean, and reusable, following the patterns established in my other page components.
+
+### **2. Page Layout and Design**
+
+* The entire page must be **fully responsive**, ensuring it looks and functions perfectly on desktop, tablet, and mobile devices.
+* I recommend a clean, two-column layout for larger screens:
+    * **Left Column:** The contact form.
+    * **Right Column:** The embedded Google Map and other contact details (address, email).
+    * On smaller screens (mobile), these columns should stack vertically into a single, easy-to-scroll column.
+
+### **3. Contact Form**
+
+* Create a user-friendly contact form with the following fields:
+    * **Name:** (Text input, mandatory)
+    * **Email:** (Email input, mandatory)
+    * **Phone Number:** (Text input, optional)
+    * **Reason for Contact:** (Dropdown/Select field, optional)
+        * Please include the following options in the dropdown: "General Inquiry," "Technical Support," "Partnership Opportunities," and "Feedback."
+    * **Message:** (Textarea, mandatory)
+* All mandatory fields should be clearly marked. Implement basic client-side validation hints.
+* Include a clearly styled "Submit" button.
+
+### **4. Google Map Integration**
+
+* Embed a Google Map on the page to visually represent our primary operational area.
+* You can use a placeholder location for the map embed code, for instance, the center of a major city. Ensure the map embed is also responsive and scales correctly within its container. 
+
+Please generate the complete, production-ready code for the `/contact` page component. This should include all necessary JSX for the layout, the form, the map embed, and styling that is consistent with the rest of the GrubGate application.

@@ -102,10 +102,7 @@ const ProcessSteps = () => {
               {/* Connector Arrow between cards */}
               {index < steps.length - 1 && (
                 <div className="flex justify-center mt-8 mb-4">
-                  <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-300 hover:scale-110 transform group bg-grub-red/30 hover:bg-grub-red"
-                    style={{ cursor: 'pointer' }}
-                  >
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-300 hover:scale-110 transform group bg-grub-red/30 hover:bg-grub-red">
                     <svg
                       className="w-6 h-6 text-grub-red group-hover:text-white transition-colors duration-200"
                       fill="currentColor"
