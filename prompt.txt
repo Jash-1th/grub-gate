@@ -248,3 +248,53 @@ Finally, go to src/pages/HomePage.jsx and import and assemble all these new comp
 
 Final Check
 After running these prompts, you will have a complete, well-structured homepage. You can test the development experience with npm run dev and preview the production SSR build with npm run build && npm run start. This integrated approach ensures your application is robust and ready for scaling.
+
+
+ABOUT PAGE :
+
+
+Hello Cursor AI. Your task is to create a new /about page for my existing "GrubGate" web application.
+
+Before writing any code, it is essential that you first analyze my entire existing codebase, paying close attention to the /home page component. You must understand the current project structure, component composition, coding style, state management, and styling conventions (e.g., CSS Modules, Styled Components, Tailwind CSS) to ensure the new page is perfectly consistent with the rest of the application.
+
+Project Technical Stack & Constraints:
+
+Framework: React with Vite.
+
+Rendering: The application uses Client-Side Rendering (CSR) in development and Server-Side Rendering (SSR) in production. This is a critical point. You must write your code carefully to avoid React hydration errors. Ensure there is no mismatch between the server-rendered HTML and the initial client-side render (e.g., avoid using browser-specific APIs like window or generating random/date-based content directly in the component body without using a useEffect hook).
+
+/about Page Requirements
+1. Component Structure
+Create a new page component, for example, at src/pages/About.jsx or a similar path consistent with the project's routing structure.
+
+The code must be well-structured, clean, and follow the exact patterns established in the /home page.
+
+2. Content & Sections
+The page should feature a friendly, professional, and trustworthy tone throughout and include the following sections:
+
+Our Story Section:
+
+Create a dedicated area that contains our Mission, Vision, and the Story of GrubGate. Use compelling placeholder text for each of these three parts.
+
+The layout for this section should be clean and easy to read.
+
+Our Team Section:
+
+Include a clear heading like "Meet Our Team" or "The Founders."
+
+Display a gallery of 6 team members.
+
+For each team member, include a placeholder for:
+
+A professional headshot image. (place images from src/assets/images/)
+
+Their name (e.g., "Jane Doe").
+
+Their role (e.g., "Chief Technology Officer").
+
+3. Layout and Design
+The entire page must be fully responsive and look great on all device sizes (desktop, tablet, and mobile).
+
+Implement a clean, responsive grid layout for the team section. This grid should neatly arrange the 6 team member profiles and adapt its column count based on the screen width.
+
+Please generate the complete, production-ready code for the /about page component, including all necessary JSX, styling, and placeholder content, adhering strictly to all the requirements mentioned above.

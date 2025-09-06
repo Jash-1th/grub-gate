@@ -67,14 +67,17 @@ async function handleSSR(req, res, next) {
     
     if (renderFunction) {
       try {
+        console.log(`Attempting SSR for URL: ${url}`);
         const rendered = renderFunction(url);
         appHtml = rendered.html;
+        console.log(`SSR successful for URL: ${url}`);
       } catch (ssrError) {
-        console.error('SSR render error:', ssrError);
+        console.error('SSR render error for URL:', url, ssrError);
         // Fall back to client-side rendering
         appHtml = '<div id="root"><!--ssr-outlet--></div>';
       }
     } else {
+      console.log('No SSR function available, using client-side rendering');
       // No SSR available, use client-side rendering
       appHtml = '<div id="root"><!--ssr-outlet--></div>';
     }
