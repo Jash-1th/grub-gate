@@ -6,9 +6,15 @@ export const navigation = {
       href: '/',
       current: true
     },
+   
     {
       name: 'About Us',
       href: '/about',
+      current: false
+    },
+    {
+      name: 'How It Works',
+      href: '/how-it-works',
       current: false
     },
     {
@@ -39,6 +45,7 @@ export const navigation = {
   footer: {
     quickLinks: [
       { name: 'Home', href: '/' },
+      { name: 'How It Works', href: '/how-it-works' },
       { name: 'About Us', href: '/about' },
       { name: 'FAQ', href: '/faq' },
       { name: 'Contact Us', href: '/contact' }
