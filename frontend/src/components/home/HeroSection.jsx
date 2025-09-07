@@ -42,7 +42,7 @@ const HeroSection = () => {
         </div>
         
         {/* Stats */}
-        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+        {/* <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
           {heroContent.stats.map((stat, index) => (
             <div key={index} className="text-center">
               <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">
@@ -56,7 +56,7 @@ const HeroSection = () => {
               </div>
             </div>
           ))}
-        </div>
+        </div> */}
       </div>
       
       {/* Scroll indicator */}

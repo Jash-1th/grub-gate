@@ -2,6 +2,7 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs';
+import i18n from './src/i18n.server.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -70,10 +71,26 @@ async function handleSSR(req, res, next) {
     
     if (renderFunction) {
       try {
+        const lng = req.headers['accept-language'] ? req.headers['accept-language'].split(',')[0] : 'en';
+        await i18n.changeLanguage(lng);
+        
         console.log(`Attempting SSR for URL: ${url}`);
-        const rendered = renderFunction(url);
+        const rendered = renderFunction(url, i18n);
         appHtml = rendered.html;
         console.log(`SSR successful for URL: ${url}`);
+
+        const initialI18nStore = {};
+        i18n.languages.forEach((l) => {
+          initialI18nStore[l] = i18n.getResourceBundle(l, 'translation');
+        });
+
+        const script = `
+          <script>
+            window.__INITIAL_I18N_STATE__ = ${JSON.stringify(initialI18nStore)};
+            window.__INITIAL_LANGUAGE__ = "${lng}";
+          </script>
+        `;
+        template = template.replace('</body>', `${script}</body>`);
       } catch (ssrError) {
         console.error('SSR render error for URL:', url, ssrError);
         // Fall back to client-side rendering

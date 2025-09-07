@@ -36,7 +36,7 @@ export const additionalFeatures = [
     title: 'Fast Delivery',
     icon: '🚀',
     description: 'Average delivery time of 25-35 minutes',
-    stats: '25-35 min'
+    stats: 'Stress-Free'
   },
   {
     id: 2,

@@ -61,6 +61,26 @@
       }
     }
   },
+  
+    "additionalFeatures": {
+      "1": {
+        "title": "Planification de repas sans effort",
+        "description": "Établissez votre horaire une seule fois et savouez de délicieux repas livrés toute la semaine."
+      },
+      "2": {
+        "title": "Vaste Sélection",
+        "description": "Plus de 500 restaurants au choix."
+      },
+      "3": {
+        "title": "Support 24/7",
+        "description": "Assistance clientèle 24h/24 et 7j/7."
+      },
+      "4": {
+        "title": "Paiement Sécurisé",
+        "description": "Traitement des paiements sûr et sécurisé."
+      }
+    }
+  ,
   "testimonials": {
     "title": "Ce Que Disent Nos Clients",
     "subtitle": "Ne nous croyez pas sur parole. Voici ce que nos clients satisfaits ont à dire sur leur expérience GrubGate.",
