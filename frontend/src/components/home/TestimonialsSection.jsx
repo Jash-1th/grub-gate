@@ -90,7 +90,11 @@ const TestimonialsSection = () => {
           </p>
         </div>
 
-        <div className="relative">
+        <div 
+          className="relative"
+          onMouseEnter={() => setIsAutoPlaying(false)}
+          onMouseLeave={() => setIsAutoPlaying(true)}
+        >
           {/* Testimonials Container */}
           <div className="overflow-hidden">
             <div 
@@ -174,15 +178,6 @@ const TestimonialsSection = () => {
           ))}
         </div>
 
-        {/* Auto-play toggle */}
-        <div className="text-center mt-6">
-          <button
-            onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-            className="text-sm text-gray-500 hover:text-grub-red transition-colors duration-200"
-          >
-            {isAutoPlaying ? t('testimonials.pause') : t('testimonials.resume')} {t('testimonials.autoPlay')}
-          </button>
-        </div>
       </div>
     </section>
   );

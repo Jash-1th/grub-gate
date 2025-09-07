@@ -8,18 +8,18 @@ const WhyGrubGateSection = () => {
 
   // Data for the benefit cards to make the code cleaner
   const benefitsData = [
-    { id: '1', emoji: '⏰' },
-    { id: '2', emoji: '🥗' },
-    { id: '3', emoji: '😋' },
-    { id: '4', emoji: '💰' }
+    { id: '1' },
+    { id: '2' },
+    { id: '3' },
+    { id: '4' }
   ];
 
   // Data for the special features section
   const specialFeaturesData = [
-    { id: '1', emoji: '🚀', stat: '25-35 min' },
-    { id: '2', emoji: '🍽️', stat: '500+ restaurants' },
-    { id: '3', emoji: '📞', stat: '24/7 available' },
-    { id: '4', emoji: '🔒', stat: '100% secure' }
+    { id: '1', stat: 'stress free' },
+    { id: '2', stat: '500+ restaurants' },
+    { id: '3', stat: '24/7 available' },
+    { id: '4', stat: '100% secure' }
   ];
 
   return (
@@ -39,7 +39,6 @@ const WhyGrubGateSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           {benefitsData.map(benefit => (
             <div key={benefit.id} className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 text-center group">
-              <div className="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">{benefit.emoji}</div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">{t(`benefits.${benefit.id}.title`)}</h3>
               <p className="text-gray-600 mb-6 leading-relaxed">{t(`benefits.${benefit.id}.description`)}</p>
               <ul className="text-sm text-gray-500 space-y-2 inline-block text-left">
@@ -62,7 +61,6 @@ const WhyGrubGateSection = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {specialFeaturesData.map(feature => (
               <div key={feature.id} className="text-center">
-                <div className="text-4xl mb-4">{feature.emoji}</div>
                 <div className="text-2xl font-bold mb-2 text-gray-900">{feature.stat}</div>
                 <h4 className="text-lg font-semibold text-gray-900 mb-2">{t(`additionalFeatures.${feature.id}.title`)}</h4>
                 <p className="text-gray-600 text-sm">{t(`additionalFeatures.${feature.id}.description`)}</p>

@@ -131,8 +131,26 @@
     "missionText": "Chez GrubGate, nous croyons que la bonne nourriture devrait être accessible, pratique et durable. Nous révolutionnons la façon dont les gens pensent aux repas quotidiens en connectant les amateurs de nourriture avec les meilleurs restaurants de Montréal grâce à des plans de repas innovants par abonnement.",
     "visionTitle": "Notre Vision",
     "visionText": "Nous envisageons un monde où chacun a accès à des repas de qualité restaurant sans les tracas de la cuisine quotidienne ou l'imprévisibilité de la livraison de nourriture traditionnelle.",
-    "ourStoryTitle": "Notre Histoire",
-    "ourStoryText": "Fondé en 2023, GrubGate est né d'une simple idée : rendre les repas de qualité accessibles à tous, tout en soutenant les restaurants locaux de Montréal.",
+    "sections": [
+      {
+        "id": 1,
+        "title": "Notre Mission",
+        "description": "Chez GrubGate, nous croyons que la bonne nourriture devrait être accessible, pratique et durable. Nous révolutionnons la façon dont les gens pensent aux repas quotidiens en connectant les amateurs de nourriture avec les meilleurs restaurants de Montréal grâce à des plans de repas innovants par abonnement.",
+        "image": "/images/grub-gate-default-img.jpg"
+      },
+      {
+        "id": 2,
+        "title": "Notre Vision",
+        "description": "Nous envisageons un monde où chacun a accès à des repas de qualité restaurant sans les tracas de la cuisine quotidienne ou l'imprévisibilité de la livraison de nourriture traditionnelle. En nous associant avec les restaurants locaux, nous créons un écosystème durable qui profite à la fois aux convives et aux entreprises culinaires.",
+        "image": "/images/grub-gate-default-restaurant-img.jpg"
+      },
+      {
+        "id": 3,
+        "title": "Notre Histoire",
+        "description": "Fondé en 2023, GrubGate est né d'une simple idée : rendre les repas de qualité accessibles à tous, tout en soutenant les restaurants locaux de Montréal. Nous avons commencé avec une passion pour connecter les communautés à travers la nourriture et nous sommes devenus le partenaire de livraison de repas de confiance de Montréal.",
+        "image": "/images/HeroHome.png"
+      }
+    ],
     "teamTitle": "Notre Équipe",
     "teamSubtitle": "Rencontrez les esprits créatifs derrière GrubGate",
     "team": {

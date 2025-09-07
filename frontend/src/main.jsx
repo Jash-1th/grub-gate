@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import './i18n'
 import App from './App.jsx'
+import ScrollToTop from './components/common/ScrollToTop'
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -22,6 +23,7 @@ if (container) {
     <StrictMode>
       <Suspense fallback={<LoadingFallback />}>
         <BrowserRouter>
+          <ScrollToTop />
           <App />
         </BrowserRouter>
       </Suspense>

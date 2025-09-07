@@ -125,12 +125,26 @@
     "heroSubtitle": "Revolutionizing how Montreal eats, one subscription at a time.",
     "storyTitle": "Our Story",
     "storySubtitle": "Discover the story behind GrubGate and our passion for quality food.",
-    "ourStoryTitle": "Our Story",
-    "ourStoryText": "Founded in 2023, GrubGate was born from a simple idea: to make quality meals accessible to everyone while supporting local Montreal restaurants.",
-    "missionTitle": "Our Mission",
-    "missionText": "At GrubGate, we believe that great food should be accessible, convenient, and sustainable. We're revolutionizing how people think about daily meals by connecting food lovers with Montreal's best restaurants through innovative subscription meal plans.",
-    "visionTitle": "Our Vision",
-    "visionText": "We envision a world where everyone has access to restaurant-quality meals without the hassle of daily cooking or the unpredictability of traditional food delivery. By partnering with local restaurants, we're creating a sustainable ecosystem that benefits both diners and culinary businesses.",
+    "sections": [
+      {
+        "id": 1,
+        "title": "Our Mission",
+        "description": "At GrubGate, we believe that great food should be accessible, convenient, and sustainable. We're revolutionizing how people think about daily meals by connecting food lovers with Montreal's best restaurants through innovative subscription meal plans.",
+        "image": "/images/grub-gate-default-img.jpg"
+      },
+      {
+        "id": 2,
+        "title": "Our Vision",
+        "description": "We envision a world where everyone has access to restaurant-quality meals without the hassle of daily cooking or the unpredictability of traditional food delivery. By partnering with local restaurants, we're creating a sustainable ecosystem that benefits both diners and culinary businesses.",
+        "image": "/images/grub-gate-default-restaurant-img.jpg"
+      },
+      {
+        "id": 3,
+        "title": "Our Story",
+        "description": "Founded in 2023, GrubGate was born from a simple idea: to make quality meals accessible to everyone while supporting local Montreal restaurants. We started with a passion for connecting communities through food and have grown into Montreal's trusted meal delivery partner.",
+        "image": "/images/HeroHome.png"
+      }
+    ],
     "teamTitle": "Meet Our Team",
     "teamSubtitle": "The passionate individuals behind GrubGate's success.",
     "team": {

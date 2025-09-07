@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import TwoColumnSection from '../components/common/TwoColumnSection';
 
 const About = () => {
   const { t } = useTranslation();
@@ -21,50 +22,26 @@ const About = () => {
 
       {/* Our Story Section */}
       <section className="py-16 lg:py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6" style={{color: '#800020'}}>
-              {t('about.storyTitle')}
-            </h2>
-            <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
-              {t('about.storySubtitle')}
-            </p>
-          </div>
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6" style={{color: '#800020'}}>
+            {t('about.storyTitle')}
+          </h2>
+          <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            {t('about.storySubtitle')}
+          </p>
+        </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            {/* Mission */}
-            <div className="text-center lg:text-left">
-              <div className="bg-grub-red text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold mx-auto lg:mx-0 mb-6">
-                M
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('about.missionTitle')}</h3>
-              <p className="text-gray-600 leading-relaxed">
-                {t('about.missionText')}
-              </p>
-            </div>
-
-            {/* Vision */}
-            <div className="text-center lg:text-left">
-              <div className="bg-grub-red text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold mx-auto lg:mx-0 mb-6">
-                V
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('about.visionTitle')}</h3>
-              <p className="text-gray-600 leading-relaxed">
-                {t('about.visionText')}
-              </p>
-            </div>
-
-            {/* Story */}
-            <div className="text-center lg:text-left">
-              <div className="bg-grub-red text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold mx-auto lg:mx-0 mb-6">
-                S
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('about.ourStoryTitle')}</h3>
-              <p className="text-gray-600 leading-relaxed">
-                {t('about.ourStoryText')}
-              </p>
-            </div>
-          </div>
+        {/* Use TwoColumnSection for each section */}
+        <div className="space-y-8">
+          {t('about.sections', { returnObjects: true }).map((section, index) => (
+            <TwoColumnSection
+              key={section.id}
+              title={section.title}
+              description={section.description}
+              image={section.image}
+              reverse={index % 2 === 1}
+            />
+          ))}
         </div>
       </section>
 
