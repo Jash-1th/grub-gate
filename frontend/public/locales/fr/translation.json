@@ -1,0 +1,289 @@
+{
+  "login": "Connexion",
+  "signup": "S'inscrire",
+  "nav": {
+    "home": "Accueil",
+    "about": "À Propos",
+    "howItWorks": "Comment Ça Marche",
+    "contact": "Nous Contacter",
+    "faq": "FAQ"
+  },
+  "hero": {
+    "title": "Vos Repas Quotidiens,",
+    "subtitle": "Livrés de Vraies Cuisines.",
+    "description": "GrubGate vous connecte avec des restaurants offrant des repas par abonnement — évitez de cuisiner, continuez à manger.",
+    "getStarted": "Commencer"
+  },
+  "whyGrubGate": {
+    "title": "Pourquoi Choisir GrubGate?",
+    "subtitle": "Nous sommes plus qu'un simple service de livraison de nourriture. Nous sommes votre passerelle vers les meilleures expériences culinaires de Montréal, livrées avec soin et commodité.",
+    "specialTitle": "Ce Qui Nous Rend Spéciaux"
+  },
+  "benefits": {
+    "1": {
+      "title": "Gain de Temps",
+      "description": "Évitez la cuisine et l'attente. Obtenez des repas délicieux livrés à votre porte en quelques minutes.",
+      "features": {
+        "0": "Livraison rapide",
+        "1": "Pas de cuisine requise",
+        "2": "Options de précommande",
+        "3": "Suivi en temps réel"
+      }
+    },
+    "2": {
+      "title": "Sain",
+      "description": "Repas frais et nutritifs des meilleurs restaurants locaux avec des options alimentaires pour tous.",
+      "features": {
+        "0": "Ingrédients frais",
+        "1": "Informations nutritionnelles",
+        "2": "Filtres alimentaires",
+        "3": "Portions équilibrées"
+      }
+    },
+    "3": {
+      "title": "Abordable",
+      "description": "Prix compétitifs avec des réductions d'abonnement et aucun frais caché.",
+      "features": {
+        "0": "Prix transparents",
+        "1": "Réductions d'abonnement",
+        "2": "Pas de frais de livraison",
+        "3": "Offres de repas avantageux"
+      }
+    },
+    "4": {
+      "title": "Abordable",
+      "description": "Excellent rapport qualité-prix avec des prix compétitifs et des réductions régulières sur vos repas préférés.",
+      "features": {
+        "0": "Prix compétitifs",
+        "1": "Réductions régulières",
+        "2": "Récompenses de fidélité",
+        "3": "Options de livraison gratuite"
+      }
+    }
+  },
+  "testimonials": {
+    "title": "Ce Que Disent Nos Clients",
+    "subtitle": "Ne nous croyez pas sur parole. Voici ce que nos clients satisfaits ont à dire sur leur expérience GrubGate.",
+    "orders": "commandes",
+    "pause": "Pause",
+    "resume": "Reprendre",
+    "autoPlay": "lecture automatique"
+  },
+  "nearbyRestaurants": {
+    "title": "Restaurants à Proximité",
+    "subtitle": "Découvrez des restaurants incroyables dans votre région offrant des plans de repas par abonnement.",
+    "viewAll": "Voir Tous les Restaurants",
+    "orderNow": "Commander Maintenant",
+    "cuisine": "Cuisine",
+    "deliveryFee": "Frais de Livraison",
+    "minOrder": "Commande Minimum",
+    "additionalInfo": "Découvrez des centaines d'autres restaurants dans votre région, chacun offrant des plans de repas par abonnement uniques adaptés à vos goûts et à votre horaire."
+  },
+  "getStartedCta": {
+    "title": "Prêt à Commencer?",
+    "subtitle": "Rejoignez des milliers d'amateurs de cuisine qui font confiance à GrubGate pour leurs repas quotidiens.",
+    "startPlan": "Commencer Votre Plan",
+    "learnMore": "En Savoir Plus",
+    "restaurants": "Restaurants Partenaires",
+    "customers": "Clients Satisfaits",
+    "avgDelivery": "Temps de Livraison Moyen",
+    "rating": "Note Client"
+  },
+  "about": {
+    "heroTitle": "À Propos de GrubGate",
+    "heroSubtitle": "Révolutionner la façon dont Montréal mange, un abonnement à la fois.",
+    "storyTitle": "Notre Histoire",
+    "storySubtitle": "Découvrez l'histoire derrière GrubGate et notre passion pour la nourriture de qualité.",
+    "missionTitle": "Notre Mission",
+    "missionText": "Chez GrubGate, nous croyons que la bonne nourriture devrait être accessible, pratique et durable. Nous révolutionnons la façon dont les gens pensent aux repas quotidiens en connectant les amateurs de nourriture avec les meilleurs restaurants de Montréal grâce à des plans de repas innovants par abonnement.",
+    "visionTitle": "Notre Vision",
+    "visionText": "Nous envisageons un monde où chacun a accès à des repas de qualité restaurant sans les tracas de la cuisine quotidienne ou l'imprévisibilité de la livraison de nourriture traditionnelle.",
+    "ourStoryTitle": "Notre Histoire",
+    "ourStoryText": "Fondé en 2023, GrubGate est né d'une simple idée : rendre les repas de qualité accessibles à tous, tout en soutenant les restaurants locaux de Montréal.",
+    "teamTitle": "Notre Équipe",
+    "teamSubtitle": "Rencontrez les esprits créatifs derrière GrubGate",
+    "team": {
+      "ceo": "PDG & Fondateur",
+      "cto": "Directeur Technique",
+      "coo": "Directeur des Opérations",
+      "headMarketing": "Responsable Marketing",
+      "headCustomerExperience": "Responsable Expérience Client",
+      "headOperations": "Responsable des Opérations"
+    },
+    "valuesTitle": "Nos Valeurs Fondamentales",
+    "valuesSubtitle": "Les principes qui guident tout ce que nous faisons",
+    "values": {
+      "partnershipTitle": "Partenariat",
+      "partnershipText": "Nous travaillons en étroite collaboration avec les restaurants locaux pour offrir la meilleure expérience culinaire.",
+      "qualityTitle": "Qualité",
+      "qualityText": "Nous nous engageons à ne proposer que des ingrédients frais et des plats préparés avec soin.",
+      "innovationTitle": "Innovation",
+      "innovationText": "Nous repoussons constamment les limites de la livraison de nourriture avec des solutions créatives.",
+      "communityTitle": "Communauté",
+      "communityText": "Nous croyons en la construction d'une communauté forte autour de la bonne nourriture."
+    }
+  },
+  "howItWorks": {
+    "heroTitle": "Comment Fonctionne GrubGate",
+    "heroSubtitle": "Livrés de Vraies Cuisines.",
+    "heroDescription": "Découvrez à quel point il est facile d'obtenir des repas de qualité restaurant livrés à votre porte avec notre simple service d'abonnement.",
+    "getStarted": "Commencer",
+    "stepsTitle": "Comment Fonctionne GrubGate",
+    "stepsSubtitle": "Notre processus simple en 5 étapes rend la livraison de délicieux repas à votre porte sans effort et pratique.",
+    "step1Title": "Entrez Votre Emplacement",
+    "step1Description": "Déposez votre adresse ou épinglez votre emplacement. Nous vous montrons instantanément les restaurants locaux offrant des repas par abonnement.",
+    "step2Title": "Parcourir et Choisir",
+    "step2Description": "Explorez les plans de repas sélectionnés des restaurants les mieux notés. Filtrez par cuisine, préférences alimentaires et gamme de prix.",
+    "step3Title": "S'abonner et Personnaliser",
+    "step3Description": "Sélectionnez votre plan de repas préféré et personnalisez la fréquence de livraison. Choisissez parmi les options hebdomadaires, bihebdomadaires ou mensuelles.",
+    "step4Title": "Détendez-vous et Anticipez",
+    "step4Description": "Asseyez-vous pendant que les restaurants préparent vos repas frais. Suivez votre commande et soyez averti quand elle est en route.",
+    "step5Title": "Savourez et Répétez",
+    "step5Description": "Savourez des repas de qualité restaurant à la maison. Évaluez votre expérience et faites-nous savoir vos préférences pour les commandes futures.",
+    "ctaTitle": "Prêt à Commencer?",
+    "ctaSubtitle": "Rejoignez des milliers de clients satisfaits qui ont simplifié leurs repas quotidiens avec GrubGate. Frais, délicieux et livrés directement à votre porte.",
+    "startPlan": "Commencer Votre Plan",
+    "learnMore": "En Savoir Plus",
+    "finalCtaTitle": "Prêt à Transformer Vos Repas?",
+    "finalCtaSubtitle": "Rejoignez la communauté GrubGate aujourd'hui et découvrez une meilleure façon de profiter de repas de qualité restaurant à la maison.",
+    "startEating": "Commencez à Manger Mieux",
+    "browseRestaurants": "Parcourir les Restaurants"
+  },
+  "contact": {
+    "heroTitle": "Contactez-Nous",
+    "heroSubtitle": "Nous aimerions avoir de vos nouvelles. Envoyez-nous un message et nous répondrons dès que possible.",
+    "formTitle": "Envoyez-nous un Message",
+    "formSubtitle": "Remplissez le formulaire ci-dessous et nous vous répondrons dans les 24 heures.",
+    "info": {
+      "title": "Informations de Contact",
+      "address": "Adresse",
+      "phone": "Téléphone",
+      "email": "E-mail",
+      "hours": "Heures d'Ouverture",
+      "weekdays": "Lundi - Vendredi: {{hours}}",
+      "weekends": "Samedi - Dimanche: {{hours}}",
+      "mapTitle": "Trouvez-Nous",
+      "mapDescription": "Visitez notre bureau dans le cœur du quartier gastronomique de Montréal"
+    },
+    "social": {
+      "title": "Suivez-Nous"
+    },
+    "form": {
+      "nameLabel": "Nom Complet",
+      "namePlaceholder": "Entrez votre nom complet",
+      "emailLabel": "Adresse E-mail",
+      "emailPlaceholder": "Entrez votre adresse e-mail",
+      "phoneLabel": "Numéro de Téléphone",
+      "phonePlaceholder": "Entrez votre numéro de téléphone (optionnel)",
+      "reasonLabel": "Raison du Contact",
+      "reasonPlaceholder": "Sélectionnez une raison",
+      "reasons": {
+        "general": "Demande Générale",
+        "technical": "Support Technique",
+        "partnership": "Opportunité de Partenariat",
+        "feedback": "Commentaires & Suggestions"
+      },
+      "messageLabel": "Message",
+      "messagePlaceholder": "Dites-nous comment nous pouvons vous aider...",
+      "sendButton": "Envoyer le Message",
+      "sending": "Envoi en cours...",
+      "success": "Merci ! Votre message a été envoyé avec succès. Nous vous répondrons bientôt.",
+      "validation": {
+        "nameRequired": "Le nom est requis",
+        "emailRequired": "L'e-mail est requis",
+        "emailInvalid": "Veuillez entrer une adresse e-mail valide",
+        "messageRequired": "Le message est requis"
+      },
+      "errors": {
+        "loading": "Les services sont en cours de chargement, veuillez patienter...",
+        "submit": "Échec de l'envoi du message. Veuillez réessayer plus tard."
+      }
+    }
+  },
+  "faq": {
+    "title": "Questions Fréquemment Posées",
+    "subtitle": "Trouvez des réponses aux questions courantes sur le service de livraison de repas, les abonnements et plus encore de GrubGate.",
+    "helpTitle": "Comment Pouvons-Nous Vous Aider?",
+    "helpSubtitle": "Parcourez nos questions les plus fréquemment posées ci-dessous. Si vous ne trouvez pas ce que vous cherchez, n'hésitez pas à contacter notre équipe de support.",
+    "contactTitle": "Vous Avez Encore des Questions?",
+    "contactSubtitle": "Notre équipe de support amicale est là pour vous aider avec toutes vos questions ou préoccupations.",
+    "contactSupport": "Contacter le Support",
+    "callUs": "Appelez-Nous",
+    "categories": {
+      "subscription": {
+        "title": "Abonnement et Tarification",
+        "questions": {
+          "0": {
+            "question": "Comment fonctionne un abonnement GrubGate?",
+            "answer": "Notre service d'abonnement est conçu pour la commodité. Vous présélectionnez votre plan de repas et planifiez vos livraisons pour la semaine ou à des dates spécifiques qui vous conviennent. Une fois configuré, vos délicieux repas arrivent automatiquement aux jours programmés."
+          },
+          "1": {
+            "question": "Puis-je changer le restaurant (notre partenaire) pour un repas programmé?",
+            "answer": "Cette flexibilité est un avantage exclusif pour nos membres d'abonnement Premium. Pour s'assurer que nos partenaires ont suffisamment de temps pour se préparer, tout changement doit être effectué au moins 2 jours avant la livraison programmée. Les membres du plan Standard ne peuvent pas changer le restaurant partenaire une fois qu'un repas est verrouillé."
+          },
+          "2": {
+            "question": "Proposez-vous des commandes ponctuelles sans abonnement?",
+            "answer": "Oui! En plus de nos plans d'abonnement, vous pouvez également commander des repas individuels à la demande de nos restaurants partenaires à tout moment. Cependant, gardez à l'esprit que nos plans d'abonnement offrent une meilleure valeur, avec des réductions pour des engagements plus longs comme les plans hebdomadaires ou mensuels."
+          }
+        }
+      },
+      "delivery": {
+        "title": "Livraison",
+        "questions": {
+          "0": {
+            "question": "Comment mon heure de livraison est-elle déterminée?",
+            "answer": "Votre heure de livraison est basée sur l'horaire que vous avez configuré avec votre abonnement (par exemple, votre créneau de déjeuner ou de dîner sélectionné). Nous livrons dans cette fenêtre pré-convenue, donc vous savez toujours quand attendre votre repas."
+          },
+          "1": {
+            "question": "Puis-je annuler ou changer un repas pour un jour spécifique?",
+            "answer": "Bien que les repas individuels ne puissent pas être entièrement annulés une fois votre horaire confirmé, vous pouvez modifier votre commande. Les membres du plan Standard peuvent échanger leur repas sélectionné contre un autre article du même prix du même restaurant partenaire. Nous exigeons que tout changement soit effectué au moins 24 heures avant la livraison programmée."
+          }
+        }
+      },
+      "dietary": {
+        "title": "Options Diététiques et de Repas",
+        "questions": {
+          "0": {
+            "question": "Puis-je personnaliser mes repas pour des besoins diététiques comme végétalien ou sans gluten?",
+            "answer": "Absolument. Lors de la sélection de vos repas ou de la navigation dans nos restaurants partenaires, vous pouvez utiliser des filtres pour trouver des options qui correspondent à vos exigences diététiques spécifiques, y compris végétarien, non-végétarien, et plus encore."
+          },
+          "1": {
+            "question": "À quelle fréquence le menu change-t-il?",
+            "answer": "Nos partenaires restaurants mettent à jour leurs menus régulièrement pour offrir des repas frais. Vous verrez de nouvelles options de repas passionnantes disponibles à ajouter à votre plan chaque semaine."
+          }
+        }
+      }
+    }
+  },
+  "footer": {
+    "description": "GrubGate vous connecte avec les meilleurs restaurants de Montréal grâce à des plans de repas par abonnement pratiques. Frais, délicieux et livrés directement à votre porte.",
+    "builtWithLove": "Fait avec ❤️ à Montréal",
+    "quickLinksTitle": "Liens Rapides",
+    "followUsTitle": "Suivez-Nous",
+    "emailPlaceholder": "Entrez votre e-mail",
+    "subscribeButton": "S'abonner",
+    "copyright": "© {{year}} {{company}}. Tous droits réservés.",
+    "legal": {
+      "termsandconditions": "Termes et Conditions",
+      "privacypolicy": "Politique de Confidentialité"
+    },
+    "newsletter": {
+      "title": "Restez Informé",
+      "description": "Abonnez-vous à notre newsletter pour les dernières mises à jour, nouveaux partenaires restaurants et offres exclusives.",
+      "placeholder": "Entrez votre e-mail",
+      "subscribe": "S'abonner",
+      "success": "Merci de vous être abonné!",
+      "error": "Veuillez entrer une adresse e-mail valide"
+    }
+  },
+  "common": {
+    "loading": "Chargement...",
+    "error": "Quelque chose s'est mal passé",
+    "retry": "Réessayer",
+    "close": "Fermer",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "viewMore": "Voir Plus",
+    "readMore": "Lire Plus"
+  }
+}

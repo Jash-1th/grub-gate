@@ -1,8 +1,11 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import heroImage from '../../assets/images/HowItWorks/Hero.png';
 
 const HeroHowItWorks = () => {
+  const { t } = useTranslation();
+  
   const scrollToSteps = () => {
     const section = document.getElementById('how-it-works-steps');
     if (section) {
@@ -24,13 +27,12 @@ const HeroHowItWorks = () => {
       <div className="relative z-10 text-left w-full">
         <div className="max-w-2xl" style={{ marginLeft: '20px'}}>
           <h3 className="text-4xl sm:text-5xl md:text-6xl  font-bold text-white mb-6 leading-tight tracking-wide" style={{lineHeight:"70px"}}>
-            Your Daily Meals,<br />
-            <span className="text-red-300">Delivered from Real Kitchens.</span>
+            {t('howItWorks.heroTitle')}<br />
+            <span className="text-red-300">{t('howItWorks.heroSubtitle')}</span>
           </h3>
           
           <p className="text-lg sm:text-xl md:text-2xl text-gray-100 mb-8 leading-relaxed tracking-wide">
-            GrubGate connects you with restaurants offering
-            subscription meals — skip cooking, keep eating.
+            {t('howItWorks.heroDescription')}
           </p>
           
           {/* CTA Button with frosted glass effect */}
@@ -40,7 +42,7 @@ const HeroHowItWorks = () => {
               onClick={scrollToSteps}
               className="inline-block bg-grub-red text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-grub-red transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl tracking-wide"
             >
-              Get Started
+              {t('howItWorks.getStarted')}
             </button>
           </div>
         </div>

@@ -1,9 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { heroContent } from '../../data';
 import heroImage from '../../assets/images/HeroHome.png';
 
 const HeroSection = () => {
+  const { t } = useTranslation();
+
   return (
     <section 
       className="relative min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
@@ -17,14 +20,14 @@ const HeroSection = () => {
       {/* Content */}
       <div className="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
         <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-          {heroContent.mainHeading}
+          {t('hero.title')}
           <br />
-          <span className="text-red-300">{heroContent.mainHeadingSecondLine}</span>
+          <span className="text-red-300">{t('hero.subtitle')}</span>
         </h1>
        
         
         <p className="text-lg sm:text-xl md:text-2xl text-gray-100 mb-8 max-w-4xl mx-auto leading-relaxed">
-          {heroContent.subheading}
+          {t('hero.description')}
         </p>
         
         {/* CTA Button with frosted glass effect */}
@@ -34,7 +37,7 @@ const HeroSection = () => {
             to={heroContent.ctaButton.href} 
             className="inline-block bg-grub-red text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-grub-red transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
           >
-            {heroContent.ctaButton.text}
+            {t('hero.getStarted')}
           </Link>
         </div>
         

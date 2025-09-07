@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { navigation, siteInfo } from '../../data';
 import logoImage from '../../assets/images/logo.png';
+import LanguageSwitcher from '../common/LanguageSwitcher';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { t } = useTranslation();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -38,13 +41,17 @@ const Header = () => {
                   item.current ? 'text-grub-red' : ''
                 }`}
               >
-                {item.name}
+                {t(`nav.${item.name}`)}
               </Link>
             ))}
           </nav>
 
-          {/* Desktop Auth Buttons - Rightmost */}
+          {/* Desktop Auth Buttons & Language Switcher - Rightmost */}
           <div className="hidden md:flex items-center space-x-4 order-3 shrink-10">
+            {/* Language Switcher */}
+            <LanguageSwitcher />
+            
+            {/* Auth Buttons */}
             {navigation.auth.map((item) => (
               <Link
                 key={item.name}
@@ -55,7 +62,7 @@ const Header = () => {
                     : 'text-grub-red hover:bg-grub-red hover:text-white border-2 border-grub-red'
                 }`}
               >
-                {item.name}
+                {t(item.name)}
               </Link>
             ))}
           </div>
@@ -108,10 +115,15 @@ const Header = () => {
                   }`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  {item.name}
+                  {t(`nav.${item.name}`)}
                 </Link>
               ))}
               <div className="pt-4 pb-3 border-t border-gray-200">
+                {/* Mobile Language Switcher */}
+                <div className="flex justify-center mb-4">
+                  <LanguageSwitcher />
+                </div>
+                
                 <div className="flex flex-col space-y-2">
                   {navigation.auth.map((item) => (
                     <Link
@@ -124,7 +136,7 @@ const Header = () => {
                       }`}
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      {item.name}
+                      {t(item.name)}
                     </Link>
                   ))}
                 </div>

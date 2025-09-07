@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { featuredTestimonials } from '../../data';
 
 const TestimonialsSection = () => {
+  const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [visibleCount, setVisibleCount] = useState(3);
@@ -81,10 +83,10 @@ const TestimonialsSection = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold  mb-6" style={{color: '#800020'}}>
-            What Our Customers Say
+            {t('testimonials.title')}
           </h2>
           <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
-            Don't just take our word for it. Here's what our satisfied customers have to say about their Grub-Gate experience.
+            {t('testimonials.subtitle')}
           </p>
         </div>
 
@@ -124,7 +126,7 @@ const TestimonialsSection = () => {
                         {testimonial.location}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {testimonial.orderCount} orders
+                        {testimonial.orderCount} {t('testimonials.orders')}
                       </p>
                     </div>
                   </div>
@@ -137,7 +139,7 @@ const TestimonialsSection = () => {
           <button
             onClick={prevTestimonial}
             className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 bg-grub-red text-white p-3 rounded-full shadow-lg hover:bg-red-700 transition-colors duration-200 z-10"
-            aria-label="Previous testimonial"
+            aria-label={t('common.previous')}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -147,7 +149,7 @@ const TestimonialsSection = () => {
           <button
             onClick={nextTestimonial}
             className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 bg-grub-red text-white p-3 rounded-full shadow-lg hover:bg-red-700 transition-colors duration-200 z-10"
-            aria-label="Next testimonial"
+            aria-label={t('common.next')}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -178,7 +180,7 @@ const TestimonialsSection = () => {
             onClick={() => setIsAutoPlaying(!isAutoPlaying)}
             className="text-sm text-gray-500 hover:text-grub-red transition-colors duration-200"
           >
-            {isAutoPlaying ? 'Pause' : 'Resume'} auto-play
+            {isAutoPlaying ? t('testimonials.pause') : t('testimonials.resume')} {t('testimonials.autoPlay')}
           </button>
         </div>
       </div>

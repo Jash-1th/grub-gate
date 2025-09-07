@@ -13,6 +13,9 @@ const isProduction = process.env.NODE_ENV === 'production';
 let vite;
 let render;
 
+// Serve static files from public directory (including locales)
+app.use(express.static(join(__dirname, 'public')));
+
 if (!isProduction) {
   // Development mode with Vite dev server
   const { createServer } = await import('vite');

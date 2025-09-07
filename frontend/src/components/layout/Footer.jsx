@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { navigation, siteInfo } from '../../data';
 import logoImage from '../../assets/images/logo.png';
+
 const Footer = () => {
+  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 
   // Social media icons mapping
@@ -54,12 +57,12 @@ const Footer = () => {
               </div>
             </Link>
           </div>
-            <p className="text-red-100 text-sm">Built with ❤️ by GrubGate.</p>
+            <p className="text-red-100 text-sm">{t('footer.builtWithLove')}</p>
           </div>
 
           {/* Column 2: Quick Links */}
           <div className="space-y-3">
-            <h3 className="text-lg font-semibold text-white">Quick Links</h3>
+            <h3 className="text-lg font-semibold text-white">{t('footer.quickLinksTitle')}</h3>
             <ul className="space-y-2">
               {navigation.footer.quickLinks.map((item) => (
                 <li key={item.name}>
@@ -67,7 +70,7 @@ const Footer = () => {
                     to={item.href}
                     className="text-red-100 hover:text-white transition-colors duration-200 text-sm"
                   >
-                    {item.name}
+                    {t(`nav.${item.name}`)}
                   </Link>
                 </li>
               ))}
@@ -77,7 +80,7 @@ const Footer = () => {
           {/* Column 3: Social + Newsletter */}
           <div className="space-y-4">
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-white">Follow Us</h4>
+              <h4 className="text-sm font-semibold text-white">{t('footer.followUsTitle')}</h4>
               <div className="flex space-x-4">
                 {navigation.footer.social.map((item) => (
                   <a
@@ -100,12 +103,12 @@ const Footer = () => {
             <form className="flex space-x-2">
               <input
                 type="email"
-                placeholder="Your email"
+                placeholder={t('footer.emailPlaceholder')}
                 className="w-full px-3 py-2 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none"
                 aria-label="Email address"
               />
               <button type="button" className="bg-white text-grub-red px-4 py-2 rounded-md font-semibold hover:bg-red-50">
-                Subscribe
+                {t('footer.subscribeButton')}
               </button>
             </form>
           </div>
@@ -114,11 +117,11 @@ const Footer = () => {
         {/* Bottom Bar: Legal */}
         <div className="mt-6 pt-6 border-t border-red-300">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
-            <p className="text-red-100 text-sm">© {currentYear} {siteInfo.name}. All rights reserved.</p>
+            <p className="text-red-100 text-sm">{t('footer.copyright', { year: currentYear, company: siteInfo.name })}</p>
             <div className="flex items-center space-x-6 text-sm">
               {navigation.footer.legal.map((item) => (
                 <Link key={item.name} to={item.href} className="text-red-100 hover:text-white">
-                  {item.name}
+                  {t(`footer.legal.${item.name.toLowerCase()}`)}
                 </Link>
               ))}
             </div>

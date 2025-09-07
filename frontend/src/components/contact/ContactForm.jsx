@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const ContactForm = () => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -56,17 +58,17 @@ const ContactForm = () => {
     const newErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = t('contact.form.validation.nameRequired');
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('contact.form.validation.emailRequired');
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = t('contact.form.validation.emailInvalid');
     }
 
     if (!formData.message.trim()) {
-      newErrors.message = 'Message is required';
+      newErrors.message = t('contact.form.validation.messageRequired');
     }
 
     setErrors(newErrors);
@@ -82,7 +84,7 @@ const ContactForm = () => {
 
     // Check if modules are loaded
     if (!window.firebaseModule || !window.firestoreModule || !window.emailjsModule) {
-      setErrorMessage('Form is still loading. Please wait a moment and try again.');
+      setErrorMessage(t('contact.form.errors.loading'));
       return;
     }
 
@@ -130,11 +132,11 @@ const ContactForm = () => {
         reason: '',
         message: ''
       });
-      setSuccessMessage('Thank you for your message! We will get back to you soon.');
+      setSuccessMessage(t('contact.form.success'));
       
     } catch (error) {
       console.error('Error submitting form:', error);
-      setErrorMessage('Sorry, there was an error sending your message. Please try again or contact us directly.');
+      setErrorMessage(t('contact.form.errors.submit'));
     } finally {
       setLoading(false);
     }
@@ -144,10 +146,10 @@ const ContactForm = () => {
     <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8" style={{height:"930px"}}>
       <div className="mb-8">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4" style={{color: '#800020'}}>
-          Get in Touch
+          {t('contact.formTitle')}
         </h2>
         <p className="text-gray-600">
-          Have a question or want to work with us? Send us a message and we'll respond as soon as possible.
+          {t('contact.formSubtitle')}
         </p>
       </div>
 
@@ -179,7 +181,7 @@ const ContactForm = () => {
         {/* Name Field */}
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-            Name <span className="text-red-500">*</span>
+            {t('contact.form.nameLabel')} <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -190,7 +192,7 @@ const ContactForm = () => {
             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 ${
               errors.name ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder="Your full name"
+            placeholder={t('contact.form.namePlaceholder')}
           />
           {errors.name && (
             <p className="mt-1 text-sm text-red-500">{errors.name}</p>
@@ -200,7 +202,7 @@ const ContactForm = () => {
         {/* Email Field */}
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-            Email <span className="text-red-500">*</span>
+            {t('contact.form.emailLabel')} <span className="text-red-500">*</span>
           </label>
           <input
             type="email"
@@ -211,7 +213,7 @@ const ContactForm = () => {
             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 ${
               errors.email ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder="your.email@example.com"
+            placeholder={t('contact.form.emailPlaceholder')}
           />
           {errors.email && (
             <p className="mt-1 text-sm text-red-500">{errors.email}</p>
@@ -221,7 +223,7 @@ const ContactForm = () => {
         {/* Phone Field */}
         <div>
           <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-            Phone Number
+            {t('contact.form.phoneLabel')}
           </label>
           <input
             type="tel"
@@ -230,14 +232,14 @@ const ContactForm = () => {
             value={formData.phone}
             onChange={handleChange}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200"
-            placeholder="+1 (555) 123-4567"
+            placeholder={t('contact.form.phonePlaceholder')}
           />
         </div>
 
         {/* Reason for Contact */}
         <div>
           <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-2">
-            Reason for Contact
+            {t('contact.form.reasonLabel')}
           </label>
           <select
             id="reason"
@@ -246,18 +248,18 @@ const ContactForm = () => {
             onChange={handleChange}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200"
           >
-            <option value="">Select a reason</option>
-            <option value="general">General Inquiry</option>
-            <option value="technical">Technical Support</option>
-            <option value="partnership">Partnership Opportunities</option>
-            <option value="feedback">Feedback</option>
+            <option value="">{t('contact.form.reasonPlaceholder')}</option>
+            <option value="general">{t('contact.form.reasons.general')}</option>
+            <option value="technical">{t('contact.form.reasons.technical')}</option>
+            <option value="partnership">{t('contact.form.reasons.partnership')}</option>
+            <option value="feedback">{t('contact.form.reasons.feedback')}</option>
           </select>
         </div>
 
         {/* Message Field */}
         <div>
           <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-            Message <span className="text-red-500">*</span>
+            {t('contact.form.messageLabel')} <span className="text-red-500">*</span>
           </label>
           <textarea
             id="message"
@@ -268,7 +270,7 @@ const ContactForm = () => {
             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 resize-none ${
               errors.message ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder="Tell us how we can help you..."
+            placeholder={t('contact.form.messagePlaceholder')}
           />
           {errors.message && (
             <p className="mt-1 text-sm text-red-500">{errors.message}</p>
@@ -292,10 +294,10 @@ const ContactForm = () => {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Sending...
+                {t('contact.form.sending')}
               </div>
             ) : (
-              'Send Message'
+              t('contact.form.sendButton')
             )}
           </button>
         </div>

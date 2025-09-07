@@ -1,10 +1,12 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { nearbyRestaurants } from '../../data';
 import './NearbyRestaurants.css';
 import restaurantImage from '../../assets/images/grub-gate-default-restaurant-img.jpg';
 
 
 const NearbyRestaurants = () => {
+  const { t } = useTranslation();
   // Duplicate restaurants for seamless infinite scroll
   const duplicatedRestaurants = [...nearbyRestaurants, ...nearbyRestaurants];
 
@@ -26,10 +28,10 @@ const NearbyRestaurants = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-grub-red mb-4">
-            Nearby Restaurants
+            {t('nearbyRestaurants.title')}
           </h2>
           <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
-            Order fresh meals from top-rated local spots!
+            {t('nearbyRestaurants.subtitle')}
           </p>
         </div>
 
@@ -67,15 +69,15 @@ const NearbyRestaurants = () => {
                 
                 <div className="space-y-2 text-sm text-gray-500">
                   <div className="flex justify-between">
-                    <span>Cuisine:</span>
+                    <span>{t('nearbyRestaurants.cuisine')}:</span>
                     <span className="font-medium">{restaurant.cuisine}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Delivery Fee:</span>
+                    <span>{t('nearbyRestaurants.deliveryFee')}:</span>
                     <span className="font-medium">{restaurant.deliveryFee}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Min Order:</span>
+                    <span>{t('nearbyRestaurants.minOrder')}:</span>
                     <span className="font-medium">{restaurant.minOrder}</span>
                   </div>
                 </div>
@@ -92,7 +94,7 @@ const NearbyRestaurants = () => {
                 </div>
 
                 <button className="w-full mt-4 bg-grub-red text-white py-2 px-4 rounded-lg font-semibold hover:bg-red-700 transition-colors duration-200">
-                  Order Now
+                  {t('nearbyRestaurants.orderNow')}
                 </button>
               </div>
             </div>
@@ -102,10 +104,10 @@ const NearbyRestaurants = () => {
         {/* Additional Info */}
         <div className="text-center mt-12">
           <p className="text-gray-600 mb-6">
-            Can't find what you're looking for? We have many more restaurants available!
+            {t('nearbyRestaurants.additionalInfo')}
           </p>
           <button className="bg-grub-red text-white px-8 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors duration-200">
-            View All Restaurants
+            {t('nearbyRestaurants.viewAll')}
           </button>
         </div>
       </div>

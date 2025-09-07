@@ -2,41 +2,41 @@
 export const navigation = {
   main: [
     {
-      name: 'Home',
+      name: 'home',
       href: '/',
       current: true
     },
    
     {
-      name: 'About Us',
+      name: 'about',
       href: '/about',
       current: false
     },
     {
-      name: 'How It Works',
+      name: 'howItWorks',
       href: '/how-it-works',
       current: false
     },
     {
-      name: 'Contact Us',
+      name: 'contact',
       href: '/contact',
       current: false
     },
     {
-      name: 'FAQs',
+      name: 'faq',
       href: '/faq',
       current: false
     }
   ],
   auth: [
     {
-      name: 'Login',
+      name: 'login',
       href: '/login',
       type: 'button',
       variant: 'outline'
     },
     {
-      name: 'Sign Up',
+      name: 'signup',
       href: '/signup',
       type: 'button',
       variant: 'primary'
@@ -44,15 +44,15 @@ export const navigation = {
   ],
   footer: {
     quickLinks: [
-      { name: 'Home', href: '/' },
-      { name: 'How It Works', href: '/how-it-works' },
-      { name: 'About Us', href: '/about' },
-      { name: 'FAQ', href: '/faq' },
-      { name: 'Contact Us', href: '/contact' }
+      { name: 'home', href: '/' },
+      { name: 'howItWorks', href: '/how-it-works' },
+      { name: 'about', href: '/about' },
+      { name: 'faq', href: '/faq' },
+      { name: 'contact', href: '/contact' }
     ],
     legal: [
-      { name: 'Terms & Conditions', href: '/terms' },
-      { name: 'Privacy Policy', href: '/privacy' }
+      { name: 'termsAndConditions', href: '/terms' },
+      { name: 'privacyPolicy', href: '/privacy' }
     ],
     social: [
       { name: 'Facebook', href: 'https://facebook.com/grubgate', icon: 'facebook' },

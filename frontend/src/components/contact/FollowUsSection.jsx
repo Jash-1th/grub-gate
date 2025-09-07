@@ -1,7 +1,9 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { navigation } from '../../data/navigation';
 
 const FollowUsSection = () => {
+  const { t } = useTranslation();
   // Social media icons mapping
   const getSocialIcon = (name) => {
     const iconMap = {
@@ -35,7 +37,7 @@ const FollowUsSection = () => {
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
       <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 text-center" style={{color: '#800020'}}>
-        Follow Us
+        {t('contact.social.title')}
       </h3>
       
       <div className="flex flex-wrap justify-center gap-4 sm:gap-6">

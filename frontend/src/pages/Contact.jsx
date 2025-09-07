@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
 import ContactForm from '../components/contact/ContactForm';
@@ -6,6 +7,8 @@ import ContactInfo from '../components/contact/ContactInfo';
 import FollowUsSection from '../components/contact/FollowUsSection';
 
 const Contact = () => {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen flex flex-col">
       
@@ -15,10 +18,10 @@ const Contact = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
-                Get in Touch
+                {t('contact.heroTitle')}
               </h1>
               <p className="text-xl sm:text-2xl text-red-100 max-w-3xl mx-auto">
-                Have questions about our meal subscription service? We'd love to hear from you!
+                {t('contact.heroSubtitle')}
               </p>
             </div>
           </div>

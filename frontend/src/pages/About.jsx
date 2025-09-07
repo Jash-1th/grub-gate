@@ -1,6 +1,9 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 const About = () => {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -8,11 +11,10 @@ const About = () => {
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
-            About GrubGate
+            {t('about.heroTitle')}
           </h1>
           <p className="text-xl md:text-2xl text-gray-100 max-w-3xl mx-auto leading-relaxed">
-            Connecting Montreal's finest restaurants with food lovers across the city, 
-            one delicious meal at a time.
+            {t('about.heroSubtitle')}
           </p>
         </div>
       </section>
@@ -22,10 +24,10 @@ const About = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6" style={{color: '#800020'}}>
-              Our Story
+              {t('about.storyTitle')}
             </h2>
             <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
-              Learn about our mission, vision, and the journey that brought us here.
+              {t('about.storySubtitle')}
             </p>
           </div>
 
@@ -35,11 +37,9 @@ const About = () => {
               <div className="bg-grub-red text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold mx-auto lg:mx-0 mb-6">
                 M
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Our Mission</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('about.missionTitle')}</h3>
               <p className="text-gray-600 leading-relaxed">
-              At GrubGate, our mission is to make quality meals accessible, effortless, and joyful for everyone. We are committed to bridging the gap between busy individuals and the vibrant local restaurants around them — delivering authentic flavors, one meal at a time.
-
-We aim to empower people to spend their time doing what they love, while still enjoying nourishing, chef-prepared meals. Because we believe that great food should never be a compromise — it should be an everyday experience.
+                {t('about.missionText')}
               </p>
             </div>
 
@@ -48,12 +48,9 @@ We aim to empower people to spend their time doing what they love, while still e
               <div className="bg-grub-red text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold mx-auto lg:mx-0 mb-6">
                 V
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Our Vision</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('about.visionTitle')}</h3>
               <p className="text-gray-600 leading-relaxed">
-                To become Montreal's most trusted food delivery platform, fostering 
-                a thriving ecosystem where local restaurants flourish and customers 
-                enjoy exceptional culinary experiences. We envision a future where 
-                food delivery is not just convenient, but delightful.
+                {t('about.visionText')}
               </p>
             </div>
 
@@ -62,13 +59,9 @@ We aim to empower people to spend their time doing what they love, while still e
               <div className="bg-grub-red text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold mx-auto lg:mx-0 mb-6">
                 S
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Our Story</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('about.ourStoryTitle')}</h3>
               <p className="text-gray-600 leading-relaxed">
-              At GrubGate, we understand a simple truth — not everyone can cook, and even when we do, it often doesn't taste the way it should. In the fast-paced lives of students and full-time professionals, spending hours in the kitchen just isn't practical.
-
-That's why we created GrubGate — the first and only platform that connects individuals directly to local restaurants for their daily, ready-to-eat meals. We believe that everyone deserves delicious, chef-prepared food without sacrificing their time, energy, or lifestyle.
-
-Whether you're studying for your future or hustling through a workday, GrubGate ensures that a great meal is always within reach — convenient, authentic, and crafted with care.
+                {t('about.ourStoryText')}
               </p>
             </div>
           </div>
@@ -80,23 +73,22 @@ Whether you're studying for your future or hustling through a workday, GrubGate 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6" style={{color: '#800020'}}>
-              Meet Our Team
+              {t('about.teamTitle')}
             </h2>
             <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
-              The passionate individuals behind GrubGate, working tirelessly to bring 
-              you the best food delivery experience in Montreal.
+              {t('about.teamSubtitle')}
             </p>
           </div>
 
           {/* Team Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              { name: 'Sarah Johnson', role: 'Chief Executive Officer' },
-              { name: 'Michael Chen', role: 'Chief Technology Officer' },
-              { name: 'Emily Rodriguez', role: 'Chief Operating Officer' },
-              { name: 'David Thompson', role: 'Head of Marketing' },
-              { name: 'Lisa Wang', role: 'Head of Customer Experience' },
-              { name: 'James Wilson', role: 'Head of Operations' }
+              { name: 'Sarah Johnson', role: t('about.team.ceo') },
+              { name: 'Michael Chen', role: t('about.team.cto') },
+              { name: 'Emily Rodriguez', role: t('about.team.coo') },
+              { name: 'David Thompson', role: t('about.team.headMarketing') },
+              { name: 'Lisa Wang', role: t('about.team.headCustomerExperience') },
+              { name: 'James Wilson', role: t('about.team.headOperations') }
             ].map((member, index) => (
               <div
                 key={index}
@@ -125,40 +117,40 @@ Whether you're studying for your future or hustling through a workday, GrubGate 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6" style={{color: '#800020'}}>
-              Our Values
+              {t('about.valuesTitle')}
             </h2>
             <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
-              The principles that guide everything we do at GrubGate.
+              {t('about.valuesSubtitle')}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center">
               <div className="text-5xl mb-4">🤝</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Partnership</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">{t('about.values.partnershipTitle')}</h3>
               <p className="text-gray-600">
-                We work closely with our restaurant partners to ensure mutual success and growth.
+                {t('about.values.partnershipText')}
               </p>
             </div>
             <div className="text-center">
               <div className="text-5xl mb-4">⭐</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Quality</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">{t('about.values.qualityTitle')}</h3>
               <p className="text-gray-600">
-                We never compromise on the quality of food or service we provide to our customers.
+                {t('about.values.qualityText')}
               </p>
             </div>
             <div className="text-center">
               <div className="text-5xl mb-4">🚀</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Innovation</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">{t('about.values.innovationTitle')}</h3>
               <p className="text-gray-600">
-                We continuously improve our platform and services through technology and creativity.
+                {t('about.values.innovationText')}
               </p>
             </div>
             <div className="text-center">
               <div className="text-5xl mb-4">❤️</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Community</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">{t('about.values.communityTitle')}</h3>
               <p className="text-gray-600">
-                We're committed to supporting the local Montreal community and its culinary culture.
+                {t('about.values.communityText')}
               </p>
             </div>
           </div>

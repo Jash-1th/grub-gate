@@ -1,14 +1,16 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { siteInfo } from '../../data/navigation';
 
 const ContactInfo = () => {
+  const { t } = useTranslation();
 
   return (
     <div className="space-y-8">
       {/* Contact Details */}
       <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
         <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-6" style={{color: '#800020'}}>
-          Contact Information
+          {t('contact.info.title')}
         </h3>
         
         <div className="space-y-6">
@@ -23,7 +25,7 @@ const ContactInfo = () => {
               </div>
             </div>
             <div>
-              <h4 className="font-semibold text-gray-900 mb-1">Address</h4>
+              <h4 className="font-semibold text-gray-900 mb-1">{t('contact.info.address')}</h4>
               <p className="text-gray-600">{siteInfo.address}</p>
             </div>
           </div>
@@ -38,7 +40,7 @@ const ContactInfo = () => {
               </div>
             </div>
             <div>
-              <h4 className="font-semibold text-gray-900 mb-1">Phone</h4>
+              <h4 className="font-semibold text-gray-900 mb-1">{t('contact.info.phone')}</h4>
               <p className="text-gray-600">{siteInfo.phone}</p>
             </div>
           </div>
@@ -53,7 +55,7 @@ const ContactInfo = () => {
               </div>
             </div>
             <div>
-              <h4 className="font-semibold text-gray-900 mb-1">Email</h4>
+              <h4 className="font-semibold text-gray-900 mb-1">{t('contact.info.email')}</h4>
               <p className="text-gray-600">{siteInfo.email}</p>
             </div>
           </div>
@@ -68,10 +70,10 @@ const ContactInfo = () => {
               </div>
             </div>
             <div>
-              <h4 className="font-semibold text-gray-900 mb-1">Business Hours</h4>
+              <h4 className="font-semibold text-gray-900 mb-1">{t('contact.info.hours')}</h4>
               <div className="text-gray-600">
-                <p>Monday - Friday: {siteInfo.hours.weekdays}</p>
-                <p>Saturday - Sunday: {siteInfo.hours.weekends}</p>
+                <p>{t('contact.info.weekdays', { hours: siteInfo.hours.weekdays })}</p>
+                <p>{t('contact.info.weekends', { hours: siteInfo.hours.weekends })}</p>
               </div>
             </div>
           </div>
@@ -81,7 +83,7 @@ const ContactInfo = () => {
       {/* Google Map */}
       <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
         <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-6" style={{color: '#800020'}}>
-          Find Us
+          {t('contact.info.mapTitle')}
         </h3>
         
         <div className="relative w-full h-64 sm:h-80 rounded-lg overflow-hidden">
@@ -99,7 +101,7 @@ const ContactInfo = () => {
         
         <div className="mt-4 text-center">
           <p className="text-gray-600 text-sm">
-            Visit our office in the heart of Montreal's food district
+            {t('contact.info.mapDescription')}
           </p>
         </div>
       </div>

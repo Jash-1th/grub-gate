@@ -399,3 +399,207 @@ Before you begin, it is essential that you analyze my existing codebase, paying 
 * You can use a placeholder location for the map embed code, for instance, the center of a major city. Ensure the map embed is also responsive and scales correctly within its container. 
 
 Please generate the complete, production-ready code for the `/contact` page component. This should include all necessary JSX for the layout, the form, the map embed, and styling that is consistent with the rest of the GrubGate application.
+
+Of course. This is a very specific and important request. Providing the exact configuration and technical constraints to the AI is key to getting the right code.
+
+Here is the precise, updated prompt to give to Cursor AI.
+
+-----
+
+Hello Cursor AI. I need you to modify my existing `/contact` page component to add the complete backend functionality for handling its form submission.
+
+Please locate and open my contact page file (likely named `ContactForm.jsx` or found within `src/pages/Contact.jsx`). The UI and validation logic are already complete. Your task is to implement the submission logic that connects to Firebase and EmailJS.
+
+-----
+
+### **CRITICAL TECHNICAL CONSTRAINTS**
+
+My application runs in a hybrid environment: **Server-Side Rendering (SSR) in production** and **Client-Side Rendering (CSR) in development**. It is absolutely essential that you write your code to be **SSR-safe and avoid React hydration errors**. All client-side API calls and initializations (like for Firebase and EmailJS) must be handled in a way that does not cause a mismatch between the server-rendered HTML and the initial client-side render.
+
+-----
+
+### **1. Firebase Configuration**
+
+I have already created my Firebase project. Please ensure a Firebase initialization file (e.g., `src/firebase.js`) is set up correctly with the following configuration. Then, import the necessary Firestore functions from this file into the contact component.
+
+```javascript
+// src/firebase.js
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAv16K6EWbzReV9W1wzC4KSO-jjO9kywug",
+  authDomain: "grubgate-514cf.firebaseapp.com",
+  projectId: "grubgate-514cf",
+  storageBucket: "grubgate-514cf.firebasestorage.app",
+  messagingSenderId: "393252121011",
+  appId: "1:393252121011:web:4b9cd8bd63490d9d4c83c6",
+  measurementId: "G-DYYX3XEZHD"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+export const db = getFirestore(app);
+```
+
+### **2. EmailJS Configuration**
+
+I have also set up my EmailJS account. You must integrate it using environment variables. **Do not hardcode keys.** The code should expect the following variables to be in a `.env.local` file: `VITE_EMAILJS_SERVICE_ID`, `VITE_EMAILJS_TEMPLATE_ID`, and `VITE_EMAILJS_PUBLIC_KEY`.
+
+-----
+
+### **3. Implementation Steps**
+
+Please modify the existing `handleSubmit` function in my contact component to perform the following actions:
+
+1.  **Add State Management:** Introduce new state variables to manage the submission process (e.g., `loading`, `successMessage`, `errorMessage`).
+
+2.  **Integrate Firebase:**
+
+      * Inside the `handleSubmit` function, after validation passes, set the `loading` state to `true`.
+      * Wrap the submission logic in a `try/catch/finally` block.
+      * Within the `try` block, add the logic to save the form's state data to a Firebase Firestore database. The data should be saved as a new document in a collection named `contactSubmissions`.
+      * The document must include all the form fields (`name`, `email`, `phone`, `reason`, `message`) and a `serverTimestamp`.
+
+3.  **Integrate EmailJS:**
+
+      * **Immediately after** the data is successfully written to Firebase (within the same `try` block), add the call to the EmailJS API.
+      * This call should send an email containing all the data from the submitted form. Use the environment variables for the credentials.
+
+4.  **Implement User Feedback:**
+
+      * On successful submission (after both Firebase and EmailJS calls succeed), clear the form fields and display a success message to the user.
+      * In the `catch` block, set an appropriate error message if either process fails.
+      * In the `finally` block, set the `loading` state back to `false`.
+      * Update the JSX to disable the submit button when `loading` is `true` and to conditionally display the success and error messages.
+
+Please refactor my existing contact page component code to seamlessly integrate this submission logic, ensuring it is robust and error-free in both SSR and CSR environments.
+
+FAQS page :
+
+
+
+Hello . Your next task is to create the **/faq** page for my "GrubGate" web application.
+
+Before writing any code, it is critical that you analyze my existing codebase, paying close attention to the structure and styling of pages like /home and /contact. The new FAQ page must maintain absolute consistency with the rest of the application's design, component structure, and coding patterns.
+
+*Project Technical Stack & Critical Constraints:*
+
+* *Framework:* React with Vite.
+* *Rendering:* The application uses a hybrid model: *Client-Side Rendering (CSR) in development* and *Server-Side Rendering (SSR) in production. This is a non-negotiable constraint. You **must* write code that is SSR-safe and *guarantees no React hydration errors*. State and effects should be handled carefully to prevent mismatches between the server and client initial render.
+
+---
+
+## **/faq Page Requirements**
+
+### *1. Component Structure & Layout*
+
+* Create the new page component at a path consistent with the project's routing, such as src/pages/Faq.jsx.
+* The overall page should be clean, professional, and *fully responsive*, providing an optimal experience on all devices (desktop, tablet, and mobile).
+* Include a main heading like "Frequently Asked Questions".
+
+### *2. Accordion Component*
+
+* The core feature of this page is an *accordion-style UI* for displaying questions and answers. You will need to build this interactive component.
+* *Functionality:*
+    * When a user clicks on a question, the corresponding answer should smoothly expand below it. 
+    * Clicking the same question again should collapse the answer.
+    * Only one answer should be visible at a time. When a new question is clicked, any previously open answer should automatically collapse.
+* *Implementation:* Use React useState to manage the state of which accordion item is currently open. Ensure smooth animations using CSS transitions for the expand/collapse effect.
+
+### *3. Content Categories*
+
+* Organize the FAQs into clear, distinct categories to help users find information easily.
+* Use a clear heading for each of the following categories:
+    * *Pricing*
+    * *Delivery*
+    * *Dietary Options*
+    * *Tech Support*
+* Under each category heading, please provide 3-4 relevant placeholder questions and answers, each implemented using the accordion component you create.
+
+Please generate the complete, production-ready code for the /faq page. This should include the structured JSX for the categories, the reusable accordion component logic, and styling that is fully consistent with the existing GrubGate application.
+
+
+
+ADDING French
+
+
+Hello . I need you to implement an internationalization (i18n) feature in my application, allowing users to switch the site's language between *English* and *French*.
+
+Before you begin, please analyze the entire codebase to understand the existing component structure, especially the Header component, to ensure a seamless integration.
+
+### *Critical Technical Constraints*
+
+My application uses a hybrid rendering model: *Server-Side Rendering (SSR) in production* and *Client-Side Rendering (CSR) in development. It is absolutely crucial that your implementation is **SSR-safe and avoids any React hydration errors*. You must use a solution that correctly handles language detection and rendering on the server and passes the initial state to the client to ensure a perfect match.
+
+### *Recommended Library*
+
+Please use the **i18next** framework along with **react-i18next**. This is the standard for React applications and has well-documented patterns for safe SSR implementation.
+
+-----
+
+### *Implementation Steps*
+
+#### *1. Install Dependencies*
+
+Install the necessary packages for the i18n functionality:
+
+bash
+npm install i18next react-i18next i18next-http-backend i18next-browser-languagedetector
+
+
+#### *2. Create Configuration File*
+
+Create a new configuration file at src/i18n.js. This file will initialize i18next.
+
+  * It should use i18next-http-backend to load translation files from the /public/locales directory.
+  * It should use i18next-browser-languagedetector to detect and persist the user's chosen language (e.g., in localStorage).
+  * Set the supported languages to ['en', 'fr'] and the fallback language to 'en'.
+
+#### *3. Create Translation Files*
+
+Create the following directory structure and files for the translation strings:
+
+  * public/locales/en/translation.json
+  * public/locales/fr/translation.json
+
+Populate them with a few example key-value pairs to start:
+
+**en/translation.json:**
+
+json
+{
+  "login": "Login",
+  "welcome_hero": "Smart Meals, Delivered."
+}
+
+
+**fr/translation.json:**
+
+json
+{
+  "login": "Connexion",
+  "welcome_hero": "Repas Intelligents, Livrés."
+}
+
+
+#### *4. Integrate into the React App*
+
+In src/main.jsx, import your ./i18n.js configuration file and wrap the root <App /> component in a <Suspense> fallback for the translation loading.
+
+#### *5. Build the Language Switcher Component*
+
+  * Locate the main Header component in the project.
+  * Create a new LanguageSwitcher component.
+  * This component should use the useTranslation hook from react-i18next.
+  * It should display two buttons or links: "EN" and "FR".
+  * The onClick event for each button should call i18n.changeLanguage('en') or i18n.changeLanguage('fr').
+  * The button for the currently active language should have a distinct style (e.g., be underlined or have a different color).
+  * **Position this new component inside the Header, directly to the left of the existing "Login" button.**
+
+#### *6. Refactor Existing UI Text*
+
+To demonstrate the functionality, please refactor the following:
+ left to the login button add another button with runded border radius which is switch for en and french
+
+Please generate all the necessary code, including the new files, component, and modifications to existing files, while strictly adhering to the SSR-safe best practices for react-i18next.
