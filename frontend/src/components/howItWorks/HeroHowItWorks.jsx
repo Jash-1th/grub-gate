@@ -7,9 +7,11 @@ const HeroHowItWorks = () => {
   const { t } = useTranslation();
   
   const scrollToSteps = () => {
-    const section = document.getElementById('how-it-works-steps');
-    if (section) {
-      section.scrollIntoView({ behavior: 'smooth' });
+    if (typeof window !== 'undefined') {
+      const section = document.getElementById('how-it-works-steps');
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
+      }
     }
   };
 

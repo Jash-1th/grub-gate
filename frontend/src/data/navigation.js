@@ -39,7 +39,7 @@ export const navigation = {
       name: 'signup',
       href: '/signup',
       type: 'button',
-      variant: 'primary'
+      variant: 'outline'
     }
   ],
   footer: {

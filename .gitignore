@@ -1,0 +1,5 @@
+# Ignore notes and internal memory files
+memory-bank/
+
+# Ignore Cline tool's rules and cache
+.clinerules/
