@@ -9,7 +9,7 @@ import { useModal } from '../../context/ModalContext';
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { t } = useTranslation();
-  const { openSignupModal } = useModal();
+  const { openSignupModal, toggleLoginModal } = useModal();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -66,6 +66,18 @@ const Header = () => {
                     className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red text-grub-red bg-white border-2 border-grub-red hover:bg-red-700 hover:text-white"
                   >
                     {t('signup.button')}
+                  </button>
+                );
+              }
+              
+              if (item.name === 'login') {
+                return (
+                  <button
+                    key={item.name}
+                    onClick={() => toggleLoginModal(true)}
+                    className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red text-grub-red bg-white border-2 border-grub-red hover:bg-red-700 hover:text-white"
+                  >
+                    {t('login.button')}
                   </button>
                 );
               }
@@ -162,6 +174,21 @@ const Header = () => {
                           className="px-4 py-2 text-sm font-medium rounded-lg text-center transition-all duration-200 text-grub-red bg-white border-2 border-grub-red hover:bg-grub-red hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red"
                         >
                           {t('signup.button')}
+                        </button>
+                      );
+                    }
+                    
+                    if (item.name === 'login') {
+                      return (
+                        <button
+                          key={item.name}
+                          onClick={() => {
+                            toggleLoginModal(true);
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className="px-4 py-2 text-sm font-medium rounded-lg text-center transition-all duration-200 text-grub-red bg-white border-2 border-grub-red hover:bg-grub-red hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red"
+                        >
+                          {t('login.button')}
                         </button>
                       );
                     }

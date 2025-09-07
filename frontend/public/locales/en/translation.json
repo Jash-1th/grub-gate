@@ -1,5 +1,18 @@
 {
-  "login": "Login",
+  "login": {
+    "title": "Welcome Back!",
+    "subtitle": "Log in to access your meal plans and continue your journey with GrubGate.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "your.email@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "forgotPassword": "Forgot Password?",
+    "button": "Login",
+    "googleButton": "Login with Google",
+    "divider": "OR",
+    "signupPrompt": "Don't have an account?",
+    "signupLink": "Sign Up"
+  },
 
   "nav": {
     "home": "Home",

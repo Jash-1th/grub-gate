@@ -15,6 +15,7 @@ export const useModal = () => {
 // Modal Provider Component
 export const ModalProvider = ({ children }) => {
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const openSignupModal = () => {
     setIsSignupModalOpen(true);
@@ -36,11 +37,49 @@ export const ModalProvider = ({ children }) => {
     }
   };
 
+  const openLoginModal = () => {
+    setIsLoginModalOpen(true);
+    // Prevent body scrolling when modal is open
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeLoginModal = () => {
+    setIsLoginModalOpen(false);
+    // Restore body scrolling when modal is closed
+    document.body.style.overflow = 'unset';
+  };
+
+  const toggleLoginModal = (isOpen) => {
+    if (typeof isOpen === 'boolean') {
+      isOpen ? openLoginModal() : closeLoginModal();
+    } else {
+      isLoginModalOpen ? closeLoginModal() : openLoginModal();
+    }
+  };
+
+  // Function to switch from signup modal to login modal
+  const switchToLogin = () => {
+    closeSignupModal();
+    openLoginModal();
+  };
+
+  // Function to switch from login modal to signup modal
+  const switchToSignup = () => {
+    closeLoginModal();
+    openSignupModal();
+  };
+
   const value = {
     isSignupModalOpen,
     openSignupModal,
     closeSignupModal,
     toggleSignupModal,
+    isLoginModalOpen,
+    openLoginModal,
+    closeLoginModal,
+    toggleLoginModal,
+    switchToLogin,
+    switchToSignup,
   };
 
   return (

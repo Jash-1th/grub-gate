@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useModal } from '../../context/ModalContext';
 
 const SignupModal = () => {
   const { t } = useTranslation();
-  const { isSignupModalOpen, closeSignupModal } = useModal();
+  const { isSignupModalOpen, closeSignupModal, switchToLogin } = useModal();
   
   // Form state management
   const [formData, setFormData] = useState({
@@ -211,13 +210,13 @@ const SignupModal = () => {
           <div className="px-6 pb-6 text-center">
             <p className="text-sm text-gray-600">
               {t('signup.loginPrompt')}{' '}
-              <Link 
-                to="/login" 
+              <button 
+                type="button"
+                onClick={switchToLogin}
                 className="text-grub-red font-semibold hover:text-red-700 transition-colors duration-200"
-                onClick={handleClose}
               >
                 {t('signup.loginLink')}
-              </Link>
+              </button>
             </p>
           </div>
         </div>

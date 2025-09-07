@@ -9,19 +9,22 @@ import Contact from './pages/Contact';
 import Faq from './pages/Faq';
 import { ModalProvider, useModal } from './context/ModalContext';
 import SignupModal from './components/auth/SignupModal';
+import LoginModal from './components/auth/LoginModal';
 
 // App Content Component
 function AppContent() {
-  const { isSignupModalOpen } = useModal();
+  const { isSignupModalOpen, isLoginModalOpen } = useModal();
+  const isModalOpen = isSignupModalOpen || isLoginModalOpen;
 
   return (
     <>
-      {/* Conditionally render the SignupModal */}
-      <SignupModal />
+      {/* Conditionally render modals */}
+      {isSignupModalOpen && <SignupModal />}
+      {isLoginModalOpen && <LoginModal />}
       
       {/* Main app content with conditional blur effect */}
       <div className={`min-h-screen flex flex-col transition-all duration-300 ${
-        isSignupModalOpen ? 'blur-sm pointer-events-none' : ''
+        isModalOpen ? 'blur-sm pointer-events-none' : ''
       }`}>
         <Header />
         <main className="flex-grow">
