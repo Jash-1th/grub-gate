@@ -1,6 +1,6 @@
 {
   "login": "Connexion",
-  "signup": "S'inscrire",
+  
   "nav": {
     "home": "Accueil",
     "about": "À Propos",
@@ -295,6 +295,21 @@
       "success": "Merci de vous être abonné!",
       "error": "Veuillez entrer une adresse e-mail valide"
     }
+  },
+  "signup": {
+    "title": "Créez Votre Compte",
+    "subtitle": "Inscrivez-vous pour recevoir de délicieux repas pré-programmés de vos restaurants locaux préférés livrés directement à votre porte.",
+    "usernameLabel": "Nom d'utilisateur",
+    "usernamePlaceholder": "Entrez votre nom d'utilisateur",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "votre.email@exemple.com",
+    "passwordLabel": "Mot de passe",
+    "passwordPlaceholder": "Créez un mot de passe fort",
+    "button": "S'inscrire",
+    "googleButton": "S'inscrire avec Google",
+    "divider": "OU",
+    "loginPrompt": "Vous avez déjà un compte?",
+    "loginLink": "Se connecter"
   },
   "common": {
     "loading": "Chargement...",

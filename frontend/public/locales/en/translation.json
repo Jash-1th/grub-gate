@@ -1,6 +1,6 @@
 {
   "login": "Login",
-  "signup": "Sign Up",
+
   "nav": {
     "home": "Home",
     "about": "About Us",
@@ -296,6 +296,21 @@
       "success": "Thank you for subscribing!",
       "error": "Please enter a valid email address"
     }
+  },
+  "signup": {
+    "title": "Create Your Account",
+    "subtitle": "Sign up to get delicious, pre-scheduled meals from your favorite local restaurants delivered right to your door.",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "Enter your username",
+    "emailLabel": "Email",
+    "emailPlaceholder": "your.email@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Create a strong password",
+    "button": "Sign Up",
+    "googleButton": "Sign Up with Google",
+    "divider": "OR",
+    "loginPrompt": "Already have an account?",
+    "loginLink": "Log In"
   },
   "common": {
     "loading": "Loading...",

@@ -4,10 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { navigation, siteInfo } from '../../data';
 import logoImage from '../../assets/images/logo.png';
 import LanguageSwitcher from '../common/LanguageSwitcher';
+import { useModal } from '../../context/ModalContext';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { t } = useTranslation();
+  const { openSignupModal } = useModal();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -55,23 +57,37 @@ const Header = () => {
             <LanguageSwitcher />
             
             {/* Auth Buttons */}
-            {navigation.auth.map((item) => (
-    <NavLink
-      key={item.name}
-      to={item.href}
-      className={({ isActive }) =>
-        `px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red ${
-          isActive
-            ? 'bg-grub-red text-white'  
-            : item.variant === 'primary'
-              ? 'bg-grub-red text-white hover:bg-red-700' // Style for INACTIVE primary link
-              : 'text-grub-red bg-white border-2 border-grub-red hover:bg-red-700 hover:text-white'// Style for INACTIVE secondary link
-        }`
-      }
-    >
-      {t(item.name)} {/* Assuming 't' is your translation function */}
-    </NavLink>
-  ))}
+            {navigation.auth.map((item) => {
+              if (item.name === 'signup') {
+                return (
+                  <button
+                    key={item.name}
+                    onClick={openSignupModal}
+                    className="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red text-grub-red bg-white border-2 border-grub-red hover:bg-red-700 hover:text-white"
+                  >
+                    {t('signup.button')}
+                  </button>
+                );
+              }
+              
+              return (
+                <NavLink
+                  key={item.name}
+                  to={item.href}
+                  className={({ isActive }) =>
+                    `px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red ${
+                      isActive
+                        ? 'bg-grub-red text-white'  
+                        : item.variant === 'primary'
+                          ? 'bg-grub-red text-white hover:bg-red-700' // Style for INACTIVE primary link
+                          : 'text-grub-red bg-white border-2 border-grub-red hover:bg-red-700 hover:text-white'// Style for INACTIVE secondary link
+                    }`
+                  }
+                >
+                  {t(item.name)}
+                </NavLink>
+              );
+            })}
           </div>
 
           {/* Mobile menu button - Rightmost on mobile */}
@@ -134,20 +150,37 @@ const Header = () => {
                 </div>
                 
                 <div className="flex flex-col space-y-2">
-                  {navigation.auth.map((item) => (
-                    <NavLink
-                      key={item.name}
-                      to={item.href}
-                      className={`px-4 py-2 text-sm font-medium rounded-lg text-center transition-all duration-200 ${
-                        item.variant === 'primary'
-                          ? 'bg-grub-red text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red'
-                          : 'text-grub-red bg-white border-2 border-grub-red hover:bg-grub-red hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red'
-                      }`}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {t(item.name)}
-                    </NavLink>
-                  ))}
+                  {navigation.auth.map((item) => {
+                    if (item.name === 'signup') {
+                      return (
+                        <button
+                          key={item.name}
+                          onClick={() => {
+                            openSignupModal();
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className="px-4 py-2 text-sm font-medium rounded-lg text-center transition-all duration-200 text-grub-red bg-white border-2 border-grub-red hover:bg-grub-red hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red"
+                        >
+                          {t('signup.button')}
+                        </button>
+                      );
+                    }
+                    
+                    return (
+                      <NavLink
+                        key={item.name}
+                        to={item.href}
+                        className={`px-4 py-2 text-sm font-medium rounded-lg text-center transition-all duration-200 ${
+                          item.variant === 'primary'
+                            ? 'bg-grub-red text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red'
+                            : 'text-grub-red bg-white border-2 border-grub-red hover:bg-grub-red hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red'
+                        }`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        {t(item.name)}
+                      </NavLink>
+                    );
+                  })}
                 </div>
               </div>
             </div>
