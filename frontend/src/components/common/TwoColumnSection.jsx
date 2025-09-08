@@ -1,10 +1,17 @@
 import React from 'react';
+import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 
 const TwoColumnSection = ({ title, description, image, reverse = false }) => {
+  // Add scroll animation to each section
+  const [sectionRef, isVisible] = useIntersectionObserver({ threshold: 0.1 });
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      {/* Card Container */}
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 lg:p-10">
+      {/* Card Container with scroll animation */}
+      <div 
+        ref={sectionRef}
+        className={`bg-white rounded-2xl shadow-lg border border-gray-200 p-8 lg:p-10 scroll-animate ${isVisible ? 'is-visible' : ''}`}
+      >
         <div className={`flex flex-col ${reverse ? 'md:flex-row-reverse' : 'md:flex-row'} items-center gap-8 md:gap-12`}>
           {/* Text Content */}
           <div className="md:w-1/2 text-center md:text-left">

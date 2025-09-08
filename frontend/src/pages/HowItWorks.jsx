@@ -2,7 +2,7 @@ import React from 'react';
 import HeroHowItWorks from '../components/howItWorks/HeroHowItWorks';
 import ProcessSteps from '../components/howItWorks/ProcessSteps';
 import WhyGrubGateSection from '../components/home/WhyGrubGateSection';
-import HowItWorksCTA from '../components/howItWorks/HowItWorksCTA';
+import GetStartedCTA from '../components/common/GetStartedCTA';
 
 const HowItWorks = () => {
   return (
@@ -10,7 +10,7 @@ const HowItWorks = () => {
       <HeroHowItWorks />
       <ProcessSteps />
       <WhyGrubGateSection />
-      <HowItWorksCTA />
+      <GetStartedCTA />
     </div>
   );
 };

@@ -2,6 +2,50 @@
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
+
+// Individual Benefit Card Component with Animation
+const BenefitCard = ({ benefit }) => {
+  const { t } = useTranslation();
+  // Call the hook for each card with a low threshold for early triggering
+  const [cardRef, isVisible] = useIntersectionObserver({ threshold: 0.1 });
+
+  return (
+    <div 
+      ref={cardRef} 
+      className={`bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 text-center group scroll-animate ${isVisible ? 'is-visible' : ''}`}
+    >
+      <h3 className="text-xl font-bold text-gray-900 mb-4">{t(`benefits.${benefit.id}.title`)}</h3>
+      <p className="text-gray-600 mb-6 leading-relaxed">{t(`benefits.${benefit.id}.description`)}</p>
+      <ul className="text-sm text-gray-500 space-y-2 inline-block text-left">
+        {Object.keys(t(`benefits.${benefit.id}.features`, { returnObjects: true })).map(key => (
+          <li key={key} className="flex items-center">
+            <span className="w-2 h-2 bg-[#800020] rounded-full mr-2"></span>
+            {t(`benefits.${benefit.id}.features.${key}`)}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+// Individual Special Feature Card Component with Animation
+const SpecialFeatureCard = ({ feature }) => {
+  const { t } = useTranslation();
+  // Call the hook for each feature card
+  const [cardRef, isVisible] = useIntersectionObserver({ threshold: 0.1 });
+
+  return (
+    <div 
+      ref={cardRef}
+      className={`text-center scroll-animate ${isVisible ? 'is-visible' : ''}`}
+    >
+      <div className="text-2xl font-bold mb-2 text-gray-900">{feature.stat}</div>
+      <h4 className="text-lg font-semibold text-gray-900 mb-2">{t(`additionalFeatures.${feature.id}.title`)}</h4>
+      <p className="text-gray-600 text-sm">{t(`additionalFeatures.${feature.id}.description`)}</p>
+    </div>
+  );
+};
 
 const WhyGrubGateSection = () => {
   const { t } = useTranslation();
@@ -38,18 +82,7 @@ const WhyGrubGateSection = () => {
         {/* Benefits Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           {benefitsData.map(benefit => (
-            <div key={benefit.id} className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 text-center group">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">{t(`benefits.${benefit.id}.title`)}</h3>
-              <p className="text-gray-600 mb-6 leading-relaxed">{t(`benefits.${benefit.id}.description`)}</p>
-              <ul className="text-sm text-gray-500 space-y-2 inline-block text-left">
-                {Object.keys(t(`benefits.${benefit.id}.features`, { returnObjects: true })).map(key => (
-                  <li key={key} className="flex items-center">
-                    <span className="w-2 h-2 bg-[#800020] rounded-full mr-2"></span>
-                    {t(`benefits.${benefit.id}.features.${key}`)}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <BenefitCard key={benefit.id} benefit={benefit} />
           ))}
         </div>
 
@@ -60,11 +93,7 @@ const WhyGrubGateSection = () => {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {specialFeaturesData.map(feature => (
-              <div key={feature.id} className="text-center">
-                <div className="text-2xl font-bold mb-2 text-gray-900">{feature.stat}</div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">{t(`additionalFeatures.${feature.id}.title`)}</h4>
-                <p className="text-gray-600 text-sm">{t(`additionalFeatures.${feature.id}.description`)}</p>
-              </div>
+              <SpecialFeatureCard key={feature.id} feature={feature} />
             ))}
           </div>
         </div>

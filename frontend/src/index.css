@@ -24,3 +24,24 @@ body {
 * {
   box-sizing: border-box;
 }
+
+/* Scroll Reveal Animation Classes */
+/*
+  The initial state for any card that will be animated.
+  It's invisible and slightly moved down. The transition property
+  defines how it will animate when the 'is-visible' class is added.
+*/
+.scroll-animate {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+/*
+  This class will be added by our React component when the card
+  is in the viewport, triggering the transition.
+*/
+.scroll-animate.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}

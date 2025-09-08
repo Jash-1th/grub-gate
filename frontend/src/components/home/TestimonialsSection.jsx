@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { featuredTestimonials } from '../../data';
+import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 
 const TestimonialsSection = () => {
   const { t } = useTranslation();
@@ -8,6 +9,9 @@ const TestimonialsSection = () => {
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [visibleCount, setVisibleCount] = useState(3);
   const [isClient, setIsClient] = useState(false);
+  
+  // Add scroll animation to the testimonials section
+  const [testimonialsRef, isVisible] = useIntersectionObserver({ threshold: 0.1 });
 
   // Determine how many cards are visible based on viewport (sm:1, md:2, lg+:3)
   useEffect(() => {
@@ -91,7 +95,8 @@ const TestimonialsSection = () => {
         </div>
 
         <div 
-          className="relative"
+          ref={testimonialsRef}
+          className={`relative scroll-animate ${isVisible ? 'is-visible' : ''}`}
           onMouseEnter={() => setIsAutoPlaying(false)}
           onMouseLeave={() => setIsAutoPlaying(true)}
         >

@@ -35,8 +35,8 @@ const i18nConfig = {
   ns: ['translation'],
   defaultNS: 'translation',
 
-  // SSR configuration
-  initImmediate: !isServer,
+  // SSR configuration - Force immediate initialization in all cases
+  initImmediate: true,
   
   // Preload languages for better performance
   preload: ['en', 'fr'],
@@ -47,35 +47,20 @@ const i18nConfig = {
 
   // React configuration
   react: {
-    useSuspense: false, // Disable suspense for SSR compatibility
-    bindI18n: 'languageChanged',
-    bindI18nStore: '',
+    useSuspense: true, // Enable suspense for better loading experience
+    bindI18n: 'languageChanged loaded',
+    bindI18nStore: 'added',
     transEmptyNodeValue: '',
     transSupportBasicHtmlNodes: true,
     transKeepBasicHtmlNodesFor: ['br', 'strong', 'i'],
   }
 };
 
-// Initialize i18next
-if (!isServer) {
-  // Client-side initialization with backend
-  i18n
-    .use(Backend)
-    .use(LanguageDetector)
-    .use(initReactI18next)
-    .init(i18nConfig);
-} else {
-  // Server-side initialization without backend
-  i18n
-    .use(initReactI18next)
-    .init({
-      ...i18nConfig,
-      lng: 'en', // Default to English on server
-      resources: {
-        en: { translation: {} },
-        fr: { translation: {} }
-      }
-    });
-}
+// Initialize i18next - Use same configuration everywhere
+i18n
+  .use(Backend)
+  .use(LanguageDetector)
+  .use(initReactI18next)
+  .init(i18nConfig);
 
 export default i18n;

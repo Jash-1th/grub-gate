@@ -70,7 +70,7 @@ const ProcessSteps = () => {
         </div>
 
         {/* Additional Info */}
-        <div className="mt-20 bg-white rounded-3xl p-8 md:p-12 shadow-lg">
+        {/* <div className="mt-20 bg-white rounded-3xl p-8 md:p-12 shadow-lg">
           <div className="text-center">
             <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6" style={{color: '#800020'}}>
               {t('howItWorks.ctaTitle')}
@@ -87,7 +87,7 @@ const ProcessSteps = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </section>
   );
