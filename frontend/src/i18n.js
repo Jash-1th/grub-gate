@@ -56,11 +56,33 @@ const i18nConfig = {
   }
 };
 
-// Initialize i18next - Use same configuration everywhere
-i18n
-  .use(Backend)
-  .use(LanguageDetector)
-  .use(initReactI18next)
-  .init(i18nConfig);
+// Initialize i18next with SSR support
+const initializeI18n = () => {
+  // Check if we have initial state from SSR
+  if (typeof window !== 'undefined' && window.INITIAL_I18N_STATE) {
+    // Client-side hydration with SSR data
+    i18n
+      .use(LanguageDetector)
+      .use(initReactI18next)
+      .init({
+        ...i18nConfig,
+        lng: window.INITIAL_LANGUAGE || 'en',
+        resources: window.INITIAL_I18N_STATE,
+      });
+      
+    // Clean up global state
+    delete window.INITIAL_I18N_STATE;
+    delete window.INITIAL_LANGUAGE;
+  } else {
+    // Normal client-side initialization with backend
+    i18n
+      .use(Backend)
+      .use(LanguageDetector)
+      .use(initReactI18next)
+      .init(i18nConfig);
+  }
+};
 
-export default i18n;
+initializeI18n();
+
+export default i18n;

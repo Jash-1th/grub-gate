@@ -1,20 +1,10 @@
-# This file provides all the build and routing instructions for Netlify.
+# frontend/netlify.toml
 
 [build]
-  # The command to build your client and server bundles.
   command = "npm run build"
-  
-  # The directory where your static client-side files are published.
   publish = "dist/client"
-  
-  # The directory where Netlify will find your Edge Functions.
   edge_functions = "netlify/edge-functions"
 
-# This section defines your Edge Function.
 [[edge_functions]]
-  # The name of the function file (without .js).
-  # Make sure your file is named 'ssr.js' inside the 'netlify/edge-functions' folder.
   function = "ssr"
-  
-  # This tells Netlify to run this function for all incoming page requests.
-  path = "/*"
+  path = "/*"
