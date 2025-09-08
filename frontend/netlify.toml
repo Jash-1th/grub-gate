@@ -1,19 +1,151 @@
+# This file provides the definitive build and routing instructions for Netlify.
+
 [build]
-  publish = "dist/client"
+  # The command to build your client and server bundles.
   command = "npm run build"
+  
+  # The directory where your static client-side files are published.
+  # This is where Netlify will find your CSS, JS, and image assets.
+  publish = "dist/client"
+  
+  # The directory where Netlify will find your Edge Functions.
+  edge_functions = "netlify/edge-functions"
 
-[build.environment]
-  NODE_VERSION = "18"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
-[functions]
-  directory = "netlify/functions"
-
-# For SSR on Netlify (Edge Functions)
+# This section defines your Edge Function.
 [[edge_functions]]
+  # The name of the function file (without .js).
+  # Make sure your file is named 'ssr.js' inside the 'netlify/edge-functions' folder.
   function = "ssr"
+  
+  # This tells Netlify to run this function for all incoming page requests.
+  # This is the most important line for making SSR work.
   path = "/*"
+```eof
+
+---
+
+### **Step 2: Implement the SSR Edge Function Correctly**
+
+Your current server-side code is missing the crucial internationalization (i18n) logic. Without it, the server can't translate the keys and just passes `` to the browser.
+
+**Replace the entire contents** of your `frontend/netlify/edge-functions/ssr.js` file with this complete, production-ready version. This new code will:
+1.  Read your built `index.html` file as a template.
+2.  Initialize the translation library on the server.
+3.  Load the correct language based on the user's request.
+4.  Render your React app to HTML with the translations.
+5.  Inject the rendered HTML and translation data into the template for perfect, error-free hydration.
+
+```javascript:Netlify Edge Function:frontend/netlify/edge-functions/ssr.js
+import { render } from '../../dist/server/main.ssr.js';
+import i18next from 'i18next';
+import FsBackend from 'i18next-fs-backend';
+import i18nextMiddleware from 'i18next-http-middleware';
+import { promises as fs } from 'fs';
+import path from 'path';
+
+// --- Server-Side i18next Configuration ---
+// This instance of i18next will run on Netlify's Edge network.
+i18next
+  .use(FsBackend) // Use the file-system backend to read your translation.json files.
+  .use(i18nextMiddleware.LanguageDetector) // Detect language from request headers/cookies.
+  .init({
+    initImmediate: false, // Important for server-side initialization
+    fallbackLng: 'en',
+    preload: ['en', 'fr'], // Preload all your languages
+    backend: {
+      // Correctly construct the path to your locales folder from the build output.
+      loadPath: path.join(process.cwd(), 'public/locales/{{lng}}/translation.json'),
+    },
+  });
+// --- End i18next Configuration ---
+
+export default async (request, context) => {
+  const url = new URL(request.url);
+
+  try {
+    // 1. Create a unique i18n instance for each request to avoid conflicts.
+    const i18n = i18next.cloneInstance();
+    i18n.changeLanguage(request.headers.get('accept-language')?.split(',')[0] || 'en');
+
+    // 2. Load the necessary translations for the detected language.
+    await i18n.loadNamespaces('translation');
+
+    // 3. Load the HTML template from the build output, not a hardcoded string.
+    const templatePath = path.join(process.cwd(), 'dist/client/index.html');
+    const template = await fs.readFile(templatePath, 'utf-8');
+
+    // 4. Server-side render the React app, PASSING IN the i18n instance.
+    const { html } = render(url.pathname, i18n);
+
+    // 5. Inject the initial state for client-side hydration.
+    const initialI18nStore = {};
+    i18n.languages.forEach((l) => {
+      initialI18nStore[l] = { translation: i18n.getResourceBundle(l, 'translation') };
+    });
+
+    const stateScript = `
+      <script>
+        window.__INITIAL_I18N_STATE__ = ${JSON.stringify(initialI18nStore)};
+        window.__INITIAL_LANGUAGE__ = "${i18n.language}";
+      </script>
+    `;
+
+    // 6. Replace the placeholder and inject the state before the main script.
+    const finalHtml = template
+      .replace(``, html)
+      .replace(
+        '</body>',
+        `${stateScript}</body>`
+      );
+
+    return new Response(finalHtml, {
+      headers: { 'Content-Type': 'text/html' },
+    });
+  } catch (error) {
+    console.error('SSR Error:', error);
+    // In case of an error, serve the basic HTML shell for client-side rendering.
+    return new Response('An error occurred during server-side rendering.', { status: 500 });
+  }
+};
+```eof
+
+---
+
+### **Step 3: Verify Client-Side Hydration**
+
+Finally, ensure your client-side i18n configuration is set up to receive the data from the server. This is the last piece of the puzzle.
+
+Verify that your **`src/i18n.js`** file looks like this:
+
+```javascript:Client-Side i18n Config:src/i18n.js
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import HttpBackend from 'i18next-http-backend';
+import LanguageDetector from 'i18next-browser-languagedetector';
+
+i18n
+  .use(HttpBackend)
+  .use(LanguageDetector)
+  .use(initReactI18next)
+  .init({
+    // --- HYDRATION LOGIC ---
+    // This is the key part: if the server sent data, use it.
+    resources: typeof window !== 'undefined' ? window.__INITIAL_I18N_STATE__ : undefined,
+    lng: typeof window !== 'undefined' ? window.__INITIAL_LANGUAGE__ : 'en',
+    // --- END HYDRATION LOGIC ---
+    
+    fallbackLng: 'en',
+    debug: false,
+    interpolation: {
+      escapeValue: false, // React already protects from XSS
+    },
+    detection: {
+      order: ['cookie', 'navigator', 'htmlTag'],
+      caches: ['cookie'],
+    },
+  });
+
+export default i18n;
+```eof
+
+After updating these files, **commit and push your changes to GitHub**. The new deployment should now work perfectly, with the server rendering the fully translated HTML.
