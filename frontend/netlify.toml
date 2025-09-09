@@ -1,10 +1,28 @@
-# frontend/netlify.toml
-
 [build]
-  command = "npm run build"
+  # Use 'npm ci' for faster, more reliable builds and then run the build script.
+  command = "npm ci && npm run build"
+  # The directory with the static assets from the client build.
   publish = "dist/client"
+  # The directory where the Edge Function is located.
   edge_functions = "netlify/edge-functions"
 
+# Define the Edge Function route.
 [[edge_functions]]
   function = "ssr"
-  path = "/*"
+  path = "/*"
+
+# Define caching policies for different asset types to improve performance.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/locales/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
