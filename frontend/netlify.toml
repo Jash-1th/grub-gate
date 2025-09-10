@@ -1,15 +1,21 @@
+# Corrected netlify.toml
+
 [build]
   # Use 'npm ci' for faster, more reliable builds and then run the build script.
   command = "npm ci && npm run build"
+  
   # The directory with the static assets from the client build.
   publish = "dist/client"
-  # The directory where the Edge Function is located.
-  edge_functions = "netlify/edge-functions"
+  
+  # The directory where your REGULAR Netlify Functions are located.
+  functions = "netlify/functions"
 
-# Define the Edge Function route.
-[[edge_functions]]
-  function = "ssr"
-  path = "/*"
+# This redirect rule is the key to making SSR work.
+# It tells Netlify to send all page requests to your ssr.js function.
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/ssr"
+  status = 200
 
 # Define caching policies for different asset types to improve performance.
 [[headers]]

@@ -1,4 +1,4 @@
-// frontend/netlify/edge-functions/ssr.js
+// frontend/netlify/functions/ssr.js
 
 import { render } from '../../dist/server/main.ssr.js';
 import i18next from 'i18next';
@@ -7,6 +7,11 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
 // --- Server-Side i18next Configuration ---
+// Note: We use path.resolve with __dirname to build a reliable absolute path
+// inside the serverless function environment.
+const localesPath = path.resolve(__dirname, '..', '..', 'public/locales');
+const templatePath = path.resolve(__dirname, '..', '..', 'dist/client/index.html');
+
 i18next
   .use(FsBackend)
   .init({
@@ -16,8 +21,7 @@ i18next
     ns: ['translation'],
     defaultNS: 'translation',
     backend: {
-      // Use process.cwd() to build an absolute path to the locales folder
-      loadPath: path.join(process.cwd(), 'public/locales/{{lng}}/{{ns}}.json'),
+      loadPath: path.join(localesPath, '{{lng}}/{{ns}}.json'),
     },
   });
 // --- End i18next Configuration ---
@@ -27,8 +31,6 @@ export default async (request, context) => {
 
   try {
     // 1. Load the built index.html as a template
-    // This is better than a hardcoded string because it includes Vite's asset hashes.
-    const templatePath = path.join(process.cwd(), 'dist/client/index.html');
     const template = await fs.readFile(templatePath, 'utf-8');
 
     // 2. Clone i18next instance and set language for the current request
@@ -55,15 +57,14 @@ export default async (request, context) => {
 
     // 5. Inject the rendered HTML and the state script into the template
     const finalHtml = template
-      .replace(`<!--ssr-outlet-->`, html)
+      .replace(``, html)
       .replace('</body>', `${stateScript}</body>`);
 
     return new Response(finalHtml, {
       headers: { 'Content-Type': 'text/html' },
     });
   } catch (error) {
-    console.error('SSR Edge Function Error:', error);
-    // If an error occurs, return a proper error response
-    return new Response(`Server-Side Rendering Error: ${error.message}, { status: 500 }`);
-  }
+    console.error('SSR Function Error:', error);
+    return new Response(`Server-Side Rendering Error: ${error.message}`, { status: 500 });
+  }
 };
