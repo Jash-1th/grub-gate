@@ -10,6 +10,8 @@ import Faq from './pages/Faq';
 import { ModalProvider, useModal } from './context/ModalContext';
 import SignupModal from './components/auth/SignupModal';
 import LoginModal from './components/auth/LoginModal';
+import { requestNotificationPermission } from './pwa'; // Ensure path is correct
+
 
 // App Content Component
 function AppContent() {
@@ -36,6 +38,7 @@ function AppContent() {
             <Route path="/faq" element={<Faq />} />
           </Routes>
         </main>
+        
         <Footer />
       </div>
     </>

@@ -45,10 +45,14 @@ app.get('/health', (req, res) => {
 });
 
 // SSR route handler - catch all routes
-app.get('/', handleSSR);
 app.get(/.*/, handleSSR);
 
 async function handleSSR(req, res, next) {
+  // Serve static assets directly if they exist
+  const filePath = join(__dirname, 'dist/client', req.originalUrl);
+  if (fs.existsSync(filePath) && fs.lstatSync(filePath).isFile()) {
+    return res.sendFile(filePath);
+  }
   const url = req.originalUrl;
 
   try {

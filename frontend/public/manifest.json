@@ -1,0 +1,21 @@
+{
+  "name": "GrubGate",
+  "short_name": "GrubGate",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ff6347",
+  "description": "Your Daily Meals, Delivered from Real Kitchens.",
+  "icons": [
+    {
+      "src": "/icons/Logo.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icons/Logo.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
