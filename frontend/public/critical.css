@@ -1,0 +1,184 @@
+/* Critical CSS for App Shell - Loaded before JavaScript */
+
+/* Reset and Base Styles */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  background-color: #ffffff;
+  color: #333333;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+#root {
+  height: 100%;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* App Shell Loader Styles */
+.app-shell-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 1;
+  transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+}
+
+.app-shell-loader.fade-out {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.loader-logo {
+  width: 120px;
+  height: 120px;
+  max-width: 25vw;
+  max-height: 25vw;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 20px rgba(128, 0, 32, 0.1));
+  animation: logoFloat 3s ease-in-out infinite;
+}
+
+.loader-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #800020;
+  margin-top: 24px;
+  margin-bottom: 8px;
+  text-align: center;
+  letter-spacing: -0.02em;
+  animation: fadeInUp 1s ease-out 0.5s both;
+}
+
+.loader-subtitle {
+  font-size: 1rem;
+  color: #666666;
+  text-align: center;
+  margin-bottom: 48px;
+  animation: fadeInUp 1s ease-out 0.7s both;
+}
+
+.loader-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #800020;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loader-progress {
+  width: 200px;
+  height: 4px;
+  background-color: #e0e0e0;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 24px;
+  animation: fadeInUp 1s ease-out 0.9s both;
+}
+
+.loader-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #800020 0%, #a00028 100%);
+  border-radius: 2px;
+  transform: translateX(-100%);
+  animation: progressSlide 2s ease-in-out infinite;
+}
+
+/* Animations */
+@keyframes logoFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes progressSlide {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .loader-title {
+    font-size: 1.5rem;
+  }
+  
+  .loader-subtitle {
+    font-size: 0.9rem;
+    padding: 0 16px;
+  }
+  
+  .loader-progress {
+    width: 160px;
+  }
+}
+
+@media (max-width: 480px) {
+  .loader-logo {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .loader-title {
+    font-size: 1.3rem;
+  }
+  
+  .loader-subtitle {
+    font-size: 0.85rem;
+  }
+}
+
+/* Hide loader when JavaScript loads */
+.js-loaded .app-shell-loader {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.8s ease-out 0.5s, visibility 0.8s ease-out 0.5s;
+}

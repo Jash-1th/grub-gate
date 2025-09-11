@@ -2,15 +2,107 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Grub-Gate - Your Daily Bite, Delivered Right. Partnering with local restaurants to deliver fresh, chef-prepared meals." />
+    <link rel="icon" type="image/png" href="/icons/logo192.png" />
+    <link rel="apple-touch-icon" href="/icons/logo192.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta name="description" content="GrubGate - Your Daily Meals, Delivered from Real Kitchens. Montreal's premier subscription meal delivery service." />
+    <meta name="keywords" content="food delivery, meal subscription, Montreal restaurants, fresh meals" />
+    <meta name="author" content="GrubGate" />
+    
+    <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#ff6347" />
-    <title>Grub-Gate - Food Delivery Made Easy</title>
+    
+    <!-- Theme and Status Bar -->
+    <meta name="theme-color" content="#800020" />
+    <meta name="msapplication-TileColor" content="#800020" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="GrubGate" />
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="GrubGate - Your Daily Meals, Delivered" />
+    <meta property="og:description" content="Montreal's premier subscription meal delivery service. Fresh, chef-prepared meals from local restaurants." />
+    <meta property="og:image" content="/icons/logo512.png" />
+    <meta property="og:url" content="https://grubgate.app" />
+    <meta property="og:type" content="website" />
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="GrubGate - Your Daily Meals, Delivered" />
+    <meta name="twitter:description" content="Montreal's premier subscription meal delivery service." />
+    <meta name="twitter:image" content="/icons/logo512.png" />
+    
+    <title>GrubGate - Your Daily Meals, Delivered from Real Kitchens</title>
+    
+    <!-- Critical CSS for App Shell - External file for SSR compatibility -->
+    <link rel="stylesheet" href="/critical.css">
   </head>
   <body>
-    <div id="root"><!--ssr-outlet--></div>
+    <div id="root">
+      <!-- App Shell Loader - Visible before JavaScript loads -->
+      <div class="app-shell-loader" id="app-shell-loader">
+        <img 
+          src="/icons/logo512.png" 
+          alt="GrubGate Logo" 
+          class="loader-logo"
+          width="120"
+          height="120"
+        />
+        <h1 class="loader-title">GrubGate</h1>
+        <p class="loader-subtitle">Your Daily Meals, Delivered from Real Kitchens</p>
+        <div class="loader-spinner"></div>
+        <div class="loader-progress">
+          <div class="loader-progress-bar"></div>
+        </div>
+      </div>
+      <!--ssr-outlet-->
+    </div>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      // Register service worker immediately
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(function(registration) {
+              console.log('✅ Service Worker registered successfully:', registration.scope);
+            })
+            .catch(function(error) {
+              console.log('❌ Service Worker registration failed:', error);
+            });
+        });
+      }
+      
+      // Hide loader when page is fully loaded
+      window.addEventListener('load', function() {
+        const loader = document.getElementById('app-shell-loader');
+        if (loader) {
+          setTimeout(() => {
+            document.body.classList.add('js-loaded');
+            // Remove loader from DOM after transition
+            setTimeout(() => {
+              if (loader.parentNode) {
+                loader.parentNode.removeChild(loader);
+              }
+            }, 1300);
+          }, 1000);
+        }
+      });
+      
+      // Hide loader when React app mounts (backup)
+      window.hideAppShellLoader = function() {
+        const loader = document.getElementById('app-shell-loader');
+        if (loader) {
+          document.body.classList.add('js-loaded');
+          setTimeout(() => {
+            if (loader.parentNode) {
+              loader.parentNode.removeChild(loader);
+            }
+          }, 1300);
+        }
+      };
+    </script>
+    
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

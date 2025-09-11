@@ -1,21 +1,59 @@
 {
   "name": "GrubGate",
   "short_name": "GrubGate",
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ff6347",
+  "orientation": "portrait-primary",
+  "background_color": "#FFFFFF",
+  "theme_color": "#800020",
   "description": "Your Daily Meals, Delivered from Real Kitchens.",
+  "categories": ["food", "lifestyle", "shopping"],
+  "lang": "en",
+  "gcm_sender_id": "103953800507",
   "icons": [
     {
-      "src": "/icons/Logo.png",
+      "src": "/icons/logo192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any"
     },
     {
-      "src": "/icons/Logo.png",
+      "src": "/icons/logo512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Browse Restaurants",
+      "short_name": "Restaurants",
+      "description": "Discover nearby restaurants with subscription meals",
+      "url": "/restaurants",
+      "icons": [
+        {
+          "src": "/icons/logo192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "How It Works",
+      "short_name": "How It Works",
+      "description": "Learn about our meal subscription service",
+      "url": "/how-it-works",
+      "icons": [
+        {
+          "src": "/icons/logo192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }

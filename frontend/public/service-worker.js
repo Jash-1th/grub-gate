@@ -1,95 +1,348 @@
-const CACHE_NAME = 'grubgate-v1';
+// Cache names with versioning for better cache management
+const CACHE_VERSION = '2.1.0';
+const CACHE_NAME = `grubgate-v${CACHE_VERSION}`;
+const STATIC_CACHE = `grubgate-static-v${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `grubgate-dynamic-v${CACHE_VERSION}`;
+const IMAGE_CACHE = `grubgate-images-v${CACHE_VERSION}`;
 
-// Assets to be cached on installation
-const PRECACHE_ASSETS = [
+// App Shell - Critical resources for instant loading
+const APP_SHELL_ASSETS = [
   '/',
   '/index.html',
-  '/icons/Logo.png'
+  '/manifest.json',
+  '/critical.css',
+  '/launch-screen.css',
+  '/icons/logo192.png',
+  '/icons/logo512.png',
+  '/icons/Logo.png' // Keep existing logo for backward compatibility
 ];
 
-// Install event: opens a cache and adds the precache assets to it
+// Static assets that change infrequently
+const STATIC_ASSETS = [
+  '/vite.svg',
+  // Add your built CSS and JS files here after build
+  // These will be dynamically added during runtime
+];
+
+// Install event: Pre-cache App Shell and critical static assets
 self.addEventListener('install', (event) => {
+  console.log('🔧 Service Worker: Installing version', CACHE_VERSION);
+  
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Service Worker: Caching Precache Assets');
-        return cache.addAll(PRECACHE_ASSETS);
-      })
-      .then(() => self.skipWaiting())
+    Promise.all([
+      // Cache App Shell assets
+      caches.open(CACHE_NAME)
+        .then((cache) => {
+          console.log('📦 Service Worker: Caching App Shell assets');
+          return cache.addAll(APP_SHELL_ASSETS.map(url => {
+            // Add cache-busting parameter to ensure fresh content
+            return new Request(url, { cache: 'reload' });
+          }));
+        }),
+      
+      // Cache static assets
+      caches.open(STATIC_CACHE)
+        .then((cache) => {
+          console.log('🗂️ Service Worker: Caching static assets');
+          return cache.addAll(STATIC_ASSETS.map(url => {
+            return new Request(url, { cache: 'reload' });
+          }));
+        })
+    ])
+    .then(() => {
+      console.log('✅ Service Worker: Installation complete');
+      // Force the waiting service worker to become the active service worker
+      return self.skipWaiting();
+    })
+    .catch((error) => {
+      console.error('❌ Service Worker: Installation failed', error);
+      throw error;
+    })
   );
 });
-
-// Activate event: cleans up old caches
+// Activate event: Clean up old caches and claim clients
 self.addEventListener('activate', (event) => {
+  console.log('🔄 Service Worker: Activating version', CACHE_VERSION);
+  
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Service Worker: Clearing old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
-  );
-});
-
-// Fetch event: handles requests with a hybrid caching strategy
-self.addEventListener('fetch', (event) => {
-  const { request } = event;
-
-  // Network-First for navigations and API calls
-  if (request.mode === 'navigate' || request.url.startsWith(self.location.origin + '/api/')) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // If the network request is successful, clone the response and cache it
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseToCache);
-          });
-          return response;
-        })
-        .catch(() => {
-          // If the network request fails, try to serve from the cache
-          return caches.match(request);
-        })
-    );
-    return;
-  }
-
-  // Cache-First for all other static assets
-  event.respondWith(
-    caches.match(request).then((cachedResponse) => {
-      // Return the cached response if it exists
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      // Otherwise, fetch from the network, cache it, and return the response
-      return fetch(request).then((networkResponse) => {
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(request, responseToCache);
-        });
-        return networkResponse;
-      });
+    Promise.all([
+      // Clean up old caches
+      caches.keys().then((cacheNames) => {
+        const currentCaches = [CACHE_NAME, STATIC_CACHE, DYNAMIC_CACHE, IMAGE_CACHE];
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (!currentCaches.includes(cacheName)) {
+              console.log('🗑️ Service Worker: Deleting old cache:', cacheName);
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      }),
+      
+      // Take control of all clients immediately
+      self.clients.claim().then(() => {
+        console.log('✅ Service Worker: Now controlling all clients');
+      })
+    ])
+    .then(() => {
+      console.log('✨ Service Worker: Activation complete');
+    })
+    .catch((error) => {
+      console.error('❌ Service Worker: Activation failed', error);
     })
   );
 });
 
+// Utility function to determine caching strategy based on request
+const getCachingStrategy = (request) => {
+  const url = new URL(request.url);
+  
+  // App Shell files (index.html, manifest, etc.) - Stale While Revalidate
+  if (APP_SHELL_ASSETS.some(asset => url.pathname === asset || url.pathname.endsWith(asset))) {
+    return 'stale-while-revalidate';
+  }
+  
+  // API calls - Network First with cache fallback
+  if (url.pathname.startsWith('/api/') || request.mode === 'navigate') {
+    return 'network-first';
+  }
+  
+  // Images - Cache First with network fallback
+  if (request.destination === 'image' || url.pathname.match(/\.(jpg|jpeg|png|gif|webp|svg|ico)$/)) {
+    return 'cache-first-images';
+  }
+  
+  // Static assets (CSS, JS, fonts) - Cache First
+  if (request.destination === 'script' || request.destination === 'style' || 
+      url.pathname.match(/\.(js|css|woff|woff2|ttf|eot)$/)) {
+    return 'cache-first';
+  }
+  
+  // Default - Network First
+  return 'network-first';
+};
+
+// Fetch event: Sophisticated hybrid caching strategy
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  
+  // Skip non-http requests
+  if (!request.url.startsWith('http')) {
+    return;
+  }
+  
+  const strategy = getCachingStrategy(request);
+  
+  switch (strategy) {
+    case 'stale-while-revalidate':
+      event.respondWith(staleWhileRevalidate(request, CACHE_NAME));
+      break;
+      
+    case 'network-first':
+      event.respondWith(networkFirst(request, DYNAMIC_CACHE));
+      break;
+      
+    case 'cache-first':
+      event.respondWith(cacheFirst(request, STATIC_CACHE));
+      break;
+      
+    case 'cache-first-images':
+      event.respondWith(cacheFirst(request, IMAGE_CACHE));
+      break;
+      
+    default:
+      event.respondWith(networkFirst(request, DYNAMIC_CACHE));
+  }
+});
+
+// Stale While Revalidate Strategy
+async function staleWhileRevalidate(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  const cachedResponse = await cache.match(request);
+  
+  // Fetch fresh content in background
+  const fetchPromise = fetch(request)
+    .then(response => {
+      if (response.ok) {
+        cache.put(request, response.clone());
+      }
+      return response;
+    })
+    .catch(error => {
+      console.warn('⚠️ Network fetch failed for:', request.url, error);
+      return cachedResponse;
+    });
+  
+  // Return cached response immediately if available, otherwise wait for network
+  return cachedResponse || fetchPromise;
+}
+
+// Network First Strategy with cache fallback
+async function networkFirst(request, cacheName) {
+  try {
+    const response = await fetch(request);
+    
+    if (response.ok) {
+      // Cache successful responses
+      const cache = await caches.open(cacheName);
+      cache.put(request, response.clone());
+    }
+    
+    return response;
+  } catch (error) {
+    console.warn('⚠️ Network failed for:', request.url, 'trying cache');
+    
+    // Try cache fallback
+    const cache = await caches.open(cacheName);
+    const cachedResponse = await cache.match(request);
+    
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    
+    // If it's a navigation request and no cache, return app shell
+    if (request.mode === 'navigate') {
+      const appShellCache = await caches.open(CACHE_NAME);
+      return appShellCache.match('/index.html');
+    }
+    
+    throw error;
+  }
+}
+
+// Cache First Strategy with network fallback
+async function cacheFirst(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  const cachedResponse = await cache.match(request);
+  
+  if (cachedResponse) {
+    return cachedResponse;
+  }
+  
+  try {
+    const response = await fetch(request);
+    
+    if (response.ok) {
+      cache.put(request, response.clone());
+    }
+    
+    return response;
+  } catch (error) {
+    console.warn('⚠️ Failed to fetch and cache:', request.url, error);
+    throw error;
+  }
+}
+
 // Push event: handles incoming push notifications
-// self.addEventListener('push', (event) => {
-//   const data = event.data ? event.data.json() : { title: 'GrubGate', body: 'New notification!' };
-//   const { title, body } = data;
+self.addEventListener('push', (event) => {
+  console.log('Push event received:', event);
+  
+  // Extract notification data from the push event
+  let notificationData;
+  try {
+    notificationData = event.data ? event.data.json() : {};
+  } catch (error) {
+    console.error('Error parsing push data:', error);
+    notificationData = {};
+  }
+  
+  // Set default values if no data is provided
+  const {
+    title = 'GrubGate',
+    body = 'You have a new notification from GrubGate!',
+    icon = '/icons/logo192.png',
+    badge = '/icons/logo192.png',
+    tag = 'grubgate-notification',
+    data: customData = {},
+    actions = [],
+    requireInteraction = false
+  } = notificationData;
+  
+  const options = {
+    body: body,
+    icon: icon,
+    badge: badge,
+    tag: tag,
+    data: {
+      ...customData,
+      timestamp: Date.now(),
+      url: customData.url || '/'
+    },
+    actions: actions,
+    requireInteraction: requireInteraction,
+    vibrate: [200, 100, 200],
+    renotify: true
+  };
+  
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
 
-// const options = {
-//     body: body,
-//     icon: '/icons/Logo.png',
-//     badge: '/icons/Logo.png'
-//   };
+// Notification click event: handles what happens when user clicks the notification
+self.addEventListener('notificationclick', (event) => {
+  console.log('Notification clicked:', event);
+  
+  // Close the notification
+  event.notification.close();
+  
+  // Get the URL to open (default to home page)
+  const urlToOpen = event.notification.data?.url || '/';
+  const fullUrl = new URL(urlToOpen, self.location.origin).href;
+  
+  // Handle action button clicks if any
+  if (event.action) {
+    console.log('Action clicked:', event.action);
+    // Handle different actions here
+    switch (event.action) {
+      case 'view-order':
+        // Handle view order action
+        break;
+      case 'dismiss':
+        // Just close the notification (already done above)
+        return;
+      default:
+        break;
+    }
+  }
+  
+  // This handles the click on the notification itself (not action buttons)
+  event.waitUntil(
+    self.clients.matchAll({
+      type: 'window',
+      includeUncontrolled: true
+    })
+    .then((clientList) => {
+      // Check if there's already a window/tab open with the target URL
+      for (const client of clientList) {
+        if (client.url === fullUrl && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      
+      // If no existing window is found, check for any GrubGate window
+      for (const client of clientList) {
+        if (client.url.startsWith(self.location.origin) && 'navigate' in client) {
+          client.navigate(fullUrl);
+          return client.focus();
+        }
+      }
+      
+      // If no window is open, open a new one
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(fullUrl);
+      }
+    })
+    .catch((error) => {
+      console.error('Error handling notification click:', error);
+    })
+  );
+});
 
-//   event.waitUntil(
-//     self.registration.showNotification(title, options)
-//   );
-// });
+// Notification close event: handles when user dismisses the notification
+self.addEventListener('notificationclose', (event) => {
+  console.log('Notification closed:', event.notification.tag);
+  
+  // Optional: Send analytics or tracking data
+  // You can track notification dismissals here
+});

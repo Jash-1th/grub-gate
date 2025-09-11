@@ -1,6 +1,7 @@
 import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { createServer } from 'http';
 import fs from 'fs';
 import i18n from './src/i18n.server.js';
 
@@ -21,8 +22,16 @@ if (!isProduction) {
   // Development mode with Vite dev server
   const { createServer } = await import('vite');
   vite = await createServer({
-    server: { middlewareMode: true },
-    appType: 'custom'
+    server: { 
+      middlewareMode: true,
+      hmr: {
+        port: 3001, // Use a different port close to main server
+        host: 'localhost'
+      }
+    },
+    appType: 'custom',
+    clearScreen: false,
+    logLevel: 'info'
   });
   app.use(vite.middlewares);
 } else {
@@ -48,12 +57,43 @@ app.get('/health', (req, res) => {
 app.get(/.*/, handleSSR);
 
 async function handleSSR(req, res, next) {
+  const url = req.originalUrl;
+  
+  // Skip SSR for development/browser specific files that don't need processing
+  const skipSSRPatterns = [
+    '/.well-known/',
+    '/chrome-devtools/',
+    '/__vite_ping',
+    '/@vite/',
+    '/@fs/',
+    '/node_modules/',
+    '/favicon.ico',
+    '.map',
+    '.css',
+    '.js',
+    '.ts',
+    '.tsx',
+    '.json',
+    '.png',
+    '.jpg',
+    '.jpeg',
+    '.gif',
+    '.svg',
+    '.ico'
+  ];
+  
+  const shouldSkipSSR = skipSSRPatterns.some(pattern => url.includes(pattern));
+  
+  if (shouldSkipSSR) {
+    console.log(`Skipping SSR for: ${url}`);
+    return next();
+  }
+  
   // Serve static assets directly if they exist
   const filePath = join(__dirname, 'dist/client', req.originalUrl);
   if (fs.existsSync(filePath) && fs.lstatSync(filePath).isFile()) {
     return res.sendFile(filePath);
   }
-  const url = req.originalUrl;
 
   try {
     let template;
@@ -118,8 +158,13 @@ async function handleSSR(req, res, next) {
   }
 }
 
-app.listen(PORT, () => {
+const httpServer = createServer(app);
+
+httpServer.listen(PORT, 'localhost', () => {
   console.log(`🚀 ${isProduction ? 'Production' : 'Development'} server running on http://localhost:${PORT}`);
   console.log(`📱 Health check: http://localhost:${PORT}/health`);
   console.log(`🌐 Open your browser to http://localhost:${PORT}`);
+  if (!isProduction) {
+    console.log(`🔥 HMR WebSocket running on ws://localhost:3001`);
+  }
 });

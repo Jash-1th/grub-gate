@@ -4,10 +4,11 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5173,
-    host: true,
+   
     hmr: {
-      overlay: true
+      overlay: true,
+      port: 24678,
+      host: 'localhost'
     }
   },
   build: {
@@ -17,5 +18,8 @@ export default defineConfig({
         manualChunks: undefined
       }
     }
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom']
   }
 })
