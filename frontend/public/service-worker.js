@@ -11,7 +11,7 @@ const APP_SHELL_ASSETS = [
   '/index.html',
   '/manifest.json',
   '/critical.css',
-  '/launch-screen.css',
+  '/images/launch-background.jpg',
   '/icons/logo192.png',
   '/icons/logo512.png',
   '/icons/Logo.png' // Keep existing logo for backward compatibility

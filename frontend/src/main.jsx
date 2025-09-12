@@ -10,14 +10,7 @@ import { registerPWA } from './pwa.js'
 // Enhanced Loading fallback component that integrates with App Shell
 const LoadingFallback = () => {
   useEffect(() => {
-    // Hide app shell loader when React component mounts
-    const timer = setTimeout(() => {
-      if (window.hideAppShellLoader) {
-        window.hideAppShellLoader();
-      }
-    }, 100);
-    
-    return () => clearTimeout(timer);
+    console.log('🔄 React Suspense fallback component mounted');
   }, []);
   
   return (
@@ -34,12 +27,13 @@ const LoadingFallback = () => {
 // Main App Component with App Shell integration
 const AppWithShellIntegration = () => {
   useEffect(() => {
-    // Hide app shell loader once React app is fully mounted
+    // Hide launch screen once React app is fully mounted and ready
     const timer = setTimeout(() => {
-      if (window.hideAppShellLoader) {
-        window.hideAppShellLoader();
+      console.log('⚙️ React app mounted, hiding launch screen');
+      if (window.hideLaunchScreen) {
+        window.hideLaunchScreen();
       }
-    }, 500);
+    }, 300); // Reduced delay for faster transition
     
     return () => clearTimeout(timer);
   }, []);
@@ -57,16 +51,14 @@ const container = document.getElementById('root');
 if (container) {
   const root = createRoot(container);
   
-  // Small delay to ensure smooth transition from App Shell
-  setTimeout(() => {
-    root.render(
-      <StrictMode>
-        <Suspense fallback={<LoadingFallback />}>
-          <AppWithShellIntegration />
-        </Suspense>
-      </StrictMode>
-    );
-  }, 100);
+  console.log('⚡ Initializing React app');
+  root.render(
+    <StrictMode>
+      <Suspense fallback={<LoadingFallback />}>
+        <AppWithShellIntegration />
+      </Suspense>
+    </StrictMode>
+  );
 }
 
 // Register the Progressive Web App
