@@ -13,8 +13,39 @@
 .restaurant-carousel {
   display: flex;
   width: fit-content;
-  animation: scroll 60s linear infinite;
   gap: 1.5rem;
+  transition: transform 0.2s ease-out;
+}
+
+/* Desktop animation (default) */
+.restaurant-carousel.desktop-animation {
+  animation: scroll 60s linear infinite;
+}
+
+/* Mobile interactive mode */
+.restaurant-carousel.mobile-interactive {
+  animation: none;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.restaurant-carousel.mobile-interactive::-webkit-scrollbar {
+  display: none;
+}
+
+.restaurant-carousel.mobile-interactive:active {
+  cursor: grabbing;
+}
+
+/* Animation pause state */
+.restaurant-carousel.animation-paused {
+  animation-play-state: paused;
 }
 
 .restaurant-card {
@@ -82,7 +113,7 @@
   }
 }
 
-.restaurant-carousel:hover {
+.restaurant-carousel.desktop-animation:hover {
   animation-play-state: paused;
 }
 
@@ -96,8 +127,12 @@
     padding: 2rem 0;
   }
   
-  .restaurant-carousel {
+  .restaurant-carousel.desktop-animation {
     animation-duration: 45s;
+  }
+  
+  .restaurant-carousel.mobile-interactive {
+    gap: 1rem;
   }
 }
 
@@ -110,14 +145,29 @@
     padding: 1rem;
   }
   
-  .restaurant-carousel {
+  .restaurant-carousel.desktop-animation {
     animation-duration: 40s;
   }
+  
+  .restaurant-carousel.mobile-interactive {
+    gap: 0.75rem;
+  }
+}
+
+/* Mobile touch improvements */
+.restaurant-carousel.mobile-interactive .restaurant-card {
+  pointer-events: auto;
+  touch-action: pan-x;
+}
+
+.restaurant-carousel.mobile-interactive .restaurant-card:active {
+  transform: translateY(-2px) scale(0.98);
+  transition: transform 0.1s ease;
 }
 
 /* Pause animation on reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
-  .restaurant-carousel {
+  .restaurant-carousel.desktop-animation {
     animation: none;
   }
 }

@@ -7,8 +7,9 @@ export default defineConfig({
    
     hmr: {
       overlay: true,
-      port: 24678,
-      host: 'localhost'
+      port: 24679,
+      host: 'localhost',
+      clientPort: 24679
     }
   },
   build: {

@@ -2,7 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { navigation, siteInfo } from '../../data';
-import logoImage from '../../assets/images/logo.png';
+// Use public path for SSR compatibility
+const logoImage = '/icons/logo192.png';
 
 const Footer = () => {
   const { t } = useTranslation();

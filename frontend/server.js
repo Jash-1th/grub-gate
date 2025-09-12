@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3002;
 const isProduction = process.env.NODE_ENV === 'production';
 
 let vite;
@@ -25,7 +25,7 @@ if (!isProduction) {
     server: { 
       middlewareMode: true,
       hmr: {
-        port: 3001, // Use a different port close to main server
+        port: 24679, // Use clean port for HMR
         host: 'localhost'
       }
     },
@@ -165,6 +165,6 @@ httpServer.listen(PORT, 'localhost', () => {
   console.log(`📱 Health check: http://localhost:${PORT}/health`);
   console.log(`🌐 Open your browser to http://localhost:${PORT}`);
   if (!isProduction) {
-    console.log(`🔥 HMR WebSocket running on ws://localhost:3001`);
+    console.log(`🔥 HMR WebSocket running on ws://localhost:24679`);
   }
 });

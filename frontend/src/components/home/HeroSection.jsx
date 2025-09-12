@@ -2,16 +2,21 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { heroContent } from '../../data';
-import heroImage from '../../assets/images/HeroHome.png';
+// Use public path for SSR compatibility
+import heroImage from "../../assets/images/HeroHome.png";
 
 const HeroSection = () => {
   const { t } = useTranslation();
+  
+  // Debug logging
+  console.log('🎭 HeroSection loading, image path:', heroImage);
 
   return (
     <section 
       className="relative min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
       style={{
-        backgroundImage: `url(${heroImage})`
+        backgroundImage: `url(${heroImage})`,
+        backgroundColor: '#1a1a1a' // Fallback dark background
       }}
     >
       {/* Frosted glass overlay */}

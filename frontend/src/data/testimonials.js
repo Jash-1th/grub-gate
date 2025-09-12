@@ -5,7 +5,7 @@ export const testimonials = [
     name: 'Sarah Johnson',
     location: 'Montreal, QC',
     rating: 5,
-    image: '../../assets/images/grub-gate-default-img.jpg',
+    image: '/images/grub-gate-default-img.jpg',
     quote: 'Grub-Gate has completely transformed my dining experience! The food arrives hot, fresh, and exactly as described. I love how I can discover new local restaurants without leaving my home.',
     date: '2024-01-15',
     orderCount: 47

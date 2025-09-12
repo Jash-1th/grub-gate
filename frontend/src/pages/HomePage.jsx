@@ -17,7 +17,7 @@ const HomePage = () => {
       <NearbyRestaurants />
       
       {/* Push Notification Tester - Remove this in production */}
-      <div className="py-16 bg-gray-50">
+      {/* <div className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Push Notification Testing</h2>
@@ -25,7 +25,7 @@ const HomePage = () => {
           </div>
           <PushNotificationTester />
         </div>
-      </div>
+      </div> */}
       
       <GetStartedCTA />
      
