@@ -212,3 +212,49 @@
   outline: 2px solid #800020;
   outline-offset: 2px;
 }
+
+/* Mobile Restaurant Cards - Alternative Layout */
+.restaurant-card-mobile {
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+              box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+}
+
+.restaurant-card-mobile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.restaurant-card-mobile:active {
+  transform: translateY(0) scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+/* Line clamp utility for mobile descriptions */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Mobile grid responsive adjustments */
+@media (max-width: 640px) {
+  .restaurant-card-mobile {
+    margin-bottom: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .restaurant-card-mobile {
+    border-radius: 1rem;
+  }
+  
+  .restaurant-card-mobile .p-4 {
+    padding: 0.875rem;
+  }
+}
