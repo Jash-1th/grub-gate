@@ -50,11 +50,12 @@ const Footer = () => {
             <Link to="/" className="flex items-center">
               <div className="flex items-center">
                 {/* Logo Image */}
-                <img 
-                  src={logoImage} 
-                  alt={siteInfo.logoText}
-                  className="h-8 w-auto sm:h-10 md:h-12 object-contain"
-                />
+                 <img 
+                                  src={logoImage} 
+                                  alt={siteInfo.logoText}
+                                  className="h-10 w-16 sm:h-12 sm:w-20 md:h-14 md:w-24 lg:h-14 lg:w-28 object-cover"
+                                  style={{ boxShadow: "0px 4px 8px 0 black" , borderRadius:"8px" , marginLeft:"10px"}}
+                                />
               </div>
             </Link>
           </div>

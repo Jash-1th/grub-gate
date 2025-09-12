@@ -1,7 +1,9 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import heroImage from '../../assets/images/HowItWorks/Hero.png';
+import '../common/hero-responsive.css';
+// Use public path for SSR compatibility
+const heroImage = '/images/HowItWorksHero.jpg';
 
 const HeroHowItWorks = () => {
   const { t } = useTranslation();
@@ -17,23 +19,23 @@ const HeroHowItWorks = () => {
 
   return (
     <section 
-      className="relative min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
+      className="hero-section-responsive"
       style={{
         backgroundImage: `url(${heroImage})`
       }}
     >
       {/* Frosted glass overlay */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+      <div className="hero-overlay"></div>
       
       {/* Content */}
-      <div className="relative z-10 text-left w-full">
+      <div className="hero-content-left w-full">
         <div className="max-w-2xl" style={{ marginLeft: '20px'}}>
-          <h3 className="text-4xl sm:text-5xl md:text-6xl  font-bold text-white mb-6 leading-tight tracking-wide" style={{lineHeight:"70px"}}>
+          <h3 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 leading-tight sm:leading-snug md:leading-normal tracking-wide">
             {t('howItWorks.heroTitle')}<br />
             <span className="text-red-300">{t('howItWorks.heroSubtitle')}</span>
           </h3>
           
-          <p className="text-lg sm:text-xl md:text-2xl text-gray-100 mb-8 leading-relaxed tracking-wide">
+          <p className="text-lg sm:text-xl md:text-2xl text-gray-100 mb-8 leading-relaxed sm:leading-relaxed md:leading-loose tracking-wide">
             {t('howItWorks.heroDescription')}
           </p>
           

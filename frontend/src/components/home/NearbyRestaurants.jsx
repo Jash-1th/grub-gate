@@ -1,135 +1,244 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { nearbyRestaurants } from '../../data';
 import './NearbyRestaurants.css';
+
 // Use public path for SSR compatibility
 const restaurantImage = '/images/grub-gate-default-restaurant-img.jpg';
 
 const NearbyRestaurants = () => {
   const { t } = useTranslation();
   
-  // Duplicate restaurants for seamless infinite scroll
-  const duplicatedRestaurants = [...nearbyRestaurants, ...nearbyRestaurants];
+  // Triple the restaurants for seamless infinite scroll
+  const duplicatedRestaurants = [...nearbyRestaurants, ...nearbyRestaurants, ...nearbyRestaurants];
   
-  // Mobile-specific state (SSR safe - initialized client-side only)
-  const [isMobile, setIsMobile] = useState(false);
-  const [isTouch, setIsTouch] = useState(false);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchCurrent, setTouchCurrent] = useState(0);
-  const [scrollOffset, setScrollOffset] = useState(0);
-  const [isAnimationPaused, setIsAnimationPaused] = useState(false);
+  // State for carousel behavior
+  const [isPaused, setIsPaused] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const [dragVisualState, setDragVisualState] = useState(false);
   
-  // Refs for mobile interaction
+  // Refs for carousel control (using refs for drag state to avoid re-render issues)
   const carouselRef = useRef(null);
-  const startTimeRef = useRef(0);
+  const animationIdRef = useRef(null);
+  const isDraggingRef = useRef(false);
+  const dragStartRef = useRef({ x: 0, scrollLeft: 0, startTime: 0 });
+  const scrollSpeedRef = useRef(0.5); // pixels per frame
+  const lastTimeRef = useRef(0);
+  const momentumRef = useRef({ velocity: 0, lastX: 0, lastTime: 0 });
+  const resumeTimeoutRef = useRef(null);
   
-  // SSR-safe mobile detection
+  // SSR-safe client initialization
   useEffect(() => {
-    const checkMobile = () => {
-      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-      const isMobileDevice = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
-      const isSmallScreen = window.innerWidth <= 768;
-      const hasTouchScreen = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      
-      const detected = isMobileDevice || (isSmallScreen && hasTouchScreen);
-      setIsMobile(detected);
-      console.log('📱 Mobile Detection:', {
-        isMobileDevice,
-        isSmallScreen,
-        hasTouchScreen,
-        finalDecision: detected
-      });
-      console.log('✅ All fixes applied: Images, HMR, PWA, Mobile Interactions');
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
+    setIsClient(true);
   }, []);
   
-  // Touch event handlers (mobile only)
-  const handleTouchStart = (e) => {
-    if (!isMobile) return;
-    
-    setIsTouch(true);
-    setTouchStart(e.touches[0].clientX);
-    setTouchCurrent(e.touches[0].clientX);
-    setIsAnimationPaused(true); // Pause CSS animation
-    startTimeRef.current = Date.now();
-    
-    // Add event listeners for touch move and end
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', handleTouchEnd);
-  };
-  
-  const handleTouchMove = (e) => {
-    if (!isMobile || !isTouch) return;
-    
-    e.preventDefault(); // Prevent scrolling
-    const currentTouch = e.touches[0].clientX;
-    const diff = touchStart - currentTouch;
-    
-    setTouchCurrent(currentTouch);
-    setScrollOffset(diff);
-  };
-  
-  const handleTouchEnd = () => {
-    if (!isMobile) return;
-    
-    const touchDuration = Date.now() - startTimeRef.current;
-    
-    // If it was a quick swipe, add momentum
-    const swipeDistance = Math.abs(touchStart - touchCurrent);
-    const isSwipe = swipeDistance > 50 && touchDuration < 300;
-    
-    if (isSwipe) {
-      // Add some momentum scrolling
-      const momentum = (touchStart - touchCurrent) * 0.5;
-      setScrollOffset(momentum);
-      
-      // Gradually return to normal position
-      setTimeout(() => {
-        setScrollOffset(0);
-      }, 300);
-    } else {
-      // Snap back to normal position
-      setScrollOffset(0);
+  // Smooth auto-scroll animation using requestAnimationFrame
+  const animate = useCallback((currentTime) => {
+    if (!carouselRef.current || isPaused || isDraggingRef.current) {
+      animationIdRef.current = requestAnimationFrame(animate);
+      return;
     }
     
-    setIsTouch(false);
-    setIsAnimationPaused(false); // Resume CSS animation
+    // Throttle animation to ~60fps
+    if (currentTime - lastTimeRef.current >= 16) {
+      const carousel = carouselRef.current;
+      const maxScroll = carousel.scrollWidth / 3; // One third of total width (original content)
+      
+      // Smooth continuous scroll
+      carousel.scrollLeft += scrollSpeedRef.current;
+      
+      // Improved infinite loop reset - avoid visible jumps
+      if (carousel.scrollLeft >= maxScroll) {
+        // Use smooth reset to avoid jarring experience
+        carousel.scrollTo({
+          left: 0,
+          behavior: 'instant'
+        });
+      }
+      
+      lastTimeRef.current = currentTime;
+    }
+    
+    animationIdRef.current = requestAnimationFrame(animate);
+  }, [isPaused]);
+  
+  // Start animation loop (SSR-safe)
+  useEffect(() => {
+    if (!isClient) return;
+    
+    animationIdRef.current = requestAnimationFrame(animate);
+    
+    return () => {
+      if (animationIdRef.current) {
+        cancelAnimationFrame(animationIdRef.current);
+      }
+    };
+  }, [isClient, animate]);
+  
+  // Clear resume timeout helper
+  const clearResumeTimeout = useCallback(() => {
+    if (resumeTimeoutRef.current) {
+      clearTimeout(resumeTimeoutRef.current);
+      resumeTimeoutRef.current = null;
+    }
+  }, []);
+
+  // Mouse/Touch event handlers for interaction (using refs for performance)
+  const handleInteractionMove = useCallback((e) => {
+    if (!isDraggingRef.current || !carouselRef.current) return;
+    
+    e.preventDefault();
+    
+    const currentTime = performance.now();
+    const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+    const deltaX = dragStartRef.current.x - clientX;
+    const newScrollLeft = dragStartRef.current.scrollLeft + deltaX;
+    
+    // Track momentum for smooth release
+    const timeDelta = currentTime - momentumRef.current.lastTime;
+    if (timeDelta > 0) {
+      momentumRef.current.velocity = (clientX - momentumRef.current.lastX) / timeDelta;
+      momentumRef.current.lastX = clientX;
+      momentumRef.current.lastTime = currentTime;
+    }
+    
+    // Handle infinite scroll boundaries during drag
+    const carousel = carouselRef.current;
+    const maxScroll = carousel.scrollWidth / 3;
+    
+    if (newScrollLeft < 0) {
+      // Dragging past the start - loop to end
+      carousel.scrollLeft = maxScroll + newScrollLeft;
+      dragStartRef.current.scrollLeft = maxScroll;
+      dragStartRef.current.x = clientX;
+    } else if (newScrollLeft > maxScroll * 2) {
+      // Dragging past the end - loop to start
+      carousel.scrollLeft = newScrollLeft - maxScroll;
+      dragStartRef.current.scrollLeft = -maxScroll;
+      dragStartRef.current.x = clientX;
+    } else {
+      // Normal drag within bounds
+      carousel.scrollLeft = newScrollLeft;
+    }
+  }, []);
+  
+  const handleInteractionEnd = useCallback(() => {
+    if (!carouselRef.current || !isDraggingRef.current) return;
+    
+    const carousel = carouselRef.current;
+    const velocity = momentumRef.current.velocity;
+    
+    // Apply momentum if significant velocity
+    if (Math.abs(velocity) > 0.5) {
+      const momentumDistance = velocity * 100; // Adjust multiplier for desired momentum
+      const targetScroll = carousel.scrollLeft - momentumDistance;
+      
+      carousel.scrollTo({
+        left: targetScroll,
+        behavior: 'smooth'
+      });
+    }
+    
+    // Reset states
+    isDraggingRef.current = false;
+    setDragVisualState(false);
+    
+    // Clear any existing resume timeout
+    clearResumeTimeout();
+    
+    // Resume auto-scroll after momentum finishes
+    resumeTimeoutRef.current = setTimeout(() => {
+      setIsPaused(false);
+    }, Math.abs(velocity) > 0.5 ? 800 : 300);
+    
+    // Reset momentum
+    momentumRef.current = { velocity: 0, lastX: 0, lastTime: 0 };
     
     // Remove event listeners
-    document.removeEventListener('touchmove', handleTouchMove);
-    document.removeEventListener('touchend', handleTouchEnd);
-  };
+    document.removeEventListener('mousemove', handleInteractionMove);
+    document.removeEventListener('mouseup', handleInteractionEnd);
+    document.removeEventListener('touchmove', handleInteractionMove);
+    document.removeEventListener('touchend', handleInteractionEnd);
+  }, [handleInteractionMove, clearResumeTimeout]);
   
-  // Long press detection for pause functionality
-  const handleLongPressStart = () => {
-    if (!isMobile) return;
+  const handleInteractionStart = useCallback((e) => {
+    if (!carouselRef.current) return;
     
-    startTimeRef.current = Date.now();
-    setTimeout(() => {
-      const pressDuration = Date.now() - startTimeRef.current;
-      if (pressDuration >= 800 && !isTouch) {
-        setIsAnimationPaused(true);
-      }
-    }, 800);
-  };
+    // Prevent default to avoid text selection and image dragging
+    e.preventDefault();
+    
+    // Clear any pending resume timeout
+    clearResumeTimeout();
+    
+    // Pause auto-scroll and set dragging state
+    setIsPaused(true);
+    isDraggingRef.current = true;
+    setDragVisualState(true);
+    
+    const currentTime = performance.now();
+    const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+    
+    dragStartRef.current = {
+      x: clientX,
+      scrollLeft: carouselRef.current.scrollLeft,
+      startTime: currentTime
+    };
+    
+    // Initialize momentum tracking
+    momentumRef.current = {
+      velocity: 0,
+      lastX: clientX,
+      lastTime: currentTime
+    };
+    
+    // Add move and end listeners
+    if (e.type === 'touchstart') {
+      document.addEventListener('touchmove', handleInteractionMove, { passive: false });
+      document.addEventListener('touchend', handleInteractionEnd, { passive: false });
+      document.addEventListener('touchcancel', handleInteractionEnd, { passive: false });
+    } else {
+      document.addEventListener('mousemove', handleInteractionMove);
+      document.addEventListener('mouseup', handleInteractionEnd);
+      // Handle mouse leave to end drag if user drags outside window
+      document.addEventListener('mouseleave', handleInteractionEnd);
+    }
+  }, [handleInteractionMove, handleInteractionEnd, clearResumeTimeout]);
   
-  const handleLongPressEnd = () => {
-    if (!isMobile) return;
-    setIsAnimationPaused(false);
-  };
+  // Hover handlers for desktop
+  const handleMouseEnter = useCallback(() => {
+    if (!isDraggingRef.current) {
+      clearResumeTimeout();
+      setIsPaused(true);
+    }
+  }, [clearResumeTimeout]);
+  
+  const handleMouseLeave = useCallback(() => {
+    if (!isDraggingRef.current) {
+      // Short delay before resuming to prevent flicker
+      resumeTimeoutRef.current = setTimeout(() => {
+        setIsPaused(false);
+      }, 200);
+    }
+  }, []);
   
   // Cleanup effect
   useEffect(() => {
     return () => {
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
+      if (animationIdRef.current) {
+        cancelAnimationFrame(animationIdRef.current);
+      }
+      if (resumeTimeoutRef.current) {
+        clearTimeout(resumeTimeoutRef.current);
+      }
+      // Clean up all possible event listeners
+      document.removeEventListener('mousemove', handleInteractionMove);
+      document.removeEventListener('mouseup', handleInteractionEnd);
+      document.removeEventListener('mouseleave', handleInteractionEnd);
+      document.removeEventListener('touchmove', handleInteractionMove);
+      document.removeEventListener('touchend', handleInteractionEnd);
+      document.removeEventListener('touchcancel', handleInteractionEnd);
     };
-  }, []);
+  }, [handleInteractionMove, handleInteractionEnd]);
 
   const renderStars = (rating) => {
     return Array.from({ length: 5 }, (_, index) => (
@@ -156,23 +265,19 @@ const NearbyRestaurants = () => {
           </p>
         </div>
 
-        <div 
-          className={`restaurant-carousel ${
-            isMobile ? 'mobile-interactive' : 'desktop-animation'
-          } ${
-            isAnimationPaused ? 'animation-paused' : ''
-          }`}
-          ref={carouselRef}
-          style={{
-            transform: isMobile && isTouch ? `translateX(-${scrollOffset}px)` : undefined,
-            transition: isMobile && isTouch ? 'none' : undefined
-          }}
-          onTouchStart={isMobile ? (e) => {
-            handleTouchStart(e);
-            handleLongPressStart();
-          } : undefined}
-          onTouchEnd={isMobile ? handleLongPressEnd : undefined}
-        >
+        <div className="carousel-wrapper">
+          <div 
+            className={`unified-carousel ${
+              dragVisualState ? 'dragging' : ''
+            } ${
+              isPaused ? 'paused' : ''
+            }`}
+            ref={carouselRef}
+            onMouseDown={handleInteractionStart}
+            onTouchStart={handleInteractionStart}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
           {duplicatedRestaurants.map((restaurant, index) => (
             <div className="restaurant-card" key={`${restaurant.id}-${index}`}>
               <div className="relative overflow-hidden">
@@ -236,6 +341,7 @@ const NearbyRestaurants = () => {
               </div>
             </div>
           ))}
+          </div>
         </div>
 
         {/* Additional Info */}

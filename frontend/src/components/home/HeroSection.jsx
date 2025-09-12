@@ -1,29 +1,29 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { heroContent } from '../../data';
+import { useModal } from '../../context/ModalContext';
+import '../common/hero-responsive.css';
 // Use public path for SSR compatibility
-import heroImage from "../../assets/images/HeroHome.png";
+const heroImage = '/images/HeroHome.jpg';
 
 const HeroSection = () => {
   const { t } = useTranslation();
+  const { openSignupModal } = useModal();
   
   // Debug logging
   console.log('🎭 HeroSection loading, image path:', heroImage);
 
   return (
     <section 
-      className="relative min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
+      className="hero-section-responsive"
       style={{
-        backgroundImage: `url(${heroImage})`,
-        backgroundColor: '#1a1a1a' // Fallback dark background
+        backgroundImage: `url(${heroImage})`
       }}
     >
       {/* Frosted glass overlay */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+      <div className="hero-overlay"></div>
       
       {/* Content */}
-      <div className="relative z-10 text-center px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+      <div className="hero-content px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
         <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
           {t('hero.title')}
           <br />
@@ -38,12 +38,12 @@ const HeroSection = () => {
         {/* CTA Button with frosted glass effect */}
         <div className="inline-flex items-center justify-center rounded-2xl bg-black/20 backdrop-blur-sm mx-auto"
              style={{ width: 'fit-content', height: 'fit-content', padding: '0.5rem' }}>
-          <Link
-            to={heroContent.ctaButton.href} 
-            className="inline-block bg-grub-red text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-grub-red transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+          <button
+            onClick={openSignupModal}
+            className="inline-block bg-grub-red text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-grub-red transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl cursor-pointer"
           >
             {t('hero.getStarted')}
-          </Link>
+          </button>
         </div>
         
         {/* Stats */}

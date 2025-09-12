@@ -1,0 +1,236 @@
+/* Responsive Hero Sections - Mobile-Optimized Background Images */
+
+/* Base hero styles with responsive background */
+.hero-section-responsive {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: scroll;
+  overflow: hidden;
+  width: 100%;
+  max-width: 100vw;
+  /* Ensure the background image loads properly */
+  background-color: #f0f0f0; /* Light fallback while image loads */
+}
+
+/* Very small mobile phones (≤480px) - Fill entire space with hero image */
+@media screen and (max-width: 480px) {
+  .hero-section-responsive {
+    background-size: cover !important;
+    background-position: center center !important;
+    background-attachment: scroll !important;
+    min-height: 100vh;
+    height: 100vh;
+    max-height: 100vh;
+  }
+}
+
+/* Small mobile devices (≤600px) - Fill entire space with hero image */
+@media screen and (max-width: 600px) {
+  .hero-section-responsive {
+    background-size: cover !important;
+    background-position: center center !important;
+    background-attachment: scroll !important;
+    min-height: 100vh;
+    height: 100vh;
+    max-height: 100vh;
+  }
+}
+
+/* Portrait orientation - Fill entire space with hero image on mobile */
+@media screen and (orientation: portrait) and (max-width: 768px) {
+  .hero-section-responsive {
+    background-size: cover !important;
+    background-position: center center !important;
+    height: 100vh;
+    min-height: 100vh;
+    max-height: 100vh;
+  }
+}
+
+/* For larger portrait screens, use cover */
+@media screen and (orientation: portrait) and (min-width: 768px) {
+  .hero-section-responsive {
+    background-size: cover;
+    background-color: transparent;
+    height: 100vh;
+    min-height: 100vh;
+  }
+}
+
+/* Small devices (portrait tablets and large phones, 600px and up) */
+@media screen and (min-width: 600px) and (max-width: 768px) {
+  .hero-section-responsive {
+    background-size: cover;
+    background-position: center center;
+    height: 100vh;
+    min-height: 100vh;
+    max-height: 100vh;
+  }
+}
+
+/* Medium devices (landscape tablets, 768px and up) */
+@media screen and (min-width: 768px) {
+  .hero-section-responsive {
+    background-size: cover;
+    background-position: center center;
+    background-color: transparent;
+    height: 100vh;
+    min-height: 100vh;
+  }
+}
+
+/* Large devices (laptops/desktops, 992px and up) */
+@media screen and (min-width: 992px) {
+  .hero-section-responsive {
+    background-size: cover;
+    background-position: center center;
+    background-attachment: scroll;
+    height: 100vh;
+    min-height: 100vh;
+  }
+}
+
+/* Extra large devices (large laptops and desktops, 1200px and up) */
+@media screen and (min-width: 1200px) {
+  .hero-section-responsive {
+    background-size: cover;
+    background-position: center center;
+    height: 100vh;
+    min-height: 100vh;
+  }
+}
+
+/* Ultra-wide screens */
+@media screen and (min-width: 1600px) {
+  .hero-section-responsive {
+    background-size: cover;
+    background-position: center center;
+    height: 100vh;
+    min-height: 100vh;
+  }
+}
+
+/* High DPI displays - Ensure crisp images */
+@media screen and (-webkit-min-device-pixel-ratio: 2), 
+       screen and (min-resolution: 192dpi), 
+       screen and (min-resolution: 2dppx) {
+  .hero-section-responsive {
+    background-size: cover;
+    background-position: center center;
+  }
+  
+  /* Mobile high DPI - fill entire space with image */
+  @media screen and (max-width: 600px) {
+    .hero-section-responsive {
+      background-size: cover !important;
+    }
+  }
+}
+
+/* Landscape orientation handling */
+@media screen and (orientation: landscape) and (max-height: 600px) {
+  .hero-section-responsive {
+    background-size: cover;
+    background-position: center center;
+  }
+}
+
+/* Specific fixes for very wide mobile screens */
+@media screen and (max-width: 600px) and (min-aspect-ratio: 16/9) {
+  .hero-section-responsive {
+    background-size: cover !important;
+    background-position: center center !important;
+  }
+}
+
+/* Ensure overlay and content work well with both contain and cover */
+.hero-section-responsive .hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+}
+
+.hero-section-responsive .hero-content {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  text-align: center;
+  padding: 1rem;
+}
+
+/* Left-aligned content for How It Works page */
+.hero-section-responsive .hero-content-left {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  text-align: left;
+  padding: 1rem;
+}
+
+/* Mobile adjustments for left-aligned content */
+@media screen and (max-width: 768px) {
+  .hero-section-responsive .hero-content-left {
+    text-align: center;
+    padding: 1rem;
+  }
+  
+  .hero-section-responsive .hero-content-left .max-w-2xl {
+    max-width: 100% !important;
+    margin: 0 auto !important;
+  }
+}
+
+/* Ensure hero section isolation - doesn't affect other page elements */
+.hero-section-responsive {
+  isolation: isolate;
+  contain: layout style paint;
+  /* Ensure background is contained within this element only */
+  background-attachment: scroll !important;
+  /* Create a new stacking context */
+  z-index: 0;
+}
+
+/* Only apply hero background styles to sections with background images */
+.hero-section-responsive[style*="background-image"] {
+  /* These styles only apply when background-image is set */
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+/* Ensure proper stacking context */
+.hero-section-responsive * {
+  position: relative;
+}
+
+/* Specifically protect Tailwind gradient and color backgrounds */
+[class*="bg-gradient"],
+[class*="bg-grub-red"],
+[class*="bg-red-"],
+[class*="from-grub-red"],
+[class*="to-red-"],
+[class*="bg-gray"],
+[class*="bg-white"],
+[class*="bg-black"] {
+  /* Preserve Tailwind background utilities */
+  background-size: initial;
+  background-position: initial;
+  background-attachment: initial;
+}
+
+/* Ensure body and html don't inherit hero background */
+body, html {
+  background-attachment: initial !important;
+}
+
+/* Ensure hero section creates its own containing block */
+.hero-section-responsive {
+  transform: translateZ(0); /* Create a new stacking context */
+}

@@ -1,4 +1,4 @@
-/* NearbyRestaurants.css */
+/* NearbyRestaurants.css - Unified Carousel Styles */
 .nearby-restaurants {
   padding: 4rem 0;
   background-color: #f9f9f9;
@@ -10,44 +10,78 @@
   color: #800020;
 }
 
-.restaurant-carousel {
+/* Carousel Wrapper - constrains width for scrolling */
+.carousel-wrapper {
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Unified Carousel Container */
+.unified-carousel {
   display: flex;
-  width: fit-content;
   gap: 1.5rem;
-  transition: transform 0.2s ease-out;
-}
-
-/* Desktop animation (default) */
-.restaurant-carousel.desktop-animation {
-  animation: scroll 60s linear infinite;
-}
-
-/* Mobile interactive mode */
-.restaurant-carousel.mobile-interactive {
-  animation: none;
   overflow-x: auto;
+  overflow-y: hidden;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+  
+  /* Critical: Set width to enable horizontal scrolling */
+  width: 100%;
+  max-width: 100%;
+  
+  /* Hide scrollbars */
   scrollbar-width: none;
   -ms-overflow-style: none;
+  
+  /* Interaction states */
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  
+  /* Smooth transitions - disabled during drag for performance */
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  
+  /* Ensure content doesn't wrap */
+  flex-wrap: nowrap;
+  
+  /* Better touch handling */
+  touch-action: pan-x;
 }
 
-.restaurant-carousel.mobile-interactive::-webkit-scrollbar {
+.unified-carousel::-webkit-scrollbar {
   display: none;
 }
 
-.restaurant-carousel.mobile-interactive:active {
+/* Dragging state */
+.unified-carousel.dragging {
   cursor: grabbing;
+  scroll-behavior: auto; /* Disable smooth scrolling during drag */
+  transition: none; /* Disable transitions during drag for immediate response */
 }
 
-/* Animation pause state */
-.restaurant-carousel.animation-paused {
-  animation-play-state: paused;
+/* Prevent text selection and image dragging during interaction */
+.unified-carousel.dragging * {
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
+/* Scale down cards slightly during drag for visual feedback */
+.unified-carousel.dragging .restaurant-card {
+  transform: scale(0.98);
+  transition: transform 0.1s ease-out;
+}
+
+/* Dim images slightly during drag */
+.unified-carousel.dragging .restaurant-card img {
+  opacity: 0.9;
+  transition: opacity 0.1s ease-out;
+}
+
+/* Restaurant Cards */
 .restaurant-card {
   flex: 0 0 auto;
   width: 300px;
@@ -55,13 +89,22 @@
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+              box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   display: flex;
   flex-direction: column;
-
+  
+  /* Ensure cards are interactive */
+  pointer-events: auto;
+  
+  /* Better performance during animations */
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
-.restaurant-card:hover {
+/* Hover effects for cards (not during drag) */
+.unified-carousel:not(.dragging) .restaurant-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
@@ -70,14 +113,16 @@
   width: 100%;
   height: 192px;
   object-fit: cover;
+  /* Prevent image dragging */
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 .card-content {
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  flex: 1; /* This makes the content take up remaining space */
-  /* flex: 1!important; */
+  flex: 1;
 }
 
 .card-content h3 {
@@ -101,21 +146,6 @@
   font-weight: 600;
   color: #f59e0b;
 }
-.order-btn {
-  margin-top: auto; /* Pushes button to bottom of flex container */
-}
-@keyframes scroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
-}
-
-.restaurant-carousel.desktop-animation:hover {
-  animation-play-state: paused;
-}
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -127,11 +157,7 @@
     padding: 2rem 0;
   }
   
-  .restaurant-carousel.desktop-animation {
-    animation-duration: 45s;
-  }
-  
-  .restaurant-carousel.mobile-interactive {
+  .unified-carousel {
     gap: 1rem;
   }
 }
@@ -145,29 +171,44 @@
     padding: 1rem;
   }
   
-  .restaurant-carousel.desktop-animation {
-    animation-duration: 40s;
-  }
-  
-  .restaurant-carousel.mobile-interactive {
+  .unified-carousel {
     gap: 0.75rem;
   }
 }
 
-/* Mobile touch improvements */
-.restaurant-carousel.mobile-interactive .restaurant-card {
-  pointer-events: auto;
-  touch-action: pan-x;
-}
-
-.restaurant-carousel.mobile-interactive .restaurant-card:active {
-  transform: translateY(-2px) scale(0.98);
-  transition: transform 0.1s ease;
-}
-
-/* Pause animation on reduced motion preference */
-@media (prefers-reduced-motion: reduce) {
-  .restaurant-carousel.desktop-animation {
-    animation: none;
+/* Enhanced touch improvements for mobile */
+@media (hover: none) {
+  .unified-carousel {
+    /* Better momentum scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
+    /* Improve touch response */
+    touch-action: pan-x;
   }
+  
+  .unified-carousel .restaurant-card:active {
+    transform: translateY(-2px) scale(0.98);
+    transition: transform 0.1s ease;
+  }
+  
+  /* Faster transitions on mobile for better responsiveness */
+  .unified-carousel .restaurant-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+}
+
+/* Accessibility: Pause animation for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .unified-carousel {
+    scroll-behavior: auto;
+  }
+  
+  .unified-carousel * {
+    transition: none !important;
+  }
+}
+
+/* Focus styles for keyboard navigation */
+.restaurant-card:focus-within {
+  outline: 2px solid #800020;
+  outline-offset: 2px;
 }

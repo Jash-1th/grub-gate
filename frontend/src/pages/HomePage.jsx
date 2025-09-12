@@ -9,8 +9,6 @@ import PushNotificationTester from '../components/common/PushNotificationTester'
 const HomePage = () => {
   return (
     <div className="min-h-screen">
-      
-      
       <HeroSection />
       <WhyGrubGateSection />
       <TestimonialsSection />

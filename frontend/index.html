@@ -37,10 +37,212 @@
     
     <!-- Critical CSS for App Shell - External file for SSR compatibility -->
     <link rel="stylesheet" href="/critical.css">
+    
+    <!-- Inline CSS for Launch Screen - No delay in styling -->
+    <style>
+      /* Launch Screen Styles */
+      .launch-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-image: url('/images/launch-background.jpg');
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 1s ease-out, visibility 1s ease-out;
+        overflow: hidden;
+      }
+      
+      /* Ensure background covers all screen orientations */
+      @media screen and (orientation: portrait) {
+        .launch-screen {
+          background-size: contain;
+          background-position: center center;
+          background-color: #1a1a1a; /* Dark background for empty areas */
+        }
+      }
+      
+      /* For larger portrait screens, use cover */
+      @media screen and (orientation: portrait) and (min-width: 768px) {
+        .launch-screen {
+          background-size: cover;
+          background-color: transparent;
+        }
+      }
+      
+      @media screen and (orientation: landscape) {
+        .launch-screen {
+          background-size: cover;
+          background-position: center center;
+        }
+      }
+      
+      /* Handle different aspect ratios */
+      @media screen and (max-aspect-ratio: 1/1) {
+        .launch-screen {
+          background-size: cover;
+          background-position: center center;
+        }
+      }
+      
+      @media screen and (min-aspect-ratio: 2/1) {
+        .launch-screen {
+          background-size: cover;
+          background-position: center center;
+        }
+      }
+      
+      .launch-screen.hidden {
+        opacity: 0;
+        visibility: hidden;
+      }
+      
+      /* Loading Indicator Styles */
+      .loading-indicator {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      
+      /* CSS Spinner Animation */
+      .css-loader {
+        width: 60px;
+        height: 60px;
+        border: 4px solid rgba(255, 255, 255, 0.2);
+        border-left: 4px solid #ffffff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      
+      /* Hide launch screen when app is loaded */
+      body.app-loaded .launch-screen {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      
+      /* Ensure the app shell loader is hidden initially when launch screen is visible */
+      .launch-screen + .app-shell-loader {
+        display: none;
+      }
+      
+      /* Comprehensive responsive adjustments for all devices */
+      
+      /* Very small mobile phones */
+      @media screen and (max-width: 480px) {
+        .launch-screen {
+          background-size: contain; /* Show entire image without cropping */
+          background-position: center center;
+          background-attachment: scroll;
+          background-color: #1a1a1a; /* Dark background for letterboxing */
+        }
+        .css-loader {
+          width: 35px;
+          height: 35px;
+          border-width: 3px;
+        }
+      }
+      
+      /* Extra small devices (phones, 600px and down) */
+      @media screen and (max-width: 600px) {
+        .launch-screen {
+          background-size: contain; /* Show entire image without cropping */
+          background-position: center center;
+          background-attachment: scroll; /* Better performance on mobile */
+          background-color: #1a1a1a; /* Fallback color for empty areas */
+        }
+        .css-loader {
+          width: 40px;
+          height: 40px;
+          border-width: 3px;
+        }
+      }
+      
+      /* Small devices (portrait tablets and large phones, 600px and up) */
+      @media screen and (min-width: 600px) {
+        .launch-screen {
+          background-size: cover;
+          background-position: center center;
+        }
+      }
+      
+      /* Medium devices (landscape tablets, 768px and up) */
+      @media screen and (min-width: 768px) {
+        .launch-screen {
+          background-size: cover;
+          background-position: center center;
+        }
+        .css-loader {
+          width: 60px;
+          height: 60px;
+        }
+      }
+      
+      /* Large devices (laptops/desktops, 992px and up) */
+      @media screen and (min-width: 992px) {
+        .launch-screen {
+          background-size: cover;
+          background-position: center center;
+        }
+        .css-loader {
+          width: 80px;
+          height: 80px;
+          border-width: 5px;
+        }
+      }
+      
+      /* Extra large devices (large laptops and desktops, 1200px and up) */
+      @media screen and (min-width: 1200px) {
+        .launch-screen {
+          background-size: cover;
+          background-position: center center;
+        }
+      }
+      
+      /* Ultra-wide screens */
+      @media screen and (min-width: 1600px) {
+        .launch-screen {
+          background-size: cover;
+          background-position: center center;
+        }
+      }
+      
+      /* High DPI displays */
+      @media screen and (-webkit-min-device-pixel-ratio: 2), 
+             screen and (min-resolution: 192dpi), 
+             screen and (min-resolution: 2dppx) {
+        .launch-screen {
+          background-size: cover;
+          background-position: center center;
+        }
+      }
+    </style>
   </head>
   <body>
     <div id="root">
-      <!-- App Shell Loader - Visible before JavaScript loads -->
+      <!-- Launch Screen - Full screen background with only loading indicator -->
+      <div class="launch-screen" id="launch-screen">
+        <div class="loading-indicator">
+          <div class="css-loader"></div>
+        </div>
+      </div>
+      
+      <!-- App Shell Loader - Fallback loader (hidden when launch screen is visible) -->
       <div class="app-shell-loader" id="app-shell-loader">
         <img 
           src="/icons/logo512.png" 
@@ -74,24 +276,43 @@
         });
       }
       
-      // Hide loader when page is fully loaded
+      // Hide launch screen when page is fully loaded
       window.addEventListener('load', function() {
-        const loader = document.getElementById('app-shell-loader');
-        if (loader) {
+        const launchScreen = document.getElementById('launch-screen');
+        const appShellLoader = document.getElementById('app-shell-loader');
+        
+        if (launchScreen) {
           setTimeout(() => {
-            document.body.classList.add('js-loaded');
-            // Remove loader from DOM after transition
+            document.body.classList.add('app-loaded');
+            // Remove launch screen from DOM after transition
             setTimeout(() => {
-              if (loader.parentNode) {
-                loader.parentNode.removeChild(loader);
+              if (launchScreen.parentNode) {
+                launchScreen.parentNode.removeChild(launchScreen);
               }
-            }, 1300);
-          }, 1000);
+            }, 1000);
+          }, 1500); // Show launch screen for 1.5 seconds
         }
       });
       
-      // Hide loader when React app mounts (backup)
+      // Hide launch screen when React app mounts (primary method)
+      window.hideLaunchScreen = function() {
+        const launchScreen = document.getElementById('launch-screen');
+        if (launchScreen) {
+          document.body.classList.add('app-loaded');
+          setTimeout(() => {
+            if (launchScreen.parentNode) {
+              launchScreen.parentNode.removeChild(launchScreen);
+            }
+          }, 1000);
+        }
+      };
+      
+      // Legacy support - hide app shell loader (backup)
       window.hideAppShellLoader = function() {
+        // First try to hide launch screen
+        window.hideLaunchScreen();
+        
+        // Then hide app shell loader as fallback
         const loader = document.getElementById('app-shell-loader');
         if (loader) {
           document.body.classList.add('js-loaded');

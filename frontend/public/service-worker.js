@@ -131,6 +131,25 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
+  // Skip non-GET requests (POST, PUT, DELETE, etc.) as they cannot be cached
+  if (request.method !== 'GET') {
+    return;
+  }
+  
+  // Skip external API calls that shouldn't be cached
+  const url = new URL(request.url);
+  const isExternalAPI = (
+    url.hostname.includes('firebaseio.com') ||
+    url.hostname.includes('googleapis.com') ||
+    url.hostname.includes('emailjs.com') ||
+    url.hostname.includes('firebase.com') ||
+    url.hostname !== self.location.hostname
+  );
+  
+  if (isExternalAPI) {
+    return;
+  }
+  
   const strategy = getCachingStrategy(request);
   
   switch (strategy) {
@@ -163,7 +182,7 @@ async function staleWhileRevalidate(request, cacheName) {
   // Fetch fresh content in background
   const fetchPromise = fetch(request)
     .then(response => {
-      if (response.ok) {
+      if (response.ok && request.method === 'GET') {
         cache.put(request, response.clone());
       }
       return response;
@@ -182,8 +201,8 @@ async function networkFirst(request, cacheName) {
   try {
     const response = await fetch(request);
     
-    if (response.ok) {
-      // Cache successful responses
+    // Only cache GET requests with successful responses
+    if (response.ok && request.method === 'GET') {
       const cache = await caches.open(cacheName);
       cache.put(request, response.clone());
     }
@@ -222,7 +241,7 @@ async function cacheFirst(request, cacheName) {
   try {
     const response = await fetch(request);
     
-    if (response.ok) {
+    if (response.ok && request.method === 'GET') {
       cache.put(request, response.clone());
     }
     

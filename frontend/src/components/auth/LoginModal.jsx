@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useModal } from '../../context/ModalContext';
+import './modal-responsive.css';
 
 const LoginModal = () => {
   const { t } = useTranslation();
@@ -75,23 +76,23 @@ const LoginModal = () => {
   }
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div className="modal-container">
       {/* Modal Overlay - Semi-transparent backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm overflow-y-auto flex min-h-full items-center justify-center py-4 px-4">
+      <div className="modal-overlay">
         
         {/* Modal Card */}
         <div 
-          className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md transform transition-all duration-300 my-2"
+          className="modal-card"
           onClick={(e) => e.stopPropagation()}
         >
           
           {/* Close Button */}
           <button 
             onClick={handleClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-800 transition-colors duration-200 z-10"
+            className="modal-close-button"
             aria-label="Close login modal"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="modal-close-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>

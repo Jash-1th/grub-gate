@@ -19,7 +19,7 @@ const Header = () => {
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-full mx-auto">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20 sm:h-22 md:h-24">
           {/* Logo - Leftmost positioned */}
           <div className="flex-shrink-0 order-1">
             <Link to="/" className="flex items-center">
@@ -28,8 +28,8 @@ const Header = () => {
                 <img 
                   src={logoImage} 
                   alt={siteInfo.logoText}
-                  className="h-8 w-auto sm:h-10 md:h-12 object-contain"
-                  style={{ boxShadow: "0px 4px 8px 0 black" , borderRadius:"10%" , marginLeft:"10px"}}
+                  className="h-10 w-20 sm:h-12 sm:w-20 md:h-14 md:w-24 lg:h-14 lg:w-28 object-cover"
+                  style={{ boxShadow: "0px 4px 8px 0 black" , borderRadius:"8px" , marginLeft:"10px"}}
                 />
               </div>
             </Link>

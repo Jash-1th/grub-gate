@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 
 let vite;
@@ -103,7 +103,13 @@ async function handleSSR(req, res, next) {
       // Development: read template and get render function from Vite
       template = fs.readFileSync(join(__dirname, 'index.html'), 'utf8');
       template = await vite.transformIndexHtml(url, template);
-      const ssrModule = await vite.ssrLoadModule('/src/main.ssr.jsx');
+      // Invalidate module cache to ensure fresh SSR in development
+      const moduleId = '/src/main.ssr.jsx';
+      const mod = vite.moduleGraph.getModuleById(moduleId);
+      if (mod) {
+        vite.reloadModule(mod);
+      }
+      const ssrModule = await vite.ssrLoadModule(moduleId);
       renderFunction = ssrModule.render;
     } else {
       // Production: use cached template and render function
