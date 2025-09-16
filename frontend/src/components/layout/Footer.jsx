@@ -48,15 +48,23 @@ const Footer = () => {
             {/* <div className="text-2xl font-bold text-white">{siteInfo.logoText}</div> */}
             <div className="flex-shrink-0 order-1">
             <Link to="/" className="flex items-center">
-              <div className="flex items-center">
-                {/* Logo Image */}
-                 <img 
-                                  src={logoImage} 
-                                  alt={siteInfo.logoText}
-                                  className="h-10 w-16 sm:h-12 sm:w-20 md:h-14 md:w-24 lg:h-14 lg:w-28 object-cover"
-                                  style={{ boxShadow: "0px 4px 8px 0 black" , borderRadius:"8px" , marginLeft:"10px"}}
-                                />
-              </div>
+            <div className="flex items-center">
+  {/* Logo Image - Larger & Fully Responsive */}
+  <img
+    src={logoImage}
+    alt={siteInfo.logoText}
+    className="
+      h-14 w-28     
+      sm:h-16 sm:w-32  
+      md:h-20 md:w-100  
+      object-contain  
+      ml-2.5         
+      rounded-lg     
+      transition-all duration-300 ease-in-out
+    "
+    
+  />
+          </div>
             </Link>
           </div>
             <p className="text-red-100 text-sm">{t('footer.builtWithLove')}</p>
