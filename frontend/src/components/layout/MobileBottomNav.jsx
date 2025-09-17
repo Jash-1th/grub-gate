@@ -46,29 +46,35 @@ const MobileBottomNav = () => {
   const { t } = useTranslation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.06)]">
-      <ul className="flex items-stretch justify-between">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] pb-[max(env(safe-area-inset-bottom),0px)]">
+      {/* Main Navigation */}
+      <ul className="flex items-stretch justify-between px-2 py-2 overflow-hidden">
         {navigation.main.map((item) => (
-          <li key={item.name} className="flex-1">
+          <li key={item.name} className="flex-1 min-w-0 overflow-hidden">
             <NavLink
               to={item.href}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center h-16 text-xs font-medium transition-colors duration-200 ${
-                  isActive ? 'text-grub-red' : 'text-gray-600 hover:text-grub-red'
+                `flex min-w-0 w-full overflow-hidden flex-col items-center justify-center h-14 text-[11px] leading-tight font-medium transition-all duration-200 rounded-lg mx-0.5 ${
+                  isActive 
+                    ? 'text-grub-red bg-red-50' 
+                    : 'text-gray-600 hover:text-grub-red hover:bg-gray-50'
                 }`
               }
               aria-label={t(`nav.${item.name}`)}
             >
-              <div className="flex items-center justify-center h-6 w-6 mb-1">
+              <div className="flex items-center justify-center h-5 w-5 mb-1 flex-shrink-0">
                 {getNavIcon(item.name)}
               </div>
-              <div className="flex items-center justify-center h-3 text-center leading-tight">
-                <span>{t(`nav.${item.name}`)}</span>
+              <div className="flex items-center justify-center h-4 text-center min-w-0 w-full px-0.5">
+                <span className="block w-full overflow-hidden text-ellipsis whitespace-nowrap" title={t(`nav.${item.name}`)}>
+                  {t(`nav.${item.name}`)}
+                </span>
               </div>
             </NavLink>
           </li>
         ))}
       </ul>
+      
     </nav>
   );
 };
