@@ -6,10 +6,6 @@ import NearbyRestaurants from '../components/home/NearbyRestaurants';
 import GetStartedCTA from '../components/common/GetStartedCTA';
 
 // Lazy load debug component only in development
-let EnvDebug = null;
-if (import.meta.env.DEV) {
-  EnvDebug = React.lazy(() => import('../components/debug/EnvDebug'));
-}
 
 // Lazy load components that use browser APIs
 const StatisticsSection = lazy(() => import('../components/home/StatisticsSection'));
@@ -50,12 +46,7 @@ const HomePage = () => {
       <NearbyRestaurants />
       <GetStartedCTA />
       
-      {/* Show environment debug in development */}
-      {import.meta.env.DEV && EnvDebug && (
-        <Suspense fallback={null}>
-          <EnvDebug />
-        </Suspense>
-      )}
+    
      
     </div>
   );
