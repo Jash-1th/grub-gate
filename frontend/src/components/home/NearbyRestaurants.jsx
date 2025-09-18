@@ -83,13 +83,15 @@ const NearbyRestaurants = () => {
     }
   }, []);
 
-  // Mouse/Touch event handlers for interaction (using refs for performance)
+  // Unified event handler for both mouse and touch move events
   const handleInteractionMove = useCallback((e) => {
     if (!isDraggingRef.current || !carouselRef.current) return;
     
+    // Prevent default to avoid scrolling the page
     e.preventDefault();
     
     const currentTime = performance.now();
+    // Get the correct clientX whether it's a touch or mouse event
     const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
     const deltaX = dragStartRef.current.x - clientX;
     const newScrollLeft = dragStartRef.current.scrollLeft + deltaX;
@@ -155,10 +157,12 @@ const NearbyRestaurants = () => {
     momentumRef.current = { velocity: 0, lastX: 0, lastTime: 0 };
     
     // Remove event listeners
-    document.removeEventListener('mousemove', handleInteractionMove);
-    document.removeEventListener('mouseup', handleInteractionEnd);
-    document.removeEventListener('touchmove', handleInteractionMove);
-    document.removeEventListener('touchend', handleInteractionEnd);
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('mousemove', handleInteractionMove);
+      document.removeEventListener('mouseup', handleInteractionEnd);
+      document.removeEventListener('touchmove', handleInteractionMove);
+      document.removeEventListener('touchend', handleInteractionEnd);
+    }
   }, [handleInteractionMove, clearResumeTimeout]);
   
   const handleInteractionStart = useCallback((e) => {
@@ -176,8 +180,10 @@ const NearbyRestaurants = () => {
     setDragVisualState(true);
     
     const currentTime = performance.now();
+    // Get the correct clientX whether it's a touch or mouse event
     const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
     
+    // Update drag start reference
     dragStartRef.current = {
       x: clientX,
       scrollLeft: carouselRef.current.scrollLeft,
@@ -191,16 +197,29 @@ const NearbyRestaurants = () => {
       lastTime: currentTime
     };
     
-    // Add move and end listeners
-    if (e.type === 'touchstart') {
-      document.addEventListener('touchmove', handleInteractionMove, { passive: false });
-      document.addEventListener('touchend', handleInteractionEnd, { passive: false });
-      document.addEventListener('touchcancel', handleInteractionEnd, { passive: false });
-    } else {
-      document.addEventListener('mousemove', handleInteractionMove);
-      document.addEventListener('mouseup', handleInteractionEnd);
-      // Handle mouse leave to end drag if user drags outside window
-      document.addEventListener('mouseleave', handleInteractionEnd);
+    // Add appropriate event listeners based on event type
+    if (typeof document !== 'undefined') {
+      const isTouch = e.type === 'touchstart';
+      
+      if (isTouch) {
+        // For touch devices, listen to touch events
+        document.addEventListener('touchmove', handleInteractionMove, { 
+          passive: false 
+        });
+        document.addEventListener('touchend', handleInteractionEnd, { 
+          passive: false 
+        });
+        // Also listen for touch cancel events
+        document.addEventListener('touchcancel', handleInteractionEnd, { 
+          passive: false 
+        });
+        document.addEventListener('touchcancel', handleInteractionEnd, { passive: false });
+      } else {
+        document.addEventListener('mousemove', handleInteractionMove);
+        document.addEventListener('mouseup', handleInteractionEnd);
+        // Handle mouse leave to end drag if user drags outside window
+        document.addEventListener('mouseleave', handleInteractionEnd);
+      }
     }
   }, [handleInteractionMove, handleInteractionEnd, clearResumeTimeout]);
   
@@ -257,53 +276,112 @@ const NearbyRestaurants = () => {
   const [isMobile, setIsMobile] = useState(false);
   
   useEffect(() => {
+    if (!isClient) return;
+    
     const checkIfMobile = () => {
-      setIsMobile(window.innerWidth <= 768 || 'ontouchstart' in window);
+      setIsMobile(window.innerWidth <= 768);
     };
     
     checkIfMobile();
     window.addEventListener('resize', checkIfMobile);
     return () => window.removeEventListener('resize', checkIfMobile);
-  }, []);
+  }, [isClient]);
 
-  // Mobile component with simple grid layout
+  // Mobile component with draggable carousel
   const MobileRestaurantView = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-      {nearbyRestaurants.slice(0, 6).map((restaurant, index) => (
-        <div key={restaurant.id} className="restaurant-card-mobile bg-white rounded-2xl shadow-lg overflow-hidden">
-          <div className="relative">
-            <img 
-              src={restaurantImage} 
-              alt={restaurant.name}
-              className="w-full h-40 object-cover"
-            />
-            <div className="absolute top-3 right-3 bg-white rounded-full px-2 py-1 shadow-md">
-              <div className="flex items-center">
-                {renderStars(restaurant.rating)}
-                <span className="ml-1 text-xs font-semibold text-gray-700">
-                  {restaurant.rating}
+    <div className="carousel-wrapper">
+      <div 
+        className={`unified-carousel mobile-carousel ${
+          dragVisualState ? 'dragging' : ''
+        } ${
+          isPaused ? 'paused' : ''
+        }`}
+        ref={carouselRef}
+        // Touch events for mobile
+        onTouchStart={handleInteractionStart}
+        onTouchMove={(e) => {
+          // Only prevent default if we're dragging to avoid interfering with scrolling
+          if (isDraggingRef.current) {
+            e.preventDefault();
+          }
+        }}
+        onTouchEnd={handleInteractionEnd}
+        // Mouse events for desktop
+        onMouseDown={handleInteractionStart}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        // Prevent image drag
+        onDragStart={(e) => e.preventDefault()}
+        // Prevent text selection during drag
+        style={{
+          WebkitUserSelect: 'none',
+          msUserSelect: 'none',
+          userSelect: 'none',
+          WebkitTapHighlightColor: 'transparent'
+        }}
+      >
+        {duplicatedRestaurants.map((restaurant, index) => (
+          <div className="restaurant-card-mobile" key={`${restaurant.id}-${index}`}>
+            <div className="relative overflow-hidden">
+              <img 
+                src={restaurantImage} 
+                alt={restaurant.name}
+                className="w-full h-40 object-cover transition-transform duration-300"
+              />
+              <div className="absolute top-3 right-3 bg-white rounded-full px-2 py-1 shadow-md">
+                <div className="flex items-center">
+                  {renderStars(restaurant.rating)}
+                  <span className="ml-1 text-xs font-semibold text-gray-700">
+                    {restaurant.rating}
+                  </span>
+                </div>
+              </div>
+              <div className="absolute top-3 left-3">
+                <span className="bg-grub-red text-white px-2 py-1 rounded-full text-xs font-semibold">
+                  {restaurant.deliveryTime}
                 </span>
               </div>
             </div>
-            <div className="absolute top-3 left-3">
-              <span className="bg-grub-red text-white px-2 py-1 rounded-full text-xs font-semibold">
-                {restaurant.deliveryTime}
-              </span>
+            
+            <div className="p-4 flex flex-col flex-1">
+              <h3 className="text-lg font-bold text-gray-900 mb-2">
+                {restaurant.name}
+              </h3>
+              <p className="text-gray-600 text-sm leading-relaxed mb-3 line-clamp-2">
+                {restaurant.description}
+              </p>
+              
+              <div className="space-y-1 text-xs text-gray-500 mb-3">
+                <div className="flex justify-between">
+                  <span>{t('nearbyRestaurants.cuisine')}:</span>
+                  <span className="font-medium">{restaurant.cuisine}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>{t('nearbyRestaurants.deliveryFee')}:</span>
+                  <span className="font-medium">{restaurant.deliveryFee}</span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-1 mb-3">
+                {restaurant.tags.slice(0, 2).map((tag, tagIndex) => (
+                  <span
+                    key={tagIndex}
+                    className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
+              <div className="mt-auto">
+                <button className="w-full bg-grub-red text-white py-2 px-4 rounded-lg font-semibold text-sm hover:bg-red-700 transition-colors duration-200">
+                  {t('nearbyRestaurants.orderNow')}
+                </button>
+              </div>
             </div>
           </div>
-          <div className="p-4">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">
-              {restaurant.name}
-            </h3>
-            <p className="text-gray-600 text-sm leading-relaxed mb-3 line-clamp-2">
-              {restaurant.description}
-            </p>
-            <button className="w-full bg-grub-red text-white py-2 px-4 rounded-lg font-semibold text-sm hover:bg-red-700 transition-colors duration-200">
-              {t('nearbyRestaurants.orderNow')}
-            </button>
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 
@@ -317,9 +395,27 @@ const NearbyRestaurants = () => {
           isPaused ? 'paused' : ''
         }`}
         ref={carouselRef}
+        // Touch events for mobile (even in desktop view for touchscreen laptops)
+        onTouchStart={handleInteractionStart}
+        onTouchMove={(e) => {
+          if (isDraggingRef.current) {
+            e.preventDefault();
+          }
+        }}
+        onTouchEnd={handleInteractionEnd}
+        // Mouse events for desktop
         onMouseDown={handleInteractionStart}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        // Prevent image drag
+        onDragStart={(e) => e.preventDefault()}
+        // Prevent text selection during drag
+        style={{
+          WebkitUserSelect: 'none',
+          msUserSelect: 'none',
+          userSelect: 'none',
+          WebkitTapHighlightColor: 'transparent'
+        }}
       >
         {duplicatedRestaurants.map((restaurant, index) => (
           <div className="restaurant-card" key={`${restaurant.id}-${index}`}>

@@ -12,7 +12,7 @@
   "gcm_sender_id": "103953800507",
   "icons": [
     {
-      "src": "/icons/logo192.png",
+      "src": "/icons/Logo.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any"
@@ -38,7 +38,7 @@
       "url": "/restaurants",
       "icons": [
         {
-          "src": "/icons/logo192.png",
+          "src": "/icons/Logo.png",
           "sizes": "192x192"
         }
       ]
@@ -50,7 +50,7 @@
       "url": "/how-it-works",
       "icons": [
         {
-          "src": "/icons/logo192.png",
+          "src": "/icons/Logo.png",
           "sizes": "192x192"
         }
       ]

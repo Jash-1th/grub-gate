@@ -1,31 +1,52 @@
-import React from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 import HeroSection from '../components/home/HeroSection';
 import WhyGrubGateSection from '../components/home/WhyGrubGateSection';
 import TestimonialsSection from '../components/home/TestimonialsSection';
 import NearbyRestaurants from '../components/home/NearbyRestaurants';
 import GetStartedCTA from '../components/common/GetStartedCTA';
-import PushNotificationTester from '../components/common/PushNotificationTester';
+
+// Lazy load debug component only in development
+
+// Lazy load components that use browser APIs
+const StatisticsSection = lazy(() => import('../components/home/StatisticsSection'));
+const PopularDishes = lazy(() => import('../components/home/PopularDishes'));
+
+// Fallback component for lazy loading
+const Fallback = () => (
+  <div className="py-16 bg-gray-50">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="animate-pulse">
+        <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto mb-6"></div>
+        <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto mb-12"></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-48 bg-gray-200 rounded-lg"></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 const HomePage = () => {
   return (
     <div className="min-h-screen">
       <HeroSection />
       <WhyGrubGateSection />
+      
+      <Suspense fallback={<Fallback />}>
+        <StatisticsSection />
+      </Suspense>
+      
+      <Suspense fallback={<Fallback />}>
+        <PopularDishes />
+      </Suspense>
+      
       <TestimonialsSection />
       <NearbyRestaurants />
-      
-      {/* Push Notification Tester - Remove this in production */}
-      {/* <div className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Push Notification Testing</h2>
-            <p className="text-gray-600">Test the push notification functionality (Development Only)</p>
-          </div>
-          <PushNotificationTester />
-        </div>
-      </div> */}
-      
       <GetStartedCTA />
+      
+    
      
     </div>
   );

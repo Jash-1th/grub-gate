@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
+import MobileBottomNav from './components/layout/MobileBottomNav';
 import HomePage from './pages/HomePage';
 import About from './pages/About';
 import HowItWorks from './pages/HowItWorks';
@@ -11,12 +12,14 @@ import { ModalProvider, useModal } from './context/ModalContext';
 import SignupModal from './components/auth/SignupModal';
 import LoginModal from './components/auth/LoginModal';
 import LaunchScreen from './components/common/LaunchScreen';
+import { useResponsiveNavigation } from './hooks/useResponsiveNavigation';
 import { requestNotificationPermission } from './pwa'; // Ensure path is correct
 
 
 // App Content Component
 function AppContent() {
   const { isSignupModalOpen, isLoginModalOpen } = useModal();
+  const { isMobile, isClient } = useResponsiveNavigation();
   const isModalOpen = isSignupModalOpen || isLoginModalOpen;
 
   return (
@@ -30,7 +33,7 @@ function AppContent() {
         isModalOpen ? 'blur-sm pointer-events-none' : ''
       }`}>
         <Header />
-        <main className="flex-grow">
+        <main className={`flex-grow`}>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/about" element={<About />} />
@@ -41,6 +44,14 @@ function AppContent() {
         </main>
         
         <Footer />
+        
+        {/* Mobile Bottom Navigation - Only render on mobile after client hydration */}
+        {isClient && isMobile && <MobileBottomNav />}
+
+        {/* Spacer to ensure footer content is fully visible above fixed bottom nav on mobile */}
+        {isClient && isMobile && (
+          <div aria-hidden className="h-20"></div>
+        )}
       </div>
     </>
   );
@@ -52,29 +63,39 @@ function App() {
   const [showLaunchScreen, setShowLaunchScreen] = useState(false);
   const [isLaunchScreenVisible, setIsLaunchScreenVisible] = useState(true);
 
-  useEffect(() => {
-    try {
-      // Use sessionStorage to check if this is the first visit in the current session/tab
-      const SESSION_KEY = 'grubgate_launch_screen_shown';
-      const hasSeenLaunchScreen = sessionStorage.getItem(SESSION_KEY);
+  const initialRender = useRef(true);
 
-      if (!hasSeenLaunchScreen) {
-        // First visit in this session - show launch screen
-        console.log('🚀 GrubGate: First visit detected - showing launch screen');
-        sessionStorage.setItem(SESSION_KEY, 'true');
-        setShowLaunchScreen(true);
-        setIsLaunchScreenVisible(true);
-      } else {
-        // Subsequent visits in this session - skip launch screen
-        console.log('🔄 GrubGate: Returning user - skipping launch screen');
+  useEffect(() => {
+    // Skip effect on server-side rendering
+    if (typeof window === 'undefined') return;
+    
+    // Only run this effect once on mount
+    if (initialRender.current) {
+      initialRender.current = false;
+      
+      try {
+        // Use sessionStorage to check if this is the first visit in the current session/tab
+        const SESSION_KEY = 'grubgate_launch_screen_shown';
+        const hasSeenLaunchScreen = sessionStorage.getItem(SESSION_KEY);
+
+        if (!hasSeenLaunchScreen) {
+          // First visit in this session - show launch screen
+          console.log('🚀 GrubGate: First visit detected - showing launch screen');
+          sessionStorage.setItem(SESSION_KEY, 'true');
+          setShowLaunchScreen(true);
+          setIsLaunchScreenVisible(true);
+        } else {
+          // Subsequent visits in this session - skip launch screen
+          console.log('🔄 GrubGate: Returning user - skipping launch screen');
+          setShowLaunchScreen(false);
+          setIsLaunchScreenVisible(false);
+        }
+      } catch (error) {
+        // If sessionStorage fails (rare), default to not showing launch screen
+        console.warn('⚠️ GrubGate: SessionStorage unavailable, skipping launch screen');
         setShowLaunchScreen(false);
         setIsLaunchScreenVisible(false);
       }
-    } catch (error) {
-      // If sessionStorage fails (rare), default to not showing launch screen
-      console.warn('⚠️ GrubGate: SessionStorage unavailable, skipping launch screen');
-      setShowLaunchScreen(false);
-      setIsLaunchScreenVisible(false);
     }
   }, []);
 

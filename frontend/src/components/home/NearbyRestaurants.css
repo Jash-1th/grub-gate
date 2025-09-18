@@ -3,6 +3,9 @@
   padding: 4rem 0;
   background-color: #f9f9f9;
   overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-text-size-adjust: 100%;
 }
 
 .nearby-restaurants h2 {
@@ -25,13 +28,23 @@
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   
-  /* Critical: Set width to enable horizontal scrolling */
+    /* Critical: Set width to enable horizontal scrolling */
   width: 100%;
   max-width: 100%;
   
-  /* Hide scrollbars */
+  /* Hide scrollbars but keep functionality */
   scrollbar-width: none;
   -ms-overflow-style: none;
+  
+  /* Optimize for touch devices */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  transform: translate3d(0,0,0);
+  will-change: transform;
   
   /* Interaction states */
   cursor: grab;
@@ -46,8 +59,9 @@
   /* Ensure content doesn't wrap */
   flex-wrap: nowrap;
   
-  /* Better touch handling */
+    /* Better touch handling */
   touch-action: pan-x;
+  -ms-touch-action: pan-x;
 }
 
 .unified-carousel::-webkit-scrollbar {
@@ -59,14 +73,34 @@
   cursor: grabbing;
   scroll-behavior: auto; /* Disable smooth scrolling during drag */
   transition: none; /* Disable transitions during drag for immediate response */
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  
+  /* Improve performance during drag */
+  -webkit-backface-visibility: hidden;
+  -webkit-transform-style: preserve-3d;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 /* Prevent text selection and image dragging during interaction */
 .unified-carousel.dragging * {
   pointer-events: none;
-  user-select: none;
   -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
   -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
 }
 
 /* Scale down cards slightly during drag for visual feedback */
@@ -96,6 +130,18 @@
   
   /* Ensure cards are interactive */
   pointer-events: auto;
+  
+  /* Optimize for performance */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000px;
+  perspective: 1000px;
+  will-change: transform;
+  
+  /* Prevent iOS text size adjustment */
+  -webkit-text-size-adjust: 100%;
   
   /* Better performance during animations */
   will-change: transform;
@@ -213,7 +259,56 @@
   outline-offset: 2px;
 }
 
-/* Mobile Restaurant Cards - Alternative Layout */
+/* Mobile Carousel Styles */
+.mobile-carousel {
+  /* Override desktop carousel styles for mobile */
+  gap: 1rem;
+  padding: 0 1rem;
+}
+
+.mobile-carousel .restaurant-card-mobile {
+  flex: 0 0 auto;
+  width: 280px;
+  height: 420px; /* Fixed height for consistent alignment */
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+              box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  pointer-events: auto;
+}
+
+/* Mobile carousel dragging states */
+.mobile-carousel.dragging .restaurant-card-mobile {
+  transform: scale(0.98);
+  transition: transform 0.1s ease-out;
+}
+
+.mobile-carousel.dragging .restaurant-card-mobile img {
+  opacity: 0.9;
+  transition: opacity 0.1s ease-out;
+}
+
+/* Mobile carousel hover effects (not during drag) */
+.mobile-carousel:not(.dragging) .restaurant-card-mobile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.mobile-carousel .restaurant-card-mobile:active {
+  transform: translateY(0) scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+/* Mobile Restaurant Cards - Alternative Layout (for non-carousel mobile view) */
 .restaurant-card-mobile {
   transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
               box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -242,7 +337,37 @@
   overflow: hidden;
 }
 
-/* Mobile grid responsive adjustments */
+/* Mobile carousel responsive adjustments */
+@media (max-width: 640px) {
+  .mobile-carousel {
+    gap: 0.75rem;
+    padding: 0 0.75rem;
+  }
+  
+  .mobile-carousel .restaurant-card-mobile {
+    width: 260px;
+    height: 400px; /* Slightly shorter for smaller screens */
+  }
+}
+
+@media (max-width: 480px) {
+  .mobile-carousel {
+    gap: 0.5rem;
+    padding: 0 0.5rem;
+  }
+  
+  .mobile-carousel .restaurant-card-mobile {
+    width: 240px;
+    height: 380px; /* Even shorter for very small screens */
+    border-radius: 12px;
+  }
+  
+  .mobile-carousel .restaurant-card-mobile .p-4 {
+    padding: 0.875rem;
+  }
+}
+
+/* Mobile grid responsive adjustments (for non-carousel mobile view) */
 @media (max-width: 640px) {
   .restaurant-card-mobile {
     margin-bottom: 0.5rem;
