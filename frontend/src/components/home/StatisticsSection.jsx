@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useServerData } from '../../utils/serverData';
 import { useInView } from 'react-intersection-observer';
 
 const AnimatedCounter = ({ target, duration = 2000, prefix = '', suffix = '' }) => {
@@ -43,6 +45,45 @@ const StatCard = ({ title, value, description, prefix = '', suffix = '' }) => (
 );
 
 const StatisticsSection = () => {
+  // Get statistics from server data or use empty object as fallback
+  const serverStats = useServerData('statistics') || {};
+  const [stats, setStats] = useState({
+    totalRestaurants: 0,
+    happyCustomers: 0,
+    deliveryAreas: 0,
+    orderCount: 0,
+    ...serverStats
+  });
+  
+  // If no server data, fetch on client side
+  useEffect(() => {
+    if (Object.keys(serverStats).length === 0) {
+      // In a real app, you would fetch from your API here
+      const fetchStats = async () => {
+        try {
+          // This is just an example - replace with your actual API call
+          // const response = await fetch('/api/statistics');
+          // const data = await response.json();
+          // setStats(prev => ({ ...prev, ...data }));
+          
+          // Fallback static data
+          const fallbackStats = {
+            totalRestaurants: 500,
+            happyCustomers: 10000,
+            deliveryAreas: 25,
+            orderCount: 50000,
+          };
+          
+          setStats(fallbackStats);
+        } catch (error) {
+          console.error('Error fetching statistics:', error);
+        }
+      };
+      
+      fetchStats();
+    }
+  }, [serverStats]);
+
   // Use dynamic imports for browser-only code
   const [isClient, setIsClient] = useState(false);
 

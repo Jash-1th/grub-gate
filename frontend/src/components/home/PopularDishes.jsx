@@ -1,34 +1,60 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
-
-const dishes = [
-  {
-    id: 1,
-    name: 'Gourmet Burger',
-    description: 'Juicy beef patty with fresh vegetables and special sauce',
-    image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80',
-    rating: 4.8,
-    price: 12.99,
-  },
-  {
-    id: 2,
-    name: 'Margherita Pizza',
-    description: 'Classic Italian pizza with fresh basil and mozzarella',
-    image: 'https://images.unsplash.com/photo-1604382355076-af4b0eb60143?auto=format&fit=crop&w=500&q=80',
-    rating: 4.7,
-    price: 14.99,
-  },
-  {
-    id: 3,
-    name: 'Sushi Platter',
-    description: 'Assorted fresh sushi with wasabi and soy sauce',
-    image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=500&q=80',
-    rating: 4.9,
-    price: 18.99,
-  },
-];
+import { useServerData } from '../../utils/serverData';
 
 const PopularDishes = () => {
+  // Get dishes from server data or use empty array as fallback
+  const serverDishes = useServerData('popularDishes') || [];
+  const [dishes, setDishes] = useState(serverDishes);
+  
+  // If no server data, fetch on client side
+  useEffect(() => {
+    if (dishes.length === 0) {
+      // In a real app, you would fetch from your API here
+      const fetchDishes = async () => {
+        try {
+          // This is just an example - replace with your actual API call
+          // const response = await fetch('/api/popular-dishes');
+          // const data = await response.json();
+          // setDishes(data);
+          
+          // Fallback static data
+          const fallbackDishes = [
+            {
+              id: 1,
+              name: 'Gourmet Burger',
+              description: 'Juicy beef patty with fresh vegetables and special sauce',
+              image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80',
+              rating: 4.8,
+              price: 12.99,
+            },
+            {
+              id: 2,
+              name: 'Margherita Pizza',
+              description: 'Classic Italian pizza with fresh basil and mozzarella',
+              image: 'https://images.unsplash.com/photo-1604382355076-af4b0eb60143?auto=format&fit=crop&w=500&q=80',
+              rating: 4.7,
+              price: 14.99,
+            },
+            {
+              id: 3,
+              name: 'Sushi Platter',
+              description: 'Assorted fresh sushi with wasabi and soy sauce',
+              image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=500&q=80',
+              rating: 4.9,
+              price: 18.99,
+            },
+          ];
+          
+          setDishes(fallbackDishes);
+        } catch (error) {
+          console.error('Error fetching popular dishes:', error);
+        }
+      };
+      
+      fetchDishes();
+    }
+  }, [dishes.length]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isClient, setIsClient] = useState(false);
   const [isInView, setIsInView] = useState(false);

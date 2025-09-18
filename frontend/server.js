@@ -117,27 +117,131 @@ async function handleSSR(req, res, next) {
       renderFunction = render;
     }
 
-    let appHtml = '';
+    let appHtml;
     
     if (renderFunction) {
       try {
+        let initialData = {
+          showLaunchScreen: false,
+        };
+        
+        try {
+          // Import the fetchInitialData function dynamically
+          const { fetchInitialData } = await import('./src/utils/serverData.js');
+          const pageData = await fetchInitialData();
+          initialData = { ...initialData, ...pageData };
+        } catch (error) {
+          console.error('Error fetching initial data:', error);
+          // Continue with default initial data
+        }
+        
         const lng = req.headers['accept-language'] ? req.headers['accept-language'].split(',')[0] : 'en';
         await i18n.changeLanguage(lng);
         
         console.log(`Attempting SSR for URL: ${url}`);
-        const rendered = renderFunction(url, i18n);
+        const rendered = renderFunction(url, i18n, initialData);
         appHtml = rendered.html;
         console.log(`SSR successful for URL: ${url}`);
 
-        const initialI18nStore = {};
-        i18n.languages.forEach((l) => {
-          initialI18nStore[l] = i18n.getResourceBundle(l, 'translation');
-        });
+        // Create a safe version of i18n state for client-side hydration
+        const getSafeI18nState = () => {
+          try {
+            const initialI18nStore = {};
+            const languages = Array.isArray(i18n.languages) ? [...i18n.languages] : [];
+            
+            // Safely get resource bundles
+            languages.forEach((l) => {
+              try {
+                const bundle = i18n.getResourceBundle(l, 'translation');
+                if (bundle) {
+                  initialI18nStore[l] = bundle;
+                }
+              } catch (e) {
+                console.warn(`Failed to load translations for language: ${l}`, e);
+              }
+            });
+            
+            // Create a safe object with only the data we need
+            const safeState = {
+              language: i18n.language || 'en',
+              languages: languages,
+              store: initialI18nStore,
+              services: {}
+            };
+            
+            // Safely add resource store data if available
+            try {
+              if (i18n.services?.resourceStore?.data) {
+                safeState.services.resourceStore = {
+                  data: { ...i18n.services.resourceStore.data }
+                };
+              }
+            } catch (e) {
+              console.warn('Failed to serialize resource store', e);
+            }
+            
+            return safeState;
+          } catch (error) {
+            console.error('Error creating safe i18n state:', error);
+            return {
+              language: 'en',
+              languages: ['en'],
+              store: {},
+              services: { resourceStore: { data: {} } }
+            };
+          }
+        };
+
+        const safeI18nState = getSafeI18nState();
+        
+        // Stringify the i18n state with a replacer function to handle circular references
+        const getSafeI18nStateString = (state) => {
+          const seen = new WeakSet();
+          return JSON.stringify(state, (key, value) => {
+            if (typeof value === 'object' && value !== null) {
+              if (seen.has(value)) return '[Circular]';
+              seen.add(value);
+            }
+            return value;
+          });
+        };
 
         const script = `
           <script>
-            window.__INITIAL_I18N_STATE__ = ${JSON.stringify(initialI18nStore)};
-            window.__INITIAL_LANGUAGE__ = "${lng}";
+            // Store initial data for client-side hydration
+            window.__INITIAL_STATE__ = ${JSON.stringify(initialData).replace(/</g, '\\u003c')};
+            
+            // Initialize i18n with server-rendered translations
+            (function() {
+              const i18nState = ${getSafeI18nStateString(safeI18nState)};
+              
+              // Add changeLanguage function
+              i18nState.changeLanguage = function(lng) {
+                return fetch('/api/change-language', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ lng })
+                });
+              };
+              
+              window.i18n = i18nState;
+            })();
+            
+            // Add hydration classes to body
+            document.addEventListener('DOMContentLoaded', function() {
+              document.body.classList.add('hydrating');
+              
+              // When React hydrates, it will remove this class
+              var checkHydration = setInterval(function() {
+                if (document.querySelector('[data-hydrated]')) {
+                  clearInterval(checkHydration);
+                  document.body.classList.remove('hydrating');
+                  document.body.classList.add('hydrated');
+                }
+              }, 50);
+            });
           </script>
         `;
         template = template.replace('</body>', `${script}</body>`);
@@ -150,8 +254,21 @@ async function handleSSR(req, res, next) {
       console.log('No SSR function available, using client-side rendering');
       // No SSR available, use client-side rendering
       appHtml = '<div id="root"><!--ssr-outlet--></div>';
+      
+      // Add minimal client-side hydration for non-SSR fallback
+      const fallbackScript = `
+        <script>
+          document.body.classList.add('hydrating');
+          document.addEventListener('DOMContentLoaded', function() {
+            document.body.classList.remove('hydrating');
+            document.body.classList.add('hydrated');
+          });
+        </script>
+      `;
+      template = template.replace('</body>', `${fallbackScript}</body>`);
     }
-
+    
+    // Replace the SSR outlet with the rendered content
     const html = template.replace('<!--ssr-outlet-->', appHtml);
     
     res.status(200).set({ 'Content-Type': 'text/html' }).end(html);

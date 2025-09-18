@@ -24,14 +24,16 @@ const Layout = ({ children }) => {
       {isLoginModalOpen && <LoginModal />}
       
       {/* Main content with conditional blur effect when modals are open */}
-      <div className={`min-h-screen flex flex-col transition-all duration-300 ${
+      <div className={`min-h-screen w-full flex flex-col transition-all duration-300 ${
         isModalOpen ? 'blur-sm pointer-events-none' : ''
       }`}>
         <Header />
         
-        {/* Main content */}
-        <main className="flex-grow">
-          {children}
+        {/* Main content - full width */}
+        <main className="flex-grow w-full">
+          <div className="w-full max-w-full">
+            {children}
+          </div>
         </main>
         
         <Footer />

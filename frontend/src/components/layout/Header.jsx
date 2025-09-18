@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { navigation, siteInfo } from '../../data';
 import LanguageSwitcher from '../common/LanguageSwitcher';
@@ -17,21 +17,32 @@ const logoImage = '/icons/logo192.png';
  * Handles both desktop and mobile views with a responsive design
  */
 const Header = () => {
+  const [isMounted, setIsMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { t } = useTranslation();
   const { isMobile } = useResponsiveNavigation();
 
+  // Set mounted state on client side
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
+
   // Close mobile menu when route changes
   useEffect(() => {
+    if (!isMounted) return;
+    
     const handleRouteChange = () => {
       setIsMobileMenuOpen(false);
     };
 
     window.addEventListener('popstate', handleRouteChange);
+    
+    // Cleanup function
     return () => {
       window.removeEventListener('popstate', handleRouteChange);
     };
-  }, []);
+  }, [isMounted]);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(prev => !prev);
@@ -54,27 +65,40 @@ const Header = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
+          <nav className="hidden md:flex items-center space-x-4">
             {navigation.main.map((item) => (
-              <Link
+              <NavLink
                 key={item.name}
                 to={item.href}
-                className="flex items-center gap-2 hover:text-grub-red px-3 py-2 text-sm font-medium transition-colors duration-200 text-gray-700"
+                className={({ isActive }) => 
+                  `flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors duration-200 rounded-md
+                  ${isActive 
+                    ? 'text-grub-red bg-red-50' 
+                    : 'text-gray-700 hover:text-grub-red hover:bg-gray-50'}`
+                }
               >
-                <span className="inline-flex items-center justify-center flex-shrink-0">
-                  <NavIcon name={item.name} />
-                </span>
-                <span className="truncate max-w-[10rem]" title={t(`nav.${item.name}`)}>
-                  {t(`nav.${item.name}`)}
-                </span>
-              </Link>
+                {({ isActive }) => (
+                  <>
+                    <span className={`inline-flex items-center justify-center flex-shrink-0 ${isActive ? 'text-grub-red' : 'text-gray-500'}`}>
+                      <NavIcon name={item.name} />
+                    </span>
+                    <span className="truncate max-w-[10rem]" title={t(`nav.${item.name}`)}>
+                      {t(`nav.${item.name}`)}
+                    </span>
+                  </>
+                )}
+              </NavLink>
             ))}
           </nav>
 
           {/* Desktop Auth Buttons & Language Switcher */}
-          <div className="hidden md:flex items-center space-x-4">
-            <LanguageSwitcher />
-            <AuthButtons />
+          <div className="hidden md:flex items-center space-x-6">
+            <div className="border-r border-gray-200 pr-6 h-8 flex items-center">
+              <LanguageSwitcher />
+            </div>
+            <div className="flex items-center space-x-3">
+              <AuthButtons />
+            </div>
           </div>
 
           {/* Mobile Menu Button */}
