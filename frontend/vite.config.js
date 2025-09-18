@@ -1,53 +1,66 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react';
 
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    host: '0.0.0.0', // Accept connections from any IP
-    port: 3000,      // Standard dev port
-    strictPort: false, // Allow fallback to other ports
-    open: false,     // Don't auto-open browser (prevents conflicts)
-    cors: true,      // Enable CORS for development
+export default ({ mode }) => {
+  // Load environment variables
+  const env = loadEnv(mode, process.cwd(), '');
+  
+  // Log loaded environment variables (for debugging)
+  console.log('Environment variables:', Object.keys(env));
+
+  return defineConfig({
+    define: {
+      'process.env': env,
+      // Support for import.meta.env
+      'import.meta.env': env,
+    },
+    plugins: [react()],
+    envPrefix: 'VITE_',
     
-    // Robust HMR Configuration for Windows
-    hmr: {
-      port: 24678,
-      host: '0.0.0.0', // Bind to all interfaces
-      clientPort: undefined, // Let Vite determine the client port automatically
-      overlay: true,
-      // Force WebSocket connection (bypasses HTTP fallback issues)
-      protocol: 'ws'
+    server: {
+      // Enable source maps for better debugging
+      sourcemap: true,
+      host: '0.0.0.0',
+      port: 3000,
+      strictPort: false,
+      open: false,
+      cors: true,
+      
+      // HMR Configuration
+      hmr: {
+        port: 24678,
+        host: '0.0.0.0',
+        clientPort: undefined,
+        overlay: true,
+        protocol: 'ws'
+      },
+      
+      // Watch configuration
+      watch: {
+        usePolling: true,
+        interval: 100,
+        ignored: ['**/node_modules/**', '**/.git/**', '**/dist/**']
+      }
     },
     
-    // Watch configuration for better file detection on Windows
-    watch: {
-      usePolling: true,
-      interval: 100,
-      // Ignore common directories that cause performance issues
-      ignored: ['**/node_modules/**', '**/.git/**', '**/dist/**']
-    }
-  },
-  
-  build: {
-    outDir: 'dist/client',
-    rollupOptions: {
-      output: {
-        manualChunks: undefined
+    build: {
+      outDir: 'dist/client',
+      rollupOptions: {
+        output: {
+          manualChunks: undefined
+        }
+      }
+    },
+    
+    optimizeDeps: {
+      include: ['react', 'react-dom', 'react-router-dom'],
+      force: false
+    },
+    
+    resolve: {
+      alias: {
+        // Add common aliases if needed
       }
     }
-  },
-  
-  optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom'],
-    // Force dependency pre-bundling for faster startup
-    force: false
-  },
-  
-  // Resolve configuration for better module resolution
-  resolve: {
-    alias: {
-      // Add common aliases if needed
-    }
-  }
-})
+  });
+};

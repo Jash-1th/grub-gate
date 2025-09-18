@@ -20,13 +20,17 @@ export const ModalProvider = ({ children }) => {
   const openSignupModal = () => {
     setIsSignupModalOpen(true);
     // Prevent body scrolling when modal is open
-    document.body.style.overflow = 'hidden';
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = 'hidden';
+    }
   };
 
   const closeSignupModal = () => {
     setIsSignupModalOpen(false);
     // Restore body scrolling when modal is closed
-    document.body.style.overflow = 'unset';
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = 'unset';
+    }
   };
 
   const toggleSignupModal = (isOpen) => {
@@ -40,13 +44,17 @@ export const ModalProvider = ({ children }) => {
   const openLoginModal = () => {
     setIsLoginModalOpen(true);
     // Prevent body scrolling when modal is open
-    document.body.style.overflow = 'hidden';
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = 'hidden';
+    }
   };
 
   const closeLoginModal = () => {
     setIsLoginModalOpen(false);
     // Restore body scrolling when modal is closed
-    document.body.style.overflow = 'unset';
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = 'unset';
+    }
   };
 
   const toggleLoginModal = (isOpen) => {
