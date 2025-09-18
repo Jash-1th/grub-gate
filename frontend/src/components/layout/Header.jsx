@@ -49,9 +49,9 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-full mx-auto">
-        <div className="flex justify-between items-center h-20 sm:h-22 md:h-24 px-4">
+    <header className="w-full bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+      <div className="w-full">
+        <div className="flex justify-between items-center h-20 sm:h-22 md:h-24 px-4 mx-auto">
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link to="/" className="flex items-center">

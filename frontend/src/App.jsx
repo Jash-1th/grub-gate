@@ -11,6 +11,7 @@ import HowItWorks from './pages/HowItWorks';
 import Contact from './pages/Contact';
 import Faq from './pages/Faq';
 import LaunchScreen from './components/common/LaunchScreen';
+import ScrollToTop from './components/common/ScrollToTop';
 
 // Add data-hydrated attribute when hydration is complete
 const useHydrationComplete = () => {
@@ -39,7 +40,7 @@ function App() {
   const [isLaunchScreenVisible, setIsLaunchScreenVisible] = useState(showLaunchScreen);
   const [isClient, setIsClient] = useState(false);
   
-  // Handle client-side initialization
+    // Handle client-side initialization and launch screen
   useEffect(() => {
     // This effect only runs on the client
     setIsClient(true);
@@ -55,10 +56,15 @@ function App() {
           sessionStorage.setItem(SESSION_KEY, 'true');
           setShowLaunchScreen(true);
           setIsLaunchScreenVisible(true);
-        } else if (showLaunchScreen) {
-          // If we're showing the launch screen but user has seen it before
+        } else {
+          // Hide launch screen if it's not the first visit
           setShowLaunchScreen(false);
           setIsLaunchScreenVisible(false);
+          
+          // Ensure launch screen is hidden in case it's still visible
+          if (window.hideLaunchScreen) {
+            window.hideLaunchScreen();
+          }
         }
       } catch (error) {
         console.warn('⚠️ GrubGate: SessionStorage unavailable, skipping launch screen');
@@ -67,10 +73,17 @@ function App() {
       }
     };
     
-    // Small delay to ensure hydration is complete
-    const timer = setTimeout(checkFirstVisit, 100);
-    return () => clearTimeout(timer);
-  }, [showLaunchScreen]);
+    // Check first visit status immediately
+    checkFirstVisit();
+    
+    // Cleanup function
+    return () => {
+      // Ensure launch screen is hidden when component unmounts
+      if (window.hideLaunchScreen) {
+        window.hideLaunchScreen();
+      }
+    };
+  }, []);
 
   // Handle launch screen animation end
   const handleLaunchScreenEnd = () => {
@@ -89,15 +102,21 @@ function App() {
 
   // Render the main app content
   const renderAppContent = () => (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/how-it-works" element={<HowItWorks />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/faq" element={<Faq />} />
-      </Routes>
-    </Layout>
+    <>
+      {/* Scroll to top on route change */}
+      <ScrollToTop />
+      
+      {/* Main layout and routes */}
+      <Layout>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/how-it-works" element={<HowItWorks />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/faq" element={<Faq />} />
+        </Routes>
+      </Layout>
+    </>
   );
 
   return (

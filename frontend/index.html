@@ -56,34 +56,51 @@
         background-size: cover;
         background-position: center center;
         background-repeat: no-repeat;
-        background-attachment: scroll;
         display: flex;
         align-items: center;
         justify-content: center;
         z-index: 10000;
-        transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
-                    visibility 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                    transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        overflow: hidden;
+        transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
         opacity: 1;
         visibility: visible;
-        transform: scale(1);
+      }
+      
+      .launch-screen.hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      
+      .loading-indicator {
+        text-align: center;
+      }
+      
+      .css-loader {
+        width: 50px;
+        height: 50px;
+        border: 5px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+        margin: 0 auto;
+      }
+      
+      @keyframes spin {
+        to { transform: rotate(360deg); }
       }
       
       /* Ensure background covers all screen orientations */
       @media screen and (orientation: portrait) {
         .launch-screen {
           background-size: contain;
-          background-position: center center;
-          background-color: #1a1a1a; /* Dark background for empty areas */
+          background-color: #1a1a1a;
         }
       }
       
-      /* For larger portrait screens, use cover */
       @media screen and (orientation: portrait) and (min-width: 768px) {
         .launch-screen {
           background-size: cover;
-          background-color: transparent;
+          background-position: center center;
         }
       }
       
@@ -94,15 +111,17 @@
         }
       }
       
-      /* Handle different aspect ratios */
-      @media screen and (max-aspect-ratio: 1/1) {
+      @media screen and (min-aspect-ratio: 2/1) {
         .launch-screen {
           background-size: cover;
           background-position: center center;
         }
       }
       
-      @media screen and (min-aspect-ratio: 2/1) {
+      /* High DPI displays */
+      @media screen and (-webkit-min-device-pixel-ratio: 2), 
+             screen and (min-resolution: 192dpi), 
+             screen and (min-resolution: 2dppx) {
         .launch-screen {
           background-size: cover;
           background-position: center center;
@@ -230,140 +249,42 @@
   </head>
   <body>
     <div id="root">
-      <!-- Launch Screen - Full screen background with only loading indicator -->
+      <!-- Launch Screen - Will be hidden by React when app is ready -->
       <div class="launch-screen" id="launch-screen">
         <div class="loading-indicator">
           <div class="css-loader"></div>
         </div>
       </div>
       
-      <!-- App Shell Loader - Fallback loader (hidden when launch screen is visible) -->
-      <div class="app-shell-loader" id="app-shell-loader">
-        <img 
-          src="/icons/logo512.png" 
-          alt="GrubGate Logo" 
-          class="loader-logo"
-          width="120"
-          height="120"
-        />
-        <h1 class="loader-title">GrubGate</h1>
-        <p class="loader-subtitle">Your Daily Meals, Delivered from Real Kitchens</p>
-        <div class="loader-spinner"></div>
-        <div class="loader-progress">
-          <div class="loader-progress-bar"></div>
-        </div>
-      </div>
+      <!-- SSR Content will be injected here -->
       <!--ssr-outlet-->
     </div>
     
-    <!-- Service Worker Registration and App Loading Coordination -->
+    <!-- Service Worker Registration -->
     <script>
-      // Track loading state
-      let appInitialized = false;
-      let imagePreloaded = false;
-      
-      // Preload background image and handle loading
-      function preloadBackgroundImage() {
-        const img = new Image();
-        img.onload = function() {
-          imagePreloaded = true;
-          console.log('✅ Launch background image preloaded');
-          // Add a small delay to ensure smooth loading
-          if (appInitialized) {
-            setTimeout(() => initializeApp(), 200);
-          }
-        };
-        img.onerror = function() {
-          imagePreloaded = true; // Continue even if image fails
-          console.warn('⚠️ Launch background image failed to load, using fallback');
-          if (appInitialized) {
-            setTimeout(() => initializeApp(), 200);
-          }
-        };
-        img.src = '/images/launch-background.jpg';
-      }
-      
-      // Initialize app coordination
-      function initializeApp() {
-        if (!imagePreloaded || !appInitialized) return;
-        
-        // Hide app shell loader immediately
-        const appShellLoader = document.getElementById('app-shell-loader');
-        if (appShellLoader) {
-          appShellLoader.style.display = 'none';
-        }
-        
-        console.log('✅ App initialization coordinated');
-      }
-      
-      // Start preloading immediately
-      preloadBackgroundImage();
-      
-      // Register service worker
+      // Register service worker in the background
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
+        window.addEventListener('load', () => {
           navigator.serviceWorker.register('/service-worker.js')
-            .then(function(registration) {
-              console.log('✅ Service Worker registered successfully:', registration.scope);
+            .then(registration => {
+              console.log('✅ ServiceWorker registration successful');
             })
-            .catch(function(error) {
-              console.log('❌ Service Worker registration failed:', error);
+            .catch(error => {
+              console.warn('⚠️ ServiceWorker registration failed:', error);
             });
         });
       }
       
-      // Coordinated app loading
-      window.addEventListener('load', function() {
-        appInitialized = true;
-        console.log('✅ DOM fully loaded');
-        
-        // Try to initialize if image is ready
-        if (imagePreloaded) {
-          setTimeout(() => initializeApp(), 200);
-        }
-      });
-      
-      // Enhanced launch screen hiding with better coordination
-      window.hideLaunchScreen = function() {
-        const launchScreen = document.getElementById('launch-screen');
-        if (!launchScreen) return;
-        
-        console.log('🚀 Hiding launch screen - React app ready');
-        
-        // Add loaded class for transition
-        document.body.classList.add('app-loaded');
-        
-        // Remove from DOM after transition
-        setTimeout(() => {
-          if (launchScreen && launchScreen.parentNode) {
-            launchScreen.parentNode.removeChild(launchScreen);
-            console.log('✨ Launch screen removed - App fully loaded');
-          }
-        }, 800); // Match CSS transition duration
-      };
-      
-      // Legacy support - hide app shell loader (backup)
-      window.hideAppShellLoader = function() {
-        // First try to hide launch screen
-        window.hideLaunchScreen();
-        
-        // Then hide app shell loader as fallback
-        const loader = document.getElementById('app-shell-loader');
-        if (loader) {
-          document.body.classList.add('js-loaded');
-          loader.style.display = 'none';
-        }
-      };
-      
-      // Automatic fallback - hide launch screen after maximum time
+      // Fallback to hide launch screen if React fails to load
       setTimeout(() => {
-        if (document.getElementById('launch-screen')) {
-          console.log('⚡ Fallback: Hiding launch screen after timeout');
-          window.hideLaunchScreen();
+        const launchScreen = document.getElementById('launch-screen');
+        if (launchScreen && !document.documentElement.classList.contains('app-loaded')) {
+          console.log('⚠️ Fallback: Hiding launch screen after timeout');
+          launchScreen.classList.add('hidden');
+          document.documentElement.classList.add('app-loaded');
         }
-      }, 4000); // 4 seconds maximum
+      }, 5000); // 5 second timeout as fallback
     </script>
-    
-    <script type="module" src="/src/main.jsx"></script>
   </body>
+  <script type="module" src="/src/main.jsx"></script>
 </html>
