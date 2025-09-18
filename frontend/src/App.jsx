@@ -1,82 +1,21 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import Header from './components/layout/Header';
-import Footer from './components/layout/Footer';
-import MobileBottomNav from './components/layout/MobileBottomNav';
+import { ModalProvider } from './context/ModalContext';
+import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
 import About from './pages/About';
 import HowItWorks from './pages/HowItWorks';
 import Contact from './pages/Contact';
 import Faq from './pages/Faq';
-import { ModalProvider, useModal } from './context/ModalContext';
-import SignupModal from './components/auth/SignupModal';
-import LoginModal from './components/auth/LoginModal';
 import LaunchScreen from './components/common/LaunchScreen';
-import { useResponsiveNavigation } from './hooks/useResponsiveNavigation';
-import { requestNotificationPermission } from './pwa'; // Ensure path is correct
 
-
-// ClientOnly component to prevent hydration mismatches
-const ClientOnly = ({ children }) => {
-  const [mounted, setMounted] = React.useState(false);
-  
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  return mounted ? children : null;
-};
-
-// App Content Component
-function AppContent() {
-  const { isSignupModalOpen, isLoginModalOpen } = useModal();
-  const { isMobile } = useResponsiveNavigation();
-  const isModalOpen = isSignupModalOpen || isLoginModalOpen;
-
-  return (
-    <>
-      {/* Conditionally render modals */}
-      {isSignupModalOpen && <SignupModal />}
-      {isLoginModalOpen && <LoginModal />}
-      
-      {/* Main app content with conditional blur effect */}
-      <div className={`min-h-screen flex flex-col transition-all duration-300 ${
-        isModalOpen ? 'blur-sm pointer-events-none' : ''
-      }`}>
-        <Header />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/how-it-works" element={<HowItWorks />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/faq" element={<Faq />} />
-          </Routes>
-        </main>
-        
-        <Footer />
-        
-        {/* Mobile Bottom Navigation - Only render on mobile */}
-        <ClientOnly>
-          {isMobile && (
-            <>
-              <MobileBottomNav />
-              {/* Spacer to ensure footer content is fully visible above fixed bottom nav on mobile */}
-              <div aria-hidden className="h-20"></div>
-            </>
-          )}
-        </ClientOnly>
-      </div>
-    </>
-  );
-}
-
-// Main App Component with LaunchScreen and ModalProvider
+/**
+ * Main App component that handles the application structure and routing
+ * Wraps everything with necessary providers and handles the launch screen
+ */
 function App() {
-  // State to control LaunchScreen visibility (only on first visit per session)
   const [showLaunchScreen, setShowLaunchScreen] = useState(false);
   const [isLaunchScreenVisible, setIsLaunchScreenVisible] = useState(true);
-
   const initialRender = useRef(true);
 
   useEffect(() => {
@@ -113,25 +52,48 @@ function App() {
     }
   }, []);
 
-  // Handler called when LaunchScreen fade-out completes
-  const handleLaunchScreenFinish = () => {
-    console.log('✨ GrubGate: Launch screen finished - showing main app');
+  // Handle launch screen animation end
+  const handleLaunchScreenEnd = () => {
+    if (!showLaunchScreen) return;
+    
+    // Start fade out animation
     setIsLaunchScreenVisible(false);
+    
+    // Remove from DOM after animation completes
+    const timer = setTimeout(() => {
+      setShowLaunchScreen(false);
+    }, 500); // Match this with your CSS transition time
+    
+    return () => clearTimeout(timer);
   };
+
+  // Render the main app content
+  const renderAppContent = () => (
+    <Layout>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/how-it-works" element={<HowItWorks />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/faq" element={<Faq />} />
+      </Routes>
+    </Layout>
+  );
 
   return (
     <ModalProvider>
-      {/* Main app content - always render so it loads in background during launch screen */}
-      <AppContent />
-      
-      {/* LaunchScreen overlay - only show on first visit per session */}
-      {showLaunchScreen && isLaunchScreenVisible && (
-        <LaunchScreen
-          durationMs={2300}        // Show for 2.3 seconds before fade begins
-          fadeDurationMs={600}     // Fade out over 600ms
-          onFinish={handleLaunchScreenFinish}
+      {/* Launch Screen - Only show on first visit */}
+      {showLaunchScreen && (
+        <LaunchScreen 
+          onAnimationEnd={handleLaunchScreenEnd}
+          isVisible={isLaunchScreenVisible}
         />
       )}
+      
+      {/* Main App Content */}
+      <div className={showLaunchScreen ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100 transition-opacity duration-500'}>
+        {renderAppContent()}
+      </div>
     </ModalProvider>
   );
 }

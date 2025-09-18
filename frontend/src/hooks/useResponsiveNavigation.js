@@ -1,56 +1,50 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 /**
  * SSR-safe hook for responsive navigation
- * Returns default values during SSR and updates on client-side
+ * 
+ * @returns {Object} - Contains responsive state values
+ * @property {boolean} isMobile - True if viewport is mobile size (< 768px)
+ * @property {boolean} isDesktop - True if viewport is desktop size (≥ 768px)
+ * @property {boolean} isClient - True when running on the client side
  */
 export const useResponsiveNavigation = () => {
-  // Default to false during SSR and update on client
   const [isMobile, setIsMobile] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+
+  // Memoize the check to prevent unnecessary re-renders
+  const checkIsMobile = useCallback(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 768; // md breakpoint
+  }, []);
 
   useEffect(() => {
-    // Mark as mounted on client
-    setIsMounted(true);
+    // Set initial client state
+    const client = typeof window !== 'undefined';
+    setIsClient(client);
     
-    // Only run on client
-    const isClient = typeof window !== 'undefined';
-    setIsClient(isClient);
+    if (!client) return;
     
-    if (!isClient) return;
-    
-    const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 768); // md breakpoint
-    };
+    // Set initial mobile state
+    setIsMobile(checkIsMobile());
 
-    // Initial check
-    checkIsMobile();
-
-    // Add resize listener with debounce
+    // Debounce resize handler
     let resizeTimer;
     const handleResize = () => {
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(checkIsMobile, 100);
+      resizeTimer = setTimeout(() => {
+        setIsMobile(checkIsMobile());
+      }, 100);
     };
     
     window.addEventListener('resize', handleResize);
-
+    
     // Cleanup
     return () => {
       clearTimeout(resizeTimer);
       window.removeEventListener('resize', handleResize);
     };
-  }, []);
-
-  // Return default values during SSR and initial render
-  if (!isMounted) {
-    return {
-      isMobile: false,
-      isClient: false,
-      isDesktop: false
-    };
-  }
+  }, [checkIsMobile]);
 
   return {
     isMobile,
@@ -58,3 +52,6 @@ export const useResponsiveNavigation = () => {
     isDesktop: isClient && !isMobile
   };
 };
+
+// Export a default instance for convenience
+export default useResponsiveNavigation;

@@ -52,6 +52,14 @@ if (container) {
   const root = createRoot(container);
   
   console.log('⚡ Initializing React app');
+
+  /**
+   * Note about StrictMode:
+   * - In development, React intentionally renders components twice to help detect side effects
+   * - This behavior only happens in development and helps identify potential issues
+   * - The double rendering does not occur in production builds
+   * - If you see duplicate logs or double API calls in development, this is expected behavior
+   */
   root.render(
     <StrictMode>
       <Suspense fallback={<LoadingFallback />}>
