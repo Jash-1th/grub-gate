@@ -61,19 +61,12 @@ const MobileBottomNav = () => {
           <li key={item.name} className="flex-1 min-w-0 overflow-hidden">
             <NavLink
               to={item.href}
-              end={item.href === '/'} // Use exact matching for home
-              className={({ isActive }) => {
-                // Special case for home to match exactly
-                const isActiveLink = item.href === '/' 
-                  ? isActive 
-                  : isActive && (typeof window !== 'undefined' && window.location.pathname === item.href);
-                
-                return `flex min-w-0 w-full overflow-hidden flex-col items-center justify-center h-14 text-[11px] leading-tight font-medium transition-all duration-200 rounded-lg mx-0.5 ${
-                  isActiveLink 
-                    ? 'text-grub-red bg-red-50' 
-                    : 'text-gray-600 hover:text-grub-red hover:bg-gray-50'
-                }`;
-              }}
+              end={item.href === '/'}
+              className={({ isActive }) => `flex min-w-0 w-full overflow-hidden flex-col items-center justify-center h-14 text-[11px] leading-tight font-medium transition-all duration-200 rounded-lg mx-0.5 ${
+                isActive 
+                  ? 'text-grub-red bg-red-50' 
+                  : 'text-gray-600 hover:text-grub-red hover:bg-gray-50'
+              }`}
               aria-label={t(`nav.${item.name}`)}
             >
               <div className="flex items-center justify-center h-5 w-5 mb-1 flex-shrink-0">

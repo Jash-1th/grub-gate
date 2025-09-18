@@ -100,17 +100,10 @@ const Header = () => {
               <NavLink
                 key={item.name}
                 to={item.href}
-                end={item.href === '/'} // Use exact matching for home
-                className={({ isActive }) => {
-                  // Special case for home to match exactly
-                  const isActiveLink = item.href === '/' 
-                    ? isActive 
-                    : isActive && (typeof window !== 'undefined' && window.location.pathname === item.href);
-                  
-                  return `flex items-center gap-2 hover:text-grub-red px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-                    isActiveLink ? 'text-grub-red' : 'text-gray-700'
-                  }`;
-                }}
+                end={item.href === '/'}
+                className={({ isActive }) => `flex items-center gap-2 hover:text-grub-red px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                  isActive ? 'text-grub-red' : 'text-gray-700'
+                }`}
               >
                 <span className="inline-flex items-center justify-center flex-shrink-0">{getNavIcon(item.name)}</span>
                 <span className="truncate max-w-[10rem]" title={t(`nav.${item.name}`)}>{t(`nav.${item.name}`)}</span>

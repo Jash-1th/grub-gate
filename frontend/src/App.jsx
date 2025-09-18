@@ -16,10 +16,21 @@ import { useResponsiveNavigation } from './hooks/useResponsiveNavigation';
 import { requestNotificationPermission } from './pwa'; // Ensure path is correct
 
 
+// ClientOnly component to prevent hydration mismatches
+const ClientOnly = ({ children }) => {
+  const [mounted, setMounted] = React.useState(false);
+  
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  return mounted ? children : null;
+};
+
 // App Content Component
 function AppContent() {
   const { isSignupModalOpen, isLoginModalOpen } = useModal();
-  const { isMobile, isClient } = useResponsiveNavigation();
+  const { isMobile } = useResponsiveNavigation();
   const isModalOpen = isSignupModalOpen || isLoginModalOpen;
 
   return (
@@ -33,7 +44,7 @@ function AppContent() {
         isModalOpen ? 'blur-sm pointer-events-none' : ''
       }`}>
         <Header />
-        <main className={`flex-grow`}>
+        <main className="flex-grow">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/about" element={<About />} />
@@ -45,13 +56,16 @@ function AppContent() {
         
         <Footer />
         
-        {/* Mobile Bottom Navigation - Only render on mobile after client hydration */}
-        {isClient && isMobile && <MobileBottomNav />}
-
-        {/* Spacer to ensure footer content is fully visible above fixed bottom nav on mobile */}
-        {isClient && isMobile && (
-          <div aria-hidden className="h-20"></div>
-        )}
+        {/* Mobile Bottom Navigation - Only render on mobile */}
+        <ClientOnly>
+          {isMobile && (
+            <>
+              <MobileBottomNav />
+              {/* Spacer to ensure footer content is fully visible above fixed bottom nav on mobile */}
+              <div aria-hidden className="h-20"></div>
+            </>
+          )}
+        </ClientOnly>
       </div>
     </>
   );
