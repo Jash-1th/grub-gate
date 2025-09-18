@@ -15,11 +15,11 @@ const TestimonialsSection = () => {
 
   // Determine how many cards are visible based on viewport (sm:1, md:2, lg+:3)
   useEffect(() => {
-    // Mark as client-side after hydration
-    setIsClient(true);
+    // This effect only runs on the client side
+    const isClient = typeof window !== 'undefined';
+    if (!isClient) return;
     
     const computeVisible = () => {
-      if (typeof window === 'undefined') return 3;
       const width = window.innerWidth;
       if (width < 768) return 1; // Tailwind sm
       if (width < 1024) return 2; // Tailwind md
@@ -27,19 +27,19 @@ const TestimonialsSection = () => {
     };
 
     const applyVisible = () => {
-      const nextVisible = computeVisible();
-      setVisibleCount(nextVisible);
-      // Clamp currentIndex so we don't go out of range when resizing smaller
-      const maxIndex = Math.max(0, featuredTestimonials.length - nextVisible);
-      setCurrentIndex((idx) => Math.min(idx, maxIndex));
+      setVisibleCount(computeVisible());
     };
-
-    // Only apply visible count after client-side hydration
-    if (typeof window !== 'undefined') {
-      applyVisible();
-      window.addEventListener('resize', applyVisible);
-      return () => window.removeEventListener('resize', applyVisible);
-    }
+    
+    // Set initial value
+    applyVisible();
+    
+    // Add event listener for resize
+    window.addEventListener('resize', applyVisible);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', applyVisible);
+    };
   }, []);
 
   // Auto-play functionality - only start after client-side hydration

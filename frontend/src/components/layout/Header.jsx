@@ -105,7 +105,7 @@ const Header = () => {
                   // Special case for home to match exactly
                   const isActiveLink = item.href === '/' 
                     ? isActive 
-                    : isActive && window.location.pathname === item.href;
+                    : isActive && (typeof window !== 'undefined' && window.location.pathname === item.href);
                   
                   return `flex items-center gap-2 hover:text-grub-red px-3 py-2 text-sm font-medium transition-colors duration-200 ${
                     isActiveLink ? 'text-grub-red' : 'text-gray-700'
@@ -309,7 +309,7 @@ const Header = () => {
                     // Special case for home to match exactly
                     const isActiveLink = item.href === '/' 
                       ? isActive 
-                      : isActive && window.location.pathname === item.href;
+                      : isActive && (typeof window !== 'undefined' && window.location.pathname === item.href);
                     
                     return `block px-3 py-2 text-base font-medium rounded-md transition-colors duration-200 ${
                       isActiveLink

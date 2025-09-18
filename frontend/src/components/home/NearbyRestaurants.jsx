@@ -155,10 +155,12 @@ const NearbyRestaurants = () => {
     momentumRef.current = { velocity: 0, lastX: 0, lastTime: 0 };
     
     // Remove event listeners
-    document.removeEventListener('mousemove', handleInteractionMove);
-    document.removeEventListener('mouseup', handleInteractionEnd);
-    document.removeEventListener('touchmove', handleInteractionMove);
-    document.removeEventListener('touchend', handleInteractionEnd);
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('mousemove', handleInteractionMove);
+      document.removeEventListener('mouseup', handleInteractionEnd);
+      document.removeEventListener('touchmove', handleInteractionMove);
+      document.removeEventListener('touchend', handleInteractionEnd);
+    }
   }, [handleInteractionMove, clearResumeTimeout]);
   
   const handleInteractionStart = useCallback((e) => {
@@ -192,15 +194,17 @@ const NearbyRestaurants = () => {
     };
     
     // Add move and end listeners
-    if (e.type === 'touchstart') {
-      document.addEventListener('touchmove', handleInteractionMove, { passive: false });
-      document.addEventListener('touchend', handleInteractionEnd, { passive: false });
-      document.addEventListener('touchcancel', handleInteractionEnd, { passive: false });
-    } else {
-      document.addEventListener('mousemove', handleInteractionMove);
-      document.addEventListener('mouseup', handleInteractionEnd);
-      // Handle mouse leave to end drag if user drags outside window
-      document.addEventListener('mouseleave', handleInteractionEnd);
+    if (typeof document !== 'undefined') {
+      if (e.type === 'touchstart') {
+        document.addEventListener('touchmove', handleInteractionMove, { passive: false });
+        document.addEventListener('touchend', handleInteractionEnd, { passive: false });
+        document.addEventListener('touchcancel', handleInteractionEnd, { passive: false });
+      } else {
+        document.addEventListener('mousemove', handleInteractionMove);
+        document.addEventListener('mouseup', handleInteractionEnd);
+        // Handle mouse leave to end drag if user drags outside window
+        document.addEventListener('mouseleave', handleInteractionEnd);
+      }
     }
   }, [handleInteractionMove, handleInteractionEnd, clearResumeTimeout]);
   

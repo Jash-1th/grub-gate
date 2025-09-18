@@ -10,8 +10,11 @@ export const useResponsiveNavigation = () => {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    // Mark as client-side after hydration
-    setIsClient(true);
+    // This effect only runs on the client side
+    const isClient = typeof window !== 'undefined';
+    setIsClient(isClient);
+    
+    if (!isClient) return;
     
     const checkIsMobile = () => {
       setIsMobile(window.innerWidth < 768); // md breakpoint

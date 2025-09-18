@@ -66,7 +66,7 @@ const MobileBottomNav = () => {
                 // Special case for home to match exactly
                 const isActiveLink = item.href === '/' 
                   ? isActive 
-                  : isActive && window.location.pathname === item.href;
+                  : isActive && (typeof window !== 'undefined' && window.location.pathname === item.href);
                 
                 return `flex min-w-0 w-full overflow-hidden flex-col items-center justify-center h-14 text-[11px] leading-tight font-medium transition-all duration-200 rounded-lg mx-0.5 ${
                   isActiveLink 
