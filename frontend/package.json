@@ -13,6 +13,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "autoprefixer": "^10.4.21",
     "emailjs-com": "^3.2.0",
     "express": "^5.1.0",
@@ -23,6 +24,7 @@
     "i18next-fs-backend": "^2.6.0",
     "i18next-http-backend": "^2.4.2",
     "postcss": "^8.5.6",
+    "prop-types": "^15.8.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-i18next": "^13.5.0",
