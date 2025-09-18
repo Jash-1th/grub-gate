@@ -1,4 +1,4 @@
-import { StrictMode, Suspense, useEffect } from 'react'
+import { Suspense, useEffect, useState, startTransition } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import './index.css'
@@ -46,34 +46,59 @@ const AppWithShellIntegration = () => {
   );
 };
 
-// Initialize React App
-const container = document.getElementById('root');
-if (container) {
-  const root = createRoot(container);
+// Client-side only rendering
+const renderApp = () => {
+  const container = document.getElementById('root');
+  if (!container) return;
+
+  // Check if we're running in the browser
+  const isBrowser = typeof window !== 'undefined';
   
-  console.log('⚡ Initializing React app');
-  root.render(
-    <StrictMode>
-      <Suspense fallback={<LoadingFallback />}>
-        <AppWithShellIntegration />
-      </Suspense>
-    </StrictMode>
-  );
+  if (isBrowser) {
+    // Use startTransition to avoid blocking the main thread
+    startTransition(() => {
+      const root = createRoot(container);
+      console.log('⚡ Initializing React app');
+      
+      // Only render the app once
+      root.render(
+        <Suspense fallback={<LoadingFallback />}>
+          <AppWithShellIntegration />
+        </Suspense>
+      );
+    });
+  }
+};
+
+// Initialize the app when the DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', renderApp);
+} else {
+  renderApp();
 }
 
 // Register the Progressive Web App
-registerPWA();
+if (typeof window !== 'undefined') {
+  registerPWA();
+  
+  // Performance monitoring - only run on client side
+  if ('performance' in window) {
+    const onPageLoad = () => {
+      const perfData = performance.getEntriesByType('navigation')[0];
+      if (perfData) {
+        console.log('🚀 PWA Performance Metrics:', {
+          'App Shell Load': Math.round(perfData.domContentLoadedEventEnd - perfData.fetchStart) + 'ms',
+          'Full Load Time': Math.round(perfData.loadEventEnd - perfData.fetchStart) + 'ms',
+          'Time to Interactive': Math.round(perfData.domInteractive - perfData.fetchStart) + 'ms'
+        });
+      }
+    };
 
-// Performance monitoring
-if ('performance' in window) {
-  window.addEventListener('load', () => {
-    const perfData = performance.getEntriesByType('navigation')[0];
-    if (perfData) {
-      console.log('🚀 PWA Performance Metrics:', {
-        'App Shell Load': Math.round(perfData.domContentLoadedEventEnd - perfData.fetchStart) + 'ms',
-        'Full Load Time': Math.round(perfData.loadEventEnd - perfData.fetchStart) + 'ms',
-        'Time to Interactive': Math.round(perfData.domInteractive - perfData.fetchStart) + 'ms'
-      });
+    // Check if the page has already loaded
+    if (document.readyState === 'complete') {
+      onPageLoad();
+    } else {
+      window.addEventListener('load', onPageLoad, { once: true });
     }
-  });
+  }
 }
