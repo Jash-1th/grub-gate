@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
 
 const dishes = [
   {
@@ -31,16 +31,40 @@ const dishes = [
 const PopularDishes = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isClient, setIsClient] = useState(false);
+  const [isInView, setIsInView] = useState(false);
+  const sectionRef = useRef(null);
 
+  // Handle auto-rotation of dishes
   useEffect(() => {
     setIsClient(true);
     
     const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % dishes.length);
+      if (isInView) {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % dishes.length);
+      }
     }, 5000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [isInView]);
+
+  // Intersection Observer to detect when section is in view
+  useEffect(() => {
+    if (!sectionRef.current || !isClient) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+        } else {
+          setIsInView(false);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(sectionRef.current);
+    return () => observer.disconnect();
+  }, [isClient]);
 
   if (!isClient) {
     // SSR-friendly static version
@@ -88,8 +112,27 @@ const PopularDishes = () => {
   }
 
   // Client-side with animations
+  // Animation variants for better performance
+  const dishVariants = {
+    hidden: { opacity: 0, x: 50 },
+    visible: { 
+      opacity: 1, 
+      x: 0,
+      transition: { 
+        duration: 0.5,
+        when: "beforeChildren",
+        staggerChildren: 0.1
+      }
+    },
+    exit: { 
+      opacity: 0, 
+      x: -50,
+      transition: { duration: 0.3 }
+    }
+  };
+
   return (
-    <div className="py-16 bg-white">
+    <div ref={sectionRef} className="py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
@@ -106,10 +149,11 @@ const PopularDishes = () => {
               index === currentIndex && (
                 <motion.div
                   key={dish.id}
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -50 }}
-                  transition={{ duration: 0.5 }}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  variants={dishVariants}
+                  viewport={{ once: true, amount: 0.2 }}
                   className="absolute inset-0 flex items-center justify-center"
                 >
                   <div className="bg-white rounded-xl overflow-hidden shadow-xl max-w-3xl w-full flex flex-col md:flex-row h-full">

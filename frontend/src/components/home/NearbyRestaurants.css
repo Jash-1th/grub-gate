@@ -3,6 +3,9 @@
   padding: 4rem 0;
   background-color: #f9f9f9;
   overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-text-size-adjust: 100%;
 }
 
 .nearby-restaurants h2 {
@@ -25,13 +28,23 @@
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   
-  /* Critical: Set width to enable horizontal scrolling */
+    /* Critical: Set width to enable horizontal scrolling */
   width: 100%;
   max-width: 100%;
   
-  /* Hide scrollbars */
+  /* Hide scrollbars but keep functionality */
   scrollbar-width: none;
   -ms-overflow-style: none;
+  
+  /* Optimize for touch devices */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  transform: translate3d(0,0,0);
+  will-change: transform;
   
   /* Interaction states */
   cursor: grab;
@@ -46,8 +59,9 @@
   /* Ensure content doesn't wrap */
   flex-wrap: nowrap;
   
-  /* Better touch handling */
+    /* Better touch handling */
   touch-action: pan-x;
+  -ms-touch-action: pan-x;
 }
 
 .unified-carousel::-webkit-scrollbar {
@@ -59,14 +73,34 @@
   cursor: grabbing;
   scroll-behavior: auto; /* Disable smooth scrolling during drag */
   transition: none; /* Disable transitions during drag for immediate response */
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  
+  /* Improve performance during drag */
+  -webkit-backface-visibility: hidden;
+  -webkit-transform-style: preserve-3d;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 /* Prevent text selection and image dragging during interaction */
 .unified-carousel.dragging * {
   pointer-events: none;
-  user-select: none;
   -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
   -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
 }
 
 /* Scale down cards slightly during drag for visual feedback */
@@ -96,6 +130,18 @@
   
   /* Ensure cards are interactive */
   pointer-events: auto;
+  
+  /* Optimize for performance */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000px;
+  perspective: 1000px;
+  will-change: transform;
+  
+  /* Prevent iOS text size adjustment */
+  -webkit-text-size-adjust: 100%;
   
   /* Better performance during animations */
   will-change: transform;
