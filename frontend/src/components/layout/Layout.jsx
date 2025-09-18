@@ -29,7 +29,7 @@ const Layout = ({ children }) => {
       }`}>
         <Header />
         
-        {/* Main content - full width */}
+        {/* Main content */}
         <main className="flex-grow w-full">
           <div className="w-full max-w-full">
             {children}

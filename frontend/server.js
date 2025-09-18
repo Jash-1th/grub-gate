@@ -206,6 +206,7 @@ async function handleSSR(req, res, next) {
           });
         };
 
+        // Add a script to handle launch screen and initial state
         const script = `
           <script>
             // Store initial data for client-side hydration
@@ -229,19 +230,22 @@ async function handleSSR(req, res, next) {
               window.i18n = i18nState;
             })();
             
-            // Add hydration classes to body
-            document.addEventListener('DOMContentLoaded', function() {
-              document.body.classList.add('hydrating');
-              
-              // When React hydrates, it will remove this class
-              var checkHydration = setInterval(function() {
-                if (document.querySelector('[data-hydrated]')) {
-                  clearInterval(checkHydration);
-                  document.body.classList.remove('hydrating');
-                  document.body.classList.add('hydrated');
-                }
-              }, 50);
-            });
+            // Function to hide launch screen
+            window.hideLaunchScreen = function() {
+              const launchScreen = document.getElementById('launch-screen');
+              if (launchScreen) {
+                launchScreen.classList.add('hidden');
+              }
+              document.documentElement.classList.add('app-loaded');
+              console.log('Launch screen hidden by React hydration');
+            };
+            
+            // Hide launch screen immediately if app is already loaded
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+              window.hideLaunchScreen();
+            } else {
+              document.addEventListener('DOMContentLoaded', window.hideLaunchScreen);
+            }
           </script>
         `;
         template = template.replace('</body>', `${script}</body>`);
