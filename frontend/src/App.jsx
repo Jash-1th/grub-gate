@@ -1,6 +1,9 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { BrowserRouter as BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { ModalProvider } from './context/ModalContext';
+import { I18nextProvider } from 'react-i18next';
+import i18n from './i18n';
+import './App.css';
 import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
 import About from './pages/About';
@@ -9,48 +12,65 @@ import Contact from './pages/Contact';
 import Faq from './pages/Faq';
 import LaunchScreen from './components/common/LaunchScreen';
 
+// Add data-hydrated attribute when hydration is complete
+const useHydrationComplete = () => {
+  useEffect(() => {
+    document.documentElement.setAttribute('data-hydrated', 'true');
+    return () => document.documentElement.removeAttribute('data-hydrated');
+  }, []);
+};
+
 /**
  * Main App component that handles the application structure and routing
  * Wraps everything with necessary providers and handles the launch screen
  */
 function App() {
-  const [showLaunchScreen, setShowLaunchScreen] = useState(false);
-  const [isLaunchScreenVisible, setIsLaunchScreenVisible] = useState(true);
-  const initialRender = useRef(true);
+  // Use the hydration complete hook
+  useHydrationComplete();
 
+  // Get initial state from server or use defaults
+  const [showLaunchScreen, setShowLaunchScreen] = useState(() => {
+    if (typeof window !== 'undefined' && window.__INITIAL_STATE__) {
+      return window.__INITIAL_STATE__.showLaunchScreen || false;
+    }
+    return false;
+  });
+  
+  const [isLaunchScreenVisible, setIsLaunchScreenVisible] = useState(showLaunchScreen);
+  const [isClient, setIsClient] = useState(false);
+  
+  // Handle client-side initialization
   useEffect(() => {
-    // Skip effect on server-side rendering
-    if (typeof window === 'undefined') return;
+    // This effect only runs on the client
+    setIsClient(true);
     
-    // Only run this effect once on mount
-    if (initialRender.current) {
-      initialRender.current = false;
-      
+    // Only run launch screen logic on client side
+    const checkFirstVisit = () => {
       try {
-        // Use sessionStorage to check if this is the first visit in the current session/tab
         const SESSION_KEY = 'grubgate_launch_screen_shown';
         const hasSeenLaunchScreen = sessionStorage.getItem(SESSION_KEY);
-
+        
         if (!hasSeenLaunchScreen) {
-          // First visit in this session - show launch screen
           console.log('🚀 GrubGate: First visit detected - showing launch screen');
           sessionStorage.setItem(SESSION_KEY, 'true');
           setShowLaunchScreen(true);
           setIsLaunchScreenVisible(true);
-        } else {
-          // Subsequent visits in this session - skip launch screen
-          console.log('🔄 GrubGate: Returning user - skipping launch screen');
+        } else if (showLaunchScreen) {
+          // If we're showing the launch screen but user has seen it before
           setShowLaunchScreen(false);
           setIsLaunchScreenVisible(false);
         }
       } catch (error) {
-        // If sessionStorage fails (rare), default to not showing launch screen
         console.warn('⚠️ GrubGate: SessionStorage unavailable, skipping launch screen');
         setShowLaunchScreen(false);
         setIsLaunchScreenVisible(false);
       }
-    }
-  }, []);
+    };
+    
+    // Small delay to ensure hydration is complete
+    const timer = setTimeout(checkFirstVisit, 100);
+    return () => clearTimeout(timer);
+  }, [showLaunchScreen]);
 
   // Handle launch screen animation end
   const handleLaunchScreenEnd = () => {

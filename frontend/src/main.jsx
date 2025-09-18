@@ -1,4 +1,5 @@
-import { StrictMode, Suspense, useEffect } from 'react'
+import React from 'react';
+import { Suspense, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import './index.css'
@@ -46,27 +47,74 @@ const AppWithShellIntegration = () => {
   );
 };
 
+// Error Boundary Component
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Error caught by ErrorBoundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center p-8 bg-white rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h2>
+          <p className="text-gray-600 mb-6">We're working on fixing this issue. Please try refreshing the page.</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-grub-red text-white rounded hover:bg-red-700 transition-colors"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>;
+    }
+
+    return this.props.children;
+  }
+}
+
 // Initialize React App
 const container = document.getElementById('root');
 if (container) {
-  const root = createRoot(container);
+  const root = createRoot(container, {
+    // Add this to suppress hydration warnings in development
+    onRecoverableError: (error, errorInfo) => {
+      console.error('Recoverable error during render:', error, errorInfo);
+    }
+  });
   
   console.log('⚡ Initializing React app');
 
-  /**
-   * Note about StrictMode:
-   * - In development, React intentionally renders components twice to help detect side effects
-   * - This behavior only happens in development and helps identify potential issues
-   * - The double rendering does not occur in production builds
-   * - If you see duplicate logs or double API calls in development, this is expected behavior
-   */
-  root.render(
-    <StrictMode>
+  // Function to render the app with error boundary
+  const renderApp = () => (
+    <ErrorBoundary>
       <Suspense fallback={<LoadingFallback />}>
         <AppWithShellIntegration />
       </Suspense>
-    </StrictMode>
+    </ErrorBoundary>
   );
+
+  // Initial render with hydration
+  root.render(renderApp());
+  
+  // Add a small delay before removing the server-rendered styles
+  // This helps prevent the flash of unstyled content
+  if (document.body) {
+    setTimeout(() => {
+      document.body.classList.remove('hydrating');
+      document.body.classList.add('hydrated');
+    }, 100);
+  }
 }
 
 // Register the Progressive Web App

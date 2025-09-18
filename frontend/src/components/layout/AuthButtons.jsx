@@ -22,7 +22,7 @@ const AuthButtons = ({ className = '', isMobile = false }) => {
             <button
               key={item.name}
               onClick={openSignupModal}
-              className="w-full px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red text-grub-red bg-white border-2 border-grub-red hover:bg-red-700 hover:text-white"
+              className="whitespace-nowrap px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red/80 text-white bg-gradient-to-r from-grub-red to-red-600 hover:from-grub-red/90 hover:to-red-700 shadow hover:shadow-md"
             >
               {t('signup.button')}
             </button>
@@ -34,7 +34,7 @@ const AuthButtons = ({ className = '', isMobile = false }) => {
             <button
               key={item.name}
               onClick={() => toggleLoginModal(true)}
-              className="w-full px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red text-white bg-grub-red border-2 border-transparent hover:bg-red-700"
+              className="whitespace-nowrap px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 shadow-sm"
             >
               {t('login.button')}
             </button>
