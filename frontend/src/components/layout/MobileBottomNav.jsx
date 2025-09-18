@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { navigation } from '../../data';
+const howItWorksImage = '/images/HowItWorks.png';
 
 const getNavIcon = (key) => {
   switch (key) {
@@ -19,9 +20,16 @@ const getNavIcon = (key) => {
       );
     case 'howItWorks':
       return (
-        <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-          <path d="M9.5 3L8 6H4l2.5 3L5 12l3-1.5L11 12l-.5-3L13 6h-4L9.5 3zM17 13a4 4 0 100 8 4 4 0 000-8zm-6 2h-7v2h7v-2z" />
-        </svg>
+        <div className="flex items-center justify-center">
+          <img 
+            src={howItWorksImage} 
+            alt="How It Works" 
+            className="w-6 h-6 object-contain"
+            loading="lazy"
+            width={24}
+            height={24}
+          />
+        </div>
       );
     case 'contact':
       return (
@@ -53,13 +61,19 @@ const MobileBottomNav = () => {
           <li key={item.name} className="flex-1 min-w-0 overflow-hidden">
             <NavLink
               to={item.href}
-              className={({ isActive }) =>
-                `flex min-w-0 w-full overflow-hidden flex-col items-center justify-center h-14 text-[11px] leading-tight font-medium transition-all duration-200 rounded-lg mx-0.5 ${
-                  isActive 
+              end={item.href === '/'} // Use exact matching for home
+              className={({ isActive }) => {
+                // Special case for home to match exactly
+                const isActiveLink = item.href === '/' 
+                  ? isActive 
+                  : isActive && window.location.pathname === item.href;
+                
+                return `flex min-w-0 w-full overflow-hidden flex-col items-center justify-center h-14 text-[11px] leading-tight font-medium transition-all duration-200 rounded-lg mx-0.5 ${
+                  isActiveLink 
                     ? 'text-grub-red bg-red-50' 
                     : 'text-gray-600 hover:text-grub-red hover:bg-gray-50'
-                }`
-              }
+                }`;
+              }}
               aria-label={t(`nav.${item.name}`)}
             >
               <div className="flex items-center justify-center h-5 w-5 mb-1 flex-shrink-0">
