@@ -59,8 +59,8 @@
   /* Ensure content doesn't wrap */
   flex-wrap: nowrap;
   
-    /* Better touch handling */
-  touch-action: pan-x;
+    /* Better touch handling - allow only horizontal panning */
+  touch-action: pan-x pinch-zoom;
   -ms-touch-action: pan-x;
 }
 

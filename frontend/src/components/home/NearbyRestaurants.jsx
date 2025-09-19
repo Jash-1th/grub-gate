@@ -204,16 +204,18 @@ const NearbyRestaurants = () => {
       if (isTouch) {
         // For touch devices, listen to touch events
         document.addEventListener('touchmove', handleInteractionMove, { 
-          passive: false 
+          passive: false,
+          capture: true 
         });
         document.addEventListener('touchend', handleInteractionEnd, { 
-          passive: false 
+          passive: false,
+          capture: true 
         });
         // Also listen for touch cancel events
         document.addEventListener('touchcancel', handleInteractionEnd, { 
-          passive: false 
+          passive: false,
+          capture: true 
         });
-        document.addEventListener('touchcancel', handleInteractionEnd, { passive: false });
       } else {
         document.addEventListener('mousemove', handleInteractionMove);
         document.addEventListener('mouseup', handleInteractionEnd);
@@ -300,10 +302,8 @@ const NearbyRestaurants = () => {
         // Touch events for mobile
         onTouchStart={handleInteractionStart}
         onTouchMove={(e) => {
-          // Only prevent default if we're dragging to avoid interfering with scrolling
-          if (isDraggingRef.current) {
-            e.preventDefault();
-          }
+          // Always prevent default for touchmove to ensure drag works
+          e.preventDefault();
         }}
         onTouchEnd={handleInteractionEnd}
         // Mouse events for desktop
@@ -398,9 +398,8 @@ const NearbyRestaurants = () => {
         // Touch events for mobile (even in desktop view for touchscreen laptops)
         onTouchStart={handleInteractionStart}
         onTouchMove={(e) => {
-          if (isDraggingRef.current) {
-            e.preventDefault();
-          }
+          // Always prevent default for touchmove to ensure drag works
+          e.preventDefault();
         }}
         onTouchEnd={handleInteractionEnd}
         // Mouse events for desktop
