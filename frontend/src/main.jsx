@@ -3,7 +3,6 @@ import { Suspense, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import './index.css'
-import './styles/scroll.css'
 import './i18n'
 import App from './App.jsx'
 import ScrollToTop from './components/common/ScrollToTop'
@@ -32,85 +31,31 @@ const AppWithShellIntegration = () => {
     // Mark the app as hydrated
     document.documentElement.setAttribute('data-hydrated', 'true');
     
-    // Disable browser's default scroll restoration
-    if ('scrollRestoration' in window.history) {
-      window.history.scrollRestoration = 'manual';
-    }
-    
-    // Function to force scroll to top on all scrollable elements
-    const forceScrollToTop = () => {
-      try {
-        // Scroll the window
-        window.scrollTo(0, 0);
-        
-        // Scroll the document element
-        const root = document.documentElement || document.body;
-        root.scrollTo(0, 0);
-        
-        // Force scroll to top on all scrollable elements
-        const scrollableSelectors = [
-          'html', 'body', '#root', 'main',
-          '[data-scrollable]', '.scrollable',
-          'div[style*="overflow"]', 'div[class*="scroll"]'
-        ];
-        
-        scrollableSelectors.forEach(selector => {
-          try {
-            document.querySelectorAll(selector).forEach(el => {
-              if (el.scrollTop > 0) {
-                el.scrollTop = 0;
-              }
-            });
-          } catch (e) {
-            console.warn('Failed to reset scroll on some elements');
-          }
-        });
-      } catch (error) {
-        console.warn('Scroll reset failed:', error);
-      }
-    };
-    
     // Hide launch screen once React app is fully mounted and ready
     const hideLaunchScreen = () => {
-      console.log('⚙️ React app mounted, handling launch screen');
-      
-      // Hide launch screen
+      console.log('⚙️ React app mounted, hiding launch screen');
       if (window.hideLaunchScreen) {
         window.hideLaunchScreen();
       } else {
+        // Fallback in case window.hideLaunchScreen is not available
         const launchScreen = document.getElementById('launch-screen');
         if (launchScreen) {
           launchScreen.classList.add('hidden');
         }
         document.documentElement.classList.add('app-loaded');
       }
-      
-      // Force scroll to top multiple times to ensure it sticks
-      forceScrollToTop();
-      setTimeout(forceScrollToTop, 50);
-      setTimeout(forceScrollToTop, 200);
     };
     
-    // Handle initial load
-    const handleLoad = () => {
-      forceScrollToTop();
-      hideLaunchScreen();
-    };
-    
-    // Initial scroll to top
-    forceScrollToTop();
-    
-    // Set up load handler
+    // Hide launch screen immediately if app is ready
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
-      handleLoad();
+      hideLaunchScreen();
     } else {
-      window.addEventListener('load', handleLoad);
+      document.addEventListener('DOMContentLoaded', hideLaunchScreen);
     }
     
     // Cleanup
     return () => {
       document.documentElement.removeAttribute('data-hydrated');
-      window.removeEventListener('load', handleLoad);
     };
   }, []);
   
