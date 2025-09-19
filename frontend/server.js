@@ -273,9 +273,20 @@ async function handleSSR(req, res, next) {
     }
     
     // Replace the SSR outlet with the rendered content
-    const html = template.replace('<!--ssr-outlet-->', appHtml);
+    let html = template.replace('<!--ssr-outlet-->', appHtml);
     
-    res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
+    // Ensure proper meta tags for client-side routing
+    if (!html.includes('<meta name="viewport"')) {
+      html = html.replace('<head>', '<head>\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">');
+    }
+    
+    // Add cache control headers to prevent stale content
+    res.status(200).set({ 
+      'Content-Type': 'text/html',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    }).end(html);
   } catch (error) {
     console.error('Server error:', error);
     if (!isProduction && vite) {

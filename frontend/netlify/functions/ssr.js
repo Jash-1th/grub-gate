@@ -57,11 +57,16 @@ export default async (request, context) => {
 
     // 5. Inject the rendered HTML and the state script into the template
     const finalHtml = template
-      .replace(``, html)
+      .replace('<!--ssr-outlet-->', html)
       .replace('</body>', `${stateScript}</body>`);
 
     return new Response(finalHtml, {
-      headers: { 'Content-Type': 'text/html' },
+      headers: { 
+        'Content-Type': 'text/html',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      },
     });
   } catch (error) {
     console.error('SSR Function Error:', error);

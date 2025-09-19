@@ -32,3 +32,19 @@
   for = "/locales/*"
   [headers.values]
     Cache-Control = "public, max-age=3600"
+
+# Prevent caching of HTML pages to avoid stale SSR content
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+    Pragma = "no-cache"
+    Expires = "0"
+
+# Prevent caching of the main entry point
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+    Pragma = "no-cache"
+    Expires = "0"
