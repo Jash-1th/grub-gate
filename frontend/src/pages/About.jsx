@@ -33,7 +33,7 @@ const About = () => {
 
         {/* Use TwoColumnSection for each section */}
         <div className="space-y-8">
-          {t('about.sections', { returnObjects: true }).map((section, index) => (
+          {(Array.isArray(t('about.sections', { returnObjects: true })) ? t('about.sections', { returnObjects: true }) : []).map((section, index) => (
             <TwoColumnSection
               key={section.id}
               title={section.title}

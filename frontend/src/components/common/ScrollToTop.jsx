@@ -1,19 +1,51 @@
 // src/components/common/ScrollToTop.jsx
-import { useEffect } from 'react';
+import { useLayoutEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const ScrollToTop = () => {
-  // Extracts pathname property from the current location object
-  const { pathname } = useLocation();
+  const { pathname, key } = useLocation();
 
-  // This effect runs every time the pathname changes
-  useEffect(() => {
-    // The window.scrollTo command is a browser-only API. 
-    // useEffect ensures this code only runs on the client, after the component mounts.
-    window.scrollTo(0, 0);
-  }, [pathname]); // Dependency array with pathname ensures it runs on route change
+  // Use useLayoutEffect to run before browser paint
+  useLayoutEffect(() => {
+    // Only run in browser environment
+    if (typeof window === 'undefined') return;
 
-  return null; // This component does not render anything
+    // Disable browser scroll restoration completely
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+
+    // Force scroll to top immediately
+    const forceScrollToTop = () => {
+      // Multiple scroll methods for maximum compatibility
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      
+      // Handle any custom scroll containers
+      const scrollContainers = document.querySelectorAll('main, .app-content, #root, [data-scroll="true"]');
+      scrollContainers.forEach(container => {
+        if (container) {
+          container.scrollTop = 0;
+          if (container.scrollTo) {
+            container.scrollTo(0, 0);
+          }
+        }
+      });
+    };
+
+    // Execute immediately in layout effect
+    forceScrollToTop();
+
+    // Also execute after any potential async operations
+    const timeoutId = setTimeout(forceScrollToTop, 0);
+    
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [pathname, key]); // Include key to handle same-route navigations
+
+  return null;
 };
 
 export default ScrollToTop;

@@ -93,7 +93,7 @@ const PopularDishes = () => {
   }, [isClient]);
 
   if (!isClient) {
-    // SSR-friendly static version
+    // SSR-friendly static version - matches client structure exactly
     return (
       <div className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -105,32 +105,47 @@ const PopularDishes = () => {
               Discover our most loved dishes from top restaurants
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {dishes.map((dish) => (
-              <div key={dish.id} className="bg-white rounded-xl overflow-hidden shadow-lg">
-                <img 
-                  src={dish.image} 
-                  alt={dish.name} 
-                  className="w-full h-48 object-cover"
-                  loading="lazy"
-                />
-                <div className="p-6">
+          
+          <div className="relative h-[500px] md:h-[400px] w-full">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="bg-white rounded-xl overflow-hidden shadow-xl max-w-3xl w-full flex flex-col md:flex-row h-full">
+                <div className="md:w-1/2 h-64 md:h-auto">
+                  <img 
+                    src={dishes[0]?.image || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80'} 
+                    alt={dishes[0]?.name || 'Gourmet Burger'} 
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-8 md:w-1/2 flex flex-col justify-center">
                   <div className="flex justify-between items-start">
-                    <h3 className="text-xl font-semibold text-gray-900">{dish.name}</h3>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-red-100 text-grub-red">
-                      {dish.rating} ★
+                    <h3 className="text-2xl font-bold text-gray-900">{dishes[0]?.name || 'Gourmet Burger'}</h3>
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                      {dishes[0]?.rating || 4.8} ★
                     </span>
                   </div>
-                  <p className="mt-2 text-gray-600">{dish.description}</p>
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="text-xl font-bold text-gray-900">${dish.price.toFixed(2)}</span>
-                    <button className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
+                  <p className="mt-4 text-gray-600">{dishes[0]?.description || 'Juicy beef patty with fresh vegetables and special sauce'}</p>
+                  <div className="mt-6 flex items-center justify-between">
+                    <span className="text-2xl font-bold text-gray-900">${(dishes[0]?.price || 12.99).toFixed(2)}</span>
+                    <button className="px-6 py-3 bg-grub-red text-white rounded-lg hover:bg-red-900 transition-colors">
                       Order Now
                     </button>
                   </div>
                 </div>
               </div>
-            ))}
+            </div>
+            
+            <div className="flex justify-center mt-8 space-x-2">
+              {dishes.map((_, index) => (
+                <button
+                  key={index}
+                  className={`w-3 h-3 rounded-full transition-colors ${
+                    index === 0 ? 'bg-grub-red w-6' : 'bg-gray-300'
+                  }`}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
