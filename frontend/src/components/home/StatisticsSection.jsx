@@ -92,7 +92,7 @@ const StatisticsSection = () => {
   }, []);
 
   if (!isClient) {
-    // Return a static version for SSR
+    // Return a static version for SSR that matches client-side structure
     return (
       <div className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -105,19 +105,21 @@ const StatisticsSection = () => {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { value: 1000, title: 'Happy Customers', description: 'and counting' },
-              { value: 200, title: 'Partner Restaurants', description: 'and growing' },
-              { value: 5000, title: 'Meals Served', description: 'and many more to come' },
-            ].map((stat, index) => (
-              <div key={index} className="bg-white p-6 rounded-xl shadow-md text-center">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-red-100 text-grub-red">
-                  {stat.value.toLocaleString()}
-                </span>
-                <h3 className="text-xl font-semibold mt-2 text-gray-800">{stat.title}</h3>
-                <p className="text-gray-600 mt-2">{stat.description}</p>
-              </div>
-            ))}
+            <div className="bg-white p-6 rounded-xl shadow-md text-center hover:shadow-lg transition-shadow duration-300">
+              <div className="text-4xl md:text-5xl font-bold text-grub-red">1000</div>
+              <h3 className="text-xl font-semibold mt-2 text-gray-800">Happy Customers</h3>
+              <p className="text-gray-600 mt-2">and counting</p>
+            </div>
+            <div className="bg-white p-6 rounded-xl shadow-md text-center hover:shadow-lg transition-shadow duration-300">
+              <div className="text-4xl md:text-5xl font-bold text-grub-red">200</div>
+              <h3 className="text-xl font-semibold mt-2 text-gray-800">Partner Restaurants</h3>
+              <p className="text-gray-600 mt-2">and growing</p>
+            </div>
+            <div className="bg-white p-6 rounded-xl shadow-md text-center hover:shadow-lg transition-shadow duration-300">
+              <div className="text-4xl md:text-5xl font-bold text-grub-red">5000</div>
+              <h3 className="text-xl font-semibold mt-2 text-gray-800">Meals Served</h3>
+              <p className="text-gray-600 mt-2">and many more to come</p>
+            </div>
           </div>
         </div>
       </div>

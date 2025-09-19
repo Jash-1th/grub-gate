@@ -9,6 +9,12 @@ html, body {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+/* Ensure scroll position resets properly */
+html {
+  scroll-behavior: auto; /* Override for instant scroll on navigation */
 }
 
 :root {

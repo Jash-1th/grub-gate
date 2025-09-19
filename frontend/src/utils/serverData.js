@@ -64,8 +64,19 @@ export function useServerData(key) {
   // we need to fetch it
   React.useEffect(() => {
     if (typeof window !== 'undefined' && !data) {
-      // In a real app, you would fetch the data here
-      console.warn(`No server data found for key: ${key}`);
+      // Fetch fallback data instead of just warning
+      const fetchFallbackData = async () => {
+        try {
+          const fallbackData = await fetchInitialData();
+          if (fallbackData[key]) {
+            setData(fallbackData[key]);
+          }
+        } catch (error) {
+          console.error(`Error fetching fallback data for key: ${key}`, error);
+        }
+      };
+      
+      fetchFallbackData();
     }
   }, [key, data]);
 

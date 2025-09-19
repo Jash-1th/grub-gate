@@ -12,6 +12,7 @@ import Contact from './pages/Contact';
 import Faq from './pages/Faq';
 import LaunchScreen from './components/common/LaunchScreen';
 import ScrollToTop from './components/common/ScrollToTop';
+import { useScrollToTop } from './hooks/useScrollToTop';
 import './App.css';
 
 // Custom hook to handle first visit detection and session management
@@ -23,23 +24,21 @@ const useFirstVisit = () => {
     // Mark as client-side
     setIsClient(true);
     
-    try {
-      const SESSION_KEY = 'grubgate_launch_screen_shown';
-      const hasSeenLaunchScreen = sessionStorage.getItem(SESSION_KEY);
-      
-      if (!hasSeenLaunchScreen) {
-        console.log('🚀 First visit detected - showing launch screen');
-        sessionStorage.setItem(SESSION_KEY, 'true');
-        setIsFirstVisit(true);
+    // Only run client-side logic after hydration
+    if (typeof window !== 'undefined') {
+      try {
+        const SESSION_KEY = 'grubgate_launch_screen_shown';
+        const hasSeenLaunchScreen = sessionStorage.getItem(SESSION_KEY);
+        
+        if (!hasSeenLaunchScreen) {
+          console.log('🚀 First visit detected - showing launch screen');
+          sessionStorage.setItem(SESSION_KEY, 'true');
+          setIsFirstVisit(true);
+        }
+      } catch (error) {
+        console.warn('⚠️ SessionStorage unavailable, skipping launch screen');
       }
-    } catch (error) {
-      console.warn('⚠️ SessionStorage unavailable, skipping launch screen');
     }
-    
-    // Cleanup function
-    return () => {
-      // Any cleanup if needed
-    };
   }, []);
 
   return { isFirstVisit, isClient };
@@ -47,43 +46,47 @@ const useFirstVisit = () => {
 
 // Main App component
 function App({ initialized = true }) {
-  const { isFirstVisit } = useFirstVisit();
+  const { isFirstVisit, isClient } = useFirstVisit();
   const location = useLocation();
-  const [isLaunching, setIsLaunching] = useState(isFirstVisit);
-  const [isReady, setIsReady] = useState(false);
+  const [isLaunching, setIsLaunching] = useState(false); // Start as false to match SSR
+  const [isReady, setIsReady] = useState(true); // Always start ready for SSR consistency
+  
+  // Use the scroll to top hook
+  useScrollToTop();
   
   // Handle app readiness and transitions
   useEffect(() => {
-    // If it's not the first visit, mark as ready immediately
-    if (!isFirstVisit) {
-      setIsReady(true);
-      return;
-    }
+    // Only run after client-side hydration
+    if (!isClient) return;
     
-    // For first visit, wait for the launch screen to complete
+    // Set launching state based on first visit after hydration
+    if (isFirstVisit) {
+      setIsLaunching(true);
+      setIsReady(false);
+    } else {
+      setIsReady(true);
+    }
+  }, [isFirstVisit, isClient]);
+  
+  // Handle launch screen completion
+  useEffect(() => {
     if (isFirstVisit && !isLaunching) {
       const timer = setTimeout(() => {
         setIsReady(true);
-      }, 300); // Small delay for smooth transition
+      }, 300);
       
       return () => clearTimeout(timer);
     }
   }, [isFirstVisit, isLaunching]);
   
-  // Handle route changes
+  // Track page views only
   useEffect(() => {
-    if (isReady) {
-      // Scroll to top on route change
-      window.scrollTo(0, 0);
-      
-      // Track page view for analytics
-      if (window.gtag) {
-        window.gtag('event', 'page_view', {
-          page_path: location.pathname + location.search,
-        });
-      }
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'page_view', {
+        page_path: location.pathname + location.search,
+      });
     }
-  }, [location, isReady]);
+  }, [location.pathname]);
   
   // Handle launch screen completion
   const handleLaunchComplete = useCallback(() => {
@@ -103,13 +106,13 @@ function App({ initialized = true }) {
     <I18nextProvider i18n={i18n}>
       <ModalProvider>
         <div className="app-container">
-          {/* Launch Screen - Only shown on first visit */}
-          {isFirstVisit && isLaunching && (
+          {/* Launch Screen - Only shown on first visit and after hydration */}
+          {isClient && isFirstVisit && isLaunching && (
             <LaunchScreen onComplete={handleLaunchComplete} />
           )}
           
           {/* Main App Content */}
-          <div className={`app-content ${!isReady ? 'opacity-0' : 'opacity-100 transition-opacity duration-300'}`}>
+          <div className="app-content">
             <ScrollToTop />
             <Layout>
               <AnimatePresence mode="wait">

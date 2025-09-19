@@ -31,6 +31,18 @@ const AppWithShellIntegration = () => {
     // Mark the app as hydrated
     document.documentElement.setAttribute('data-hydrated', 'true');
     
+    // Disable scroll restoration to prevent browser interference
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual';
+    }
+    
+    // Force scroll to top on initial load
+    if (typeof window !== 'undefined') {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+    
     // Hide launch screen once React app is fully mounted and ready
     const hideLaunchScreen = () => {
       console.log('⚙️ React app mounted, hiding launch screen');
@@ -56,12 +68,15 @@ const AppWithShellIntegration = () => {
     // Cleanup
     return () => {
       document.documentElement.removeAttribute('data-hydrated');
+      // Restore default scroll restoration
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'auto';
+      }
     };
   }, []);
   
   return (
     <BrowserRouter>
-      <ScrollToTop />
       <App />
     </BrowserRouter>
   );
@@ -119,22 +134,35 @@ if (container) {
 
   // Check if we have server-rendered content to hydrate
   const hasServerRenderedContent = container.innerHTML.trim() !== '' && 
-    !container.innerHTML.includes('<!--ssr-outlet-->');
+    !container.innerHTML.includes('<!--ssr-outlet-->') &&
+    !container.innerHTML.includes('launch-screen'); // Don't hydrate if only launch screen
 
   if (hasServerRenderedContent) {
-    // SSR content exists, use hydration
+    // SSR content exists, use hydration with suppressHydrationWarning
     console.log('🔄 Hydrating server-rendered content');
-    hydrateRoot(container, renderApp(), {
-      onRecoverableError: (error, errorInfo) => {
-        console.warn('Hydration recoverable error:', error, errorInfo);
-      }
-    });
+    try {
+      hydrateRoot(container, renderApp(), {
+        onRecoverableError: (error, errorInfo) => {
+          // Suppress hydration warnings in production
+          if (process.env.NODE_ENV !== 'production') {
+            console.warn('Hydration recoverable error:', error, errorInfo);
+          }
+        }
+      });
+    } catch (error) {
+      console.warn('Hydration failed, falling back to client-side rendering:', error);
+      // Fallback to client-side rendering
+      const root = createRoot(container);
+      root.render(renderApp());
+    }
   } else {
     // No SSR content, use client-side rendering
     console.log('🎨 Client-side rendering (no SSR content)');
     const root = createRoot(container, {
       onRecoverableError: (error, errorInfo) => {
-        console.error('Recoverable error during render:', error, errorInfo);
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Recoverable error during render:', error, errorInfo);
+        }
       }
     });
     root.render(renderApp());
