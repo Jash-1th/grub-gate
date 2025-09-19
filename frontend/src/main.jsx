@@ -1,6 +1,6 @@
 import React from 'react';
 import { Suspense, useEffect } from 'react'
-import { createRoot } from 'react-dom/client'
+import { createRoot, hydrateRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import './i18n'
@@ -106,13 +106,6 @@ class ErrorBoundary extends React.Component {
 // Initialize React App
 const container = document.getElementById('root');
 if (container) {
-  const root = createRoot(container, {
-    // Add this to suppress hydration warnings in development
-    onRecoverableError: (error, errorInfo) => {
-      console.error('Recoverable error during render:', error, errorInfo);
-    }
-  });
-  
   console.log('⚡ Initializing React app');
 
   // Function to render the app with error boundary
@@ -124,8 +117,28 @@ if (container) {
     </ErrorBoundary>
   );
 
-  // Initial render with hydration
-  root.render(renderApp());
+  // Check if we have server-rendered content to hydrate
+  const hasServerRenderedContent = container.innerHTML.trim() !== '' && 
+    !container.innerHTML.includes('<!--ssr-outlet-->');
+
+  if (hasServerRenderedContent) {
+    // SSR content exists, use hydration
+    console.log('🔄 Hydrating server-rendered content');
+    hydrateRoot(container, renderApp(), {
+      onRecoverableError: (error, errorInfo) => {
+        console.warn('Hydration recoverable error:', error, errorInfo);
+      }
+    });
+  } else {
+    // No SSR content, use client-side rendering
+    console.log('🎨 Client-side rendering (no SSR content)');
+    const root = createRoot(container, {
+      onRecoverableError: (error, errorInfo) => {
+        console.error('Recoverable error during render:', error, errorInfo);
+      }
+    });
+    root.render(renderApp());
+  }
   
   // Add a small delay before removing the server-rendered styles
   // This helps prevent the flash of unstyled content

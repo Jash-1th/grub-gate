@@ -49,7 +49,12 @@ export default ({ mode }) => {
         output: {
           manualChunks: undefined
         }
-      }
+      },
+      // Ensure proper source maps for debugging
+      sourcemap: true,
+      // Optimize for better SSR compatibility
+      minify: 'terser',
+      target: 'esnext'
     },
     
     optimizeDeps: {
