@@ -145,8 +145,8 @@
 @media screen and (max-width: 640px) {
   .modal-overlay {
     padding: 0.5rem;
-    align-items: flex-start;
-    padding-top: 2rem;
+    align-items: center;
+    justify-content: center;
   }
   
   .modal-card {
@@ -160,7 +160,8 @@
 @media screen and (max-width: 480px) {
   .modal-overlay {
     padding: 0.25rem;
-    padding-top: 1rem;
+    align-items: center;
+    justify-content: center;
   }
   
   .modal-card {

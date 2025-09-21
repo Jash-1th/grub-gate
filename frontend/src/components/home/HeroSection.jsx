@@ -31,7 +31,7 @@ const HeroSection = () => {
         </h1>
        
         
-        <p className="text-lg sm:text-xl md:text-2xl text-gray-100 mb-8 max-w-4xl mx-auto leading-relaxed">
+        <p className="text-lg sm:text-xl md:text-2xl text-gray-100 mb-8 max-w-4xl mx-auto leading-relaxed px-6 sm:px-8 md:px-12 lg:px-16 xl:px-24">
           {t('hero.description')}
         </p>
         

@@ -30,12 +30,12 @@ const HeroHowItWorks = () => {
       {/* Content */}
       <div className="hero-content-left w-full">
         <div className="max-w-2xl" style={{ marginLeft: '20px'}}>
-          <h3 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 leading-tight sm:leading-snug md:leading-normal tracking-wide">
+          <h3 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
             {t('howItWorks.heroTitle')}<br />
             <span className="text-red-300">{t('howItWorks.heroSubtitle')}</span>
           </h3>
           
-          <p className="text-lg sm:text-xl md:text-2xl text-gray-100 mb-8 leading-relaxed sm:leading-relaxed md:leading-loose tracking-wide">
+          <p className="text-lg sm:text-xl md:text-2xl text-gray-100 mb-8 leading-relaxed">
             {t('howItWorks.heroDescription')}
           </p>
           

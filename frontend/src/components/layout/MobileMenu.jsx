@@ -77,7 +77,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
                 <svg className="w-5 h-5 text-grub-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
                 </svg>
-                {t('language')}
+                {t('language').toUpperCase()}
               </h3>
               <div className="flex justify-center">
                 <LanguageSwitcher />
@@ -93,7 +93,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
                 }}
                 className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-grub-red to-red-600 text-white text-base font-semibold rounded-xl hover:opacity-90 transition-all transform hover:scale-[1.02] active:scale-95 shadow-lg"
               >
-                <UserPlusIcon className="w-5 h-3" />
+                {/* <UserPlusIcon className="w-5 h-3" /> */}
                 <span>{t('signup.button')}</span>
               </button>
               
@@ -104,7 +104,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
                 }}
                 className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white border-2 border-gray-200 text-gray-800 text-base font-semibold rounded-xl hover:bg-gray-50 transition-all transform hover:scale-[1.02] active:scale-95 shadow-md"
               >
-                <ArrowRightOnRectangleIcon className="w-5 h-5" />
+                {/* <ArrowRightOnRectangleIcon className="w-5 h-5" /> */}
                 <span>{t('login.button')}</span>
               </button>
             </div>
