@@ -40,7 +40,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="w-full bg-grub-red text-white">
+    <footer className="w-full bg-gradient-to-r from-grub-red to-red-700 text-white">
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Column 1: Logo + Tagline */}

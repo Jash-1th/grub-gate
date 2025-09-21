@@ -8,7 +8,7 @@ const About = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative py-20 lg:py-32 bg-gradient-to-br from-grub-red to-red-800">
+      <section className="relative py-20 lg:py-32 bg-gradient-to-r from-grub-red to-red-700">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
@@ -46,7 +46,7 @@ const About = () => {
       </section>
 
       {/* Our Team Section */}
-      <section className="py-16 lg:py-24 bg-gray-50">
+      {/* <section className="py-16 lg:py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6" style={{color: '#800020'}}>
@@ -57,7 +57,7 @@ const About = () => {
             </p>
           </div>
 
-          {/* Team Grid */}
+          
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               { name: 'Sarah Johnson', role: t('about.team.ceo') },
@@ -87,7 +87,7 @@ const About = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Values Section */}
       <section className="py-16 lg:py-24 bg-white">

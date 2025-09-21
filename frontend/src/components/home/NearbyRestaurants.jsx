@@ -21,11 +21,13 @@ const NearbyRestaurants = () => {
   const carouselRef = useRef(null);
   const animationIdRef = useRef(null);
   const isDraggingRef = useRef(false);
-  const dragStartRef = useRef({ x: 0, scrollLeft: 0, startTime: 0 });
+  const dragStartRef = useRef({ x: 0, y: 0, scrollLeft: 0, startTime: 0 });
   const scrollSpeedRef = useRef(0.5); // pixels per frame
   const lastTimeRef = useRef(0);
   const momentumRef = useRef({ velocity: 0, lastX: 0, lastTime: 0 });
   const resumeTimeoutRef = useRef(null);
+  const touchStartRef = useRef({ x: 0, y: 0 });
+  const isDragIntentRef = useRef(false);
   
   // SSR-safe client initialization
   useEffect(() => {
@@ -85,14 +87,38 @@ const NearbyRestaurants = () => {
 
   // Unified event handler for both mouse and touch move events
   const handleInteractionMove = useCallback((e) => {
-    if (!isDraggingRef.current || !carouselRef.current) return;
-    
-    // Prevent default to avoid scrolling the page
-    e.preventDefault();
+    if (!carouselRef.current) return;
     
     const currentTime = performance.now();
-    // Get the correct clientX whether it's a touch or mouse event
+    // Get the correct clientX/Y whether it's a touch or mouse event
     const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+    
+    // For touch events, determine drag intent on first move
+    if (e.type === 'touchmove' && !isDragIntentRef.current) {
+      const deltaX = Math.abs(clientX - touchStartRef.current.x);
+      const deltaY = Math.abs(clientY - touchStartRef.current.y);
+      
+      // Only start dragging if horizontal movement is greater than vertical
+      if (deltaX > deltaY && deltaX > 10) {
+        isDragIntentRef.current = true;
+        isDraggingRef.current = true;
+        setDragVisualState(true);
+        setIsPaused(true);
+      } else if (deltaY > deltaX && deltaY > 10) {
+        // Vertical scroll detected - don't interfere
+        return;
+      } else {
+        // Not enough movement to determine intent
+        return;
+      }
+    }
+    
+    if (!isDraggingRef.current) return;
+    
+    // Prevent default only after we've determined horizontal drag intent
+    e.preventDefault();
+    
     const deltaX = dragStartRef.current.x - clientX;
     const newScrollLeft = dragStartRef.current.scrollLeft + deltaX;
     
@@ -125,13 +151,13 @@ const NearbyRestaurants = () => {
   }, []);
   
   const handleInteractionEnd = useCallback(() => {
-    if (!carouselRef.current || !isDraggingRef.current) return;
+    if (!carouselRef.current) return;
     
     const carousel = carouselRef.current;
     const velocity = momentumRef.current.velocity;
     
-    // Apply momentum if significant velocity
-    if (Math.abs(velocity) > 0.5) {
+    // Apply momentum if significant velocity and we were actually dragging
+    if (isDraggingRef.current && Math.abs(velocity) > 0.5) {
       const momentumDistance = velocity * 100; // Adjust multiplier for desired momentum
       const targetScroll = carousel.scrollLeft - momentumDistance;
       
@@ -143,6 +169,7 @@ const NearbyRestaurants = () => {
     
     // Reset states
     isDraggingRef.current = false;
+    isDragIntentRef.current = false;
     setDragVisualState(false);
     
     // Clear any existing resume timeout
@@ -168,24 +195,33 @@ const NearbyRestaurants = () => {
   const handleInteractionStart = useCallback((e) => {
     if (!carouselRef.current) return;
     
-    // Prevent default to avoid text selection and image dragging
-    e.preventDefault();
-    
     // Clear any pending resume timeout
     clearResumeTimeout();
     
-    // Pause auto-scroll and set dragging state
-    setIsPaused(true);
-    isDraggingRef.current = true;
-    setDragVisualState(true);
-    
     const currentTime = performance.now();
-    // Get the correct clientX whether it's a touch or mouse event
+    // Get the correct clientX/Y whether it's a touch or mouse event
     const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+    
+    // Store touch start position for intent detection
+    touchStartRef.current = { x: clientX, y: clientY };
+    
+    // For mouse events, start dragging immediately
+    if (e.type === 'mousedown') {
+      e.preventDefault();
+      setIsPaused(true);
+      isDraggingRef.current = true;
+      setDragVisualState(true);
+      isDragIntentRef.current = true;
+    } else {
+      // For touch events, wait for move to determine intent
+      isDragIntentRef.current = false;
+    }
     
     // Update drag start reference
     dragStartRef.current = {
       x: clientX,
+      y: clientY,
       scrollLeft: carouselRef.current.scrollLeft,
       startTime: currentTime
     };
@@ -242,6 +278,32 @@ const NearbyRestaurants = () => {
     }
   }, []);
   
+  // Add explicit passive: false event listeners for mobile touch handling
+  useEffect(() => {
+    if (!isClient || !carouselRef.current) return;
+    
+    const carousel = carouselRef.current;
+    
+    // Add passive: false listeners to ensure preventDefault works on mobile
+    const addTouchListeners = () => {
+      carousel.addEventListener('touchstart', handleInteractionStart, { passive: false });
+      carousel.addEventListener('touchmove', handleInteractionMove, { passive: false });
+      carousel.addEventListener('touchend', handleInteractionEnd, { passive: false });
+      carousel.addEventListener('touchcancel', handleInteractionEnd, { passive: false });
+    };
+    
+    const removeTouchListeners = () => {
+      carousel.removeEventListener('touchstart', handleInteractionStart);
+      carousel.removeEventListener('touchmove', handleInteractionMove);
+      carousel.removeEventListener('touchend', handleInteractionEnd);
+      carousel.removeEventListener('touchcancel', handleInteractionEnd);
+    };
+    
+    addTouchListeners();
+    
+    return removeTouchListeners;
+  }, [isClient, handleInteractionStart, handleInteractionMove, handleInteractionEnd]);
+  
   // Cleanup effect
   useEffect(() => {
     return () => {
@@ -252,12 +314,14 @@ const NearbyRestaurants = () => {
         clearTimeout(resumeTimeoutRef.current);
       }
       // Clean up all possible event listeners
-      document.removeEventListener('mousemove', handleInteractionMove);
-      document.removeEventListener('mouseup', handleInteractionEnd);
-      document.removeEventListener('mouseleave', handleInteractionEnd);
-      document.removeEventListener('touchmove', handleInteractionMove);
-      document.removeEventListener('touchend', handleInteractionEnd);
-      document.removeEventListener('touchcancel', handleInteractionEnd);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('mousemove', handleInteractionMove);
+        document.removeEventListener('mouseup', handleInteractionEnd);
+        document.removeEventListener('mouseleave', handleInteractionEnd);
+        document.removeEventListener('touchmove', handleInteractionMove);
+        document.removeEventListener('touchend', handleInteractionEnd);
+        document.removeEventListener('touchcancel', handleInteractionEnd);
+      }
     };
   }, [handleInteractionMove, handleInteractionEnd]);
 
@@ -299,13 +363,8 @@ const NearbyRestaurants = () => {
           isPaused ? 'paused' : ''
         }`}
         ref={carouselRef}
-        // Touch events for mobile
-        onTouchStart={handleInteractionStart}
-        onTouchMove={(e) => {
-          // Always prevent default for touchmove to ensure drag works
-          e.preventDefault();
-        }}
-        onTouchEnd={handleInteractionEnd}
+        // Touch events handled by useEffect with passive: false
+        // onTouchStart, onTouchMove, onTouchEnd are managed by explicit event listeners
         // Mouse events for desktop
         onMouseDown={handleInteractionStart}
         onMouseEnter={handleMouseEnter}
@@ -360,9 +419,13 @@ const NearbyRestaurants = () => {
                   <span>{t('nearbyRestaurants.deliveryFee')}:</span>
                   <span className="font-medium">{restaurant.deliveryFee}</span>
                 </div>
+                <div className="flex justify-between">
+                  <span>{t('nearbyRestaurants.minOrder')}:</span>
+                  <span className="font-medium">{restaurant.minOrder}</span>
+                </div>
               </div>
 
-              <div className="flex flex-wrap gap-1 mb-3">
+              {/* <div className="flex flex-wrap gap-1 mb-3">
                 {restaurant.tags.slice(0, 2).map((tag, tagIndex) => (
                   <span
                     key={tagIndex}
@@ -371,7 +434,7 @@ const NearbyRestaurants = () => {
                     {tag}
                   </span>
                 ))}
-              </div>
+              </div> */}
 
               <div className="mt-auto">
                 <button className="w-full bg-grub-red text-white py-2 px-4 rounded-lg font-semibold text-sm hover:bg-red-700 transition-colors duration-200">
@@ -395,13 +458,8 @@ const NearbyRestaurants = () => {
           isPaused ? 'paused' : ''
         }`}
         ref={carouselRef}
-        // Touch events for mobile (even in desktop view for touchscreen laptops)
-        onTouchStart={handleInteractionStart}
-        onTouchMove={(e) => {
-          // Always prevent default for touchmove to ensure drag works
-          e.preventDefault();
-        }}
-        onTouchEnd={handleInteractionEnd}
+        // Touch events handled by useEffect with passive: false
+        // onTouchStart, onTouchMove, onTouchEnd are managed by explicit event listeners
         // Mouse events for desktop
         onMouseDown={handleInteractionStart}
         onMouseEnter={handleMouseEnter}
@@ -448,10 +506,10 @@ const NearbyRestaurants = () => {
               </p>
               
               <div className="space-y-2 text-sm text-gray-500">
-                <div className="flex justify-between">
+                {/* <div className="flex justify-between">
                   <span>{t('nearbyRestaurants.cuisine')}:</span>
                   <span className="font-medium">{restaurant.cuisine}</span>
-                </div>
+                </div> */}
                 <div className="flex justify-between">
                   <span>{t('nearbyRestaurants.deliveryFee')}:</span>
                   <span className="font-medium">{restaurant.deliveryFee}</span>
@@ -462,7 +520,7 @@ const NearbyRestaurants = () => {
                 </div>
               </div>
 
-              <div className="mt-4 flex flex-wrap gap-2">
+              {/* <div className="mt-4 flex flex-wrap gap-2">
                 {restaurant.tags.slice(0, 3).map((tag, tagIndex) => (
                   <span
                     key={tagIndex}
@@ -471,7 +529,7 @@ const NearbyRestaurants = () => {
                     {tag}
                   </span>
                 ))}
-              </div>
+              </div> */}
 
               <button className="w-full mt-4 bg-grub-red text-white py-2 px-4 rounded-lg font-semibold hover:bg-red-700 transition-colors duration-200">
                 {t('nearbyRestaurants.orderNow')}

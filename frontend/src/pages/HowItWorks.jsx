@@ -1,7 +1,7 @@
 import React from 'react';
 import HeroHowItWorks from '../components/howItWorks/HeroHowItWorks';
 import ProcessSteps from '../components/howItWorks/ProcessSteps';
-import WhyGrubGateSection from '../components/home/WhyGrubGateSection';
+// import WhyGrubGateSection from '../components/home/WhyGrubGateSection';
 import GetStartedCTA from '../components/common/GetStartedCTA';
 
 const HowItWorks = () => {
@@ -9,7 +9,7 @@ const HowItWorks = () => {
     <div className="min-h-screen">
       <HeroHowItWorks />
       <ProcessSteps />
-      <WhyGrubGateSection />
+      {/* <WhyGrubGateSection /> */}
       <GetStartedCTA />
     </div>
   );
