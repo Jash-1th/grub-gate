@@ -10,6 +10,8 @@ import About from './pages/About';
 import HowItWorks from './pages/HowItWorks';
 import Contact from './pages/Contact';
 import Faq from './pages/Faq';
+import MealPlanningPage from './pages/MealPlanningPage';
+import RestaurantDetailPage from './pages/RestaurantDetailPage';
 import LaunchScreen from './components/common/LaunchScreen';
 import ScrollToTop from './components/common/ScrollToTop';
 import { useScrollToTop } from './hooks/useScrollToTop';
@@ -122,6 +124,8 @@ function App({ initialized = true }) {
                   <Route path="/how-it-works" element={<HowItWorks />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/faq" element={<Faq />} />
+                  <Route path="/plan" element={<MealPlanningPage />} />
+                  <Route path="/restaurant/:id" element={<RestaurantDetailPage />} />
                   {/* Add more routes as needed */}
                 </Routes>
               </AnimatePresence>
