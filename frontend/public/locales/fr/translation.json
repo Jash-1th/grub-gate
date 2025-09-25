@@ -351,5 +351,175 @@
     "previous": "Précédent",
     "viewMore": "Voir Plus",
     "readMore": "Lire Plus"
+  },
+  "mealPlanning": {
+    "hero": {
+      "title": "Planifiez Vos Repas Parfaits avec",
+      "subtitle": "GrubGate",
+      "description": "Créez des horaires de repas personnalisés à partir des meilleurs restaurants de Montréal. Des repas frais et délicieux livrés à votre porte.",
+      "postalCodePlaceholder": "Entrez votre code postal",
+      "postalCodeLabel": "Code Postal",
+      "findMealsButton": "Trouver restaurants",
+      "searchNearby": "Rechercher à proximité"
+    },
+    "howItWorks": {
+      "title": "Délicieusement Simple.",
+      "subtitle": "Créez votre plan de repas parfait en trois étapes simples et savourez des plats de qualité restaurant livrés à votre porte.",
+      "steps": {
+        "1": {
+          "title": "Personnalisez Vos Goûts",
+          "description": "Choisissez parmi une variété de préférences alimentaires incluant Végétarien, Végétalien, Sans Gluten, et plus encore pour correspondre à votre style de vie."
+        },
+        "2": {
+          "title": "Créez Votre Horaire",
+          "description": "Planifiez votre déjeuner et dîner pour toute la semaine. Sélectionnez parmi nos restaurants partenaires et personnalisez vos heures de repas."
+        },
+        "3": {
+          "title": "Abonnez-vous et Savourez",
+          "description": "Choisissez votre plan d'abonnement et détendez-vous pendant que nous livrons des repas frais et délicieux directement à votre porte."
+        }
+      }
+    },
+    "scheduleDemo": {
+      "title": "Votre Menu Hebdomadaire, Personnalisé par Vous",
+      "description": "Notre planificateur facile à utiliser vous permet de remplir votre semaine avec vos plats préférés. Cliquez sur n'importe quel créneau pour le Déjeuner ou le Dîner, et choisissez parmi une liste déroulante d'options délicieuses. Chaque sélection affiche le nom du restaurant, le repas et le prix, vous donnant un contrôle total.",
+      "features": {
+        "flexibility": {
+          "title": "Flexibilité Complète",
+          "description": "Changez vos repas à tout moment avant la fenêtre de livraison"
+        },
+        "variety": {
+          "title": "Variété Infinie",
+          "description": "Choisissez parmi des centaines de plats de multiples cuisines"
+        },
+        "convenience": {
+          "title": "Configurez et Oubliez",
+          "description": "Planifiez une fois et profitez de livraisons hebdomadaires automatiques"
+        }
+      }
+    },
+    "preferences": {
+      "title": "Définissez Vos Préférences Alimentaires",
+      "subtitle": "Sélectionnez vos préférences alimentaires pour obtenir des recommandations de repas personnalisées de nos restaurants partenaires.",
+      "clearAll": "Tout Effacer",
+      "selectedCount": "{{count}} préférence(s) sélectionnée(s)",
+      "selectPrompt": "Sélectionnez vos préférences alimentaires",
+      "selectedTitle": "Préférences Sélectionnées",
+      "options": {
+        "vegetarian": {
+          "name": "Végétarien",
+          "label": "Sélectionner la préférence végétarienne"
+        },
+        "vegan": {
+          "name": "Végétalien",
+          "label": "Sélectionner la préférence végétalienne"
+        },
+        "glutenFree": {
+          "name": "Sans Gluten",
+          "label": "Sélectionner la préférence sans gluten"
+        },
+        "dairyFree": {
+          "name": "Sans Lactose",
+          "label": "Sélectionner la préférence sans lactose"
+        },
+        "keto": {
+          "name": "Kéto",
+          "label": "Sélectionner la préférence kéto"
+        },
+        "halal": {
+          "name": "Halal",
+          "label": "Sélectionner la préférence halal"
+        },
+        "kosher": {
+          "name": "Casher",
+          "label": "Sélectionner la préférence casher"
+        },
+        "lowCarb": {
+          "name": "Faible en Glucides",
+          "label": "Sélectionner la préférence faible en glucides"
+        },
+        "paleo": {
+          "name": "Paléo",
+          "label": "Sélectionner la préférence paléo"
+        },
+        "spicy": {
+          "name": "Épicé",
+          "label": "Sélectionner la préférence épicée"
+        },
+        "organic": {
+          "name": "Biologique",
+          "label": "Sélectionner la préférence biologique"
+        },
+        "sugarFree": {
+          "name": "Sans Sucre",
+          "label": "Sélectionner la préférence sans sucre"
+        },
+        "nutFree": {
+          "name": "Sans Noix",
+          "label": "Sélectionner la préférence sans noix"
+        },
+        "soyFree": {
+          "name": "Sans Soja",
+          "label": "Sélectionner la préférence sans soja"
+        },
+        "rawFood": {
+          "name": "Aliments Crus",
+          "label": "Sélectionner la préférence aliments crus"
+        },
+        "mediterranean": {
+          "name": "Méditerranéen",
+          "label": "Sélectionner la préférence méditerranéenne"
+        },
+        "lowSodium": {
+          "name": "Faible en Sodium",
+          "label": "Sélectionner la préférence faible en sodium"
+        },
+        "highProtein": {
+          "name": "Riche en Protéines",
+          "label": "Sélectionner la préférence riche en protéines"
+        },
+        "whole30": {
+          "name": "Whole30",
+          "label": "Sélectionner la préférence whole30"
+        },
+        "pescatarian": {
+          "name": "Pescatarien",
+          "label": "Sélectionner la préférence pescatarienne"
+        }
+      }
+    },
+    "subscriptionPlans": {
+      "title": "Choisissez Votre Durée d'Abonnement.",
+      "subtitle": "Choisissez le plan qui convient le mieux à votre style de vie et à votre budget. Tous les plans incluent l'accès à notre réseau complet de restaurants partenaires.",
+      "planDescription": "Ce plan détermine la fréquence de livraison des repas et les avantages que vous débloquez.",
+      "mostPopular": "Le Plus Populaire",
+      "benefits": "Avantages Clés",
+      "selectPlan": "Sélectionner le Plan",
+      "importantInfo": "Informations Importantes",
+      "renewalInfo": "Les plans se renouvellent automatiquement. Vous pouvez changer ou annuler à tout moment depuis les paramètres de votre compte.",
+      "plans": {
+        "bi-weekly": {
+          "name": "Bi-Hebdomadaire",
+          "deliveryFrequency": "Toutes les 2 semaines"
+        },
+        "monthly": {
+          "name": "Mensuel",
+          "deliveryFrequency": "Chaque mois"
+        },
+        "quarterly": {
+          "name": "3 Mois",
+          "deliveryFrequency": "Planification trimestrielle"
+        },
+        "semi-annual": {
+          "name": "6 Mois",
+          "deliveryFrequency": "Planification semestrielle"
+        }
+      },
+      "features": {
+        "cancelAnytime": "Annuler à Tout Moment",
+        "changePlans": "Changer de Plans",
+        "noHiddenFees": "Aucuns Frais Cachés"
+      }
+    }
   }
 }

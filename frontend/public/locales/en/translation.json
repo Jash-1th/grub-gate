@@ -348,5 +348,175 @@
     "previous": "Previous",
     "viewMore": "View More",
     "readMore": "Read More"
+  },
+  "mealPlanning": {
+    "hero": {
+      "title": "Plan Your Perfect Meals with",
+      "subtitle": "GrubGate",
+      "description": "Create personalized meal schedules from Montreal's best restaurants. Fresh, delicious meals delivered to your door.",
+      "postalCodePlaceholder": "Enter your postal code",
+      "postalCodeLabel": "Postal Code",
+      "findMealsButton": "Get nearest restaurants",
+      "searchNearby": "Search nearby"
+    },
+    "howItWorks": {
+      "title": "Deliciously Simple.",
+      "subtitle": "Create your perfect meal plan in three easy steps and enjoy restaurant-quality food delivered to your door.",
+      "steps": {
+        "1": {
+          "title": "Personalize Your Taste",
+          "description": "Choose from a variety of dietary preferences including Vegetarian, Vegan, Gluten-Free, and more to match your lifestyle."
+        },
+        "2": {
+          "title": "Craft Your Schedule",
+          "description": "Plan your lunch and dinner for the entire week. Select from our partner restaurants and customize your meal times."
+        },
+        "3": {
+          "title": "Subscribe & Enjoy",
+          "description": "Choose your subscription plan and sit back while we deliver fresh, delicious meals right to your doorstep."
+        }
+      }
+    },
+    "scheduleDemo": {
+      "title": "Your Weekly Menu, Personalized by You",
+      "description": "Our easy-to-use scheduler lets you fill your week with your favorite foods. Click any slot for Lunch or Dinner, and choose from a dropdown of delicious options. Each selection shows the restaurant name, meal, and price, giving you full control.",
+      "features": {
+        "flexibility": {
+          "title": "Complete Flexibility",
+          "description": "Change your meals anytime before the delivery window"
+        },
+        "variety": {
+          "title": "Endless Variety",
+          "description": "Choose from hundreds of dishes across multiple cuisines"
+        },
+        "convenience": {
+          "title": "Set & Forget",
+          "description": "Schedule once and enjoy automatic weekly deliveries"
+        }
+      }
+    },
+    "preferences": {
+      "title": "Set Your Food Preferences",
+      "subtitle": "Select your dietary preferences to get personalized meal recommendations from our partner restaurants.",
+      "clearAll": "Clear All",
+      "selectedCount": "{{count}} preference(s) selected",
+      "selectPrompt": "Select your dietary preferences",
+      "selectedTitle": "Selected Preferences",
+      "options": {
+        "vegetarian": {
+          "name": "Vegetarian",
+          "label": "Select vegetarian preference"
+        },
+        "vegan": {
+          "name": "Vegan",
+          "label": "Select vegan preference"
+        },
+        "glutenFree": {
+          "name": "Gluten-Free",
+          "label": "Select gluten-free preference"
+        },
+        "dairyFree": {
+          "name": "Dairy-Free",
+          "label": "Select dairy-free preference"
+        },
+        "keto": {
+          "name": "Keto",
+          "label": "Select keto preference"
+        },
+        "halal": {
+          "name": "Halal",
+          "label": "Select halal preference"
+        },
+        "kosher": {
+          "name": "Kosher",
+          "label": "Select kosher preference"
+        },
+        "lowCarb": {
+          "name": "Low-Carb",
+          "label": "Select low-carb preference"
+        },
+        "paleo": {
+          "name": "Paleo",
+          "label": "Select paleo preference"
+        },
+        "spicy": {
+          "name": "Spicy",
+          "label": "Select spicy preference"
+        },
+        "organic": {
+          "name": "Organic",
+          "label": "Select organic preference"
+        },
+        "sugarFree": {
+          "name": "Sugar-Free",
+          "label": "Select sugar-free preference"
+        },
+        "nutFree": {
+          "name": "Nut-Free",
+          "label": "Select nut-free preference"
+        },
+        "soyFree": {
+          "name": "Soy-Free",
+          "label": "Select soy-free preference"
+        },
+        "rawFood": {
+          "name": "Raw Food",
+          "label": "Select raw food preference"
+        },
+        "mediterranean": {
+          "name": "Mediterranean",
+          "label": "Select mediterranean preference"
+        },
+        "lowSodium": {
+          "name": "Low-Sodium",
+          "label": "Select low-sodium preference"
+        },
+        "highProtein": {
+          "name": "High-Protein",
+          "label": "Select high-protein preference"
+        },
+        "whole30": {
+          "name": "Whole30",
+          "label": "Select whole30 preference"
+        },
+        "pescatarian": {
+          "name": "Pescatarian",
+          "label": "Select pescatarian preference"
+        }
+      }
+    },
+    "subscriptionPlans": {
+      "title": "Pick Your Subscription Duration.",
+      "subtitle": "Choose the plan that works best for your lifestyle and budget. All plans include access to our full network of partner restaurants.",
+      "planDescription": "This plan determines how often meals are delivered and the benefits you unlock.",
+      "mostPopular": "Most Popular",
+      "benefits": "Key Benefits",
+      "selectPlan": "Select Plan",
+      "importantInfo": "Important Information",
+      "renewalInfo": "Plans renew automatically. You can change or cancel anytime from your account settings.",
+      "plans": {
+        "bi-weekly": {
+          "name": "Bi-Weekly",
+          "deliveryFrequency": "Every 2 weeks"
+        },
+        "monthly": {
+          "name": "Monthly",
+          "deliveryFrequency": "Every month"
+        },
+        "quarterly": {
+          "name": "3 Months",
+          "deliveryFrequency": "Quarterly planning"
+        },
+        "semi-annual": {
+          "name": "6 Months",
+          "deliveryFrequency": "Semi-annual planning"
+        }
+      },
+      "features": {
+        "cancelAnytime": "Cancel Anytime",
+        "changePlans": "Change Plans",
+        "noHiddenFees": "No Hidden Fees"
+      }
+    }
   }
 }

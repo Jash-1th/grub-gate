@@ -4,12 +4,18 @@ import { I18nextProvider } from 'react-i18next';
 import { AnimatePresence } from 'framer-motion';
 import i18n from './i18n';
 import { ModalProvider } from './context/ModalContext';
+import { MealPlanProvider } from './contexts/MealPlanContext';
+import { ToastProvider } from './contexts/ToastContext';
 import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
 import About from './pages/About';
 import HowItWorks from './pages/HowItWorks';
 import Contact from './pages/Contact';
 import Faq from './pages/Faq';
+import MealPlanningPage from './pages/MealPlanningPage';
+import RestaurantDetailPage from './pages/RestaurantDetailPage';
+import DayMealPlanPage from './pages/DayMealPlanPage';
+import RestaurantsListPage from './pages/RestaurantsListPage';
 import LaunchScreen from './components/common/LaunchScreen';
 import ScrollToTop from './components/common/ScrollToTop';
 import { useScrollToTop } from './hooks/useScrollToTop';
@@ -105,7 +111,9 @@ function App({ initialized = true }) {
   return (
     <I18nextProvider i18n={i18n}>
       <ModalProvider>
-        <div className="app-container">
+        <MealPlanProvider>
+          <ToastProvider>
+            <div className="app-container">
           {/* Launch Screen - Only shown on first visit and after hydration */}
           {isClient && isFirstVisit && isLaunching && (
             <LaunchScreen onComplete={handleLaunchComplete} />
@@ -122,12 +130,18 @@ function App({ initialized = true }) {
                   <Route path="/how-it-works" element={<HowItWorks />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/faq" element={<Faq />} />
+                  <Route path="/plan" element={<MealPlanningPage />} />
+                  <Route path="/restaurant/:id" element={<RestaurantDetailPage />} />
+                  <Route path="/meal-plan/:day" element={<DayMealPlanPage />} />
+                  <Route path="/restaurants" element={<RestaurantsListPage />} />
                   {/* Add more routes as needed */}
                 </Routes>
               </AnimatePresence>
             </Layout>
           </div>
         </div>
+          </ToastProvider>
+        </MealPlanProvider>
       </ModalProvider>
     </I18nextProvider>
   );
