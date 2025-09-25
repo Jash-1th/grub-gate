@@ -15,8 +15,8 @@ export const DAYS_OF_WEEK = [
 export const MEAL_AVAILABILITY = {
   sunday: { lunch: true, dinner: true },
   monday: { lunch: true, dinner: true },
-  tuesday: { lunch: true, dinner: true },
-  wednesday: { lunch: true, dinner: true },
+  tuesday: { lunch: true, dinner: false }, // Tuesday dinner closed early
+  wednesday: { lunch: false, dinner: true }, // Wednesday lunch closed for maintenance
   thursday: { lunch: true, dinner: true },
   friday: { lunch: true, dinner: true },
   saturday: { lunch: true, dinner: true }
@@ -117,9 +117,21 @@ export const filterItemsByDay = (allItems, selectedDay, currentTime = new Date()
   const isLunchTime = currentHour >= 11 && currentHour < 16; // 11 AM - 4 PM
   const isDinnerTime = currentHour >= 16 || currentHour < 2; // 4 PM - 2 AM
 
+  // Filter items based on day availability
+  const filterItemsByDayAvailability = (items) => {
+    return items.filter(item => {
+      // If item has availableDays property, check if current day is included
+      if (item.availableDays && Array.isArray(item.availableDays)) {
+        return item.availableDays.includes(selectedDay);
+      }
+      // If no availableDays property, assume item is available all days
+      return true;
+    });
+  };
+
   const result = {
-    lunch: dayAvailability.lunch ? allItems.lunch || [] : [],
-    dinner: dayAvailability.dinner ? allItems.dinner || [] : [],
+    lunch: dayAvailability.lunch ? filterItemsByDayAvailability(allItems.lunch || []) : [],
+    dinner: dayAvailability.dinner ? filterItemsByDayAvailability(allItems.dinner || []) : [],
     availableMeals: []
   };
 

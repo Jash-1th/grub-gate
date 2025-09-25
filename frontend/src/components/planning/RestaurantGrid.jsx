@@ -120,7 +120,11 @@ const RestaurantGrid = ({ postalCode, selectedPreferences }) => {
         {displayedRestaurants.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
             {displayedRestaurants.map((restaurant) => (
-              <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+              <RestaurantCard 
+                key={restaurant.id} 
+                restaurant={restaurant} 
+                selectedPreferences={selectedPreferences}
+              />
             ))}
           </div>
         ) : (

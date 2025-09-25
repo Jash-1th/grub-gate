@@ -23,6 +23,7 @@ const PlanCard = ({ plan, index }) => {
         scroll-animate ${isVisible ? 'is-visible' : ''}
         ${plan.color} border-2 ${plan.borderColor}
         ${plan.popular ? 'scale-105 shadow-2xl' : 'hover:scale-102'}
+        h-full flex flex-col
       `}
     >
       {/* Popular Badge */}
@@ -43,10 +44,12 @@ const PlanCard = ({ plan, index }) => {
           ${plan.price.monthly}
           <span className="text-lg text-gray-600 font-normal">/month</span>
         </div>
-        {plan.price.savings > 0 && (
-          <div className="text-sm text-green-600 font-semibold">
+        {plan.price.savings > 0 ? (
+          <div className="text-sm text-green-600 font-semibold min-h-[1.25rem]">
             Save ${plan.price.savings}/month
           </div>
+        ) : (
+          <div className="min-h-[1.25rem]"></div>
         )}
         <div className="text-sm text-gray-600 mt-2">
           {t(`mealPlanning.subscriptionPlans.plans.${plan.id}.deliveryFrequency`)}
@@ -60,8 +63,8 @@ const PlanCard = ({ plan, index }) => {
         </p>
       </div>
 
-      {/* Features List */}
-      <div className="mb-8">
+      {/* Features List - Fixed height container */}
+      <div className="mb-6 flex-1">
         <ul className="space-y-3">
           {plan.features.map((feature, featureIndex) => (
             <li key={featureIndex} className="flex items-start">
@@ -74,8 +77,8 @@ const PlanCard = ({ plan, index }) => {
         </ul>
       </div>
 
-      {/* Benefits */}
-      <div className="mb-8">
+      {/* Benefits - Fixed height container */}
+      <div className="mb-8 min-h-[8rem]">
         <h4 className="font-semibold text-gray-900 mb-3 text-sm">
           {t('mealPlanning.subscriptionPlans.benefits')}:
         </h4>
@@ -89,20 +92,22 @@ const PlanCard = ({ plan, index }) => {
         </ul>
       </div>
 
-      {/* CTA Button */}
-      <button
-        onClick={handleSelectPlan}
-        className={`
-          w-full py-3 px-6 rounded-lg font-semibold transition-all duration-300
-          focus:outline-none focus:ring-2 focus:ring-offset-2
-          ${plan.popular 
-            ? 'bg-grub-red text-white hover:bg-red-600 focus:ring-grub-red' 
-            : 'bg-white text-grub-red border-2 border-grub-red hover:bg-grub-red hover:text-white focus:ring-grub-red'
-          }
-        `}
-      >
-        {t('mealPlanning.subscriptionPlans.selectPlan')}
-      </button>
+      {/* CTA Button - Pushed to bottom */}
+      <div className="mt-auto">
+        <button
+          onClick={handleSelectPlan}
+          className={`
+            w-full py-3 px-6 rounded-lg font-semibold transition-all duration-300
+            focus:outline-none focus:ring-2 focus:ring-offset-2
+            ${plan.popular 
+              ? 'bg-grub-red text-white hover:bg-red-600 focus:ring-grub-red' 
+              : 'bg-white text-grub-red border-2 border-grub-red hover:bg-grub-red hover:text-white focus:ring-grub-red'
+            }
+          `}
+        >
+          {t('mealPlanning.subscriptionPlans.selectPlan')}
+        </button>
+      </div>
     </div>
   );
 };

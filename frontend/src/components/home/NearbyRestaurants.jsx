@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { nearbyRestaurants } from '../../data';
 import './NearbyRestaurants.css';
@@ -8,6 +9,7 @@ const restaurantImage = '/images/grub-gate-default-restaurant-img.jpg';
 
 const NearbyRestaurants = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   
   // Triple the restaurants for seamless infinite scroll
   const duplicatedRestaurants = [...nearbyRestaurants, ...nearbyRestaurants, ...nearbyRestaurants];
@@ -33,6 +35,11 @@ const NearbyRestaurants = () => {
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Navigation handler for Make Your Plan button
+  const handleMakeYourPlan = () => {
+    navigate('/plan');
+  };
   
   // Smooth auto-scroll animation using requestAnimationFrame
   const animate = useCallback((currentTime) => {
@@ -561,8 +568,14 @@ const NearbyRestaurants = () => {
           <p className="text-gray-600 mb-6">
             {t('nearbyRestaurants.additionalInfo')}
           </p>
-          <button className="bg-grub-red text-white px-8 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors duration-200">
-            {t('nearbyRestaurants.viewAll')}
+          <button 
+            onClick={handleMakeYourPlan}
+            className="bg-grub-red text-white px-8 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors duration-200 flex items-center justify-center space-x-2 mx-auto"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span>Make Your Plan</span>
           </button>
         </div>
       </div>

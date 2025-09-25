@@ -1,6 +1,8 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
+import { useMealPlan } from '../../contexts/MealPlanContext';
 
 // Mock data for the weekly schedule demo - can be moved to backend later
 const mockScheduleData = {
@@ -22,103 +24,120 @@ const mockScheduleData = {
       { restaurant: 'Grill Master', meal: 'BBQ Ribs Platter', price: '$19.99', available: false },
       { restaurant: 'Veggie Delight', meal: 'Stuffed Bell Peppers', price: '$13.99', available: true },
       { restaurant: 'Seafood Bay', meal: 'Fish & Chips', price: '$15.49', available: true },
-      { restaurant: 'Comfort Kitchen', meal: 'Roasted Chicken', price: '$17.99', available: true }
     ]
   }
 };
 
 // Individual meal slot component
-const MealSlot = ({ day, mealType, mealData, dayIndex }) => {
-  const isSelected = dayIndex % 3 === 0; // Mock some selected slots for demo
-  const isEmpty = !mealData.available;
+const MealSlot = ({ day, mealType, actualMealItems }) => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const hasItems = actualMealItems && actualMealItems.length > 0;
+  const firstItem = hasItems ? actualMealItems[0] : null;
+  const additionalCount = hasItems ? actualMealItems.length - 1 : 0;
+
+  const handleSlotClick = () => {
+    if (hasItems) {
+      // Navigate to day meal plan page if there are items
+      navigate(`/meal-plan/${day}`);
+    } else {
+      // Navigate to restaurants page to add items
+      navigate(`/restaurants?day=${day}&meal=${mealType}`);
+    }
+  };
 
   return (
-    <div className={`
-      p-3 rounded-lg border-2 transition-all duration-200 cursor-pointer
-      ${isSelected 
-        ? 'border-grub-red bg-red-50 shadow-md' 
-        : isEmpty 
-          ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
-          : 'border-gray-200 bg-white hover:border-grub-red/50 hover:shadow-sm'
-      }
-    `}>
-      {isSelected ? (
+    <div 
+      onClick={handleSlotClick}
+      className={`
+        p-3 rounded-lg border-2 transition-all duration-200 cursor-pointer min-h-[80px] flex flex-col justify-center
+        ${hasItems 
+          ? 'border-grub-red bg-red-50 shadow-md hover:shadow-lg hover:bg-red-100' 
+          : 'border-gray-200 bg-white hover:border-grub-red/50 hover:shadow-sm hover:bg-gray-50'
+        }
+      `}
+    >
+      {hasItems ? (
         <div className="text-xs">
-          <div className="font-semibold text-grub-red truncate">{mealData.restaurant}</div>
-          <div className="text-gray-700 truncate">{mealData.meal}</div>
-          <div className="font-bold text-grub-red">{mealData.price}</div>
-        </div>
-      ) : isEmpty ? (
-        <div className="text-xs text-gray-400 text-center py-2">
-          Unavailable
+          <div className="font-semibold text-grub-red truncate">{firstItem.restaurantName}</div>
+          <div className="text-gray-700 truncate">{firstItem.name}</div>
+          <div className="font-bold text-grub-red">${firstItem.price}</div>
+          {additionalCount > 0 && (
+            <div className="text-xs text-gray-500 mt-1">
+              +{additionalCount} more item{additionalCount !== 1 ? 's' : ''}
+            </div>
+          )}
+          <div className="text-xs text-grub-red/70 mt-1 font-medium">
+            Click to view details →
+          </div>
         </div>
       ) : (
-        <div className="text-xs text-gray-500 text-center py-2">
-          Click to select
+        <div className="text-xs text-gray-500 text-center">
+          <div>{t('mealplan.clickToSelect', 'Click to select')}</div>
+          <div className="text-grub-red/70 mt-1 font-medium">Add items →</div>
         </div>
       )}
     </div>
   );
 };
-
 // Weekly calendar component
 const WeeklyCalendar = () => {
   const { t } = useTranslation();
+  const { mealPlan } = useMealPlan();
+  
+  const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-      <div className="grid grid-cols-8 gap-2 mb-4">
-        {/* Header row */}
-        <div className="p-2"></div>
-        {mockScheduleData.days.map((day, index) => (
-          <div key={day} className="p-2 text-center">
-            <div className="text-sm font-semibold text-gray-900">{day.slice(0, 3)}</div>
-            <div className="text-xs text-gray-500">{index + 1}</div>
+    <div className="bg-white rounded-2xl p-4 md:p-6 shadow-lg border border-gray-100 overflow-x-auto">
+      <div className="min-w-[600px]">
+        <div className="grid grid-cols-8 gap-2 mb-4">
+          {/* Header row */}
+          <div className="p-2"></div>
+          {dayLabels.map((day, index) => (
+            <div key={day} className="p-2 text-center">
+              <div className="text-sm font-semibold text-gray-900">{day}</div>
+              <div className="text-xs text-gray-500">{index + 1}</div>
+            </div>
+          ))}
+          
+          {/* Lunch row */}
+          <div className="p-2 flex items-center">
+            <div className="text-sm font-medium text-gray-700">{t('mealplan.lunch', 'Lunch')}</div>
           </div>
-        ))}
-        
-        {/* Lunch row */}
-        <div className="p-2 flex items-center">
-          <div className="text-sm font-medium text-gray-700">Lunch</div>
+          {daysOfWeek.map((day) => (
+            <MealSlot 
+              key={`lunch-${day}`}
+              day={day}
+              mealType="lunch"
+              actualMealItems={mealPlan[day]?.lunch || []}
+            />
+          ))}
+          
+          {/* Dinner row */}
+          <div className="p-2 flex items-center">
+            <div className="text-sm font-medium text-gray-700">{t('mealplan.dinner', 'Dinner')}</div>
+          </div>
+          {daysOfWeek.map((day) => (
+            <MealSlot 
+              key={`dinner-${day}`}
+              day={day}
+              mealType="dinner"
+              actualMealItems={mealPlan[day]?.dinner || []}
+            />
+          ))}
         </div>
-        {mockScheduleData.days.map((day, dayIndex) => (
-          <MealSlot 
-            key={`lunch-${day}`}
-            day={day}
-            mealType="lunch"
-            mealData={mockScheduleData.meals.lunch[dayIndex]}
-            dayIndex={dayIndex}
-          />
-        ))}
-        
-        {/* Dinner row */}
-        <div className="p-2 flex items-center">
-          <div className="text-sm font-medium text-gray-700">Dinner</div>
-        </div>
-        {mockScheduleData.days.map((day, dayIndex) => (
-          <MealSlot 
-            key={`dinner-${day}`}
-            day={day}
-            mealType="dinner"
-            mealData={mockScheduleData.meals.dinner[dayIndex]}
-            dayIndex={dayIndex}
-          />
-        ))}
       </div>
       
       {/* Legend */}
       <div className="flex flex-wrap gap-4 text-xs text-gray-600 pt-4 border-t border-gray-100">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-red-50 border-2 border-grub-red rounded"></div>
-          <span>Selected</span>
+          <span>{t('mealplan.planned', 'Planned Meals')}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-white border-2 border-gray-200 rounded"></div>
-          <span>Available</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-gray-50 border-2 border-gray-200 rounded opacity-50"></div>
-          <span>Unavailable</span>
+          <span>{t('mealplan.available', 'Available Slots')}</span>
         </div>
       </div>
     </div>
@@ -131,7 +150,7 @@ const ScheduleDemo = () => {
   const [calendarRef, calendarVisible] = useIntersectionObserver({ threshold: 0.1 });
 
   return (
-    <section className="py-16 lg:py-24 bg-white">
+    <section id="weekly-menu-section" className="py-16 lg:py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div 
@@ -155,7 +174,7 @@ const ScheduleDemo = () => {
         </div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="text-center p-6">
             <div className="w-16 h-16 bg-grub-red/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-grub-red" fill="currentColor" viewBox="0 0 24 24">
@@ -197,7 +216,7 @@ const ScheduleDemo = () => {
               {t('mealPlanning.scheduleDemo.features.convenience.description')}
             </p>
           </div>
-        </div>
+        </div> */}
       </div>
     </section>
   );

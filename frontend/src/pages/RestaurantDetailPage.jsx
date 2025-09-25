@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { restaurantData } from '../data/restaurantData';
 import { getFoodItemsByRestaurant, filterFoodItemsByPreferences, getFoodItemsByCategory } from '../data/foodItemsData';
 import { 
@@ -10,7 +10,12 @@ import {
   filterItemsByDay,
   isMealAvailable 
 } from '../utils/filteringAlgorithms';
-import MobileFilterModal from '../components/restaurant/MobileFilterModal';
+import PreferencesFilterModal from '../components/restaurant/PreferencesFilterModal';
+import DaysFilterModal from '../components/restaurant/DaysFilterModal';
+import MealPlanSummary from '../components/restaurant/MealPlanSummary';
+import FoodItemCard from '../components/restaurant/FoodItemCard';
+import { useMealPlan } from '../contexts/MealPlanContext';
+import { useToast } from '../contexts/ToastContext';
 
 // Food preference options for sidebar
 const foodPreferences = [
@@ -19,7 +24,6 @@ const foodPreferences = [
   { id: 'gluten-free', name: 'Gluten Free', icon: '🌾' },
   { id: 'dairy-free', name: 'Dairy Free', icon: '🥛' },
   { id: 'keto', name: 'Keto', icon: '🥑' },
-  { id: 'halal', name: 'Halal', icon: '☪️' },
   { id: 'kosher', name: 'Kosher', icon: '✡️' },
   { id: 'low-carb', name: 'Low Carb', icon: '🥩' },
   { id: 'paleo', name: 'Paleo', icon: '🦴' },
@@ -28,143 +32,35 @@ const foodPreferences = [
   { id: 'pescatarian', name: 'Pescatarian', icon: '🐟' }
 ];
 
-const FoodItemCard = ({ item }) => {
-  const renderStars = (rating) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-    
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(
-        <svg key={i} className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
-      );
-    }
-    
-    if (hasHalfStar) {
-      stars.push(
-        <svg key="half" className="w-4 h-4 text-yellow-400" viewBox="0 0 20 20">
-          <defs>
-            <linearGradient id={`half-fill-${item.id}`}>
-              <stop offset="50%" stopColor="currentColor" />
-              <stop offset="50%" stopColor="transparent" />
-            </linearGradient>
-          </defs>
-          <path fill={`url(#half-fill-${item.id})`} d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
-      );
-    }
-    
-    const emptyStars = 5 - Math.ceil(rating);
-    for (let i = 0; i < emptyStars; i++) {
-      stars.push(
-        <svg key={`empty-${i}`} className="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
-      );
-    }
-    
-    return stars;
-  };
-
-  return (
-    <div className="group relative bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border border-gray-100">
-      {/* Popular Badge */}
-      {item.isPopular && (
-        <div className="absolute top-3 left-3 z-10">
-          <span className="px-2 py-1 bg-red-500 text-white text-xs font-semibold rounded-full shadow-lg">
-            Popular
-          </span>
-        </div>
-      )}
-      
-      {/* Food Image */}
-      <div className="relative h-48 overflow-hidden">
-        <img
-          src={item.image}
-          alt={item.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          onError={(e) => {
-            e.target.src = '/images/grub-gate-default-img.jpg';
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-      </div>
-      
-      {/* Food Info */}
-      <div className="p-4">
-        <div className="mb-3">
-          <h3 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-red-600 transition-colors duration-300">
-            {item.name}
-          </h3>
-          <p className="text-sm text-gray-500 font-medium">{item.category}</p>
-        </div>
-        
-        <p className="text-gray-600 text-sm mb-3 line-clamp-2 leading-relaxed">
-          {item.description}
-        </p>
-        
-        {/* Rating and Price */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-1">
-            {renderStars(item.rating)}
-            <span className="text-sm font-semibold text-gray-700 ml-1">
-              {item.rating}
-            </span>
-          </div>
-          <span className="text-lg font-bold text-red-600">
-            ${item.price}
-          </span>
-        </div>
-        
-        {/* Preferences Tags */}
-        <div className="flex flex-wrap gap-1 mb-4">
-          {item.preferences.slice(0, 2).map((preference, index) => (
-            <span
-              key={index}
-              className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full capitalize"
-            >
-              {preference.replace('-', ' ')}
-            </span>
-          ))}
-          {item.preferences.length > 2 && (
-            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-              +{item.preferences.length - 2} more
-            </span>
-          )}
-        </div>
-        
-        {/* Add to Cart Button */}
-        <button className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 shadow-lg hover:shadow-xl">
-          <div className="flex items-center justify-center space-x-2">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 11-4 0v-6m4 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
-            </svg>
-            <span>Add to Cart</span>
-          </div>
-        </button>
-      </div>
-      
-      {/* Shimmer effect */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-      </div>
-    </div>
-  );
-};
 
 const RestaurantDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isClient, setIsClient] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState('lunch');
   const [selectedPreferences, setSelectedPreferences] = useState([]);
   const [selectedDay, setSelectedDay] = useState(getCurrentDay());
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [showPreferencesFilter, setShowPreferencesFilter] = useState(false);
+  const [showDaysFilter, setShowDaysFilter] = useState(false);
   const scrollContainerRef = useRef(null);
   const preferenceRefs = useRef({});
   const itemsContainerRef = useRef(null);
+  
+  // Meal plan context
+  const { addItemToPlan } = useMealPlan();
+  
+  // Toast context
+  const { showMealPlanSuccess } = useToast();
+
+  // Initialize preferences from URL parameters
+  useEffect(() => {
+    const preferencesParam = searchParams.get('preferences');
+    if (preferencesParam) {
+      const preferencesArray = preferencesParam.split(',').filter(Boolean);
+      setSelectedPreferences(preferencesArray);
+    }
+  }, [searchParams]);
 
   // SSR Safety
   useEffect(() => {
@@ -196,13 +92,11 @@ const RestaurantDetailPage = () => {
     // Get items for selected day and meal type
     const mealItems = dayFilteredItems[selectedMealType] || [];
     
-    // Apply preference filtering if any preferences are selected
-    let items = selectedPreferences.length > 0 
-      ? filterFoodItemsByPreferences(mealItems, selectedPreferences)
-      : mealItems;
+    // Don't apply preference filtering here - we need all items for proper sectioning
+    // The sectioning will be done later in preferenceMatchedItems and otherMenuItems
     
     // Sort items using the efficient preference-based algorithm
-    return sortItemsByPreferences(items, selectedPreferences);
+    return sortItemsByPreferences(mealItems, selectedPreferences);
   }, [dayFilteredItems, selectedMealType, selectedPreferences, isClient]);
 
   // Group items by preference categories for better organization
@@ -211,36 +105,55 @@ const RestaurantDetailPage = () => {
     return groupItemsByPreferenceCategories(filteredItems, selectedPreferences);
   }, [filteredItems, selectedPreferences, isClient]);
 
-  // Group items by category within each preference group
-  const itemsByCategory = useMemo(() => {
-    const result = {};
+  // Check if any filters are applied
+  const hasFiltersApplied = useMemo(() => {
+    const isNonCurrentDay = selectedDay !== getCurrentDay();
+    const hasPreferences = selectedPreferences.length > 0;
+    return isNonCurrentDay || hasPreferences;
+  }, [selectedDay, selectedPreferences]);
+
+  // Get filtered items based on current filters
+  const displayItems = useMemo(() => {
+    if (!isClient) return [];
     
-    // Process matched items first (user preferences)
-    if (itemsByPreferenceGroup.matched.length > 0) {
-      const matchedByCategory = getFoodItemsByCategory(itemsByPreferenceGroup.matched);
-      Object.entries(matchedByCategory).forEach(([category, items]) => {
-        result[`🎯 ${category} (Your Preferences)`] = items;
-      });
+    // Get items for selected day and meal type
+    const allMealItems = dayFilteredItems[selectedMealType] || [];
+    
+    // If no filters applied, show all items
+    if (!hasFiltersApplied) {
+      return sortItemsByPreferences(allMealItems, selectedPreferences);
     }
     
-    // Then popular items
-    if (itemsByPreferenceGroup.popular.length > 0) {
-      const popularByCategory = getFoodItemsByCategory(itemsByPreferenceGroup.popular);
-      Object.entries(popularByCategory).forEach(([category, items]) => {
-        result[`⭐ ${category} (Popular)`] = items;
-      });
+    // If filters are applied, show only matching items
+    let filteredItems = allMealItems;
+    
+    // Apply preference filtering if preferences are selected
+    if (selectedPreferences.length > 0) {
+      filteredItems = filteredItems.filter(item => 
+        selectedPreferences.some(preference => 
+          item.preferences.includes(preference)
+        )
+      );
     }
     
-    // Finally other items
-    if (itemsByPreferenceGroup.other.length > 0) {
-      const otherByCategory = getFoodItemsByCategory(itemsByPreferenceGroup.other);
-      Object.entries(otherByCategory).forEach(([category, items]) => {
-        result[category] = items;
-      });
-    }
+    // Sort the filtered items
+    return sortItemsByPreferences(filteredItems, selectedPreferences);
+  }, [dayFilteredItems, selectedMealType, selectedPreferences, isClient, hasFiltersApplied]);
+
+  // Separate items for display sections
+  const preferenceMatchedItems = useMemo(() => {
+    if (!isClient || selectedPreferences.length === 0) return [];
+    return itemsByPreferenceGroup.matched;
+  }, [itemsByPreferenceGroup.matched, selectedPreferences, isClient]);
+
+  const otherMenuItems = useMemo(() => {
+    // Only show "other items" when no filters are applied
+    if (!isClient || hasFiltersApplied) return [];
     
-    return result;
-  }, [itemsByPreferenceGroup]);
+    // When no filters, show all items in "other" section
+    return displayItems;
+  }, [displayItems, hasFiltersApplied, isClient]);
+
 
   // Handle preference selection with smooth scroll
   const handlePreferenceClick = (preferenceId) => {
@@ -286,9 +199,10 @@ const RestaurantDetailPage = () => {
     }, 100);
   };
 
-  // Handle mobile filter apply
-  const handleMobileFilterApply = () => {
-    setShowMobileFilters(false);
+  // Handle preferences filter apply
+  const handlePreferencesFilterApply = (preferences) => {
+    setSelectedPreferences(preferences);
+    setShowPreferencesFilter(false);
     // Auto-scroll to first item after applying filters
     setTimeout(() => {
       if (itemsContainerRef.current) {
@@ -298,6 +212,28 @@ const RestaurantDetailPage = () => {
         });
       }
     }, 300);
+  };
+
+  // Handle days filter apply
+  const handleDaysFilterApply = () => {
+    setShowDaysFilter(false);
+    // Auto-scroll to first item after applying filters
+    setTimeout(() => {
+      if (itemsContainerRef.current) {
+        itemsContainerRef.current.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }
+    }, 300);
+  };
+
+  // Handle add to plan
+  const handleAddToPlan = (item, restaurantName) => {
+    addItemToPlan(item, selectedDay, selectedMealType, restaurantName);
+    
+    // Show beautiful toast notification
+    showMealPlanSuccess(item.name, selectedDay, selectedMealType, restaurantName, item.price);
   };
 
   // Loading state for SSR
@@ -392,39 +328,64 @@ const RestaurantDetailPage = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Desktop Layout */}
         <div className="hidden lg:block">
-          {/* Desktop Filter Button */}
+          {/* Desktop Filter Buttons */}
           <div className="bg-white rounded-xl shadow-lg p-4 mb-6">
-            <button
-              onClick={() => setShowMobileFilters(true)}
-              className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-3 px-4 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95"
-            >
-              <div className="flex items-center justify-center space-x-3">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
-                </svg>
-                <span className="font-semibold">Filter Options</span>
-                {/* Badge for active filters */}
-                {(selectedPreferences.length > 0 || selectedDay !== getCurrentDay()) && (
-                  <div className="bg-orange-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-white">
-                    {selectedPreferences.length + (selectedDay !== getCurrentDay() ? 1 : 0)}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Preferences Filter Button */}
+              <button
+                onClick={() => setShowPreferencesFilter(true)}
+                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 px-4 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95"
+              >
+                <div className="flex items-center justify-center space-x-3">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="font-semibold">Food Preferences</span>
+                  {/* Badge for active preferences */}
+                  {selectedPreferences.length > 0 && (
+                    <div className="bg-orange-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-white">
+                      {selectedPreferences.length}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Preferences Summary */}
+                {selectedPreferences.length > 0 && (
+                  <div className="mt-2 text-sm opacity-90">
+                    <span>{selectedPreferences.length} preference{selectedPreferences.length !== 1 ? 's' : ''} selected</span>
                   </div>
                 )}
-              </div>
-              
-              {/* Filter Summary */}
-              {(selectedPreferences.length > 0 || selectedDay !== getCurrentDay()) && (
-                <div className="mt-2 text-sm opacity-90">
-                  <div className="flex items-center justify-center space-x-4">
-                    {selectedPreferences.length > 0 && (
-                      <span>{selectedPreferences.length} preference{selectedPreferences.length !== 1 ? 's' : ''}</span>
-                    )}
-                    {selectedDay !== getCurrentDay() && (
-                      <span>{DAYS_OF_WEEK.find(d => d.id === selectedDay)?.name}</span>
-                    )}
-                  </div>
+              </button>
+
+              {/* Days Filter Button */}
+              <button
+                onClick={() => setShowDaysFilter(true)}
+                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-3 px-4 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95"
+              >
+                <div className="flex items-center justify-center space-x-3">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="font-semibold">Select Day</span>
+                  {/* Badge for non-current day */}
+                  {selectedDay !== getCurrentDay() && (
+                    <div className="bg-orange-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-white">
+                      1
+                    </div>
+                  )}
                 </div>
-              )}
-            </button>
+                
+                {/* Day Summary */}
+                <div className="mt-2 text-sm opacity-90">
+                  <span>{DAYS_OF_WEEK.find(d => d.id === selectedDay)?.name}</span>
+                  {selectedDay === getCurrentDay() && (
+                    <span className="ml-2 px-2 py-1 bg-orange-100 text-orange-600 text-xs rounded-full">
+                      Today
+                    </span>
+                  )}
+                </div>
+              </button>
+            </div>
           </div>
 
           {/* Desktop Content Area */}
@@ -478,22 +439,100 @@ const RestaurantDetailPage = () => {
               )}
             </div>
 
+            {/* Desktop Filter Summary */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+              <div className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">
+                        {selectedMealType.charAt(0).toUpperCase() + selectedMealType.slice(1)} for {DAYS_OF_WEEK.find(d => d.id === selectedDay)?.name}
+                      </h3>
+                      <p className="text-gray-600 text-sm mt-1">
+                        {displayItems.length} items available
+                        {selectedPreferences.length > 0 && (
+                          <span className="ml-2 text-green-600">• {selectedPreferences.length} preference{selectedPreferences.length !== 1 ? 's' : ''} applied</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  {selectedDay === getCurrentDay() && (
+                    <span className="px-3 py-1 bg-orange-100 text-orange-600 text-sm rounded-full font-medium">
+                      Today
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Meal Plan Summary */}
+            <MealPlanSummary restaurantName={restaurant.name} />
+
             {/* Desktop Menu Items */}
-            <div className="space-y-6">
-              {Object.keys(itemsByCategory).length > 0 ? (
-                Object.entries(itemsByCategory).map(([category, items]) => (
-                  <div key={category} className="bg-white rounded-xl shadow-lg p-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-3">
-                      {category}
-                    </h3>
+            <div className="space-y-8">
+              {/* Filtered Items Section - Show when filters are applied */}
+              {hasFiltersApplied && displayItems.length > 0 && (
+                <div className="bg-white rounded-xl shadow-lg border border-gray-200">
+                  <div className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                      {items.map((item) => (
-                        <FoodItemCard key={item.id} item={item} />
+                      {displayItems.map((item) => (
+                        <FoodItemCard 
+                          key={item.id} 
+                          item={item} 
+                          onAddToPlan={handleAddToPlan}
+                          selectedDay={selectedDay}
+                          selectedMealType={selectedMealType}
+                          restaurantName={restaurant.name}
+                        />
                       ))}
                     </div>
                   </div>
-                ))
-              ) : (
+                </div>
+              )}
+
+              {/* Other Menu Items Section */}
+              {otherMenuItems.length > 0 && (
+                <div className="bg-white rounded-xl shadow-lg">
+                  <div className="p-6 border-b border-gray-200 bg-gray-50 rounded-t-xl">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                        </svg>
+                      </div>
+                      <h2 className="text-2xl font-bold text-gray-800">
+                        {selectedPreferences.length > 0 ? `Other Menu Items (${otherMenuItems.length} items)` : `All Menu Items (${otherMenuItems.length} items)`}
+                      </h2>
+                    </div>
+                    <p className="text-gray-600 mt-2">
+                      {selectedPreferences.length > 0 ? 'Additional items available at this restaurant' : 'All available items for this meal'}
+                    </p>
+                  </div>
+                  
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {otherMenuItems.map((item) => (
+                        <FoodItemCard 
+                          key={item.id} 
+                          item={item} 
+                          onAddToPlan={handleAddToPlan}
+                          selectedDay={selectedDay}
+                          selectedMealType={selectedMealType}
+                          restaurantName={restaurant.name}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* No Items Found */}
+              {displayItems.length === 0 && otherMenuItems.length === 0 && (
                 <div className="bg-white rounded-xl shadow-lg p-12 text-center">
                   <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
                     <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -502,7 +541,7 @@ const RestaurantDetailPage = () => {
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">No items found</h3>
                   <p className="text-gray-600 mb-6">
-                    No {selectedMealType} items match your selected preferences for {DAYS_OF_WEEK.find(d => d.id === selectedDay)?.name}. Try adjusting your filters.
+                    No {selectedMealType} items available for {DAYS_OF_WEEK.find(d => d.id === selectedDay)?.name}. Try selecting a different day or meal type.
                   </p>
                   <button
                     onClick={() => setSelectedPreferences([])}
@@ -560,70 +599,170 @@ const RestaurantDetailPage = () => {
             </div>
           </div>
 
-          {/* Mobile Filter Button */}
+          {/* Mobile Filter Buttons */}
           <div className="bg-white rounded-xl shadow-lg p-4 mb-6">
-            <button
-              onClick={() => setShowMobileFilters(true)}
-              className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-3 px-4 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95"
-            >
-              <div className="flex items-center justify-center space-x-3">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
-                </svg>
-                <span className="font-semibold">Filter Options</span>
-                {/* Badge for active filters */}
-                {(selectedPreferences.length > 0 || selectedDay !== getCurrentDay()) && (
-                  <div className="bg-orange-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-white">
-                    {selectedPreferences.length + (selectedDay !== getCurrentDay() ? 1 : 0)}
+            <div className="space-y-3">
+              {/* Preferences Filter Button */}
+              <button
+                onClick={() => setShowPreferencesFilter(true)}
+                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 px-4 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95"
+              >
+                <div className="flex items-center justify-center space-x-3">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="font-semibold">Food Preferences</span>
+                  {/* Badge for active preferences */}
+                  {selectedPreferences.length > 0 && (
+                    <div className="bg-orange-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-white">
+                      {selectedPreferences.length}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Preferences Summary */}
+                {selectedPreferences.length > 0 && (
+                  <div className="mt-2 text-sm opacity-90">
+                    <span>{selectedPreferences.length} preference{selectedPreferences.length !== 1 ? 's' : ''} selected</span>
                   </div>
                 )}
-              </div>
-              
-              {/* Filter Summary */}
-              {(selectedPreferences.length > 0 || selectedDay !== getCurrentDay()) && (
+              </button>
+
+              {/* Days Filter Button */}
+              <button
+                onClick={() => setShowDaysFilter(true)}
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-3 px-4 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95"
+              >
+                <div className="flex items-center justify-center space-x-3">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="font-semibold">Select Day</span>
+                  {/* Badge for non-current day */}
+                  {selectedDay !== getCurrentDay() && (
+                    <div className="bg-orange-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-white">
+                      1
+                    </div>
+                  )}
+                </div>
+                
+                {/* Day Summary */}
                 <div className="mt-2 text-sm opacity-90">
-                  <div className="flex items-center justify-center space-x-4">
-                    {selectedPreferences.length > 0 && (
-                      <span>{selectedPreferences.length} preference{selectedPreferences.length !== 1 ? 's' : ''}</span>
-                    )}
-                    {selectedDay !== getCurrentDay() && (
-                      <span>{DAYS_OF_WEEK.find(d => d.id === selectedDay)?.name}</span>
-                    )}
+                  <span>{DAYS_OF_WEEK.find(d => d.id === selectedDay)?.name}</span>
+                  {selectedDay === getCurrentDay() && (
+                    <span className="ml-2 px-2 py-1 bg-orange-100 text-orange-600 text-xs rounded-full">
+                      Today
+                    </span>
+                  )}
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Filter Summary */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+            <div className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                    <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">
+                      {selectedMealType.charAt(0).toUpperCase() + selectedMealType.slice(1)} • {DAYS_OF_WEEK.find(d => d.id === selectedDay)?.name}
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      {displayItems.length} items available
+                      {selectedPreferences.length > 0 && (
+                        <span className="ml-2 text-green-600">• {selectedPreferences.length} preference{selectedPreferences.length !== 1 ? 's' : ''} applied</span>
+                      )}
+                    </p>
                   </div>
                 </div>
-              )}
-            </button>
+                {selectedDay === getCurrentDay() && (
+                  <span className="px-2 py-1 bg-orange-100 text-orange-600 text-xs rounded-full font-medium">
+                    Today
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
+
+          {/* Mobile Meal Plan Summary */}
+          <MealPlanSummary restaurantName={restaurant.name} />
 
           {/* Mobile Menu Items */}
           <div className="space-y-6">
-            {Object.keys(itemsByCategory).length > 0 ? (
-              Object.entries(itemsByCategory).map(([category, items]) => (
-                <div key={category} className="bg-white rounded-xl shadow-lg p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-3">
-                    {category}
-                  </h3>
-                  <div className="grid grid-cols-1 gap-6">
-                    {items.map((item) => (
-                      <FoodItemCard key={item.id} item={item} />
+            {/* Filtered Items Section - Mobile */}
+            {hasFiltersApplied && displayItems.length > 0 && (
+              <div className="bg-white rounded-xl shadow-lg border border-gray-200">
+                <div className="p-4">
+                  <div className="grid grid-cols-1 gap-4">
+                    {displayItems.map((item) => (
+                      <FoodItemCard 
+                        key={item.id} 
+                        item={item} 
+                        onAddToPlan={handleAddToPlan}
+                        selectedDay={selectedDay}
+                        selectedMealType={selectedMealType}
+                        restaurantName={restaurant.name}
+                      />
                     ))}
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-                <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-                  <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
+              </div>
+            )}
+
+            {/* Other Menu Items Section - Mobile */}
+            {otherMenuItems.length > 0 ? (
+              <div className="bg-white rounded-xl shadow-lg">
+                <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-xl">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                      </svg>
+                    </div>
+                    <h2 className="text-lg font-bold text-gray-800">
+                      {selectedPreferences.length > 0 ? `Other Items (${otherMenuItems.length})` : `All Items (${otherMenuItems.length})`}
+                    </h2>
+                  </div>
+                  <p className="text-gray-600 text-sm mt-1">
+                    {selectedPreferences.length > 0 ? 'Additional items available' : 'All available items for this meal'}
+                  </p>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No items found</h3>
-                <p className="text-gray-600 mb-6">
-                  No {selectedMealType} items match your selected preferences for {DAYS_OF_WEEK.find(d => d.id === selectedDay)?.name}. Try adjusting your filters.
+                
+                <div className="p-4">
+                  <div className="grid grid-cols-1 gap-4">
+                    {otherMenuItems.map((item) => (
+                      <FoodItemCard 
+                        key={item.id} 
+                        item={item} 
+                        onAddToPlan={handleAddToPlan}
+                        selectedDay={selectedDay}
+                        selectedMealType={selectedMealType}
+                        restaurantName={restaurant.name}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-xl shadow-lg p-6 text-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No items found</h3>
+                <p className="text-gray-600 mb-4 text-sm">
+                  No {selectedMealType} items available for {DAYS_OF_WEEK.find(d => d.id === selectedDay)?.name}. Try selecting a different day or meal type.
                 </p>
                 <button
                   onClick={() => setSelectedPreferences([])}
-                  className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-300"
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-300 text-sm"
                 >
                   Clear Filters
                 </button>
@@ -633,18 +772,47 @@ const RestaurantDetailPage = () => {
         </div>
       </div>
 
-      {/* Mobile Filter Modal */}
-      <MobileFilterModal
-        isOpen={showMobileFilters}
-        onClose={() => setShowMobileFilters(false)}
+      {/* Preferences Filter Modal */}
+      <PreferencesFilterModal
+        isOpen={showPreferencesFilter}
+        onClose={() => setShowPreferencesFilter(false)}
         selectedPreferences={selectedPreferences}
-        setSelectedPreferences={setSelectedPreferences}
+        onApply={handlePreferencesFilterApply}
+      />
+
+      {/* Days Filter Modal */}
+      <DaysFilterModal
+        isOpen={showDaysFilter}
+        onClose={() => setShowDaysFilter(false)}
         selectedDay={selectedDay}
         setSelectedDay={setSelectedDay}
         selectedMealType={selectedMealType}
-        dayFilteredItems={dayFilteredItems}
-        onApply={handleMobileFilterApply}
+        onApply={handleDaysFilterApply}
       />
+
+      {/* Sticky Go to Next Step Button */}
+      <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-40">
+        <button
+          onClick={() => {
+            navigate('/plan');
+            // Scroll to the weekly menu section after navigation
+            setTimeout(() => {
+              const element = document.getElementById('weekly-menu-section');
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }, 300);
+          }}
+          className="group bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 md:px-6 md:py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center space-x-2 md:space-x-3"
+        >
+          <span className="font-semibold text-sm">Next Step</span>
+          <div className="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center group-hover:bg-opacity-30 transition-all duration-300">
+            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </button>
+      </div>
     </div>
   );
 };
