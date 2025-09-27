@@ -61,7 +61,15 @@ export const useFilterState = (initialDay = null, initialMeal = 'lunch') => {
   const handleStickyMealTypeChange = (mealType) => {
     setSelectedMealType(mealType);
     setShowStickyMealDropdown(false);
-    scrollToItems();
+    // Scroll to top of items container for mobile navbar clicks
+    setTimeout(() => {
+      if (itemsContainerRef.current) {
+        itemsContainerRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }, 100);
   };
 
   const handleCompactMealTypeChange = (mealType) => {
