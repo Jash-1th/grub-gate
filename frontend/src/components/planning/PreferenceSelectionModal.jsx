@@ -3,18 +3,18 @@ import { useTranslation } from 'react-i18next';
 
 // Food preference options data
 const foodPreferences = [
-  { id: 'vegetarian', key: 'vegetarian', icon: '🥬' },
-  { id: 'vegan', key: 'vegan', icon: '🌱' },
-  { id: 'gluten-free', key: 'glutenFree', icon: '🌾' },
-  { id: 'dairy-free', key: 'dairyFree', icon: '🥛' },
-  { id: 'keto', key: 'keto', icon: '🥑' },
-  { id: 'halal', key: 'halal', icon: '☪️' },
-  { id: 'kosher', key: 'kosher', icon: '✡️' },
-  { id: 'low-carb', key: 'lowCarb', icon: '🥩' },
-  { id: 'paleo', key: 'paleo', icon: '🦴' },
-  { id: 'spicy', key: 'spicy', icon: '🌶️' },
-  { id: 'organic', key: 'organic', icon: '🌿' },
-  { id: 'pescatarian', key: 'pescatarian', icon: '🐟' }
+  { id: 'vegetarian', key: 'vegetarian' },
+  { id: 'vegan', key: 'vegan' },
+  { id: 'gluten-free', key: 'glutenFree' },
+  { id: 'dairy-free', key: 'dairyFree' },
+  { id: 'keto', key: 'keto' },
+  { id: 'halal', key: 'halal' },
+  { id: 'kosher', key: 'kosher' },
+  { id: 'low-carb', key: 'lowCarb' },
+  { id: 'paleo', key: 'paleo' },
+  { id: 'spicy', key: 'spicy' },
+  { id: 'organic', key: 'organic' },
+  { id: 'pescatarian', key: 'pescatarian' }
 ];
 
 const PreferenceSelectionModal = ({ 
@@ -165,7 +165,6 @@ const PreferenceSelectionModal = ({
                     )}
                     
                     <div className="text-center">
-                      <div className="text-2xl mb-2">{preference.icon}</div>
                       <div className="text-sm font-medium text-gray-900 capitalize">
                         {preference.id.replace('-', ' ')}
                       </div>

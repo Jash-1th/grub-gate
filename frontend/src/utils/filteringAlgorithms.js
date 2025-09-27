@@ -15,8 +15,8 @@ export const DAYS_OF_WEEK = [
 export const MEAL_AVAILABILITY = {
   sunday: { lunch: true, dinner: true },
   monday: { lunch: true, dinner: true },
-  tuesday: { lunch: true, dinner: false }, // Tuesday dinner closed early
-  wednesday: { lunch: false, dinner: true }, // Wednesday lunch closed for maintenance
+  tuesday: { lunch: true, dinner: true },
+  wednesday: { lunch: true, dinner: true },
   thursday: { lunch: true, dinner: true },
   friday: { lunch: true, dinner: true },
   saturday: { lunch: true, dinner: true }

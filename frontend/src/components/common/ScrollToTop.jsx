@@ -1,12 +1,14 @@
 // src/components/common/ScrollToTop.jsx
-import { useLayoutEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const ScrollToTop = () => {
   const { pathname, key } = useLocation();
 
-  // Use useLayoutEffect to run before browser paint
-  useLayoutEffect(() => {
+  // Use useEffect for SSR compatibility, useLayoutEffect for client-side performance
+  const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+  
+  useIsomorphicLayoutEffect(() => {
     // Only run in browser environment
     if (typeof window === 'undefined') return;
 

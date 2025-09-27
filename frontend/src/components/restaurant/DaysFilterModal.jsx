@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DAYS_OF_WEEK, isMealAvailable, getCurrentDay } from '../../utils/filteringAlgorithms';
+import { DAYS_OF_WEEK, MEAL_AVAILABILITY, isMealAvailable, getCurrentDay } from '../../utils/filteringAlgorithms';
 
 const DaysFilterModal = ({ 
   isOpen, 
@@ -99,7 +99,10 @@ const DaysFilterModal = ({
               {/* Days Grid */}
               <div className="space-y-3">
                 {DAYS_OF_WEEK.map((day) => {
-                  const isAvailable = isMealAvailable(day.id, selectedMealType);
+                  const dayAvailability = MEAL_AVAILABILITY[day.id];
+                  const hasLunch = dayAvailability?.lunch || false;
+                  const hasDinner = dayAvailability?.dinner || false;
+                  const isAvailable = hasLunch || hasDinner; // Day is available if any meal is available
                   const isSelected = localDay === day.id;
                   const isToday = day.id === getCurrentDay();
                   
@@ -140,7 +143,10 @@ const DaysFilterModal = ({
                           <span className={`text-sm ${
                             isAvailable ? 'text-gray-500' : 'text-gray-400'
                           }`}>
-                            {isAvailable ? 'Menu available' : 'No menu available'}
+                            {isAvailable 
+                              ? `${hasLunch ? 'Lunch' : ''}${hasLunch && hasDinner ? ' & ' : ''}${hasDinner ? 'Dinner' : ''} available`
+                              : 'No menu available'
+                            }
                           </span>
                         </div>
                       </div>
@@ -185,7 +191,7 @@ const DaysFilterModal = ({
                   <div className="flex items-center justify-between">
                     <span className="text-blue-700">Available meals:</span>
                     <span className="font-medium text-blue-800">
-                      {dayFilteredItems.availableMeals.length > 0 
+                      {dayFilteredItems?.availableMeals?.length > 0 
                         ? dayFilteredItems.availableMeals.map(meal => meal.charAt(0).toUpperCase() + meal.slice(1)).join(', ')
                         : 'None'
                       }

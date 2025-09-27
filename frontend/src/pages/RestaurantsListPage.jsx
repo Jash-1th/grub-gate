@@ -1,48 +1,47 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { restaurantData } from '../data/restaurantData';
 import { getFoodItemsByRestaurant } from '../data/foodItemsData';
-import { 
-  DAYS_OF_WEEK, 
-  getCurrentDay,
-  filterItemsByDay,
-  isMealAvailable 
-} from '../utils/filteringAlgorithms';
+import { DAYS_OF_WEEK } from '../utils/filteringAlgorithms';
 import { useMealPlan } from '../contexts/MealPlanContext';
 import { useToast } from '../contexts/ToastContext';
+import { useFilterState } from '../hooks/useFilterState';
+import { foodPreferences, filterRestaurantsData } from '../utils/filteringHelpers';
 import FoodItemCard from '../components/restaurant/FoodItemCard';
 import PreferencesFilterModal from '../components/restaurant/PreferencesFilterModal';
-
-// Food preference options
-const foodPreferences = [
-  { id: 'vegetarian', name: 'Vegetarian', icon: '🥬' },
-  { id: 'vegan', name: 'Vegan', icon: '🌱' },
-  { id: 'gluten-free', name: 'Gluten Free', icon: '🌾' },
-  { id: 'dairy-free', name: 'Dairy Free', icon: '🥛' },
-  { id: 'keto', name: 'Keto', icon: '🥑' },
-  { id: 'halal', name: 'Halal', icon: '☪️' },
-  { id: 'kosher', name: 'Kosher', icon: '✡️' },
-];
+import DaysFilterModal from '../components/restaurant/DaysFilterModal';
+import FilterSection from '../components/shared/FilterSection';
+import StickyFilterBar from '../components/shared/StickyFilterBar';
 
 const RestaurantsListPage = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { addItemToPlan } = useMealPlan();
   const { showMealPlanSuccess } = useToast();
 
-  // Get URL parameters
-  const selectedDay = searchParams.get('day') || getCurrentDay();
-  const selectedMealFromUrl = searchParams.get('meal') || 'lunch';
-
-  // State
-  const [selectedMealType, setSelectedMealType] = useState(selectedMealFromUrl);
-  const [selectedPreferences, setSelectedPreferences] = useState([]);
-  const [showPreferencesFilter, setShowPreferencesFilter] = useState(false);
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  // Use shared filter state hook
+  const {
+    isClient,
+    selectedDay,
+    selectedMealType,
+    selectedPreferences,
+    showPreferencesFilter,
+    showDaysFilter,
+    showMealDropdown,
+    showStickyMealDropdown,
+    showStickyFilter,
+    itemsContainerRef,
+    filterSectionRef,
+    setSelectedDay,
+    setShowPreferencesFilter,
+    setShowDaysFilter,
+    setShowStickyMealDropdown,
+    handleMealTypeChange,
+    handleStickyMealTypeChange,
+    handleCompactMealTypeChange,
+    handlePreferencesFilterApply,
+    handleDaysFilterApply,
+    handlePreferenceClick
+  } = useFilterState();
 
   // Get day name
   const dayName = DAYS_OF_WEEK.find(d => d.id === selectedDay)?.name || selectedDay;
@@ -50,48 +49,32 @@ const RestaurantsListPage = () => {
   // Get all restaurants with their food items for the selected day
   const restaurantsWithItems = useMemo(() => {
     if (!isClient) return [];
-
-    return restaurantData.map(restaurant => {
-      const foodItems = getFoodItemsByRestaurant(restaurant.id);
-      const dayFilteredItems = filterItemsByDay(foodItems, selectedDay);
-      const mealItems = dayFilteredItems[selectedMealType] || [];
-
-      // Apply preference filtering if any preferences are selected
-      let filteredItems = mealItems;
-      if (selectedPreferences.length > 0) {
-        filteredItems = mealItems.filter(item => 
-          selectedPreferences.some(preference => 
-            item.preferences.includes(preference)
-          )
-        );
-      }
-
-      return {
-        ...restaurant,
-        availableItems: filteredItems,
-        totalItems: mealItems.length
-      };
-    }).filter(restaurant => restaurant.availableItems.length > 0); // Only show restaurants with available items
+    return filterRestaurantsData(
+      restaurantData,
+      getFoodItemsByRestaurant,
+      selectedDay,
+      selectedMealType,
+      selectedPreferences
+    );
   }, [selectedDay, selectedMealType, selectedPreferences, isClient]);
+
+  // Get day filtered items for the first restaurant (for meal availability)
+  const dayFilteredItems = useMemo(() => {
+    if (!isClient || restaurantsWithItems.length === 0) return { availableMeals: [] };
+    return restaurantsWithItems[0].dayFilteredItems;
+  }, [restaurantsWithItems, isClient]);
+
+  // Get all available items for scroll target
+  const allAvailableItems = useMemo(() => {
+    return restaurantsWithItems.reduce((acc, restaurant) => {
+      return acc.concat(restaurant.availableItems);
+    }, []);
+  }, [restaurantsWithItems]);
 
   // Handle adding item to meal plan
   const handleAddToPlan = (item, restaurantName) => {
     addItemToPlan(item, selectedDay, selectedMealType, restaurantName);
     showMealPlanSuccess(item.name, selectedDay, selectedMealType, restaurantName, item.price);
-  };
-
-  // Handle preference selection
-  const handlePreferenceClick = (preferenceId) => {
-    setSelectedPreferences(prev => {
-      return prev.includes(preferenceId)
-        ? prev.filter(id => id !== preferenceId)
-        : [...prev, preferenceId];
-    });
-  };
-
-  const handleApplyPreferences = (preferences) => {
-    setSelectedPreferences(preferences);
-    setShowPreferencesFilter(false);
   };
 
   const getTotalAvailableItems = () => {
@@ -126,124 +109,74 @@ const RestaurantsListPage = () => {
         </div>
       </div>
 
+      {/* Sticky Filter Bar */}
+      <StickyFilterBar
+        isVisible={showStickyFilter}
+        selectedMealType={selectedMealType}
+        selectedDay={selectedDay}
+        selectedPreferences={selectedPreferences}
+        dayFilteredItems={dayFilteredItems}
+        displayItems={allAvailableItems}
+        showStickyMealDropdown={showStickyMealDropdown}
+        onToggleMealDropdown={() => setShowStickyMealDropdown(!showStickyMealDropdown)}
+        onMealTypeChange={handleStickyMealTypeChange}
+        onShowPreferencesFilter={() => setShowPreferencesFilter(true)}
+        onShowDaysFilter={() => setShowDaysFilter(true)}
+      />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters Section */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 mb-8">
-          <div className="p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Filters</h2>
-            
-            {/* Desktop Filters */}
-            <div className="hidden md:block">
-              <div className="grid grid-cols-2 gap-4">
-                {/* Meal Type Selector */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Meal Type</label>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => setSelectedMealType('lunch')}
-                      className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors duration-200 ${
-                        selectedMealType === 'lunch'
-                          ? 'bg-orange-100 text-orange-800 border-2 border-orange-300'
-                          : 'bg-gray-100 text-gray-700 border-2 border-gray-200 hover:bg-gray-200'
-                      }`}
-                    >
-                      Lunch
-                    </button>
-                    <button
-                      onClick={() => setSelectedMealType('dinner')}
-                      className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors duration-200 ${
-                        selectedMealType === 'dinner'
-                          ? 'bg-indigo-100 text-indigo-800 border-2 border-indigo-300'
-                          : 'bg-gray-100 text-gray-700 border-2 border-gray-200 hover:bg-gray-200'
-                      }`}
-                    >
-                      Dinner
-                    </button>
-                  </div>
-                </div>
-
-                {/* Preferences Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Food Preferences</label>
-                  <button
-                    onClick={() => setShowPreferencesFilter(true)}
-                    className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white py-2 px-4 rounded-lg font-semibold hover:from-green-600 hover:to-emerald-600 transition-all duration-200 flex items-center justify-center space-x-2"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Food Preferences</span>
-                    {selectedPreferences.length > 0 && (
-                      <div className="bg-orange-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-white">
-                        {selectedPreferences.length}
-                      </div>
-                    )}
-                  </button>
-                  {selectedPreferences.length > 0 && (
-                    <div className="mt-2 text-sm text-green-700">
-                      {selectedPreferences.length} preference{selectedPreferences.length !== 1 ? 's' : ''} selected
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Mobile Filters */}
-            <div className="md:hidden space-y-4">
-              {/* Meal Type Selector */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Meal Type</label>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => setSelectedMealType('lunch')}
-                    className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors duration-200 ${
-                      selectedMealType === 'lunch'
-                        ? 'bg-orange-100 text-orange-800 border-2 border-orange-300'
-                        : 'bg-gray-100 text-gray-700 border-2 border-gray-200'
-                    }`}
-                  >
-                    Lunch
-                  </button>
-                  <button
-                    onClick={() => setSelectedMealType('dinner')}
-                    className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors duration-200 ${
-                      selectedMealType === 'dinner'
-                        ? 'bg-indigo-100 text-indigo-800 border-2 border-indigo-300'
-                        : 'bg-gray-100 text-gray-700 border-2 border-gray-200'
-                    }`}
-                  >
-                    Dinner
-                  </button>
-                </div>
-              </div>
-
-              {/* Preferences Filter */}
-              <button
-                onClick={() => setShowPreferencesFilter(true)}
-                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white py-3 px-4 rounded-lg font-semibold hover:from-green-600 hover:to-emerald-600 transition-all duration-200 flex items-center justify-center space-x-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Food Preferences</span>
-                {selectedPreferences.length > 0 && (
-                  <div className="bg-orange-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-white">
-                    {selectedPreferences.length}
-                  </div>
-                )}
-              </button>
-            </div>
-          </div>
+        <div ref={filterSectionRef}>
+          <FilterSection
+            selectedMealType={selectedMealType}
+            selectedPreferences={selectedPreferences}
+            showMealDropdown={showMealDropdown}
+            dayFilteredItems={dayFilteredItems}
+            onMealTypeChange={handleCompactMealTypeChange}
+            onToggleMealDropdown={() => setShowMealDropdown(!showMealDropdown)}
+            onShowPreferencesFilter={() => setShowPreferencesFilter(true)}
+            onShowDaysFilter={() => setShowDaysFilter(true)}
+            showDaysFilter={true}
+            className="mb-8"
+          />
         </div>
 
         {/* Restaurants List */}
-        {restaurantsWithItems.length > 0 ? (
-          <div className="space-y-8">
-            {restaurantsWithItems.map((restaurant) => (
+        <div>
+          <div ref={itemsContainerRef}></div>
+          {restaurantsWithItems.length > 0 ? (
+            <div className="space-y-8">
+              {restaurantsWithItems.map((restaurant) => (
               <div key={restaurant.id} className="bg-white rounded-xl shadow-lg border border-gray-200">
                 {/* Restaurant Header */}
-                <div className="p-6 border-b border-gray-200 bg-gray-50 rounded-t-xl">
-                  <div className="flex items-center justify-between">
+                <div className="p-4 md:p-6 border-b border-gray-200 bg-gray-50 rounded-t-xl">
+                  {/* Mobile Layout */}
+                  <div className="md:hidden">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-grub-red rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-white font-bold text-lg">
+                            {restaurant.name.charAt(0)}
+                          </span>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h2 className="text-lg font-bold text-gray-900 truncate">{restaurant.name}</h2>
+                          <p className="text-gray-600 text-sm">
+                            {restaurant.availableItems.length} items for {selectedMealType}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => navigate(`/restaurant/${restaurant.id}?day=${selectedDay}&meal=${selectedMealType}`)}
+                      className="w-full bg-grub-red text-white px-4 py-2.5 rounded-lg font-medium hover:bg-red-600 transition-colors duration-200 text-sm"
+                    >
+                      View Details
+                    </button>
+                  </div>
+
+                  {/* Desktop Layout */}
+                  <div className="hidden md:flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div className="w-16 h-16 bg-grub-red rounded-full flex items-center justify-center">
                         <span className="text-white font-bold text-xl">
@@ -267,8 +200,8 @@ const RestaurantsListPage = () => {
                 </div>
 
                 {/* Restaurant Items */}
-                <div className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="p-4 md:p-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                     {restaurant.availableItems.map((item) => (
                       <FoodItemCard 
                         key={item.id} 
@@ -282,9 +215,9 @@ const RestaurantsListPage = () => {
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        ) : (
+              ))}
+            </div>
+          ) : (
           /* No Results */
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-12 text-center">
             <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
@@ -304,6 +237,7 @@ const RestaurantsListPage = () => {
             </button>
           </div>
         )}
+        </div>
       </div>
 
       {/* Preferences Filter Modal */}
@@ -313,8 +247,67 @@ const RestaurantsListPage = () => {
         preferences={foodPreferences}
         selectedPreferences={selectedPreferences}
         onPreferenceClick={handlePreferenceClick}
-        onApply={handleApplyPreferences}
+        onApply={handlePreferencesFilterApply}
       />
+
+      {/* Days Filter Modal */}
+      <DaysFilterModal
+        isOpen={showDaysFilter}
+        onClose={() => setShowDaysFilter(false)}
+        selectedDay={selectedDay}
+        setSelectedDay={setSelectedDay}
+        selectedMealType={selectedMealType}
+        dayFilteredItems={dayFilteredItems}
+        onApply={handleDaysFilterApply}
+      />
+
+
+      <div className="fixed bottom-20 right-4 z-[60] md:hidden">
+        <button
+          onClick={() => {
+            navigate('/plan');
+            // Scroll to the weekly menu section after navigation
+            setTimeout(() => {
+              const element = document.getElementById('weekly-menu-section');
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }, 300);
+          }}
+          className="group bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center space-x-2"
+        >
+          <span className="font-semibold text-sm whitespace-nowrap">Next Step</span>
+          <div className="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center group-hover:bg-opacity-30 transition-all duration-300">
+            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </button>
+      </div>
+
+      {/* Desktop Next Step Button */}
+      <div className="hidden md:block fixed bottom-6 right-6 z-50">
+        <button
+          onClick={() => {
+            navigate('/plan');
+            // Scroll to the weekly menu section after navigation
+            setTimeout(() => {
+              const element = document.getElementById('weekly-menu-section');
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }, 300);
+          }}
+          className="group bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center space-x-3"
+        >
+          <span className="font-semibold text-sm whitespace-nowrap">Next Step</span>
+          <div className="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center group-hover:bg-opacity-30 transition-all duration-300">
+            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </button>
+      </div>
     </div>
   );
 };

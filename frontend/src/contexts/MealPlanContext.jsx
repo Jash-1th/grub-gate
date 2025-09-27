@@ -191,6 +191,17 @@ export const MealPlanProvider = ({ children }) => {
     return summary;
   };
 
+  // Check if an item is already in the meal plan and get its quantity
+  const getItemQuantityInPlan = (itemId, day, mealType) => {
+    const mealItems = getMealItems(day, mealType);
+    return mealItems.filter(item => item.id === itemId).length;
+  };
+
+  // Check if an item exists in the meal plan
+  const isItemInPlan = (itemId, day, mealType) => {
+    return getItemQuantityInPlan(itemId, day, mealType) > 0;
+  };
+
   const value = {
     // State
     weeklyPlan: state.weeklyPlan,
@@ -208,7 +219,9 @@ export const MealPlanProvider = ({ children }) => {
     getDayItemsCount,
     getMealItems,
     getTotalItemsCount,
-    getWeeklyPlanSummary
+    getWeeklyPlanSummary,
+    getItemQuantityInPlan,
+    isItemInPlan
   };
 
   return (

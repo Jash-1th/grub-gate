@@ -1,0 +1,9 @@
+          <CompactFilterRow
+            selectedPreferences={selectedPreferences}
+            selectedDay={selectedDay}
+            selectedMealType={selectedMealType}
+            dayFilteredItems={dayFilteredItems}
+            onShowPreferencesFilter={() => setShowPreferencesFilter(true)}
+            onShowDaysFilter={() => setShowDaysFilter(true)}
+            onMealTypeChange={setSelectedMealType}
+          />

@@ -279,7 +279,6 @@ const FoodPreferences = ({ onPreferencesChange }) => {
                   const pref = foodPreferences.find(p => p.id === prefId);
                   return (
                     <span key={prefId} className="inline-flex items-center px-2 py-1 bg-white rounded-md text-xs">
-                      <span className="mr-1">{pref?.icon}</span>
                       {t(`mealPlanning.preferences.options.${pref?.key}.name`)}
                     </span>
                   );
