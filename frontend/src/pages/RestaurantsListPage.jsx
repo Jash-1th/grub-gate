@@ -261,7 +261,7 @@ const RestaurantsListPage = () => {
         onApply={handleDaysFilterApply}
       />
 
-      {selectedPreferences.length === 0 && !showPreferencesFilter && !showDaysFilter && (
+      {!showPreferencesFilter && !showDaysFilter && (
         <div className="fixed bottom-20 right-4 z-[60] md:hidden">
           <button
             onClick={() => {
@@ -286,7 +286,7 @@ const RestaurantsListPage = () => {
         </div>
       )}
 
-      {selectedPreferences.length === 0 && !showPreferencesFilter && !showDaysFilter && (
+      {!showPreferencesFilter && !showDaysFilter && (
         <div className="hidden md:block fixed bottom-6 right-6 z-50">
           <button
             onClick={() => {
