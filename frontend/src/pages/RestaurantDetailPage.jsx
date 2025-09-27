@@ -1,51 +1,60 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useMemo, useEffect, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { restaurantData } from '../data/restaurantData';
-import { getFoodItemsByRestaurant, filterFoodItemsByPreferences, getFoodItemsByCategory } from '../data/foodItemsData';
+import { getFoodItemsByRestaurant } from '../data/foodItemsData';
 import { 
-  sortItemsByPreferences, 
-  groupItemsByPreferenceCategories, 
   DAYS_OF_WEEK, 
   getCurrentDay,
-  filterItemsByDay,
-  isMealAvailable 
+  filterItemsByDay
 } from '../utils/filteringAlgorithms';
+import { useMealPlan } from '../contexts/MealPlanContext';
+import { useToast } from '../contexts/ToastContext';
+import { useFilterState } from '../hooks/useFilterState';
+import { 
+  foodPreferences, 
+  applyPreferenceFilter, 
+  separateItemsByPreferences, 
+  groupItemsByCategory, 
+  hasFiltersApplied 
+} from '../utils/filteringHelpers';
+import FoodItemCard from '../components/restaurant/FoodItemCard';
+import CompactFilterRow from '../components/restaurant/CompactFilterRow';
 import PreferencesFilterModal from '../components/restaurant/PreferencesFilterModal';
 import DaysFilterModal from '../components/restaurant/DaysFilterModal';
 import MealPlanSummary from '../components/restaurant/MealPlanSummary';
-import FoodItemCard from '../components/restaurant/FoodItemCard';
-import { useMealPlan } from '../contexts/MealPlanContext';
-import { useToast } from '../contexts/ToastContext';
-
-// Food preference options for sidebar
-const foodPreferences = [
-  { id: 'vegetarian', name: 'Vegetarian', icon: '🥬' },
-  { id: 'vegan', name: 'Vegan', icon: '🌱' },
-  { id: 'gluten-free', name: 'Gluten Free', icon: '🌾' },
-  { id: 'dairy-free', name: 'Dairy Free', icon: '🥛' },
-  { id: 'keto', name: 'Keto', icon: '🥑' },
-  { id: 'kosher', name: 'Kosher', icon: '✡️' },
-  { id: 'low-carb', name: 'Low Carb', icon: '🥩' },
-  { id: 'paleo', name: 'Paleo', icon: '🦴' },
-  { id: 'spicy', name: 'Spicy', icon: '🌶️' },
-  { id: 'organic', name: 'Organic', icon: '🌿' },
-  { id: 'pescatarian', name: 'Pescatarian', icon: '🐟' }
-];
-
+import StickyFilterBar from '../components/shared/StickyFilterBar';
 
 const RestaurantDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const [isClient, setIsClient] = useState(false);
-  const [selectedMealType, setSelectedMealType] = useState('lunch');
-  const [selectedPreferences, setSelectedPreferences] = useState([]);
-  const [selectedDay, setSelectedDay] = useState(getCurrentDay());
-  const [showPreferencesFilter, setShowPreferencesFilter] = useState(false);
-  const [showDaysFilter, setShowDaysFilter] = useState(false);
-  const scrollContainerRef = useRef(null);
-  const preferenceRefs = useRef({});
-  const itemsContainerRef = useRef(null);
+  
+  // Use shared filter state hook
+  const {
+    isClient,
+    selectedDay,
+    selectedMealType,
+    selectedPreferences,
+    showPreferencesFilter,
+    showDaysFilter,
+    showMealDropdown,
+    showStickyMealDropdown,
+    showStickyFilter,
+    lastScrollY,
+    itemsContainerRef,
+    filterSectionRef,
+    setSelectedDay,
+    setShowPreferencesFilter,
+    setShowDaysFilter,
+    setShowMealDropdown,
+    setShowStickyMealDropdown,
+    setShowStickyFilter,
+    handleMealTypeChange,
+    handleStickyMealTypeChange,
+    handleCompactMealTypeChange,
+    handlePreferencesFilterApply: applyPreferencesFilter,
+    handleDaysFilterApply: applyDaysFilter,
+    handlePreferenceClick: clickPreference
+  } = useFilterState(null, 'lunch');
   
   // Meal plan context
   const { addItemToPlan } = useMealPlan();
@@ -53,19 +62,8 @@ const RestaurantDetailPage = () => {
   // Toast context
   const { showMealPlanSuccess } = useToast();
 
-  // Initialize preferences from URL parameters
-  useEffect(() => {
-    const preferencesParam = searchParams.get('preferences');
-    if (preferencesParam) {
-      const preferencesArray = preferencesParam.split(',').filter(Boolean);
-      setSelectedPreferences(preferencesArray);
-    }
-  }, [searchParams]);
 
-  // SSR Safety
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+
 
   // Get restaurant data
   const restaurant = useMemo(() => {
@@ -79,98 +77,52 @@ const RestaurantDetailPage = () => {
     return getFoodItemsByRestaurant(restaurant.id);
   }, [restaurant, isClient]);
 
-  // Filter items by selected day and get available meals
+  // Filter items by day and meal type
   const dayFilteredItems = useMemo(() => {
-    if (!isClient) return { lunch: [], dinner: [], availableMeals: [], suggestedMeal: 'lunch' };
+    if (!isClient) return { lunch: [], dinner: [], availableMeals: [] };
     return filterItemsByDay(foodItems, selectedDay);
   }, [foodItems, selectedDay, isClient]);
 
-  // Filter and sort items based on selected preferences, meal type, and day
-  const filteredItems = useMemo(() => {
-    if (!isClient) return [];
-    
-    // Get items for selected day and meal type
-    const mealItems = dayFilteredItems[selectedMealType] || [];
-    
-    // Don't apply preference filtering here - we need all items for proper sectioning
-    // The sectioning will be done later in preferenceMatchedItems and otherMenuItems
-    
-    // Sort items using the efficient preference-based algorithm
-    return sortItemsByPreferences(mealItems, selectedPreferences);
-  }, [dayFilteredItems, selectedMealType, selectedPreferences, isClient]);
+  // Get items for selected meal type
+  const mealItems = useMemo(() => {
+    return dayFilteredItems[selectedMealType] || [];
+  }, [dayFilteredItems, selectedMealType]);
 
-  // Group items by preference categories for better organization
-  const itemsByPreferenceGroup = useMemo(() => {
-    if (!isClient) return { matched: [], popular: [], other: [] };
-    return groupItemsByPreferenceCategories(filteredItems, selectedPreferences);
-  }, [filteredItems, selectedPreferences, isClient]);
-
-  // Check if any filters are applied
-  const hasFiltersApplied = useMemo(() => {
-    const isNonCurrentDay = selectedDay !== getCurrentDay();
-    const hasPreferences = selectedPreferences.length > 0;
-    return isNonCurrentDay || hasPreferences;
-  }, [selectedDay, selectedPreferences]);
-
-  // Get filtered items based on current filters
+  // Apply preference filtering
   const displayItems = useMemo(() => {
     if (!isClient) return [];
-    
-    // Get items for selected day and meal type
-    const allMealItems = dayFilteredItems[selectedMealType] || [];
-    
-    // If no filters applied, show all items
-    if (!hasFiltersApplied) {
-      return sortItemsByPreferences(allMealItems, selectedPreferences);
-    }
-    
-    // If filters are applied, show only matching items
-    let filteredItems = allMealItems;
-    
-    // Apply preference filtering if preferences are selected
-    if (selectedPreferences.length > 0) {
-      filteredItems = filteredItems.filter(item => 
-        selectedPreferences.some(preference => 
-          item.preferences.includes(preference)
-        )
-      );
-    }
-    
-    // Sort the filtered items
-    return sortItemsByPreferences(filteredItems, selectedPreferences);
-  }, [dayFilteredItems, selectedMealType, selectedPreferences, isClient, hasFiltersApplied]);
+    return applyPreferenceFilter(mealItems, selectedPreferences);
+  }, [mealItems, selectedPreferences, isClient]);
 
-  // Separate items for display sections
-  const preferenceMatchedItems = useMemo(() => {
-    if (!isClient || selectedPreferences.length === 0) return [];
-    return itemsByPreferenceGroup.matched;
-  }, [itemsByPreferenceGroup.matched, selectedPreferences, isClient]);
+  // Check if filters are applied
+  const filtersApplied = hasFiltersApplied(selectedPreferences, selectedDay, getCurrentDay);
+
+  // Separate items into preference-matched and other items
+  const { preferenceMatchedItems, otherItems } = useMemo(() => {
+    if (!isClient) return { preferenceMatchedItems: [], otherItems: [] };
+    return separateItemsByPreferences(displayItems, selectedPreferences);
+  }, [displayItems, selectedPreferences, isClient]);
 
   const otherMenuItems = useMemo(() => {
-    // Only show "other items" when no filters are applied
-    if (!isClient || hasFiltersApplied) return [];
-    
-    // When no filters, show all items in "other" section
-    return displayItems;
-  }, [displayItems, hasFiltersApplied, isClient]);
+    if (!isClient || filtersApplied) return [];
+    return otherItems;
+  }, [otherItems, filtersApplied, isClient]);
 
+  // Group items by category for both sections
+  const preferenceItemsByCategory = useMemo(() => {
+    return groupItemsByCategory(preferenceMatchedItems);
+  }, [preferenceMatchedItems]);
 
-  // Handle preference selection with smooth scroll
+  const otherItemsByCategory = useMemo(() => {
+    return groupItemsByCategory(otherMenuItems);
+  }, [otherMenuItems]);
+
+  // Handle preference selection
   const handlePreferenceClick = (preferenceId) => {
     setSelectedPreferences(prev => {
       const newPreferences = prev.includes(preferenceId)
         ? prev.filter(id => id !== preferenceId)
         : [...prev, preferenceId];
-      
-      // Auto-scroll to first item after filter change
-      setTimeout(() => {
-        if (itemsContainerRef.current) {
-          itemsContainerRef.current.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-          });
-        }
-      }, 100);
       
       return newPreferences;
     });
@@ -187,28 +139,18 @@ const RestaurantDetailPage = () => {
     } else if (dayData.availableMeals.length > 0) {
       setSelectedMealType(dayData.availableMeals[0]);
     }
-    
-    // Auto-scroll to first item after day change
-    setTimeout(() => {
-      if (itemsContainerRef.current) {
-        itemsContainerRef.current.scrollTo({
-          top: 0,
-          behavior: 'smooth'
-        });
-      }
-    }, 100);
   };
 
   // Handle preferences filter apply
   const handlePreferencesFilterApply = (preferences) => {
     setSelectedPreferences(preferences);
     setShowPreferencesFilter(false);
-    // Auto-scroll to first item after applying filters
+    // Auto-scroll to items list after applying filters
     setTimeout(() => {
       if (itemsContainerRef.current) {
-        itemsContainerRef.current.scrollTo({
-          top: 0,
-          behavior: 'smooth'
+        itemsContainerRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
         });
       }
     }, 300);
@@ -217,12 +159,12 @@ const RestaurantDetailPage = () => {
   // Handle days filter apply
   const handleDaysFilterApply = () => {
     setShowDaysFilter(false);
-    // Auto-scroll to first item after applying filters
+    // Auto-scroll to items list after applying filters
     setTimeout(() => {
       if (itemsContainerRef.current) {
-        itemsContainerRef.current.scrollTo({
-          top: 0,
-          behavior: 'smooth'
+        itemsContainerRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
         });
       }
     }, 300);
@@ -323,121 +265,25 @@ const RestaurantDetailPage = () => {
         </div>
       </section>
 
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Desktop Layout */}
         <div className="hidden lg:block">
           {/* Desktop Filter Buttons */}
-          <div className="bg-white rounded-xl shadow-lg p-4 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Preferences Filter Button */}
-              <button
-                onClick={() => setShowPreferencesFilter(true)}
-                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 px-4 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95"
-              >
-                <div className="flex items-center justify-center space-x-3">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="font-semibold">Food Preferences</span>
-                  {/* Badge for active preferences */}
-                  {selectedPreferences.length > 0 && (
-                    <div className="bg-orange-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-white">
-                      {selectedPreferences.length}
-                    </div>
-                  )}
-                </div>
-                
-                {/* Preferences Summary */}
-                {selectedPreferences.length > 0 && (
-                  <div className="mt-2 text-sm opacity-90">
-                    <span>{selectedPreferences.length} preference{selectedPreferences.length !== 1 ? 's' : ''} selected</span>
-                  </div>
-                )}
-              </button>
-
-              {/* Days Filter Button */}
-              <button
-                onClick={() => setShowDaysFilter(true)}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-3 px-4 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95"
-              >
-                <div className="flex items-center justify-center space-x-3">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <span className="font-semibold">Select Day</span>
-                  {/* Badge for non-current day */}
-                  {selectedDay !== getCurrentDay() && (
-                    <div className="bg-orange-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-white">
-                      1
-                    </div>
-                  )}
-                </div>
-                
-                {/* Day Summary */}
-                <div className="mt-2 text-sm opacity-90">
-                  <span>{DAYS_OF_WEEK.find(d => d.id === selectedDay)?.name}</span>
-                  {selectedDay === getCurrentDay() && (
-                    <span className="ml-2 px-2 py-1 bg-orange-100 text-orange-600 text-xs rounded-full">
-                      Today
-                    </span>
-                  )}
-                </div>
-              </button>
-            </div>
+          <div ref={filterSectionRef}>
+            <CompactFilterRow
+              selectedPreferences={selectedPreferences}
+              selectedDay={selectedDay}
+              selectedMealType={selectedMealType}
+              dayFilteredItems={dayFilteredItems}
+              onShowPreferencesFilter={() => setShowPreferencesFilter(true)}
+              onShowDaysFilter={() => setShowDaysFilter(true)}
+              onMealTypeChange={handleCompactMealTypeChange}
+            />
           </div>
 
           {/* Desktop Content Area */}
           <div data-items-section>
-            {/* Meal Type Toggle */}
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-              <div className="flex items-center justify-center">
-                <div className="bg-gray-100 rounded-lg p-1 flex">
-                  {dayFilteredItems.availableMeals.includes('lunch') && (
-                    <button
-                      onClick={() => setSelectedMealType('lunch')}
-                      className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
-                        selectedMealType === 'lunch'
-                          ? 'bg-red-500 text-white shadow-lg'
-                          : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                        <span>Lunch</span>
-                      </div>
-                    </button>
-                  )}
-                  {dayFilteredItems.availableMeals.includes('dinner') && (
-                    <button
-                      onClick={() => setSelectedMealType('dinner')}
-                      className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
-                        selectedMealType === 'dinner'
-                          ? 'bg-red-500 text-white shadow-lg'
-                          : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                        </svg>
-                        <span>Dinner</span>
-                      </div>
-                    </button>
-                  )}
-                </div>
-              </div>
-              
-              {/* Meal availability info */}
-              {dayFilteredItems.availableMeals.length === 0 && (
-                <div className="text-center mt-4">
-                  <p className="text-gray-500">No meals available on {DAYS_OF_WEEK.find(d => d.id === selectedDay)?.name}</p>
-                </div>
-              )}
-            </div>
 
             {/* Desktop Filter Summary */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
@@ -471,12 +317,12 @@ const RestaurantDetailPage = () => {
             </div>
 
             {/* Meal Plan Summary */}
-            <MealPlanSummary restaurantName={restaurant.name} />
+            {/* <MealPlanSummary restaurantName={restaurant.name} /> */}
 
             {/* Desktop Menu Items */}
-            <div className="space-y-8">
+            <div ref={itemsContainerRef} className="space-y-8">
               {/* Filtered Items Section - Show when filters are applied */}
-              {hasFiltersApplied && displayItems.length > 0 && (
+              {filtersApplied && displayItems.length > 0 && (
                 <div className="bg-white rounded-xl shadow-lg border border-gray-200">
                   <div className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -557,105 +403,95 @@ const RestaurantDetailPage = () => {
 
         {/* Mobile Layout */}
         <div className="lg:hidden">
-          {/* Meal Type Toggle for Mobile */}
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-            <div className="flex items-center justify-center">
-              <div className="bg-gray-100 rounded-lg p-1 flex">
-                {dayFilteredItems.availableMeals.includes('lunch') && (
-                  <button
-                    onClick={() => setSelectedMealType('lunch')}
-                    className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 ${
-                      selectedMealType === 'lunch'
-                        ? 'bg-red-500 text-white shadow-lg'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                      </svg>
-                      <span>Lunch</span>
-                    </div>
-                  </button>
-                )}
-                {dayFilteredItems.availableMeals.includes('dinner') && (
-                  <button
-                    onClick={() => setSelectedMealType('dinner')}
-                    className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 ${
-                      selectedMealType === 'dinner'
-                        ? 'bg-red-500 text-white shadow-lg'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                      </svg>
-                      <span>Dinner</span>
-                    </div>
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
           {/* Mobile Filter Buttons */}
-          <div className="bg-white rounded-xl shadow-lg p-4 mb-6">
-            <div className="space-y-3">
-              {/* Preferences Filter Button */}
+          <div className="flex items-center justify-between space-x-3 bg-white rounded-xl shadow-lg p-4 mb-6">
+            {/* Left Side - Compact Filter Buttons */}
+            <div className="flex items-center space-x-2 flex-1">
+              {/* Preferences Filter Button - Mobile */}
               <button
                 onClick={() => setShowPreferencesFilter(true)}
-                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 px-4 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95"
+                className="group relative bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 active:from-green-700 active:to-green-800 text-white py-2.5 px-3 rounded-lg shadow-md transition-all duration-200 transform active:scale-95 touch-manipulation"
               >
-                <div className="flex items-center justify-center space-x-3">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center space-x-1.5">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="font-semibold">Food Preferences</span>
-                  {/* Badge for active preferences */}
+                  <span className="font-semibold text-xs">Prefs</span>
                   {selectedPreferences.length > 0 && (
-                    <div className="bg-orange-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-white">
+                    <div className="bg-orange-500 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center border border-white">
                       {selectedPreferences.length}
                     </div>
                   )}
                 </div>
-                
-                {/* Preferences Summary */}
-                {selectedPreferences.length > 0 && (
-                  <div className="mt-2 text-sm opacity-90">
-                    <span>{selectedPreferences.length} preference{selectedPreferences.length !== 1 ? 's' : ''} selected</span>
-                  </div>
-                )}
               </button>
 
-              {/* Days Filter Button */}
+              {/* Days Filter Button - Mobile */}
               <button
                 onClick={() => setShowDaysFilter(true)}
-                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-3 px-4 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95"
+                className="group relative bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 active:from-blue-700 active:to-blue-800 text-white py-2.5 px-3 rounded-lg shadow-md transition-all duration-200 transform active:scale-95 touch-manipulation"
               >
-                <div className="flex items-center justify-center space-x-3">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <div className="flex items-center space-x-1.5">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  <span className="font-semibold">Select Day</span>
-                  {/* Badge for non-current day */}
+                  <span className="font-semibold text-xs">Day</span>
                   {selectedDay !== getCurrentDay() && (
-                    <div className="bg-orange-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center border-2 border-white">
+                    <div className="bg-orange-500 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center border border-white">
                       1
                     </div>
                   )}
                 </div>
-                
-                {/* Day Summary */}
-                <div className="mt-2 text-sm opacity-90">
-                  <span>{DAYS_OF_WEEK.find(d => d.id === selectedDay)?.name}</span>
-                  {selectedDay === getCurrentDay() && (
-                    <span className="ml-2 px-2 py-1 bg-orange-100 text-orange-600 text-xs rounded-full">
-                      Today
-                    </span>
+              </button>
+            </div>
+
+            {/* Right Side - Mobile Meal Type Dropdown */}
+            <div className="relative meal-dropdown">
+              <button
+                onClick={() => setShowMealDropdown(!showMealDropdown)}
+                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 active:from-red-700 active:to-red-800 text-white py-2.5 px-4 rounded-lg shadow-md transition-all duration-200 transform active:scale-95 flex items-center space-x-2 touch-manipulation min-w-[100px]"
+              >
+                <div className="flex items-center space-x-1.5">
+                  {selectedMealType === 'lunch' ? (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 0 1 8.646 3.646 9.003 9.003 0 0 0 12 21a9.003 9.003 0 0 0 8.354-5.646z" />
+                    </svg>
+                  )}
+                  <span className="font-semibold text-xs capitalize">{selectedMealType}</span>
+                </div>
+                <svg className={`w-3 h-3 transition-transform duration-200 ${showMealDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Mobile Dropdown Menu */}
+              {showMealDropdown && (
+                <div className="absolute right-0 top-full mt-2 w-40 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-20 animate-in slide-in-from-top-2 duration-200">
+                  {dayFilteredItems.availableMeals.includes('lunch') && (
+                    <button
+                      onClick={() => handleMealTypeChange('lunch')}
+                      className={`w-full text-left px-3 py-2.5 hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 transition-all duration-200 flex items-center space-x-2 touch-manipulation ${
+                        selectedMealType === 'lunch' ? 'bg-gradient-to-r from-yellow-50 to-orange-50 text-yellow-700' : 'text-gray-700 hover:text-yellow-700'
+                      }`}
+                    >
+                      Lunch
+                    </button>
+                  )}
+                  {dayFilteredItems.availableMeals.includes('dinner') && (
+                    <button
+                      onClick={() => handleMealTypeChange('dinner')}
+                      className={`w-full text-left px-3 py-2.5 hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50 transition-all duration-200 flex items-center space-x-2 touch-manipulation ${
+                        selectedMealType === 'dinner' ? 'bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-700' : 'text-gray-700 hover:text-purple-700'
+                      }`}
+                    >
+                      Dinner
+                    </button>
                   )}
                 </div>
-              </button>
+              )}
             </div>
           </div>
 
@@ -691,12 +527,12 @@ const RestaurantDetailPage = () => {
           </div>
 
           {/* Mobile Meal Plan Summary */}
-          <MealPlanSummary restaurantName={restaurant.name} />
+          {/* <MealPlanSummary restaurantName={restaurant.name} /> */}
 
           {/* Mobile Menu Items */}
           <div className="space-y-6">
             {/* Filtered Items Section - Mobile */}
-            {hasFiltersApplied && displayItems.length > 0 && (
+            {filtersApplied && displayItems.length > 0 && (
               <div className="bg-white rounded-xl shadow-lg border border-gray-200">
                 <div className="p-4">
                   <div className="grid grid-cols-1 gap-4">
@@ -716,7 +552,7 @@ const RestaurantDetailPage = () => {
             )}
 
             {/* Other Menu Items Section - Mobile */}
-            {otherMenuItems.length > 0 ? (
+            {otherMenuItems.length > 0 && (
               <div className="bg-white rounded-xl shadow-lg">
                 <div className="p-4 border-b border-gray-200 bg-gray-50 rounded-t-xl">
                   <div className="flex items-center space-x-2">
@@ -749,7 +585,10 @@ const RestaurantDetailPage = () => {
                   </div>
                 </div>
               </div>
-            ) : (
+            )}
+
+            {/* No Items Found - Mobile */}
+            {displayItems.length === 0 && otherMenuItems.length === 0 && (
               <div className="bg-white rounded-xl shadow-lg p-6 text-center">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -772,26 +611,43 @@ const RestaurantDetailPage = () => {
         </div>
       </div>
 
-      {/* Preferences Filter Modal */}
+      {/* Sticky Filter Bar */}
+      <StickyFilterBar
+        isVisible={showStickyFilter}
+        selectedMealType={selectedMealType}
+        selectedDay={selectedDay}
+        selectedPreferences={selectedPreferences}
+        dayFilteredItems={dayFilteredItems}
+        displayItems={displayItems}
+        showStickyMealDropdown={showStickyMealDropdown}
+        onToggleMealDropdown={() => setShowStickyMealDropdown(!showStickyMealDropdown)}
+        onMealTypeChange={handleStickyMealTypeChange}
+        onShowPreferencesFilter={() => setShowPreferencesFilter(true)}
+        onShowDaysFilter={() => setShowDaysFilter(true)}
+      />
+
+      {/* Filter Modals */}
       <PreferencesFilterModal
         isOpen={showPreferencesFilter}
         onClose={() => setShowPreferencesFilter(false)}
         selectedPreferences={selectedPreferences}
-        onApply={handlePreferencesFilterApply}
+        onApply={applyPreferencesFilter}
+        onPreferenceClick={clickPreference}
       />
 
-      {/* Days Filter Modal */}
       <DaysFilterModal
         isOpen={showDaysFilter}
         onClose={() => setShowDaysFilter(false)}
         selectedDay={selectedDay}
         setSelectedDay={setSelectedDay}
         selectedMealType={selectedMealType}
-        onApply={handleDaysFilterApply}
+        dayFilteredItems={dayFilteredItems}
+        onApply={applyDaysFilter}
+        foodItems={foodItems}
       />
 
-      {/* Sticky Go to Next Step Button */}
-      <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-40">
+      {/* Mobile Next Step Button */}
+      <div className="fixed bottom-20 right-4 z-[60] md:hidden">
         <button
           onClick={() => {
             navigate('/plan');
@@ -803,9 +659,33 @@ const RestaurantDetailPage = () => {
               }
             }, 300);
           }}
-          className="group bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 md:px-6 md:py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center space-x-2 md:space-x-3"
+          className="group bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center space-x-2"
         >
-          <span className="font-semibold text-sm">Next Step</span>
+          <span className="font-semibold text-sm whitespace-nowrap">Next Step</span>
+          <div className="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center group-hover:bg-opacity-30 transition-all duration-300">
+            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </button>
+      </div>
+
+      {/* Desktop Next Step Button */}
+      <div className="hidden md:block fixed bottom-6 right-6 z-50">
+        <button
+          onClick={() => {
+            navigate('/plan');
+            // Scroll to the weekly menu section after navigation
+            setTimeout(() => {
+              const element = document.getElementById('weekly-menu-section');
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }, 300);
+          }}
+          className="group bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center space-x-3"
+        >
+          <span className="font-semibold text-sm whitespace-nowrap">Next Step</span>
           <div className="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center group-hover:bg-opacity-30 transition-all duration-300">
             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

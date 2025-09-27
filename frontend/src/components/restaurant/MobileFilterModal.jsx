@@ -3,18 +3,18 @@ import { DAYS_OF_WEEK, isMealAvailable } from '../../utils/filteringAlgorithms';
 
 // Food preference options for filtering
 const foodPreferences = [
-  { id: 'vegetarian', name: 'Vegetarian', icon: '🥬' },
-  { id: 'vegan', name: 'Vegan', icon: '🌱' },
-  { id: 'gluten-free', name: 'Gluten Free', icon: '🌾' },
-  { id: 'dairy-free', name: 'Dairy Free', icon: '🥛' },
-  { id: 'keto', name: 'Keto', icon: '🥑' },
-  { id: 'halal', name: 'Halal', icon: '☪️' },
-  { id: 'kosher', name: 'Kosher', icon: '✡️' },
-  { id: 'low-carb', name: 'Low Carb', icon: '🥩' },
-  { id: 'paleo', name: 'Paleo', icon: '🦴' },
-  { id: 'spicy', name: 'Spicy', icon: '🌶️' },
-  { id: 'organic', name: 'Organic', icon: '🌿' },
-  { id: 'pescatarian', name: 'Pescatarian', icon: '🐟' }
+  { id: 'vegetarian', name: 'Vegetarian' },
+  { id: 'vegan', name: 'Vegan' },
+  { id: 'gluten-free', name: 'Gluten Free' },
+  { id: 'dairy-free', name: 'Dairy Free' },
+  { id: 'keto', name: 'Keto' },
+  { id: 'halal', name: 'Halal' },
+  { id: 'kosher', name: 'Kosher' },
+  { id: 'low-carb', name: 'Low Carb' },
+  { id: 'paleo', name: 'Paleo' },
+  { id: 'spicy', name: 'Spicy' },
+  { id: 'organic', name: 'Organic' },
+  { id: 'pescatarian', name: 'Pescatarian' }
 ];
 
 const MobileFilterModal = ({ 
@@ -127,13 +127,12 @@ const MobileFilterModal = ({
                       <button
                         key={preference.id}
                         onClick={() => handlePreferenceToggle(preference.id)}
-                        className={`flex items-center space-x-2 p-3 rounded-lg transition-all duration-300 ${
+                        className={`flex items-center justify-center p-3 rounded-lg transition-all duration-300 ${
                           isActive
                             ? 'bg-red-50 border-2 border-red-500 text-red-700'
                             : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent text-gray-700'
                         }`}
                       >
-                        <span className="text-lg">{preference.icon}</span>
                         <span className="font-medium text-sm">{preference.name}</span>
                         {isActive && (
                           <svg className="w-4 h-4 ml-auto text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

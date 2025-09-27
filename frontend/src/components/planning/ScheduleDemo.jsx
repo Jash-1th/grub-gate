@@ -50,95 +50,61 @@ const MealSlot = ({ day, mealType, actualMealItems }) => {
     <div 
       onClick={handleSlotClick}
       className={`
-        p-3 rounded-lg border-2 transition-all duration-200 cursor-pointer min-h-[80px] flex flex-col justify-center
+        group relative p-3 rounded-xl border-2 transition-all duration-300 cursor-pointer min-h-[90px] flex flex-col justify-center transform hover:scale-[1.02] hover:-translate-y-1
         ${hasItems 
-          ? 'border-grub-red bg-red-50 shadow-md hover:shadow-lg hover:bg-red-100' 
-          : 'border-gray-200 bg-white hover:border-grub-red/50 hover:shadow-sm hover:bg-gray-50'
+          ? 'border-grub-red bg-gradient-to-br from-red-50 to-orange-50 shadow-lg hover:shadow-2xl hover:border-red-400' 
+          : 'border-gray-200 bg-gradient-to-br from-white to-gray-50 hover:border-grub-red/60 hover:shadow-lg hover:from-red-50/30 hover:to-orange-50/30'
         }
       `}
     >
-      {hasItems ? (
-        <div className="text-xs">
-          <div className="font-semibold text-grub-red truncate">{firstItem.restaurantName}</div>
-          <div className="text-gray-700 truncate">{firstItem.name}</div>
-          <div className="font-bold text-grub-red">${firstItem.price}</div>
-          {additionalCount > 0 && (
-            <div className="text-xs text-gray-500 mt-1">
-              +{additionalCount} more item{additionalCount !== 1 ? 's' : ''}
-            </div>
-          )}
-          <div className="text-xs text-grub-red/70 mt-1 font-medium">
-            Click to view details →
-          </div>
-        </div>
-      ) : (
-        <div className="text-xs text-gray-500 text-center">
-          <div>{t('mealplan.clickToSelect', 'Click to select')}</div>
-          <div className="text-grub-red/70 mt-1 font-medium">Add items →</div>
-        </div>
-      )}
-    </div>
-  );
-};
-// Weekly calendar component
-const WeeklyCalendar = () => {
-  const { t } = useTranslation();
-  const { mealPlan } = useMealPlan();
-  
-  const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-  const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-  return (
-    <div className="bg-white rounded-2xl p-4 md:p-6 shadow-lg border border-gray-100 overflow-x-auto">
-      <div className="min-w-[600px]">
-        <div className="grid grid-cols-8 gap-2 mb-4">
-          {/* Header row */}
-          <div className="p-2"></div>
-          {dayLabels.map((day, index) => (
-            <div key={day} className="p-2 text-center">
-              <div className="text-sm font-semibold text-gray-900">{day}</div>
-              <div className="text-xs text-gray-500">{index + 1}</div>
-            </div>
-          ))}
-          
-          {/* Lunch row */}
-          <div className="p-2 flex items-center">
-            <div className="text-sm font-medium text-gray-700">{t('mealplan.lunch', 'Lunch')}</div>
-          </div>
-          {daysOfWeek.map((day) => (
-            <MealSlot 
-              key={`lunch-${day}`}
-              day={day}
-              mealType="lunch"
-              actualMealItems={mealPlan[day]?.lunch || []}
-            />
-          ))}
-          
-          {/* Dinner row */}
-          <div className="p-2 flex items-center">
-            <div className="text-sm font-medium text-gray-700">{t('mealplan.dinner', 'Dinner')}</div>
-          </div>
-          {daysOfWeek.map((day) => (
-            <MealSlot 
-              key={`dinner-${day}`}
-              day={day}
-              mealType="dinner"
-              actualMealItems={mealPlan[day]?.dinner || []}
-            />
-          ))}
-        </div>
-      </div>
+      {/* Gradient overlay for hover effect */}
+      <div className={`absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+        hasItems 
+          ? 'bg-gradient-to-br from-red-100/50 to-orange-100/50' 
+          : 'bg-gradient-to-br from-red-50/30 to-orange-50/30'
+      }`}></div>
       
-      {/* Legend */}
-      <div className="flex flex-wrap gap-4 text-xs text-gray-600 pt-4 border-t border-gray-100">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-red-50 border-2 border-grub-red rounded"></div>
-          <span>{t('mealplan.planned', 'Planned Meals')}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-white border-2 border-gray-200 rounded"></div>
-          <span>{t('mealplan.available', 'Available Slots')}</span>
-        </div>
+      <div className="relative z-10">
+        {hasItems ? (
+          <div className="text-xs space-y-1">
+            <div className="flex items-center justify-between mb-2">
+              <div className="font-semibold text-grub-red truncate group-hover:text-red-700 transition-colors duration-200">{firstItem.restaurantName}</div>
+              {actualMealItems.length > 1 && (
+                <div className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-semibold shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-200">
+                  {actualMealItems.length}x
+                </div>
+              )}
+            </div>
+            <div className="text-gray-700 truncate group-hover:text-gray-800 transition-colors duration-200 font-medium">{firstItem.name}</div>
+            <div className="font-bold text-grub-red text-sm group-hover:text-red-700 transition-colors duration-200">${firstItem.price}</div>
+            {additionalCount > 0 && (
+              <div className="text-xs text-gray-500 mt-1 group-hover:text-gray-600 transition-colors duration-200">
+                +{additionalCount} more item{additionalCount !== 1 ? 's' : ''}
+              </div>
+            )}
+            <div className="text-xs text-grub-red/70 mt-2 font-medium group-hover:text-red-600 transition-colors duration-200 flex items-center">
+              <span>View details</span>
+              <svg className="w-3 h-3 ml-1 group-hover:translate-x-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        ) : (
+          <div className="text-xs text-gray-500 text-center space-y-2">
+            <div className="w-8 h-8 mx-auto bg-gray-100 group-hover:bg-red-100 rounded-full flex items-center justify-center transition-colors duration-200">
+              <svg className="w-4 h-4 text-gray-400 group-hover:text-red-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            </div>
+            <div className="group-hover:text-gray-600 transition-colors duration-200">{t('mealplan.clickToSelect', 'Click to select')}</div>
+            <div className="text-grub-red/70 font-medium group-hover:text-red-600 transition-colors duration-200 flex items-center justify-center">
+              <span>Add items</span>
+              <svg className="w-3 h-3 ml-1 group-hover:translate-x-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -146,31 +112,117 @@ const WeeklyCalendar = () => {
 
 const ScheduleDemo = () => {
   const { t } = useTranslation();
+  const { mealPlan } = useMealPlan();
   const [sectionRef, isVisible] = useIntersectionObserver({ threshold: 0.1 });
   const [calendarRef, calendarVisible] = useIntersectionObserver({ threshold: 0.1 });
 
   return (
-    <section id="weekly-menu-section" className="py-16 lg:py-24 bg-white">
+    <section id="weekly-menu-section" className="py-16 lg:py-24 bg-gradient-to-br from-gray-50 to-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
+        {/* Combined Header and Calendar Card */}
         <div 
           ref={sectionRef}
-          className={`text-center mb-12 scroll-animate ${isVisible ? 'is-visible' : ''}`}
+          className={`scroll-animate ${isVisible ? 'is-visible' : ''}`}
         >
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6" style={{ color: '#800020' }}>
-            {t('mealPlanning.scheduleDemo.title')}
-          </h2>
-          <p className="text-lg md:text-xl text-gray-600 max-w-4xl mx-auto mb-8">
-            {t('mealPlanning.scheduleDemo.description')}
-          </p>
-        </div>
+          <div className="bg-gradient-to-br from-white to-gray-50/50 rounded-2xl p-6 md:p-8 shadow-xl border-2 border-gray-100 hover:border-gray-200 hover:shadow-2xl transition-all duration-300 mb-12">
+            {/* Header Section */}
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-red-100 to-orange-100 rounded-full mb-6 shadow-lg">
+                <svg className="w-8 h-8 text-grub-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 bg-gradient-to-r from-grub-red to-red-600 bg-clip-text text-transparent">
+                Your Weekly Menu, Personalized by You
+              </h2>
+              <p className="text-lg md:text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed mb-8">
+                Plan your perfect week with our interactive meal calendar. Click any slot to add delicious meals from your favorite restaurants, or view your planned meals with detailed information.
+              </p>
+            </div>
 
-        {/* Calendar Demo */}
-        <div 
-          ref={calendarRef}
-          className={`mb-12 scroll-animate ${calendarVisible ? 'is-visible' : ''}`}
-        >
-          <WeeklyCalendar />
+            {/* Calendar Section */}
+            <div 
+              ref={calendarRef}
+              className={`scroll-animate ${calendarVisible ? 'is-visible' : ''}`}
+            >
+              <div className="overflow-x-auto">
+                <div className="min-w-[700px] lg:min-w-0">
+                  <div className="grid grid-cols-8 gap-2 md:gap-3 mb-4">
+                    {/* Header row */}
+                    <div className="p-2"></div>
+                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => (
+                      <div key={day} className="p-2 text-center">
+                        <div className="bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg px-3 py-2 shadow-sm">
+                          <div className="text-sm font-bold text-gray-900">{day}</div>
+                          <div className="text-xs text-gray-600 font-medium">{index + 1}</div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* Lunch row */}
+                    <div className="p-2 flex items-center">
+                      <div className="bg-gradient-to-r from-yellow-100 to-orange-100 rounded-lg px-3 py-2 shadow-sm border border-yellow-200">
+                        <div className="flex items-center space-x-2">
+                          <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                          </svg>
+                          <div className="text-sm font-bold text-yellow-800">{t('mealplan.lunch', 'Lunch')}</div>
+                        </div>
+                      </div>
+                    </div>
+                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
+                      <MealSlot 
+                        key={`lunch-${day}`}
+                        day={day}
+                        mealType="lunch"
+                        actualMealItems={mealPlan[day]?.lunch || []}
+                      />
+                    ))}
+                    
+                    {/* Dinner row */}
+                    <div className="p-2 flex items-center">
+                      <div className="bg-gradient-to-r from-purple-100 to-indigo-100 rounded-lg px-3 py-2 shadow-sm border border-purple-200">
+                        <div className="flex items-center space-x-2">
+                          <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                          </svg>
+                          <div className="text-sm font-bold text-purple-800">{t('mealplan.dinner', 'Dinner')}</div>
+                        </div>
+                      </div>
+                    </div>
+                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
+                      <MealSlot 
+                        key={`dinner-${day}`}
+                        day={day}
+                        mealType="dinner"
+                        actualMealItems={mealPlan[day]?.dinner || []}
+                      />
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Legend */}
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 mt-4 border border-gray-200">
+                  <div className="flex flex-wrap gap-4 md:gap-6 text-sm text-gray-700">
+                    <div className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 shadow-sm border border-gray-200">
+                      <div className="w-4 h-4 bg-gradient-to-br from-red-50 to-orange-50 border-2 border-grub-red rounded-lg shadow-sm"></div>
+                      <span className="font-medium">{t('mealplan.planned', 'Planned Meals')}</span>
+                    </div>
+                    <div className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 shadow-sm border border-gray-200">
+                      <div className="w-4 h-4 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-300 rounded-lg shadow-sm"></div>
+                      <span className="font-medium">{t('mealplan.available', 'Available Slots')}</span>
+                    </div>
+                    <div className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 shadow-sm border border-gray-200">
+                      <div className="w-4 h-4 bg-gradient-to-r from-green-100 to-emerald-100 border-2 border-green-300 rounded-lg shadow-sm flex items-center justify-center">
+                        <span className="text-xs font-bold text-green-700">2x</span>
+                      </div>
+                      <span className="font-medium">Multiple Items</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Features Grid */}
