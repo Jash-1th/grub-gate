@@ -261,53 +261,55 @@ const RestaurantsListPage = () => {
         onApply={handleDaysFilterApply}
       />
 
+      {selectedPreferences.length === 0 && !showPreferencesFilter && !showDaysFilter && (
+        <div className="fixed bottom-20 right-4 z-[60] md:hidden">
+          <button
+            onClick={() => {
+              navigate('/plan');
+              // Scroll to the weekly menu section after navigation
+              setTimeout(() => {
+                const element = document.getElementById('weekly-menu-section');
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }, 300);
+            }}
+            className="group bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center space-x-2"
+          >
+            <span className="font-semibold text-sm whitespace-nowrap">Next Step</span>
+            <div className="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center group-hover:bg-opacity-30 transition-all duration-300">
+              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </button>
+        </div>
+      )}
 
-      <div className="fixed bottom-20 right-4 z-[60] md:hidden">
-        <button
-          onClick={() => {
-            navigate('/plan');
-            // Scroll to the weekly menu section after navigation
-            setTimeout(() => {
-              const element = document.getElementById('weekly-menu-section');
-              if (element) {
-                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }
-            }, 300);
-          }}
-          className="group bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center space-x-2"
-        >
-          <span className="font-semibold text-sm whitespace-nowrap">Next Step</span>
-          <div className="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center group-hover:bg-opacity-30 transition-all duration-300">
-            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-        </button>
-      </div>
-
-      {/* Desktop Next Step Button */}
-      <div className="hidden md:block fixed bottom-6 right-6 z-50">
-        <button
-          onClick={() => {
-            navigate('/plan');
-            // Scroll to the weekly menu section after navigation
-            setTimeout(() => {
-              const element = document.getElementById('weekly-menu-section');
-              if (element) {
-                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }
-            }, 300);
-          }}
-          className="group bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center space-x-3"
-        >
-          <span className="font-semibold text-sm whitespace-nowrap">Next Step</span>
-          <div className="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center group-hover:bg-opacity-30 transition-all duration-300">
-            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-        </button>
-      </div>
+      {selectedPreferences.length === 0 && !showPreferencesFilter && !showDaysFilter && (
+        <div className="hidden md:block fixed bottom-6 right-6 z-50">
+          <button
+            onClick={() => {
+              navigate('/plan');
+              // Scroll to the weekly menu section after navigation
+              setTimeout(() => {
+                const element = document.getElementById('weekly-menu-section');
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }, 300);
+            }}
+            className="group bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center space-x-3"
+          >
+            <span className="font-semibold text-sm whitespace-nowrap">Next Step</span>
+            <div className="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center group-hover:bg-opacity-30 transition-all duration-300">
+              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </button>
+        </div>
+      )}
     </div>
   );
 };
