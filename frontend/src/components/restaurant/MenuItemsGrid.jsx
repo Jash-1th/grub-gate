@@ -8,6 +8,7 @@ const MenuItemsGrid = ({
   selectedMealType,
   restaurantName,
   onItemClick,
+  onRemoveFromPlan,
   isItemInPlan,
   getItemPlanEntries,
   title,
@@ -78,6 +79,7 @@ const MenuItemsGrid = ({
             <FoodItemCard
               item={item}
               onAddToPlan={() => onItemClick(item)}
+              onRemoveFromPlan={onRemoveFromPlan}
               selectedDay={selectedDay}
               selectedMealType={selectedMealType}
               restaurantName={restaurantName}

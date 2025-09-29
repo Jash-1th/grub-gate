@@ -4,6 +4,7 @@ import { useMealPlan } from '../../contexts/MealPlanContext';
 const FoodItemCard = ({ 
   item, 
   onAddToPlan, 
+  onRemoveFromPlan,
   selectedDay, 
   selectedMealType, 
   restaurantName, 
@@ -188,19 +189,43 @@ const FoodItemCard = ({
         {/* Flexible spacer to push button to bottom */}
         <div className="flex-1"></div>
 
-        {/* View Details Button */}
+        {/* Action Button - Add or Remove */}
         {!hideAddButton && (
-          <button 
-            onClick={() => onAddToPlan && onAddToPlan(item, restaurantName)}
-            className="w-full font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-lg hover:shadow-xl text-sm bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white focus:ring-green-500 touch-manipulation active:scale-95"
-          >
-            <div className="flex items-center justify-center space-x-1.5">
-              <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              <span className="whitespace-nowrap">View Details</span>
-            </div>
-          </button>
+          <>
+            {itemIsInPlan ? (
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onRemoveFromPlan && onRemoveFromPlan(item);
+                }}
+                className="w-full font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-lg hover:shadow-xl text-sm bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white focus:ring-red-500 touch-manipulation active:scale-95"
+              >
+                <div className="flex items-center justify-center space-x-1.5">
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span className="whitespace-nowrap">Remove</span>
+                </div>
+              </button>
+            ) : (
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onAddToPlan && onAddToPlan(item, restaurantName);
+                }}
+                className="w-full font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-lg hover:shadow-xl text-sm bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white focus:ring-green-500 touch-manipulation active:scale-95"
+              >
+                <div className="flex items-center justify-center space-x-1.5">
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  <span className="whitespace-nowrap">View Details</span>
+                </div>
+              </button>
+            )}
+          </>
         )}
 
         {/* Click Hint for Normal Users */}
