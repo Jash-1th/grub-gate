@@ -11,7 +11,7 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { postalCode, selectedPreferences, isClient } = usePlanning();
-  const { addItemToPlan } = useMealPlan();
+  const { addItemToPlan, removeItemFromPlan, getMealItems } = useMealPlan();
   
   // Get URL parameters
   const day = searchParams.get('day') || 'monday';
@@ -70,7 +70,7 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
       document.removeEventListener('modal:close', handleModalClose);
     };
   }, []);
-  
+
 
   // Get nearby restaurants
   const nearbyRestaurants = useMemo(() => {
@@ -112,6 +112,19 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
   // Handle item click - add to plan
   const handleItemClick = (item) => {
     addItemToPlan(item, day, slot);
+  };
+
+  // Handle remove from plan
+  const handleRemoveFromPlan = (item) => {
+    // Find the meal plan item with matching item id
+    const mealItems = getMealItems(day, slot);
+    const mealPlanItem = mealItems.find(mealItem => mealItem.id === item.id);
+    
+    if (mealPlanItem && mealPlanItem.planId) {
+      removeItemFromPlan(mealPlanItem.planId, day, slot);
+    } else {
+      console.warn('Could not find meal plan item to remove:', item.id);
+    }
   };
 
   // Handle restaurant card click - navigate to restaurant detail with context
@@ -219,6 +232,7 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
                   key={`${item.restaurantId}-${item.id}`}
                   item={item}
                   onAddToPlan={() => handleItemClick(item)}
+                  onRemoveFromPlan={() => handleRemoveFromPlan(item)}
                   selectedDay={day}
                   selectedMealType={mealType}
                   restaurantName={item.restaurantName}
@@ -280,7 +294,7 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-32 sm:pb-40">
       {/* Header */}
       <div className="bg-gradient-to-r from-grub-red to-red-600 text-white">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
@@ -344,35 +358,35 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
 
       {/* Progress Indicator */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-center space-x-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
+          <div className="flex items-center justify-center space-x-2 sm:space-x-8">
             <div className="flex items-center">
-              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <span className="ml-2 text-sm font-medium text-gray-900">Location</span>
+              <span className="ml-1 sm:ml-2 text-xs sm:text-sm font-medium text-gray-900">Location</span>
             </div>
             
-            <div className="w-8 h-0.5 bg-gray-300"></div>
+            <div className="w-4 sm:w-8 h-0.5 bg-gray-300"></div>
             
             <div className="flex items-center">
-              <div className="w-8 h-8 bg-grub-red rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-bold">2</span>
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-grub-red rounded-full flex items-center justify-center">
+                <span className="text-white text-xs sm:text-sm font-bold">2</span>
               </div>
-              <span className="ml-2 text-sm font-medium text-gray-900">
+              <span className="ml-1 sm:ml-2 text-xs sm:text-sm font-medium text-gray-900">
                 {isFromPlan ? 'Restaurants' : 'Menu Selection'}
               </span>
             </div>
             
-            <div className="w-8 h-0.5 bg-gray-300"></div>
+            <div className="w-4 sm:w-8 h-0.5 bg-gray-300"></div>
             
             <div className="flex items-center">
-              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                <span className="text-gray-600 text-sm font-bold">3</span>
+              <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                <span className="text-gray-600 text-xs sm:text-sm font-bold">3</span>
               </div>
-              <span className="ml-2 text-sm font-medium text-gray-500">Subscribe</span>
+              <span className="ml-1 sm:ml-2 text-xs sm:text-sm font-medium text-gray-500">Subscribe</span>
             </div>
           </div>
         </div>
@@ -414,8 +428,8 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
                     </svg>
                   </div>
                   <div className="text-left">
-                    <div className="text-2xl font-bold text-gray-900">{nearbyRestaurants.length}</div>
-                    <div className="text-sm text-gray-600">Restaurants Found</div>
+                    <div className="text-2xl font-bold text-gray-900">Near You</div>
+                    <div className="text-sm text-gray-600">Top Restaurants</div>
                   </div>
                 </div>
                 
@@ -445,14 +459,6 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
               </div>
             </div>
             
-            {/* Mobile Summary */}
-            <div className="sm:hidden mb-4 text-center">
-              <div className="inline-flex items-center bg-white rounded-full px-4 py-2 shadow-md">
-                <span className="text-sm font-medium text-gray-700">
-                  {nearbyRestaurants.length} restaurant{nearbyRestaurants.length !== 1 ? 's' : ''} found
-                </span>
-              </div>
-            </div>
 
             {/* Restaurant Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
@@ -583,8 +589,8 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
 
       {/* Bottom Action Bar - Hidden when modals are open */}
       {!isModalOpen && (
-        <div className="bg-white border-t shadow-lg fixed bottom-0 left-0 right-0 z-10">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="bg-white border-t shadow-lg fixed bottom-16 sm:bottom-0 left-0 right-0 z-10 pb-safe">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
             <div className="flex flex-wrap items-center gap-2 sm:gap-4">
               {/* Current Filters Display */}

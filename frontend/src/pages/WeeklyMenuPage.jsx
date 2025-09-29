@@ -442,10 +442,25 @@ const WeeklyMenuPage = () => {
               </button>
               <button
                 onClick={() => navigate('/subscription')}
-                className="w-full text-left p-3 rounded-lg border border-gray-200 hover:border-grub-red hover:bg-red-50 transition-colors duration-200"
+                className="w-full text-left p-3 rounded-lg bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 border-2 border-red-500 relative overflow-hidden"
               >
-                <div className="font-medium text-gray-900">Subscribe to Plan</div>
-                <div className="text-sm text-gray-600">Get regular deliveries</div>
+                {/* Highlight badge */}
+                <div className="absolute top-2 right-2 bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold shadow-md">
+                  NEXT STEP
+                </div>
+                
+                {/* Animated background effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                
+                <div className="relative z-10">
+                  <div className="font-bold text-white flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                    </svg>
+                    Subscribe to Plan
+                  </div>
+                  <div className="text-sm text-red-100 mt-1">Complete your meal planning journey</div>
+                </div>
               </button>
             </div>
           </div>

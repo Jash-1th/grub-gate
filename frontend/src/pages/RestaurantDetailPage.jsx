@@ -15,10 +15,8 @@ import PreferencesSelector from '../components/restaurant/PreferencesSelector';
 import MenuItemsGrid from '../components/restaurant/MenuItemsGrid';
 import ItemDetailsModal from '../components/restaurant/ItemDetailsModal';
 import ProUserFeatures from '../components/restaurant/ProUserFeatures';
-import ProFeaturesPanel from '../components/restaurant/ProFeaturesPanel';
 import FloatingPreferencesButton from '../components/restaurant/FloatingPreferencesButton';
 import NextStepButton from '../components/restaurant/NextStepButton';
-import WeeklyPlanSummary from '../components/restaurant/WeeklyPlanSummary';
 import UserTypeSelectionModal from '../components/shared/UserTypeSelectionModal';
 
 const RestaurantDetailPage = () => {
@@ -63,7 +61,7 @@ const RestaurantDetailPage = () => {
   const [showItemDetails, setShowItemDetails] = useState(false);
 
   // Meal plan context
-  const { addItemToPlan, mealPlan } = useMealPlan();
+  const { addItemToPlan, removeItemFromPlan, getMealItems, mealPlan } = useMealPlan();
   
   // Toast context
   const { showMealPlanSuccess } = useToast();
@@ -186,6 +184,19 @@ const RestaurantDetailPage = () => {
   const handleItemClick = (item) => {
     setSelectedDetailItem(item);
     setShowItemDetails(true);
+  };
+
+  // Handle remove from plan
+  const handleRemoveFromPlan = (item) => {
+    // Find the meal plan item with matching item id
+    const mealItems = getMealItems(activeDay, selectedMealType);
+    const mealPlanItem = mealItems.find(mealItem => mealItem.id === item.id);
+    
+    if (mealPlanItem && mealPlanItem.planId) {
+      removeItemFromPlan(mealPlanItem.planId, activeDay, selectedMealType);
+    } else {
+      console.warn('Could not find meal plan item to remove:', item.id);
+    }
   };
 
   // Handle close item details
@@ -385,19 +396,9 @@ const RestaurantDetailPage = () => {
       {userType === 'normal' ? (
         // Normal User Experience
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-            {/* Weekly Plan Summary - Sidebar */}
-            <div className="lg:col-span-1 order-2 lg:order-1">
-              <div className="sticky top-20 sm:top-24 lg:top-28">
-                <WeeklyPlanSummary 
-                  restaurantId={restaurant.id}
-                  restaurantName={restaurant.name}
-                />
-              </div>
-            </div>
-
+          <div className="max-w-7xl mx-auto">
             {/* Weekly Menu Builder - Main Content */}
-            <div className="lg:col-span-3 order-1 lg:order-2">
+            <div>
               {/* Preferences Selector */}
               {hasSelectedUserType && (
                 <div className="mb-6" data-preferences-section>
@@ -425,6 +426,7 @@ const RestaurantDetailPage = () => {
                   selectedMealType={selectedMealType}
                   restaurantName={restaurant.name}
                   onItemClick={handleItemClick}
+                  onRemoveFromPlan={handleRemoveFromPlan}
                   isItemInPlan={isItemInPlan}
                   getItemPlanEntries={getItemPlanEntries}
                   title="Menu Items"
@@ -439,22 +441,9 @@ const RestaurantDetailPage = () => {
       ) : (
         // Pro User Experience
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Enhanced Plan Summary - Sidebar */}
-            <div className="lg:col-span-1 order-2 lg:order-1">
-              <div className="sticky top-20 sm:top-24 lg:top-28 space-y-6">
-                <WeeklyPlanSummary 
-                  restaurantId={restaurant.id}
-                  restaurantName={restaurant.name}
-                />
-                
-                {/* Pro Features Panel */}
-                <ProFeaturesPanel />
-              </div>
-            </div>
-
+          <div>
             {/* Enhanced Menu Builder - Main Content */}
-            <div className="lg:col-span-3 order-1 lg:order-2">
+            <div>
               {/* Pro Header */}
 
               {/* Preferences Selector for Pro Users */}
@@ -485,6 +474,7 @@ const RestaurantDetailPage = () => {
                 selectedMealType={selectedMealType}
                 restaurantName={restaurant.name}
                 onItemClick={handleItemClick}
+                onRemoveFromPlan={handleRemoveFromPlan}
                 isItemInPlan={isItemInPlan}
                 getItemPlanEntries={getItemPlanEntries}
                 title={`${selectedMealType === 'lunch' ? 'Lunch' : 'Dinner'} Planning`}
