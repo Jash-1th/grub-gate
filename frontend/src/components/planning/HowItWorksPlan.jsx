@@ -1,105 +1,135 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
-
-// Step Card Component with Animation
-const StepCard = ({ step, index }) => {
-  const { t } = useTranslation();
-  const [cardRef, isVisible] = useIntersectionObserver({ threshold: 0.1 });
-
-  // Icons for each step (using simple SVG icons for SSR safety)
-  const getStepIcon = (stepNumber) => {
-    switch (stepNumber) {
-      case 1:
-        return (
-          <svg className="w-12 h-12 mx-auto mb-4 text-grub-red" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-          </svg>
-        );
-      case 2:
-        return (
-          <svg className="w-12 h-12 mx-auto mb-4 text-grub-red" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
-          </svg>
-        );
-      case 3:
-        return (
-          <svg className="w-12 h-12 mx-auto mb-4 text-grub-red" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M9 11H7v6h2v-6zm4 0h-2v6h2v-6zm4 0h-2v6h2v-6zm2.5-9H18V1h-2v1H8V1H6v1H4.5C3.11 2 2 3.11 2 4.5v15C2 20.89 3.11 22 4.5 22h15c1.39 0 2.5-1.11 2.5-2.5v-15C22 3.11 20.89 2 19.5 2zM20 19.5c0 .28-.22.5-.5.5h-15c-.28 0-.5-.22-.5-.5v-15c0-.28.22-.5.5-.5h15c.28 0 .5.22.5.5v15z"/>
-          </svg>
-        );
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <div 
-      ref={cardRef} 
-      className={`bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 text-center group scroll-animate ${isVisible ? 'is-visible' : ''}`}
-    >
-      <div className="relative">
-        {/* Step Number Badge */}
-        <div className="absolute -top-4 -right-4 w-8 h-8 bg-grub-red text-white rounded-full flex items-center justify-center text-sm font-bold">
-          {index + 1}
-        </div>
-        
-        {/* Step Icon */}
-        {getStepIcon(index + 1)}
-        
-        {/* Step Content */}
-        <h3 className="text-xl font-bold text-gray-900 mb-4">
-          {t(`mealPlanning.howItWorks.steps.${step.id}.title`)}
-        </h3>
-        <p className="text-gray-600 leading-relaxed">
-          {t(`mealPlanning.howItWorks.steps.${step.id}.description`)}
-        </p>
-      </div>
-    </div>
-  );
-};
 
 const HowItWorksPlan = () => {
   const { t } = useTranslation();
-  const [sectionRef, isVisible] = useIntersectionObserver({ threshold: 0.1 });
 
-  // Static data for the steps - can be moved to backend later
-  const stepsData = [
-    { id: '1' }, // Personalize Your Taste
-    { id: '2' }, // Craft Your Schedule  
-    { id: '3' }  // Subscribe & Enjoy
+  const steps = [
+    {
+      id: 1,
+      title: 'Enter Your Location',
+      description: 'Tell us your postal code and dietary preferences to get personalized recommendations',
+      icon: '📍',
+      color: 'blue'
+    },
+    {
+      id: 2,
+      title: 'Browse Restaurants',
+      description: 'Discover amazing restaurants near you with detailed menus and ratings',
+      icon: '🍽️',
+      color: 'green'
+    },
+    {
+      id: 3,
+      title: 'Plan Your Week',
+      description: 'Select meals for each day of the week and create your perfect meal plan',
+      icon: '📅',
+      color: 'purple'
+    },
+    {
+      id: 4,
+      title: 'Enjoy Your Meals',
+      description: 'Follow your plan and enjoy delicious meals from your favorite restaurants',
+      icon: '😋',
+      color: 'red'
+    }
   ];
 
+  const getColorClasses = (color) => {
+    const colors = {
+      blue: {
+        bg: 'bg-blue-100',
+        text: 'text-blue-600',
+        border: 'border-blue-200'
+      },
+      green: {
+        bg: 'bg-green-100',
+        text: 'text-green-600',
+        border: 'border-green-200'
+      },
+      purple: {
+        bg: 'bg-purple-100',
+        text: 'text-purple-600',
+        border: 'border-purple-200'
+      },
+      red: {
+        bg: 'bg-red-100',
+        text: 'text-grub-red',
+        border: 'border-red-200'
+      }
+    };
+    return colors[color] || colors.blue;
+  };
+
   return (
-    <section className="py-16 lg:py-24 bg-gray-50">
+    <div className="py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div 
-          ref={sectionRef}
-          className={`text-center mb-16 scroll-animate ${isVisible ? 'is-visible' : ''}`}
-        >
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6" style={{ color: '#800020' }}>
-            {t('mealPlanning.howItWorks.title')}
+        <div className="text-center mb-16">
+          <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+            How It Works
           </h2>
-          <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
-            {t('mealPlanning.howItWorks.subtitle')}
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Planning your perfect week of meals is simple with GrubGate. Follow these easy steps to get started.
           </p>
         </div>
 
-        {/* Steps Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
-          {stepsData.map((step, index) => (
-            <StepCard key={step.id} step={step} index={index} />
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {steps.map((step, index) => {
+            const colors = getColorClasses(step.color);
+            
+            return (
+              <div key={step.id} className="relative">
+                {/* Connection Line */}
+                {index < steps.length - 1 && (
+                  <div className="hidden lg:block absolute top-16 left-full w-full h-0.5 bg-gray-200 transform translate-x-4 z-0">
+                    <div className="absolute right-0 top-1/2 transform translate-y-[-50%] translate-x-1">
+                      <svg className="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                )}
+
+                <div className="relative z-10 text-center">
+                  {/* Step Icon */}
+                  <div className={`w-32 h-32 mx-auto mb-6 ${colors.bg} ${colors.border} border-2 rounded-full flex items-center justify-center`}>
+                    <span className="text-4xl">{step.icon}</span>
+                  </div>
+
+                  {/* Step Number */}
+                  <div className={`inline-flex items-center justify-center w-8 h-8 ${colors.bg} ${colors.text} rounded-full font-bold text-sm mb-4`}>
+                    {step.id}
+                  </div>
+
+                  {/* Step Content */}
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                    {step.title}
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    {step.description}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        {/* Connecting Lines for Desktop */}
-        <div className="hidden md:block relative -mt-16 mb-8">
-          <div className="absolute top-1/2 left-1/3 w-1/3 h-0.5 bg-gradient-to-r from-grub-red/30 to-grub-red/30 transform -translate-y-1/2"></div>
-          <div className="absolute top-1/2 right-1/3 w-1/3 h-0.5 bg-gradient-to-r from-grub-red/30 to-grub-red/30 transform -translate-y-1/2"></div>
+        {/* Call to Action */}
+        <div className="text-center mt-16">
+          <div className="bg-gradient-to-r from-grub-red to-red-600 rounded-2xl p-8 text-white">
+            <h3 className="text-2xl font-bold mb-4">
+              Ready to Start Planning?
+            </h3>
+            <p className="text-red-100 mb-6 max-w-2xl mx-auto">
+              Join thousands of satisfied customers who have transformed their meal planning experience with GrubGate.
+            </p>
+            <button className="bg-white text-grub-red px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200">
+              Get Started Now
+            </button>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 

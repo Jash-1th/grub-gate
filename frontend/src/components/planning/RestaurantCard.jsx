@@ -1,11 +1,17 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const RestaurantCard = ({ restaurant, selectedPreferences = [] }) => {
+const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore }) => {
   const navigate = useNavigate();
   
   const handleExploreRestaurant = () => {
-    // Create URL with preferences as search parameters
+    // If custom onExplore handler is provided, use it
+    if (onExplore) {
+      onExplore(restaurant);
+      return;
+    }
+    
+    // Default behavior: Create URL with preferences as search parameters
     const searchParams = new URLSearchParams();
     if (selectedPreferences && selectedPreferences.length > 0) {
       searchParams.set('preferences', selectedPreferences.join(','));
@@ -67,7 +73,9 @@ const RestaurantCard = ({ restaurant, selectedPreferences = [] }) => {
             alt={restaurant.name}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             onError={(e) => {
+              console.log(`Failed to load image: ${restaurant.image}`);
               e.target.src = '/images/grub-gate-default-img.jpg';
+              e.target.onerror = null; // Prevent infinite loop if default image also fails
             }}
           />
           

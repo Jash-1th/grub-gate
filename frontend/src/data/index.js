@@ -1,5 +1,5 @@
 // Main data export file
-export { restaurants, featuredRestaurants, nearbyRestaurants } from './restaurants';
+export { unifiedRestaurants as restaurants, featuredRestaurants, nearbyRestaurants } from './unifiedRestaurants';
 export { testimonials, featuredTestimonials } from './testimonials';
 export { benefits, additionalFeatures } from './benefits';
 export { menuItems, getMenuItemsByRestaurant, getFeaturedMenuItems } from './menuItems';

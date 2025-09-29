@@ -1,6 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
+// Get icon for preference type
+const getPreferenceIcon = (preferenceId) => {
+  const icons = {
+    'vegetarian': '🥗',
+    'vegan': '🌱',
+    'gluten-free': '🌾',
+    'dairy-free': '🥛',
+    'keto': '🥑',
+    'halal': '🕌',
+    'kosher': '✡️',
+    'low-carb': '🥬',
+    'paleo': '🦴',
+    'spicy': '🌶️',
+    'organic': '🌿',
+    'pescatarian': '🐟'
+  };
+  return icons[preferenceId] || '🍽️';
+};
+
 // Food preference options data
 const foodPreferences = [
   { id: 'vegetarian', key: 'vegetarian' },
@@ -165,6 +184,7 @@ const PreferenceSelectionModal = ({
                     )}
                     
                     <div className="text-center">
+                      <div className="text-2xl mb-2">{getPreferenceIcon(preference.id)}</div>
                       <div className="text-sm font-medium text-gray-900 capitalize">
                         {preference.id.replace('-', ' ')}
                       </div>

@@ -2,15 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMealPlan } from '../contexts/MealPlanContext';
 import { useToast } from '../contexts/ToastContext';
+import { usePlanning } from '../contexts/PlanningContext';
 import { DAYS_OF_WEEK } from '../utils/filteringAlgorithms';
-import { restaurantData } from '../data/restaurantData';
+import { unifiedRestaurants } from '../data/unifiedRestaurants';
+import ItemDetailsModal from '../components/restaurant/ItemDetailsModal';
 
 const DayMealPlanPage = () => {
   const { day } = useParams();
   const navigate = useNavigate();
   const { mealPlan, removeItemFromPlan } = useMealPlan();
   const { showMealPlanSuccess } = useToast();
+  const { postalCode } = usePlanning();
   const [selectedMealType, setSelectedMealType] = useState('lunch');
+  
+  // State for item details modal
+  const [selectedDetailItem, setSelectedDetailItem] = useState(null);
+  const [showItemDetails, setShowItemDetails] = useState(false);
 
   const dayName = DAYS_OF_WEEK.find(d => d.id === day)?.name || day;
   const dayItems = mealPlan[day] || { lunch: [], dinner: [] };
@@ -47,13 +54,20 @@ const DayMealPlanPage = () => {
   };
 
   const handleAddMoreItems = () => {
-    // Navigate to restaurants page with day filter applied
-    navigate(`/restaurants?day=${day}&meal=${selectedMealType}`);
+    // Navigate to restaurants page with day, slot, and postal code filters applied
+    const postalParam = postalCode ? `&postal=${postalCode}` : '';
+    navigate(`/plan/restaurants?source=weekly-menu&day=${day}&slot=${selectedMealType}${postalParam}`);
+  };
+
+  const handleItemClick = (item) => {
+    // Show item details modal instead of navigating
+    setSelectedDetailItem(item);
+    setShowItemDetails(true);
   };
 
   const handleGoToRestaurant = (restaurantName) => {
     // Find restaurant by name and navigate to its detail page
-    const restaurant = restaurantData.find(r => r.name === restaurantName);
+    const restaurant = unifiedRestaurants.find(r => r.name === restaurantName);
     if (restaurant) {
       navigate(`/restaurant/${restaurant.id}?day=${day}&meal=${selectedMealType}`);
     }
@@ -94,15 +108,6 @@ const DayMealPlanPage = () => {
                 </div>
               </div>
             </div>
-            <button
-              onClick={handleAddMoreItems}
-              className="w-full bg-grub-red text-white px-4 py-2.5 rounded-lg font-semibold hover:bg-red-600 transition-colors duration-200 flex items-center justify-center space-x-2 text-sm"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              <span>Add More Items</span>
-            </button>
           </div>
 
           {/* Desktop Header */}
@@ -125,16 +130,6 @@ const DayMealPlanPage = () => {
                 </p>
               </div>
             </div>
-            
-            <button
-              onClick={handleAddMoreItems}
-              className="bg-grub-red text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-600 transition-colors duration-200 flex items-center space-x-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              <span>Add More Items</span>
-            </button>
           </div>
         </div>
       </div>
@@ -202,12 +197,26 @@ const DayMealPlanPage = () => {
               </div>
             </div>
 
+            {/* Add More Items Button */}
+            <div className="mb-6">
+              <button
+                onClick={handleAddMoreItems}
+                className="w-full bg-grub-red text-white px-4 py-3 rounded-lg font-semibold hover:bg-red-600 transition-colors duration-200 flex items-center justify-center space-x-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span>Add More {selectedMealType.charAt(0).toUpperCase() + selectedMealType.slice(1)} Items</span>
+              </button>
+            </div>
+
             {/* Items List */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {groupedItems.map((groupedItem) => (
                 <div 
                   key={`${groupedItem.id}-${selectedMealType}`}
-                  className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow duration-200 flex flex-col h-full"
+                  onClick={() => handleItemClick(groupedItem)}
+                  className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-200 flex flex-col h-full cursor-pointer hover:border-grub-red hover:scale-[1.02]"
                 >
                   <div className="p-6 flex flex-col flex-1">
                     {/* Quantity Badge */}
@@ -271,7 +280,10 @@ const DayMealPlanPage = () => {
                     <div className="mt-auto space-y-3">
                       {/* View Restaurant Button - Full Width */}
                       <button
-                        onClick={() => handleGoToRestaurant(groupedItem.restaurantName)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleGoToRestaurant(groupedItem.restaurantName);
+                        }}
                         className="w-full bg-blue-500 text-white py-2.5 px-4 rounded-lg font-medium hover:bg-blue-600 transition-colors duration-200 flex items-center justify-center space-x-2"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -284,7 +296,10 @@ const DayMealPlanPage = () => {
                       {groupedItem.quantity > 1 ? (
                         <div className="grid grid-cols-2 gap-2">
                           <button
-                            onClick={() => handleRemoveItem(groupedItem.items[0])}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveItem(groupedItem.items[0]);
+                            }}
                             className="bg-orange-500 text-white py-2.5 px-3 rounded-lg font-medium hover:bg-orange-600 transition-colors duration-200 flex items-center justify-center space-x-1.5 text-sm"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -293,7 +308,8 @@ const DayMealPlanPage = () => {
                             <span>Remove 1</span>
                           </button>
                           <button
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               // Remove all items of this type
                               groupedItem.items.forEach(item => handleRemoveItem(item));
                             }}
@@ -307,7 +323,10 @@ const DayMealPlanPage = () => {
                         </div>
                       ) : (
                         <button
-                          onClick={() => handleRemoveItem(groupedItem.items[0])}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveItem(groupedItem.items[0]);
+                          }}
                           className="w-full bg-red-500 text-white py-2.5 px-4 rounded-lg font-medium hover:bg-red-600 transition-colors duration-200 flex items-center justify-center space-x-2"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -331,7 +350,7 @@ const DayMealPlanPage = () => {
               </svg>
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              No {selectedMealType} planned yet
+              No {selectedMealType.charAt(0).toUpperCase() + selectedMealType.slice(1)} Items Yet
             </h3>
             <p className="text-gray-600 mb-6">
               Start building your {selectedMealType} plan by adding some delicious items.
@@ -348,8 +367,26 @@ const DayMealPlanPage = () => {
           </div>
         )}
       </div>
+      
+      {/* Item Details Modal */}
+      <ItemDetailsModal 
+        isOpen={showItemDetails}
+        item={selectedDetailItem}
+        userType="normal"
+        isFromMenuSelection={true}
+        hideAddButton={true}
+        onClose={() => {
+          setShowItemDetails(false);
+          setSelectedDetailItem(null);
+        }}
+        onAddToPlan={(item) => {
+          // Handle adding item to plan from modal if needed
+          setShowItemDetails(false);
+          setSelectedDetailItem(null);
+        }}
+      />
     </div>
-  );
+  )
 };
 
 export default DayMealPlanPage;
