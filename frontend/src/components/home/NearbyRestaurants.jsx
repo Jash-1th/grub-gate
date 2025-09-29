@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { nearbyRestaurants } from '../../data';
+import { nearbyRestaurants } from '../../data/unifiedRestaurants';
 import './NearbyRestaurants.css';
 
 // Use public path for SSR compatibility
@@ -39,6 +39,11 @@ const NearbyRestaurants = () => {
   // Navigation handler for Make Your Plan button
   const handleMakeYourPlan = () => {
     navigate('/plan');
+  };
+
+  // Navigation handler for restaurant card clicks
+  const handleRestaurantClick = (restaurantId) => {
+    navigate(`/restaurant/${restaurantId}`);
   };
   
   // Smooth auto-scroll animation using requestAnimationFrame
@@ -444,7 +449,10 @@ const NearbyRestaurants = () => {
               </div> */}
 
               <div className="mt-auto">
-                <button className="w-full bg-grub-red text-white py-2 px-4 rounded-lg font-semibold text-sm hover:bg-red-700 transition-colors duration-200">
+                <button 
+                  onClick={() => handleRestaurantClick(restaurant.id)}
+                  className="w-full bg-grub-red text-white py-2 px-4 rounded-lg font-semibold text-sm hover:bg-red-700 transition-colors duration-200"
+                >
                   {t('nearbyRestaurants.orderNow')}
                 </button>
               </div>
@@ -538,7 +546,10 @@ const NearbyRestaurants = () => {
                 ))}
               </div> */}
 
-              <button className="w-full mt-4 bg-grub-red text-white py-2 px-4 rounded-lg font-semibold hover:bg-red-700 transition-colors duration-200">
+              <button 
+                onClick={() => handleRestaurantClick(restaurant.id)}
+                className="w-full mt-4 bg-grub-red text-white py-2 px-4 rounded-lg font-semibold hover:bg-red-700 transition-colors duration-200"
+              >
                 {t('nearbyRestaurants.orderNow')}
               </button>
             </div>

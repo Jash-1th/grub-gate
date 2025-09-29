@@ -6,6 +6,7 @@ import i18n from './i18n';
 import { ModalProvider } from './context/ModalContext';
 import { MealPlanProvider } from './contexts/MealPlanContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { PlanningProvider } from './contexts/PlanningContext';
 import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
 import About from './pages/About';
@@ -13,9 +14,12 @@ import HowItWorks from './pages/HowItWorks';
 import Contact from './pages/Contact';
 import Faq from './pages/Faq';
 import MealPlanningPage from './pages/MealPlanningPage';
+import MealPlanningFlowPage from './pages/MealPlanningFlowPage';
+import WeeklyMenuPage from './pages/WeeklyMenuPage';
 import RestaurantDetailPage from './pages/RestaurantDetailPage';
 import DayMealPlanPage from './pages/DayMealPlanPage';
-import RestaurantsListPage from './pages/RestaurantsListPage';
+import SubscriptionPage from './pages/SubscriptionPage';
+import MenuSelectionStep from './components/planning/MenuSelectionStep';
 import LaunchScreen from './components/common/LaunchScreen';
 import ScrollToTop from './components/common/ScrollToTop';
 import { useScrollToTop } from './hooks/useScrollToTop';
@@ -112,7 +116,8 @@ function App({ initialized = true }) {
     <I18nextProvider i18n={i18n}>
       <ModalProvider>
         <MealPlanProvider>
-          <ToastProvider>
+          <PlanningProvider>
+            <ToastProvider>
             <div className="app-container">
           {/* Launch Screen - Only shown on first visit and after hydration */}
           {isClient && isFirstVisit && isLaunching && (
@@ -130,17 +135,23 @@ function App({ initialized = true }) {
                   <Route path="/how-it-works" element={<HowItWorks />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/faq" element={<Faq />} />
-                  <Route path="/plan" element={<MealPlanningPage />} />
+                  <Route path="/plan" element={<MealPlanningFlowPage />} />
+                  <Route path="/plan/:step" element={<MealPlanningFlowPage />} />
+                  <Route path="/meal-planning" element={<MealPlanningPage />} />
+                  <Route path="/weekly-menu" element={<WeeklyMenuPage />} />
+                  <Route path="/subscription" element={<SubscriptionPage />} />
                   <Route path="/restaurant/:id" element={<RestaurantDetailPage />} />
                   <Route path="/meal-plan/:day" element={<DayMealPlanPage />} />
-                  <Route path="/restaurants" element={<RestaurantsListPage />} />
+                  <Route path="/plan/restaurants" element={<MenuSelectionStep />} />
+                  <Route path="/restaurants/weekly-menu" element={<WeeklyMenuPage />} />
                   {/* Add more routes as needed */}
                 </Routes>
               </AnimatePresence>
             </Layout>
           </div>
         </div>
-          </ToastProvider>
+            </ToastProvider>
+          </PlanningProvider>
         </MealPlanProvider>
       </ModalProvider>
     </I18nextProvider>

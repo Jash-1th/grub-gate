@@ -1,171 +1,131 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import RestaurantCard from './RestaurantCard';
-import { getFilteredRestaurants } from '../../data/restaurantData';
 
-const RestaurantGrid = ({ postalCode, selectedPreferences }) => {
+const RestaurantGrid = ({ restaurants = [], postalCode = '' }) => {
+  const navigate = useNavigate();
   const { t } = useTranslation();
-  const [isClient, setIsClient] = useState(false);
-  const [displayedRestaurants, setDisplayedRestaurants] = useState([]);
 
-  // SSR Safety - only run on client side
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  // Memoized restaurant filtering
-  const filteredRestaurants = useMemo(() => {
-    if (!isClient) return [];
-    
-    return getFilteredRestaurants(postalCode, selectedPreferences);
-  }, [postalCode, selectedPreferences, isClient]);
-
-  // Update displayed restaurants when filters change
-  useEffect(() => {
-    if (isClient) {
-      setDisplayedRestaurants(filteredRestaurants);
-    }
-  }, [filteredRestaurants, isClient]);
-
-  // Get section title based on current filters
-  const getSectionTitle = () => {
-    if (postalCode && postalCode.length >= 3) {
-      if (selectedPreferences && selectedPreferences.length > 0) {
-        return `Restaurants near ${postalCode.toUpperCase()} matching your preferences`;
-      }
-      return `Restaurants near ${postalCode.toUpperCase()}`;
-    }
-    
-    if (selectedPreferences && selectedPreferences.length > 0) {
-      return 'Popular restaurants matching your preferences';
-    }
-    
-    return 'Popular restaurants in Montreal';
+  const handleRestaurantClick = (restaurant) => {
+    navigate(`/restaurant/${restaurant.id}`);
   };
 
-  const getSectionSubtitle = () => {
-    if (postalCode && postalCode.length >= 3) {
-      return 'Discover amazing restaurants in your area';
-    }
-    return 'Top-rated restaurants loved by our customers';
-  };
-
-  // Show loading state during SSR
-  if (!isClient) {
+  if (!restaurants || restaurants.length === 0) {
     return (
-      <section className="py-12 sm:py-16 lg:py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <div className="h-8 bg-gray-200 rounded-lg w-64 mx-auto mb-4 animate-pulse"></div>
-            <div className="h-4 bg-gray-200 rounded w-48 mx-auto animate-pulse"></div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {[...Array(8)].map((_, index) => (
-              <div key={index} className="bg-white rounded-xl shadow-lg overflow-hidden animate-pulse">
-                <div className="h-48 bg-gray-200"></div>
-                <div className="p-6">
-                  <div className="h-6 bg-gray-200 rounded mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                  <div className="h-4 bg-gray-200 rounded mb-4"></div>
-                  <div className="h-10 bg-gray-200 rounded"></div>
-                </div>
-              </div>
-            ))}
+      <div className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="bg-white rounded-xl shadow-lg p-12">
+            <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+              <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              No restaurants found
+            </h3>
+            <p className="text-gray-600">
+              We couldn't find any restaurants in your area. Try expanding your search radius.
+            </p>
           </div>
         </div>
-      </section>
+      </div>
     );
   }
 
   return (
-    <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-red-100 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-40 h-40 bg-orange-100 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse delay-1000"></div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Section Header */}
-        <div className="text-center mb-12 sm:mb-16">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">
-            {getSectionTitle()}
+    <div className="py-16 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+            Restaurants Near You
           </h2>
-          <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            {getSectionSubtitle()}
-          </p>
-          
-          {/* Filter indicators */}
-          {(postalCode || (selectedPreferences && selectedPreferences.length > 0)) && (
-            <div className="flex flex-wrap justify-center gap-2 mt-6">
-              {postalCode && postalCode.length >= 3 && (
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  {postalCode.toUpperCase()}
-                </span>
-              )}
-              {selectedPreferences && selectedPreferences.map((preference, index) => (
-                <span key={index} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 capitalize">
-                  {preference.replace('-', ' ')}
-                </span>
-              ))}
-            </div>
+          {postalCode && (
+            <p className="text-xl text-gray-600">
+              Showing restaurants near <span className="font-semibold text-grub-red">{postalCode}</span>
+            </p>
           )}
         </div>
 
-        {/* Restaurant Grid */}
-        {displayedRestaurants.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
-            {displayedRestaurants.map((restaurant) => (
-              <RestaurantCard 
-                key={restaurant.id} 
-                restaurant={restaurant} 
-                selectedPreferences={selectedPreferences}
-              />
-            ))}
-          </div>
-        ) : (
-          /* No restaurants found */
-          <div className="text-center py-16">
-            <div className="max-w-md mx-auto">
-              <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-                <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+          {restaurants.map((restaurant) => (
+            <div
+              key={restaurant.id}
+              onClick={() => handleRestaurantClick(restaurant)}
+              className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-200 cursor-pointer transform hover:scale-105"
+            >
+              {/* Restaurant Image */}
+              <div className="relative h-48 overflow-hidden">
+                <img
+                  src={restaurant.image || '/images/grub-gate-default-img.jpg'}
+                  alt={restaurant.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.src = '/images/grub-gate-default-img.jpg';
+                  }}
+                />
+                <div className="absolute top-4 right-4 bg-white bg-opacity-90 rounded-full px-2 py-1 flex items-center space-x-1">
+                  <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  <span className="text-sm font-medium text-gray-900">{restaurant.rating}</span>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No restaurants found</h3>
-              <p className="text-gray-600 mb-6">
-                We couldn't find any restaurants matching your criteria. Try adjusting your location or preferences.
-              </p>
-              <button 
-                onClick={() => window.location.reload()}
-                className="inline-flex items-center px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-300"
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Refresh
-              </button>
-            </div>
-          </div>
-        )}
 
-        {/* Show more button if there are many results */}
-        {displayedRestaurants.length >= 8 && (
-          <div className="text-center mt-12">
-            <button className="inline-flex items-center px-8 py-4 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-xl border-2 border-gray-200 hover:border-gray-300 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl">
-              <span>View More Restaurants</span>
-              <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-          </div>
-        )}
+              {/* Restaurant Info */}
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">
+                  {restaurant.name}
+                </h3>
+                
+                <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                  {restaurant.description || restaurant.cuisine || 'Delicious food awaits you'}
+                </p>
+
+                <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                  <span className="flex items-center space-x-1">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>{restaurant.distance || '0.5 km'}</span>
+                  </span>
+                  <span className="flex items-center space-x-1">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{restaurant.deliveryTime || '25-35 min'}</span>
+                  </span>
+                </div>
+
+                {/* Cuisine Tags */}
+                {restaurant.cuisines && restaurant.cuisines.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-4">
+                    {restaurant.cuisines.slice(0, 2).map((cuisine, index) => (
+                      <span
+                        key={index}
+                        className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs"
+                      >
+                        {cuisine}
+                      </span>
+                    ))}
+                    {restaurant.cuisines.length > 2 && (
+                      <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">
+                        +{restaurant.cuisines.length - 2} more
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Action Button */}
+                <button className="w-full bg-grub-red text-white py-2.5 px-4 rounded-lg font-medium hover:bg-red-600 transition-colors duration-200">
+                  View Menu
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-    </section>
+    </div>
   );
 };
 

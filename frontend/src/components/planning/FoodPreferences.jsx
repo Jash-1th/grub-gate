@@ -1,294 +1,109 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 
-// Food preference options data - can be moved to backend later
-const foodPreferences = [
-  {
-    id: 'vegetarian',
-    key: 'vegetarian'
-  },
-  {
-    id: 'vegan',
-    key: 'vegan'
-  },
-  {
-    id: 'gluten-free',
-    key: 'glutenFree'
-  },
-  {
-    id: 'dairy-free',
-    key: 'dairyFree'
-  },
-  {
-    id: 'keto',
-    key: 'keto'
-  },
-  {
-    id: 'halal',
-    key: 'halal'
-  },
-  {
-    id: 'kosher',
-    key: 'kosher'
-  },
-  {
-    id: 'low-carb',
-    key: 'lowCarb'
-  },
-  {
-    id: 'paleo',
-    key: 'paleo'
-  },
-  {
-    id: 'spicy',
-    key: 'spicy'
-  },
-  {
-    id: 'organic',
-    key: 'organic'
-  },
-  {
-    id: 'sugar-free',
-    key: 'sugarFree'
-  },
-  {
-    id: 'nut-free',
-    key: 'nutFree'
-  },
-  {
-    id: 'soy-free',
-    key: 'soyFree'
-  },
-  {
-    id: 'raw-food',
-    key: 'rawFood'
-  },
-  {
-    id: 'mediterranean',
-    key: 'mediterranean'
-  },
-  {
-    id: 'low-sodium',
-    key: 'lowSodium'
-  },
-  {
-    id: 'high-protein',
-    key: 'highProtein'
-  },
-  {
-    id: 'whole30',
-    key: 'whole30'
-  },
-  {
-    id: 'pescatarian',
-    key: 'pescatarian'
-  }
-];
-
-// Individual preference option component
-const PreferenceOption = ({ preference, isSelected, onToggle }) => {
+const FoodPreferences = ({ selectedPreferences = [], onPreferencesChange }) => {
   const { t } = useTranslation();
 
-  return (
-    <button
-      onClick={() => onToggle(preference.id)}
-      className={`
-        inline-flex items-center justify-center px-4 py-2 rounded-lg border-2
-        hover:scale-105 focus:outline-none whitespace-nowrap
-        transition-transform duration-300
-        ${isSelected 
-          ? 'border-grub-red bg-grub-red text-white shadow-lg' 
-          : 'border-gray-300 bg-white text-gray-700 hover:border-grub-red hover:bg-grub-red/5 hover:shadow-sm focus:border-gray-400'
-        }
-      `}
-      aria-pressed={isSelected}
-      aria-label={t(`mealPlanning.preferences.options.${preference.key}.label`)}
-    >
-      <span className="text-sm font-medium">
-        {t(`mealPlanning.preferences.options.${preference.key}.name`)}
-      </span>
-    </button>
-  );
-};
-
-const FoodPreferences = ({ onPreferencesChange }) => {
-  const { t } = useTranslation();
-  const [selectedPreferences, setSelectedPreferences] = useState([]);
-  const [sectionRef, isVisible] = useIntersectionObserver({ threshold: 0.1 });
-  const scrollContainerRef = useRef(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+  const preferences = [
+    { id: 'vegetarian', name: 'Vegetarian', icon: '🥗', description: 'No meat, fish, or poultry' },
+    { id: 'vegan', name: 'Vegan', icon: '🌱', description: 'No animal products' },
+    { id: 'gluten-free', name: 'Gluten Free', icon: '🌾', description: 'No wheat, barley, or rye' },
+    { id: 'dairy-free', name: 'Dairy Free', icon: '🥛', description: 'No milk or dairy products' },
+    { id: 'keto', name: 'Keto', icon: '🥑', description: 'Low carb, high fat' },
+    { id: 'halal', name: 'Halal', icon: '🕌', description: 'Islamic dietary laws' },
+    { id: 'kosher', name: 'Kosher', icon: '✡️', description: 'Jewish dietary laws' },
+    { id: 'paleo', name: 'Paleo', icon: '🦴', description: 'Stone age diet' },
+    { id: 'low-sodium', name: 'Low Sodium', icon: '🧂', description: 'Reduced salt content' },
+    { id: 'nut-free', name: 'Nut Free', icon: '🥜', description: 'No nuts or nut products' }
+  ];
 
   const handlePreferenceToggle = (preferenceId) => {
-    setSelectedPreferences(prev => {
-      const newPreferences = prev.includes(preferenceId)
-        ? prev.filter(id => id !== preferenceId)
-        : [...prev, preferenceId];
-      
-      // Notify parent component of preference changes
-      if (onPreferencesChange) {
-        onPreferencesChange(newPreferences);
-      }
-      
-      return newPreferences;
-    });
-  };
-
-  const clearAllPreferences = () => {
-    setSelectedPreferences([]);
-    // Notify parent component of cleared preferences
+    const newPreferences = selectedPreferences.includes(preferenceId)
+      ? selectedPreferences.filter(p => p !== preferenceId)
+      : [...selectedPreferences, preferenceId];
+    
     if (onPreferencesChange) {
-      onPreferencesChange([]);
+      onPreferencesChange(newPreferences);
     }
   };
-
-  const checkScrollButtons = () => {
-    if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
-    }
-  };
-
-  const scrollLeft = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({
-        left: -200,
-        behavior: 'smooth'
-      });
-      setTimeout(checkScrollButtons, 300);
-    }
-  };
-
-  const scrollRight = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({
-        left: 200,
-        behavior: 'smooth'
-      });
-      setTimeout(checkScrollButtons, 300);
-    }
-  };
-
-  React.useEffect(() => {
-    checkScrollButtons();
-    const handleResize = () => checkScrollButtons();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   return (
-    <section className="py-12 bg-white border-b border-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div 
-          ref={sectionRef}
-          className={`scroll-animate ${isVisible ? 'is-visible' : ''}`}
-        >
-          {/* Section Header */}
-          <div className="text-center mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
-              {t('mealPlanning.preferences.title')}
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              {t('mealPlanning.preferences.subtitle')}
-            </p>
-          </div>
+    <div className="py-16 bg-white">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+            Dietary Preferences
+          </h2>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Select your dietary preferences to get personalized restaurant recommendations
+          </p>
+        </div>
 
-          {/* Preferences Horizontal Scroll */}
-          <div className="relative mb-6">
-            {/* Left Arrow */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {preferences.map((preference) => (
             <button
-              onClick={scrollLeft}
-              className={`absolute left-0 top-1/2 transform -translate-y-1/2 z-10 w-12 h-12 rounded-full shadow-xl border-2 flex items-center justify-center transition-all duration-300 ${
-                canScrollLeft 
-                  ? 'bg-grub-red border-grub-red text-white hover:bg-red-600 hover:border-red-600 hover:shadow-2xl hover:scale-110' 
-                  : 'bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed text-gray-400'
+              key={preference.id}
+              onClick={() => handlePreferenceToggle(preference.id)}
+              className={`p-6 rounded-xl border-2 transition-all duration-200 text-left hover:shadow-lg transform hover:scale-105 ${
+                selectedPreferences.includes(preference.id)
+                  ? 'border-grub-red bg-red-50 shadow-md'
+                  : 'border-gray-200 bg-white hover:border-gray-300'
               }`}
-              disabled={!canScrollLeft}
-              aria-label="Scroll left"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-
-            {/* Scrollable Container */}
-            <div 
-              ref={scrollContainerRef}
-              className="flex gap-3 overflow-x-auto scrollbar-hide px-12"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-              onScroll={checkScrollButtons}
-            >
-              {foodPreferences.map((preference) => (
-                <div key={preference.id} className="flex-shrink-0">
-                  <PreferenceOption
-                    preference={preference}
-                    isSelected={selectedPreferences.includes(preference.id)}
-                    onToggle={handlePreferenceToggle}
-                  />
+              <div className="flex items-start space-x-4">
+                <span className="text-3xl">{preference.icon}</span>
+                <div className="flex-1">
+                  <h3 className={`text-lg font-semibold mb-2 ${
+                    selectedPreferences.includes(preference.id)
+                      ? 'text-grub-red'
+                      : 'text-gray-900'
+                  }`}>
+                    {preference.name}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {preference.description}
+                  </p>
                 </div>
-              ))}
-            </div>
-
-            {/* Right Arrow */}
-            <button
-              onClick={scrollRight}
-              className={`absolute right-0 top-1/2 transform -translate-y-1/2 z-10 w-12 h-12 rounded-full shadow-xl border-2 flex items-center justify-center transition-all duration-300 ${
-                canScrollRight 
-                  ? 'bg-grub-red border-grub-red text-white hover:bg-red-600 hover:border-red-600 hover:shadow-2xl hover:scale-110' 
-                  : 'bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed text-gray-400'
-              }`}
-              disabled={!canScrollRight}
-              aria-label="Scroll right"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-              </svg>
+                {selectedPreferences.includes(preference.id) && (
+                  <div className="flex-shrink-0">
+                    <svg className="w-6 h-6 text-grub-red" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+              </div>
             </button>
-          </div>
+          ))}
+        </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            {selectedPreferences.length > 0 && (
-              <button
-                onClick={clearAllPreferences}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 hover:text-gray-900 text-sm font-medium rounded-lg border border-gray-300 hover:border-gray-400 transition-all duration-200 hover:shadow-md active:scale-95"
-              >
-                {t('mealPlanning.preferences.clearAll')}
-              </button>
-            )}
-            
-            <div className="text-sm text-gray-500">
-              {selectedPreferences.length > 0 ? (
-                t('mealPlanning.preferences.selectedCount', { count: selectedPreferences.length })
-              ) : (
-                t('mealPlanning.preferences.selectPrompt')
-              )}
-            </div>
-          </div>
-
-          {/* Selected Preferences Summary (for mobile) */}
-          {selectedPreferences.length > 0 && (
-            <div className="mt-6 p-4 bg-grub-red/5 rounded-lg border border-grub-red/20 sm:hidden">
-              <h3 className="text-sm font-semibold text-grub-red mb-2">
-                {t('mealPlanning.preferences.selectedTitle')}:
+        {selectedPreferences.length > 0 && (
+          <div className="mt-12 p-6 bg-green-50 border border-green-200 rounded-xl">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-green-800 mb-2">
+                Great! You've selected {selectedPreferences.length} preference{selectedPreferences.length !== 1 ? 's' : ''}
               </h3>
-              <div className="flex flex-wrap gap-2">
-                {selectedPreferences.map(prefId => {
-                  const pref = foodPreferences.find(p => p.id === prefId);
-                  return (
-                    <span key={prefId} className="inline-flex items-center px-2 py-1 bg-white rounded-md text-xs">
-                      {t(`mealPlanning.preferences.options.${pref?.key}.name`)}
+              <p className="text-green-700">
+                We'll use these to recommend the best restaurants and dishes for you
+              </p>
+              <div className="flex flex-wrap justify-center gap-2 mt-4">
+                {selectedPreferences.map((prefId) => {
+                  const pref = preferences.find(p => p.id === prefId);
+                  return pref ? (
+                    <span
+                      key={prefId}
+                      className="inline-flex items-center space-x-1 bg-white border border-green-300 rounded-full px-3 py-1 text-sm text-green-800"
+                    >
+                      <span>{pref.icon}</span>
+                      <span>{pref.name}</span>
                     </span>
-                  );
+                  ) : null;
                 })}
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
-    </section>
+    </div>
   );
 };
 

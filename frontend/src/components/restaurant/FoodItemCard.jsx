@@ -1,12 +1,25 @@
 import React from 'react';
 import { useMealPlan } from '../../contexts/MealPlanContext';
 
-const FoodItemCard = ({ item, onAddToPlan, selectedDay, selectedMealType, restaurantName }) => {
-  const { getItemQuantityInPlan, isItemInPlan } = useMealPlan();
+const FoodItemCard = ({ 
+  item, 
+  onAddToPlan, 
+  selectedDay, 
+  selectedMealType, 
+  restaurantName, 
+  showClickHint = false,
+  hideAddButton = false,
+  isInPlan = false,
+  planEntries = []
+}) => {
+  const { getItemQuantityInPlan, isItemInPlan: checkItemInPlan } = useMealPlan();
   
-  // Get current quantity of this item in the meal plan
+  // Get current quantity of this item in the meal plan for specific day/meal
   const currentQuantity = getItemQuantityInPlan(item.id, selectedDay, selectedMealType);
-  const isInPlan = isItemInPlan(item.id, selectedDay, selectedMealType);
+  const isInSpecificSlot = checkItemInPlan(item.id, selectedDay, selectedMealType);
+  
+  // Use passed props for general meal plan status
+  const itemIsInPlan = isInPlan || isInSpecificSlot;
   const renderStars = (rating) => {
     const stars = [];
     const fullStars = Math.floor(rating);
@@ -47,12 +60,24 @@ const FoodItemCard = ({ item, onAddToPlan, selectedDay, selectedMealType, restau
   };
 
   return (
-    <div className="group relative bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border border-gray-100">
+    <div className="group relative bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border border-gray-100 h-full flex flex-col">
       {/* Popular Badge */}
       {item.isPopular && (
         <div className="absolute top-2 left-2 z-10">
           <span className="px-2 py-1 bg-red-500 text-white text-xs font-semibold rounded-full shadow-lg">
             Popular
+          </span>
+        </div>
+      )}
+
+      {/* Already Added Badge */}
+      {itemIsInPlan && (
+        <div className={`absolute top-2 z-10 ${item.isPopular ? 'right-2' : 'left-2'}`}>
+          <span className="px-2 py-1 bg-green-500 text-white text-xs font-semibold rounded-full shadow-lg flex items-center space-x-1">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <span>Added</span>
           </span>
         </div>
       )}
@@ -71,7 +96,7 @@ const FoodItemCard = ({ item, onAddToPlan, selectedDay, selectedMealType, restau
       </div>
       
       {/* Food Info */}
-      <div className="p-3 sm:p-4">
+      <div className="p-3 sm:p-4 flex-1 flex flex-col">
         <div className="mb-2">
           <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 group-hover:text-red-600 transition-colors duration-300 line-clamp-1">
             {item.name}
@@ -100,7 +125,7 @@ const FoodItemCard = ({ item, onAddToPlan, selectedDay, selectedMealType, restau
         
         {/* Preferences Tags */}
         <div className="flex flex-wrap gap-1 mb-3">
-          {item.preferences.slice(0, 2).map((preference, index) => (
+          {(item.dietaryPreferences || item.preferences || []).slice(0, 2).map((preference, index) => (
             <span
               key={index}
               className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full capitalize whitespace-nowrap"
@@ -108,54 +133,82 @@ const FoodItemCard = ({ item, onAddToPlan, selectedDay, selectedMealType, restau
               {preference.replace('-', ' ')}
             </span>
           ))}
-          {item.preferences.length > 2 && (
+          {(item.dietaryPreferences || item.preferences || []).length > 2 && (
             <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full whitespace-nowrap">
-              +{item.preferences.length - 2}
+              +{(item.dietaryPreferences || item.preferences || []).length - 2}
             </span>
           )}
         </div>
         
-        {/* Quantity Badge */}
-        {isInPlan && (
+        {/* Meal Plan Status */}
+        {itemIsInPlan && planEntries.length > 0 && (
+          <div className="mb-3">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-xs font-medium text-green-800">
+                    In your meal plan
+                  </span>
+                </div>
+                <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                  {currentQuantity} in this slot
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1 mt-2">
+                {planEntries.slice(0, 2).map((entry, index) => (
+                  <span key={index} className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
+                    {entry.day.charAt(0).toUpperCase() + entry.day.slice(1)} {entry.mealType}
+                  </span>
+                ))}
+                {planEntries.length > 2 && (
+                  <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
+                    +{planEntries.length - 2} more
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Specific Slot Quantity Badge (for pro users) */}
+        {isInSpecificSlot && currentQuantity > 0 && (
           <div className="mb-3 flex items-center justify-center">
-            <div className="bg-green-100 border-2 border-green-300 rounded-lg px-2 py-1.5 flex items-center space-x-1">
-              <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-blue-100 border-2 border-blue-300 rounded-lg px-2 py-1.5 flex items-center space-x-1">
+              <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="text-green-700 font-semibold text-xs">
-                {currentQuantity} in plan
+              <span className="text-blue-700 font-semibold text-xs">
+                {currentQuantity} in this slot
               </span>
             </div>
           </div>
         )}
 
-        {/* Add to Plan Button */}
-        <button 
-          onClick={() => onAddToPlan && onAddToPlan(item, restaurantName)}
-          className={`w-full font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-lg hover:shadow-xl text-sm ${
-            isInPlan 
-              ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white focus:ring-green-500' 
-              : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white focus:ring-blue-500'
-          }`}
-        >
-          <div className="flex items-center justify-center space-x-1.5">
-            {isInPlan ? (
-              <>
-                <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                <span className="whitespace-nowrap">Add Another</span>
-              </>
-            ) : (
-              <>
-                <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span className="whitespace-nowrap">Add to Plan</span>
-              </>
-            )}
+        {/* Flexible spacer to push button to bottom */}
+        <div className="flex-1"></div>
+
+        {/* View Details Button */}
+        {!hideAddButton && (
+          <button 
+            onClick={() => onAddToPlan && onAddToPlan(item, restaurantName)}
+            className="w-full font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-lg hover:shadow-xl text-sm bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white focus:ring-green-500 touch-manipulation active:scale-95"
+          >
+            <div className="flex items-center justify-center space-x-1.5">
+              <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              <span className="whitespace-nowrap">View Details</span>
+            </div>
+          </button>
+        )}
+
+        {/* Click Hint for Normal Users */}
+        {showClickHint && hideAddButton && (
+          <div className="text-center py-2">
+            <span className="text-xs text-gray-500 italic">Click to view details</span>
           </div>
-        </button>
+        )}
       </div>
       
       {/* Shimmer effect */}
