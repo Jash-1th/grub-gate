@@ -396,70 +396,6 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Show Restaurant Grid for both cases, but with different titles and context */}
         <div>
-            <div className="text-center mb-6 sm:mb-8 lg:mb-12">
-              <div className="inline-flex items-center bg-grub-red text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full mb-4 sm:mb-6 text-sm sm:text-base">
-                <svg className="w-4 h-4 sm:w-6 sm:h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-                <span className="font-semibold">Top Rated Restaurants</span>
-              </div>
-              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-3 sm:mb-4 px-2 sm:px-0">
-                {isFromPlan 
-                  ? 'Discover Amazing Restaurants'
-                  : `Restaurants for ${capitalizeFirst(day)}'s ${capitalizeFirst(slot)}`
-                }
-              </h2>
-              <p className="text-sm sm:text-base lg:text-xl text-gray-600 max-w-2xl mx-auto px-4 sm:px-0">
-                {isFromPlan 
-                  ? 'Choose from these highly-rated restaurants in your area, sorted by customer reviews and popularity'
-                  : `Find the perfect restaurant for your ${slot} on ${capitalizeFirst(day)}. All restaurants below offer ${slot} options.`
-                }
-              </p>
-            </div>
-
-            {/* Stats Bar - Hidden on mobile, compact on larger screens */}
-            <div className="hidden sm:block bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
-              <div className="grid grid-cols-3 gap-4 sm:gap-6 text-center">
-                <div className="flex items-center justify-center space-x-3">
-                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </div>
-                  <div className="text-left">
-                    <div className="text-2xl font-bold text-gray-900">Near You</div>
-                    <div className="text-sm text-gray-600">Top Restaurants</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-center space-x-3">
-                  <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  </div>
-                  <div className="text-left">
-                    <div className="text-2xl font-bold text-gray-900">4.5+</div>
-                    <div className="text-sm text-gray-600">Average Rating</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-center space-x-3">
-                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <div className="text-left">
-                    <div className="text-2xl font-bold text-gray-900">Weekly</div>
-                    <div className="text-sm text-gray-600">Meal Plans</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-
             {/* Restaurant Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
               {nearbyRestaurants.map((restaurant) => (
@@ -591,61 +527,18 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
       {!isModalOpen && (
         <div className="bg-white border-t shadow-lg fixed bottom-16 sm:bottom-0 left-0 right-0 z-10 pb-safe">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
-            <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-              {/* Current Filters Display */}
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">Current selection:</span>
-                {postalCode && (
-                  <button 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      console.log('Postal code badge clicked!'); // Debug log
-                      // Navigate back to location selection
-                      navigate('/plan');
-                    }}
-                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 hover:text-blue-900 transition-all duration-200 cursor-pointer border border-blue-300 hover:border-blue-400 shadow-sm hover:shadow-md"
-                    title="Click to change location"
-                  >
-                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    </svg>
-                    {postalCode.toUpperCase()}
-                    <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                  </button>
-                )}
-                <button 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Day/Slot badge clicked!'); // Debug log
-                    // Navigate back to weekly menu for the selected day
-                    navigate(`/weekly-menu?day=${day}&highlight=${slot}`);
-                  }}
-                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 hover:text-purple-900 transition-all duration-200 cursor-pointer border border-purple-300 hover:border-purple-400 shadow-sm hover:shadow-md"
-                  title="Click to go back to weekly menu"
-                >
-                  <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  {capitalizeFirst(day)} {capitalizeFirst(slot)}
-                  <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </button>
-                {userType === 'pro' && (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                    Pro User
-                  </span>
-                )}
-              </div>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* Left side - Optional summary or info */}
+            <div className="hidden lg:flex items-center text-sm text-gray-600">
+              <svg className="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Ready to continue your meal planning journey</span>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
+            {/* Action Buttons - Enhanced desktop layout */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 lg:gap-4 w-full sm:w-auto">
+              {/* Change Location Button - Secondary style */}
               <button
                 onClick={(e) => {
                   e.preventDefault();
@@ -654,13 +547,15 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
                   // Navigate back to location selection
                   navigate('/plan');
                 }}
-                className="px-4 sm:px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base"
+                className="group px-4 sm:px-6 lg:px-8 py-2.5 lg:py-3 border-2 border-gray-300 text-gray-700 font-medium rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base lg:min-w-[160px] shadow-sm hover:shadow-md"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                <span>Change Location</span>
+                <span className="font-semibold">Change Location</span>
               </button>
+
+              {/* Continue Button - Primary style with enhanced desktop design */}
               <button
                 onClick={(e) => {
                   e.preventDefault();
@@ -669,11 +564,16 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
                   // Navigate to weekly menu to see the meal planning calendar
                   navigate('/weekly-menu');
                 }}
-                className="px-6 sm:px-8 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-lg transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 text-sm sm:text-base"
+                className="group relative px-6 sm:px-8 lg:px-10 py-2.5 lg:py-3 bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-700 hover:via-red-700 hover:to-red-800 text-white font-bold rounded-xl transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 text-sm sm:text-base lg:min-w-[220px] overflow-hidden"
               >
-                <span className="hidden sm:inline">Continue to Subscription Plans</span>
-                <span className="sm:hidden">Continue</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {/* Subtle shine effect for desktop */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700 hidden lg:block"></div>
+                
+                <span className="relative z-10">
+                  <span className="hidden sm:inline">Continue to Subscription Plans</span>
+                  <span className="sm:hidden">Continue</span>
+                </span>
+                <svg className="relative z-10 w-4 h-4 lg:w-5 lg:h-5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m0-7H3" />
                 </svg>
               </button>

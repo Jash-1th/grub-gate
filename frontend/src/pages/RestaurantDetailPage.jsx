@@ -164,13 +164,7 @@ const RestaurantDetailPage = () => {
       showMealPlanSuccess(selectedItem.name, activeDay, selectedMealType, restaurant.name, selectedItem.price);
       setShowDayMealSelector(false);
       setSelectedItem(null);
-      // Scroll back to items section
-      setTimeout(() => {
-        const itemsSection = document.querySelector('[data-items-section]');
-        if (itemsSection) {
-          itemsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 500);
+      // Removed automatic scrolling to prevent unwanted scroll behavior
     }
   };
 
@@ -215,13 +209,7 @@ const RestaurantDetailPage = () => {
     setShowItemDetails(false);
     setSelectedDetailItem(null);
     
-    // Scroll back to items section
-    setTimeout(() => {
-      const itemsSection = document.querySelector('[data-items-section]');
-      if (itemsSection) {
-        itemsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 500);
+    // Removed automatic scrolling to prevent unwanted scroll behavior
   };
 
   // Handle user type selection
