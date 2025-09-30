@@ -102,10 +102,10 @@ const MealPlanSummary = ({ restaurantName }) => {
               </div>
 
               {/* Preferences */}
-              {item.preferences && item.preferences.length > 0 && (
+              {item.dietaryPreferences && item.dietaryPreferences.length > 0 && (
                 <div className="mb-3">
                   <div className="flex flex-wrap gap-1">
-                    {item.preferences.slice(0, 3).map((preference, index) => (
+                    {item.dietaryPreferences.slice(0, 3).map((preference, index) => (
                       <span
                         key={index}
                         className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs"
@@ -113,9 +113,9 @@ const MealPlanSummary = ({ restaurantName }) => {
                         {preference}
                       </span>
                     ))}
-                    {item.preferences.length > 3 && (
+                    {item.dietaryPreferences.length > 3 && (
                       <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs">
-                        +{item.preferences.length - 3} more
+                        +{item.dietaryPreferences.length - 3} more
                       </span>
                     )}
                   </div>

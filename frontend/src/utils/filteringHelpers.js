@@ -26,7 +26,7 @@ export const applyPreferenceFilter = (items, selectedPreferences) => {
   
   return items.filter(item => 
     selectedPreferences.some(preference => 
-      item.preferences && item.preferences.includes(preference)
+      item.dietaryPreferences && item.dietaryPreferences.includes(preference)
     )
   );
 };
@@ -80,13 +80,13 @@ export const separateItemsByPreferences = (items, selectedPreferences) => {
 
   const preferenceMatchedItems = items.filter(item =>
     selectedPreferences.some(preference =>
-      item.preferences && item.preferences.includes(preference)
+      item.dietaryPreferences && item.dietaryPreferences.includes(preference)
     )
   );
 
   const otherItems = items.filter(item =>
     !selectedPreferences.some(preference =>
-      item.preferences && item.preferences.includes(preference)
+      item.dietaryPreferences && item.dietaryPreferences.includes(preference)
     )
   );
 

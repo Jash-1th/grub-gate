@@ -44,7 +44,7 @@ export const sortItemsByPreferences = (items, userPreferences = []) => {
     
     // Count matching preferences
     userPreferences.forEach(userPref => {
-      if (item.preferences.includes(userPref)) {
+      if (item.dietaryPreferences && item.dietaryPreferences.includes(userPref)) {
         matchedPreferences++;
         score += 10; // Base score for each match
       }
@@ -91,7 +91,7 @@ export const groupItemsByPreferenceCategories = (items, userPreferences = []) =>
 
   items.forEach(item => {
     const hasMatchingPreference = userPreferences.some(pref => 
-      item.preferences.includes(pref)
+      item.dietaryPreferences && item.dietaryPreferences.includes(pref)
     );
     
     if (hasMatchingPreference) {
