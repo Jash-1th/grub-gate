@@ -2,7 +2,7 @@
 
 [build]
   # Build from root directory to install all workspace dependencies
-  command = "npm ci && npm run build"
+  command = "cd ../.. && npm ci && cd apps/customer-app && npm run build"
   
   # The directory with the static assets from the client build (relative to repo root)
   publish = "dist/client"
