@@ -1,0 +1,17 @@
+{
+  "name": "@grub-gate/locales",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./en": "./en.json",
+    "./fr": "./fr.json"
+  }
+}
+
+
+
+
+

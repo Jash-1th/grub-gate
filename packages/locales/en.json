@@ -1,0 +1,367 @@
+{
+  "common": {
+    "submit": "Submit",
+    "next": "Next",
+    "previous": "Previous",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Try Again",
+    "close": "Close",
+    "viewMore": "View More",
+    "readMore": "Read More",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "export": "Export",
+    "import": "Import",
+    "back": "Back",
+    "continue": "Continue",
+    "finish": "Finish",
+    "yes": "Yes",
+    "no": "No",
+    "confirm": "Confirm",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Information",
+    "language": "Language"
+  },
+  "landingPage": {
+    "hero": {
+      "headline": "Partner with GrubGate. Turn Local Diners into Loyal Weekly Customers.",
+      "subheadline": "Join our exclusive network of Montreal's finest restaurants and grow your business with predictable, recurring revenue through subscription meal plans.",
+      "cta": "Become a Partner",
+      "learnMore": "Learn More",
+      "stats": {
+        "partners": "Partner Restaurants",
+        "customers": "Active Subscribers",
+        "revenue": "Avg. Monthly Revenue Increase",
+        "satisfaction": "Partner Satisfaction Rate"
+      }
+    },
+    "benefits": {
+      "title": "Why Partner with GrubGate?",
+      "subtitle": "We provide everything you need to grow your restaurant business with subscription meal plans.",
+      "items": {
+        "revenue": {
+          "title": "Predictable Revenue",
+          "description": "Get guaranteed weekly orders and steady cash flow from subscription customers."
+        },
+        "growth": {
+          "title": "Business Growth",
+          "description": "Expand your customer base and increase order frequency with our platform."
+        },
+        "support": {
+          "title": "Full Support",
+          "description": "We handle marketing, customer service, and logistics so you can focus on cooking."
+        },
+        "analytics": {
+          "title": "Detailed Analytics",
+          "description": "Track your performance with comprehensive reports and insights."
+        }
+      }
+    },
+    "howItWorks": {
+      "title": "How It Works",
+      "subtitle": "Getting started is simple. Join our network in just a few steps.",
+      "steps": {
+        "1": {
+          "title": "Apply to Join",
+          "description": "Submit your restaurant details and menu information for review."
+        },
+        "2": {
+          "title": "Get Approved",
+          "description": "Our team reviews your application and sets up your partner account."
+        },
+        "3": {
+          "title": "Create Menu Plans",
+          "description": "Design subscription meal plans that work for your kitchen and customers."
+        },
+        "4": {
+          "title": "Start Earning",
+          "description": "Begin receiving orders and growing your business with GrubGate."
+        }
+      }
+    },
+    "testimonials": {
+      "title": "What Our Partners Say",
+      "subtitle": "Hear from successful restaurant partners who've grown their business with GrubGate.",
+      "orders": "orders"
+    },
+    "partnerTestimonials": {
+      "title": "What Our Partners Say",
+      "subtitle": "Discover how GrubGate has helped Montreal's finest restaurants grow their business with predictable revenue and loyal customers."
+    },
+    "cta": {
+      "title": "Ready to Grow Your Restaurant?",
+      "subtitle": "Join Montreal's leading restaurant network and start earning predictable revenue today.",
+      "button": "Apply Now",
+      "contact": "Contact Sales"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome Back",
+      "subtitle": "Sign in to your partner dashboard",
+      "email": "Email Address",
+      "password": "Password",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password?",
+      "signIn": "Sign In",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign up here"
+    },
+    "register": {
+      "title": "Join GrubGate",
+      "subtitle": "Create your partner account to get started",
+      "restaurantName": "Restaurant Name",
+      "ownerName": "Owner Name",
+      "email": "Email Address",
+      "phone": "Phone Number",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "agreeTerms": "I agree to the Terms of Service and Privacy Policy",
+      "createAccount": "Create Account",
+      "haveAccount": "Already have an account?",
+      "signIn": "Sign in here"
+    },
+    "forgotPassword": {
+      "title": "Reset Password",
+      "subtitle": "Enter your email to receive reset instructions",
+      "email": "Email Address",
+      "sendReset": "Send Reset Link",
+      "backToLogin": "Back to Login"
+    }
+  },
+  "dashboard": {
+    "welcome": "Welcome back, {{name}}!",
+    "overview": "Dashboard Overview",
+    "quickStats": "Quick Stats",
+    "recentOrders": "Recent Orders",
+    "menuItems": "Menu Items",
+    "analytics": "Analytics",
+    "settings": "Settings",
+    "logout": "Logout",
+    "navigation": {
+      "dashboard": "Dashboard",
+      "menu": "Menu Management",
+      "orders": "Orders",
+      "analytics": "Analytics",
+      "customers": "Customers",
+      "settings": "Settings",
+      "support": "Support"
+    },
+    "stats": {
+      "totalOrders": "Total Orders",
+      "totalRevenue": "Total Revenue",
+      "activeSubscribers": "Active Subscribers",
+      "avgOrderValue": "Avg Order Value",
+      "thisWeek": "This Week",
+      "lastWeek": "Last Week",
+      "thisMonth": "This Month",
+      "lastMonth": "Last Month"
+    }
+  },
+  "menu": {
+    "title": "Menu Management",
+    "subtitle": "Manage your subscription meal plans and menu items",
+    "addItem": "Add Menu Item",
+    "editItem": "Edit Menu Item",
+    "deleteItem": "Delete Menu Item",
+    "tableHeaders": {
+      "item": "Item",
+      "category": "Category",
+      "price": "Price",
+      "status": "Status",
+      "orders": "Orders",
+      "actions": "Actions"
+    },
+    "form": {
+      "name": "Item Name",
+      "description": "Description",
+      "category": "Category",
+      "price": "Price",
+      "prepTime": "Prep Time (minutes)",
+      "servings": "Servings",
+      "dietary": "Dietary Options",
+      "ingredients": "Ingredients",
+      "allergens": "Allergens",
+      "image": "Item Image",
+      "status": "Status",
+      "available": "Available",
+      "unavailable": "Unavailable"
+    },
+    "categories": {
+      "appetizer": "Appetizer",
+      "main": "Main Course",
+      "dessert": "Dessert",
+      "beverage": "Beverage",
+      "salad": "Salad",
+      "soup": "Soup",
+      "pasta": "Pasta",
+      "pizza": "Pizza",
+      "sandwich": "Sandwich",
+      "breakfast": "Breakfast"
+    },
+    "dietary": {
+      "vegetarian": "Vegetarian",
+      "vegan": "Vegan",
+      "glutenFree": "Gluten-Free",
+      "dairyFree": "Dairy-Free",
+      "keto": "Keto",
+      "halal": "Halal",
+      "kosher": "Kosher",
+      "lowCarb": "Low-Carb",
+      "paleo": "Paleo",
+      "spicy": "Spicy"
+    }
+  },
+  "orders": {
+    "title": "Order Management",
+    "subtitle": "View and manage all customer orders",
+    "filterBy": "Filter by",
+    "status": "Status",
+    "dateRange": "Date Range",
+    "searchOrders": "Search orders...",
+    "tableHeaders": {
+      "orderId": "Order ID",
+      "customer": "Customer",
+      "items": "Items",
+      "total": "Total",
+      "status": "Status",
+      "date": "Date",
+      "actions": "Actions"
+    },
+    "statuses": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "preparing": "Preparing",
+      "ready": "Ready for Pickup",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    },
+    "actions": {
+      "view": "View Details",
+      "confirm": "Confirm Order",
+      "markReady": "Mark as Ready",
+      "cancel": "Cancel Order"
+    },
+    "details": {
+      "title": "Order Details",
+      "customerInfo": "Customer Information",
+      "orderItems": "Order Items",
+      "total": "Order Total",
+      "notes": "Special Instructions",
+      "deliveryInfo": "Delivery Information"
+    }
+  },
+  "analytics": {
+    "title": "Analytics & Reports",
+    "subtitle": "Track your restaurant's performance and growth",
+    "timeRange": "Time Range",
+    "last7Days": "Last 7 Days",
+    "last30Days": "Last 30 Days",
+    "last3Months": "Last 3 Months",
+    "lastYear": "Last Year",
+    "metrics": {
+      "revenue": "Revenue",
+      "orders": "Orders",
+      "customers": "Customers",
+      "avgOrderValue": "Avg Order Value",
+      "topItems": "Top Selling Items",
+      "customerGrowth": "Customer Growth",
+      "revenueGrowth": "Revenue Growth"
+    },
+    "charts": {
+      "revenueChart": "Revenue Over Time",
+      "ordersChart": "Orders Over Time",
+      "topItemsChart": "Top Selling Items",
+      "customerChart": "Customer Growth"
+    },
+    "export": "Export Report"
+  },
+  "customers": {
+    "title": "Customer Management",
+    "subtitle": "View and manage your customer base",
+    "searchCustomers": "Search customers...",
+    "tableHeaders": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "orders": "Total Orders",
+      "totalSpent": "Total Spent",
+      "lastOrder": "Last Order",
+      "status": "Status"
+    },
+    "statuses": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "suspended": "Suspended"
+    }
+  },
+  "settings": {
+    "title": "Restaurant Settings",
+    "subtitle": "Manage your restaurant profile and preferences",
+    "profile": {
+      "title": "Restaurant Profile",
+      "name": "Restaurant Name",
+      "description": "Description",
+      "cuisine": "Cuisine Type",
+      "address": "Address",
+      "phone": "Phone Number",
+      "email": "Email Address",
+      "website": "Website",
+      "hours": "Operating Hours",
+      "logo": "Restaurant Logo"
+    },
+    "delivery": {
+      "title": "Delivery Settings",
+      "deliveryRadius": "Delivery Radius (km)",
+      "deliveryFee": "Delivery Fee",
+      "minOrderAmount": "Minimum Order Amount",
+      "deliveryTime": "Average Delivery Time (minutes)"
+    },
+    "notifications": {
+      "title": "Notification Settings",
+      "emailNotifications": "Email Notifications",
+      "smsNotifications": "SMS Notifications",
+      "orderAlerts": "New Order Alerts",
+      "customerMessages": "Customer Messages",
+      "systemUpdates": "System Updates"
+    },
+    "billing": {
+      "title": "Billing & Payments",
+      "paymentMethod": "Payment Method",
+      "billingAddress": "Billing Address",
+      "taxId": "Tax ID",
+      "commissionRate": "Commission Rate"
+    }
+  },
+  "support": {
+    "title": "Support Center",
+    "subtitle": "Get help and support for your restaurant",
+    "faq": "Frequently Asked Questions",
+    "contact": "Contact Support",
+    "documentation": "Documentation",
+    "tutorials": "Video Tutorials",
+    "status": "System Status"
+  },
+  "footer": {
+    "description": "GrubGate connects Montreal's finest restaurants with customers through subscription meal plans. Join our network and grow your business with predictable, recurring revenue.",
+    "builtWithLove": "Built with ❤️ in Montreal",
+    "quickLinksTitle": "Quick Links",
+    "followUsTitle": "Follow Us",
+    "copyright": "© {{year}} {{company}}. All rights reserved."
+  },
+  "errors": {
+    "pageNotFound": "Page Not Found",
+    "unauthorized": "Unauthorized Access",
+    "serverError": "Server Error",
+    "networkError": "Network Error",
+    "validationError": "Validation Error"
+  }
+}
+
