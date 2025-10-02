@@ -242,66 +242,100 @@ const generateMetaTags = (url, userAgent) => {
 
 // Main handler function
 exports.handler = async (event, context) => {
-  const { path: urlPath, headers } = event;
-  const userAgent = headers['user-agent'] || '';
-  
-  console.log('SSR Handler - URL:', urlPath);
-  console.log('SSR Handler - User Agent:', userAgent);
-  
-  // Don't handle static assets - let Netlify serve them directly
-  if (urlPath.match(/\.(js|jsx|ts|tsx|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json|xml|txt|map)$/)) {
-    console.log('Static asset request, skipping SSR:', urlPath);
-    return {
-      statusCode: 404,
-      body: 'Static asset not found'
-    };
-  }
-  
-  // Don't handle src/ requests - these should be handled by Vite in development
-  if (urlPath.startsWith('/src/')) {
-    console.log('Source file request, skipping SSR:', urlPath);
-    return {
-      statusCode: 404,
-      body: 'Source file not found'
-    };
-  }
-  
-  // Don't handle assets/ requests - these are built static assets
-  if (urlPath.startsWith('/assets/')) {
-    console.log('Assets request, skipping SSR:', urlPath);
-    return {
-      statusCode: 404,
-      body: 'Asset not found'
-    };
-  }
+  // Set a timeout to prevent 504 errors
+  const startTime = Date.now();
+  const timeout = 8000; // 8 seconds max
   
   try {
-    // Get the HTML template
-    let html = getHTMLTemplate();
+    const { path: urlPath, headers } = event;
+    const userAgent = headers['user-agent'] || '';
     
-    // For now, use CSR (Client-Side Rendering) to avoid hydration issues
-    // This ensures the app works reliably while we can optimize SSR later
-    console.log('Using CSR fallback for reliable routing');
+    console.log('🚀 SSR Handler started - URL:', urlPath);
     
-    // Generate appropriate meta tags based on the route
-    const metaTags = generateMetaTags(urlPath || '/', userAgent);
-    html = html.replace('<!--app-head-->', metaTags);
-    
-    // Ensure the root div is empty for client-side rendering
-    html = html.replace(
-      '<div id="root"><!--app-html--></div>',
-      '<div id="root"></div>'
-    );
-    
-    // Replace development script with production scripts
-    // The built HTML should have the correct script tags, but if not, we'll fix it
-    if (html.includes('/src/main.jsx')) {
-      // This is the development template, replace with production script loading
-      html = html.replace(
-        '<script type="module" src="/src/main.jsx"></script>',
-        '<!-- Production scripts will be injected by Vite build process -->'
-      );
+    // Quick timeout check
+    if (Date.now() - startTime > timeout) {
+      throw new Error('Function timeout');
     }
+    
+    // Don't handle static assets - let Netlify serve them directly
+    if (urlPath.match(/\.(js|jsx|ts|tsx|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json|xml|txt|map)$/)) {
+      console.log('📄 Static asset request, skipping SSR:', urlPath);
+      return {
+        statusCode: 404,
+        headers: {
+          'Content-Type': 'text/plain'
+        },
+        body: 'Static asset not found - should be served by Netlify directly'
+      };
+    }
+    
+    // Don't handle assets/ requests - these are built static assets
+    if (urlPath.startsWith('/assets/')) {
+      console.log('📦 Assets directory request, skipping SSR:', urlPath);
+      return {
+        statusCode: 404,
+        headers: {
+          'Content-Type': 'text/plain'
+        },
+        body: 'Asset not found - should be served by Netlify directly'
+      };
+    }
+    
+    // Don't handle API or function requests
+    if (urlPath.startsWith('/api/') || urlPath.startsWith('/.netlify/')) {
+      console.log('🔧 API/Function request, skipping SSR:', urlPath);
+      return {
+        statusCode: 404,
+        body: 'API endpoint not found'
+      };
+    }
+    
+    // Get the HTML template quickly
+    let html;
+    try {
+      html = getHTMLTemplate();
+      console.log('✅ HTML template loaded');
+    } catch (err) {
+      console.warn('⚠️ Template loading failed, using minimal fallback');
+      html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GrubGate Partner Portal</title>
+  <meta name="theme-color" content="#800020" />
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module">
+    // Fallback script loader
+    const scripts = ['/assets/index.js', '/assets/main.js'];
+    scripts.forEach(src => {
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = src;
+      script.onerror = () => console.warn('Failed to load:', src);
+      document.head.appendChild(script);
+    });
+  </script>
+</body>
+</html>`;
+    }
+    
+    // Quick timeout check
+    if (Date.now() - startTime > timeout) {
+      throw new Error('Function timeout during HTML processing');
+    }
+    
+    // Simple meta tag injection for SEO
+    const title = urlPath.includes('/dashboard') ? 'Dashboard - GrubGate Partners' : 'GrubGate Partner Portal';
+    const description = 'Restaurant management platform for Montreal food delivery partners';
+    
+    // Replace placeholders if they exist
+    html = html.replace('<!--app-head-->', `<title>${title}</title><meta name="description" content="${description}" />`);
+    html = html.replace('<div id="root"><!--app-html--></div>', '<div id="root"></div>');
+    
+    console.log('✅ SSR completed in', Date.now() - startTime, 'ms');
     
     // Return the HTML response
     return {
@@ -316,28 +350,47 @@ exports.handler = async (event, context) => {
     };
     
   } catch (error) {
-    console.error('SSR handler error:', error);
+    console.error('❌ SSR handler error:', error.message);
     
-    // Return a basic error page
-    const errorHtml = `
-      <!DOCTYPE html>
-      <html lang="en">
-        <head>
-          <meta charset="UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <title>GrubGate Partner Portal</title>
-          <style>
-            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-            .error { color: #800020; }
-          </style>
-        </head>
-        <body>
-          <h1 class="error">GrubGate Partner Portal</h1>
-          <p>Loading your restaurant management platform...</p>
-          <div id="root"></div>
-          <script type="module" src="/src/main.jsx"></script>
-        </body>
-      </html>
+    // Return a minimal working page that will load the app
+    const errorHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GrubGate Partner Portal</title>
+  <meta name="theme-color" content="#800020" />
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f9fafb; }
+    .loading { text-align: center; padding: 50px; color: #800020; }
+    .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #800020; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="loading">
+    <h1>GrubGate Partner Portal</h1>
+    <div class="spinner"></div>
+    <p>Loading your restaurant management platform...</p>
+  </div>
+  <div id="root"></div>
+  <script type="module">
+    // Try to load the main app assets
+    const loadScript = (src) => {
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = src;
+      script.onload = () => console.log('✅ Loaded:', src);
+      script.onerror = () => console.warn('❌ Failed to load:', src);
+      document.head.appendChild(script);
+    };
+    
+    // Try common asset paths
+    const possiblePaths = ['/assets/index.js', '/assets/main.js', '/src/main.jsx'];
+    possiblePaths.forEach(loadScript);
+  </script>
+</body>
+</html>
     `;
     
     return {
