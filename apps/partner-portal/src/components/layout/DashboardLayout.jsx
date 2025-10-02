@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Outlet, useLocation, useNavigate, NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -10,9 +10,7 @@ import {
   Settings, 
   HelpCircle,
   LogOut,
-  Globe,
-  X,
-  ChevronLeft
+  Globe
 } from 'lucide-react';
 import { Logo, Button } from '@grub-gate/ui';
 import MobileBottomNav from './MobileBottomNav';
@@ -21,7 +19,6 @@ const DashboardLayout = ({ onLanguageChange }) => {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLanguageToggle = () => {
     const newLang = i18n.language === 'en' ? 'fr' : 'en';
@@ -30,13 +27,13 @@ const DashboardLayout = ({ onLanguageChange }) => {
   };
 
   const navigation = [
-    { name: t('dashboard.navigation.dashboard'), href: '/dashboard', icon: LayoutDashboard },
-    { name: t('dashboard.navigation.menu'), href: '/dashboard/menu', icon: MenuIcon },
-    { name: t('dashboard.navigation.orders'), href: '/dashboard/orders', icon: ShoppingBag },
-    { name: t('dashboard.navigation.analytics'), href: '/dashboard/analytics', icon: BarChart3 },
-    { name: t('dashboard.navigation.customers'), href: '/dashboard/customers', icon: Users },
-    { name: t('dashboard.navigation.settings'), href: '/dashboard/settings', icon: Settings },
-    { name: t('dashboard.navigation.support'), href: '/dashboard/support', icon: HelpCircle },
+    { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Menu Management', href: '/dashboard/menu', icon: MenuIcon },
+    { name: 'Orders', href: '/dashboard/orders', icon: ShoppingBag },
+    { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
+    { name: 'Customers', href: '/dashboard/customers', icon: Users },
+    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+    { name: 'Support', href: '/dashboard/support', icon: HelpCircle },
   ];
 
   const isCurrentPath = (path) => {
@@ -53,29 +50,14 @@ const DashboardLayout = ({ onLanguageChange }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-        </div>
-      )}
-
-      {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
+      {/* Desktop Sidebar Only */}
+      <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:w-64 lg:bg-white lg:shadow-lg lg:flex">
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
+          <div className="flex items-center h-16 px-6 border-b border-gray-200">
             <NavLink to="/" aria-label="Go to landing page" className="inline-flex">
-              <Logo size="md" />
+              <Logo size="lg" />
             </NavLink>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden text-gray-500 hover:text-gray-700"
-            >
-              <X className="h-6 w-6" />
-            </button>
           </div>
 
           {/* Navigation */}
@@ -86,10 +68,7 @@ const DashboardLayout = ({ onLanguageChange }) => {
               return (
                 <button
                   key={item.name}
-                  onClick={() => {
-                    navigate(item.href);
-                    setSidebarOpen(false);
-                  }}
+                  onClick={() => navigate(item.href)}
                   className={`group w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors border-l-4 ${
                     active
                       ? 'bg-red-50 text-grub-red border-grub-red'
@@ -147,18 +126,17 @@ const DashboardLayout = ({ onLanguageChange }) => {
         {/* Top bar */}
         <div className="sticky top-0 z-10 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-gray-200">
           <div className="mx-auto w-full max-w-7xl flex items-center justify-between h-14 lg:h-16 px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 -ml-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                aria-label="Open sidebar"
-              >
-                <MenuIcon className="h-6 w-6" />
-              </button>
-
+            <div className="flex items-center">
+              {/* Mobile Logo */}
+                <div className="lg:hidden mr-4">
+                <NavLink to="/" aria-label="Go to landing page" className="inline-flex">
+                  <Logo size="md" />
+                </NavLink>
+              </div>
+              
               <div className="flex items-center">
                 <h1 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
-                  {navigation.find(item => isCurrentPath(item.href))?.name || t('dashboard.overview')}
+                  {navigation.find(item => isCurrentPath(item.href))?.name || 'Overview'}
                 </h1>
               </div>
             </div>
@@ -167,10 +145,13 @@ const DashboardLayout = ({ onLanguageChange }) => {
               {/* Language switcher - mobile */}
               <button
                 onClick={handleLanguageToggle}
-                className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                className="lg:hidden flex items-center justify-center space-x-1 px-2 py-1.5 text-xs font-medium text-gray-600 hover:text-grub-red hover:bg-gray-100 rounded-md transition-colors border border-gray-300"
                 title={t('common.language')}
               >
-                <Globe className="h-5 w-5" />
+                <Globe className="h-4 w-4" />
+                <span className="uppercase font-semibold">
+                  {i18n.language}
+                </span>
               </button>
               
               {/* Notifications */}
@@ -187,7 +168,7 @@ const DashboardLayout = ({ onLanguageChange }) => {
         </div>
 
         {/* Page content */}
-        <main className="p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
+        <main className="p-4 sm:p-6 lg:p-8 pb-24 lg:pb-8">
           <div className="mx-auto w-full max-w-7xl">
             <Outlet />
           </div>

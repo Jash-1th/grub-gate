@@ -50,18 +50,18 @@ const Modal = ({
   
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black bg-opacity-50"
       onClick={handleOverlayClick}
       {...props}
     >
       <div className={clsx(
-        'bg-white rounded-lg shadow-xl w-full',
+        'bg-white rounded-lg shadow-xl w-full max-h-[85vh] lg:max-h-[95vh] flex flex-col',
         sizes[size],
         className
       )}>
         {/* Header */}
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 flex-shrink-0">
             {title && (
               <h2 className="text-lg font-semibold text-gray-900">
                 {title}
@@ -79,7 +79,7 @@ const Modal = ({
         )}
         
         {/* Content */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6 flex-1 overflow-y-auto">
           {children}
         </div>
       </div>

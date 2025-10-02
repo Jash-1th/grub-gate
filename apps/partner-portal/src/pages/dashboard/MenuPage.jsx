@@ -198,10 +198,13 @@ const MenuPage = () => {
           setShowAddModal(false);
           setEditingItem(null);
         }}
-        title={editingItem ? t('menu.editItem') : t('menu.addItem')}
-        size="lg"
+        title={editingItem ? 'Edit Menu Item' : 'Add Menu Item'}
+        size="xl"
+        className="max-w-3xl"
       >
-        <div className="space-y-5 max-h-[calc(100vh-200px)] overflow-y-auto pb-4">
+        <div className="flex flex-col h-full">
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-y-auto space-y-5 pr-2">
           {/* Segmented tabs */}
           <div className="flex items-center justify-between">
             <div className="inline-flex bg-gray-100 rounded-lg p-1 text-sm">
@@ -225,64 +228,98 @@ const MenuPage = () => {
 
           {/* BASICS TAB */}
           {activeTab === 'basics' && (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {/* Item name */}
-              <Input label={t('menu.form.name')} placeholder="Item name" defaultValue={editingItem?.name || ''} />
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">Item Name</label>
+                <input 
+                  type="text" 
+                  placeholder="Enter item name" 
+                  defaultValue={editingItem?.name || ''} 
+                  className="w-full px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm"
+                />
+              </div>
 
-              {/* Price + Category (two-up even on mobile) */}
-              <div className="grid grid-cols-2 gap-3 md:gap-4">
+              {/* Price + Category (2 cols on mobile, 3 on desktop) */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Price</label>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">Price</label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                    <input type="number" step="0.01" defaultValue={editingItem?.price || ''} placeholder="0.00" className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red" />
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500 text-xs sm:text-sm">$</span>
+                    <input 
+                      type="number" 
+                      step="0.01" 
+                      defaultValue={editingItem?.price || ''} 
+                      placeholder="0.00" 
+                      className="w-full pl-6 sm:pl-7 pr-2 sm:pr-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm" 
+                    />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Category</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">Category</label>
+                  <select className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm">
                     {categories.slice(1).map(category => (
                       <option key={category.value} value={category.value}>{category.label}</option>
                     ))}
                   </select>
                 </div>
-              </div>
-
-              {/* Prep time + Servings */}
-              <div className="grid grid-cols-2 gap-3 md:gap-4">
-                <Input label={t('menu.form.prepTime')} type="number" placeholder="30" defaultValue={editingItem?.prepTime || ''} />
-                <Input label={t('menu.form.servings')} type="number" placeholder="1" defaultValue={editingItem?.servings || ''} />
-              </div>
-
-              {/* Status */}
-              <div className="grid grid-cols-2 gap-3 md:gap-4">
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Status</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red" defaultValue={editingItem?.status || 'available'}>
+                <div className="col-span-2 sm:col-span-1">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">Status</label>
+                  <select 
+                    className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm" 
+                    defaultValue={editingItem?.status || 'available'}
+                  >
                     <option value="available">Available</option>
                     <option value="unavailable">Unavailable</option>
                   </select>
                 </div>
-                <div className="hidden sm:block"></div>
+              </div>
+
+              {/* Prep time + Servings (2 cols on mobile, 2 on desktop) */}
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">Prep Time</label>
+                  <div className="relative">
+                    <input 
+                      type="number" 
+                      placeholder="30" 
+                      defaultValue={editingItem?.prepTime || ''} 
+                      className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm"
+                    />
+                    <span className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">min</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">Servings</label>
+                  <input 
+                    type="number" 
+                    placeholder="1" 
+                    defaultValue={editingItem?.servings || ''} 
+                    className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Image URL */}
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">Image URL <span className="text-gray-400">(optional)</span></label>
+                <input 
+                  type="url" 
+                  defaultValue={editingItem?.image || ''} 
+                  placeholder="https://..." 
+                  className="w-full px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm"
+                />
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{t('menu.form.description')}</label>
-                <textarea rows={4} defaultValue={editingItem?.description || ''} placeholder="Item description" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red" />
-              </div>
-
-              {/* Image URL + preview (preview hidden on mobile) */}
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Image URL</label>
-                <input type="url" defaultValue={editingItem?.image || ''} placeholder="https://..." className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red" />
-                <div className="mt-3 hidden md:flex aspect-video bg-gray-100 rounded-lg overflow-hidden border items-center justify-center">
-                  {editingItem?.image ? (
-                    <img src={editingItem.image} alt="preview" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-gray-400 text-sm">Preview</span>
-                  )}
-                </div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">Description</label>
+                <textarea 
+                  rows={2} 
+                  defaultValue={editingItem?.description || ''} 
+                  placeholder="Describe your menu item..." 
+                  className="w-full px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm resize-none"
+                />
               </div>
             </div>
           )}
@@ -339,24 +376,24 @@ const MenuPage = () => {
               </div>
             </div>
           )}
-
-        </div>
-        
-        {/* Footer actions - Outside scrollable area */}
-        <div className="border-t bg-white px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:justify-end gap-3 mt-4">
+          </div>
+          
+          {/* Footer actions - Outside scrollable area */}
+          <div className="border-t bg-white px-0 py-4 flex flex-col sm:flex-row sm:justify-end gap-3 mt-4 flex-shrink-0">
             <Button
               variant="secondary"
               className="w-full sm:w-auto border-gray-300 hover:bg-gray-50"
               onClick={() => { setShowAddModal(false); setEditingItem(null); }}
             >
-              {t('common.cancel')}
+              Cancel
             </Button>
             <Button
               variant="primary"
               className="w-full sm:w-auto bg-grub-red hover:bg-red-700 text-white active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-300"
             >
-              {editingItem ? t('common.save') : t('menu.addItem')}
+              {editingItem ? 'Save Changes' : 'Add Menu Item'}
             </Button>
+          </div>
         </div>
       </Modal>
     </div>

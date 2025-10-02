@@ -21,34 +21,34 @@ const MobileBottomNav = () => {
   // Main navigation items for mobile (limited to 5 for better UX)
   const mobileNavigation = [
     { 
-      name: 'dashboard', 
+      name: 'overview', 
       href: '/dashboard', 
       icon: LayoutDashboard,
-      label: t('dashboard.navigation.dashboard')
+      label: 'Overview'
     },
     { 
       name: 'menu', 
       href: '/dashboard/menu', 
       icon: MenuIcon,
-      label: t('dashboard.navigation.menu')
+      label: 'Menu'
     },
     { 
       name: 'orders', 
       href: '/dashboard/orders', 
       icon: ShoppingBag,
-      label: t('dashboard.navigation.orders')
+      label: 'Orders'
     },
     { 
       name: 'analytics', 
       href: '/dashboard/analytics', 
       icon: BarChart3,
-      label: t('dashboard.navigation.analytics')
+      label: 'Analytics'
     },
     { 
       name: 'settings', 
       href: '/dashboard/settings', 
       icon: Settings,
-      label: t('dashboard.navigation.settings')
+      label: 'Settings'
     }
   ];
 
@@ -65,9 +65,9 @@ const MobileBottomNav = () => {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] pb-[max(env(safe-area-inset-bottom),0px)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] pb-[max(env(safe-area-inset-bottom),4px)]">
       {/* Main Navigation */}
-      <ul className="flex items-stretch justify-between px-2 py-2">
+      <ul className="flex items-stretch justify-between px-1 py-1">
         {mobileNavigation.map((item) => {
           const Icon = item.icon;
           const isActive = isCurrentPath(item.href);
@@ -77,19 +77,19 @@ const MobileBottomNav = () => {
               <NavLink
                 to={item.href}
                 end={item.href === '/dashboard'}
-                className={`flex flex-col items-center justify-center h-14 text-[11px] leading-tight font-medium transition-all duration-200 rounded-lg mx-0.5 ${
+                className={`flex flex-col items-center justify-center h-16 text-[10px] leading-tight font-medium transition-all duration-200 rounded-xl mx-1 ${
                   isActive 
-                    ? 'text-grub-red bg-red-50' 
+                    ? 'text-grub-red bg-red-50 shadow-sm' 
                     : 'text-gray-600 hover:text-grub-red hover:bg-gray-50'
                 }`}
                 aria-label={item.label}
               >
-                <div className="flex items-center justify-center h-6 w-6 mb-1 flex-shrink-0">
-                  <Icon className="h-5 w-5" />
+                <div className="flex items-center justify-center h-7 w-7 mb-1 flex-shrink-0">
+                  <Icon className={`h-5 w-5 ${isActive ? 'scale-110' : ''} transition-transform`} />
                 </div>
-                <div className="flex items-center justify-center h-4 text-center min-w-0 w-full px-0.5">
+                <div className="flex items-center justify-center h-5 text-center min-w-0 w-full px-1">
                   <span 
-                    className="block w-full overflow-hidden text-ellipsis whitespace-nowrap" 
+                    className="block w-full overflow-hidden text-ellipsis whitespace-nowrap font-semibold" 
                     title={item.label}
                   >
                     {item.label}

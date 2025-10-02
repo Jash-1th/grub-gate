@@ -27,6 +27,15 @@ const OrdersPage = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
 
+  // Consistent date formatting to prevent hydration mismatch
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
   const statuses = [
     { value: 'all', label: 'All Statuses' },
     { value: 'pending', label: t('orders.statuses.pending') },
@@ -232,7 +241,7 @@ const OrdersPage = () => {
                                 </span>
                               </td>
                               <td className="py-4 px-6">
-                                <span className="text-gray-900">{new Date(order.orderDate).toLocaleDateString()}</span>
+                                <span className="text-gray-900">{formatDate(order.orderDate)}</span>
                               </td>
                               <td className="py-4 px-6">
                                 <div className="flex items-center space-x-2">
@@ -281,60 +290,55 @@ const OrdersPage = () => {
               </div>
 
               {/* Mobile Card View */}
-              <div className="lg:hidden space-y-4">
+              <div className="lg:hidden space-y-3">
                 {filteredOrders.map((order) => (
                   <Card key={order.id} className="hover:shadow-lg transition-all duration-200">
-                    <CardContent className="p-4">
-                      <div className="space-y-4">
+                    <CardContent className="p-3">
+                      <div className="space-y-3">
                         {/* Header Row */}
                         <div className="flex items-start justify-between">
-                          <div>
-                            <div className="flex items-center space-x-2 mb-1">
-                              <span className="font-bold text-gray-900">#{order.id.split('_')[1]}</span>
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                                {getStatusIcon(order.status)}
-                                <span className="ml-1">{order.status}</span>
-                              </span>
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {new Date(order.orderDate).toLocaleDateString()}
-                            </div>
+                          <div className="flex items-center space-x-2">
+                            <span className="font-bold text-gray-900 text-sm">#{order.id.split('_')[1]}</span>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                              {getStatusIcon(order.status)}
+                              <span className="ml-1">{order.status}</span>
+                            </span>
                           </div>
                           <div className="text-right">
-                            <div className="font-bold text-xl text-grub-red">${order.total}</div>
-                            <div className="text-sm text-gray-500">{order.items.length} items</div>
+                            <div className="font-bold text-lg text-grub-red">${order.total}</div>
+                            <div className="text-xs text-gray-500">{order.items.length} items</div>
                           </div>
                         </div>
 
-                        {/* Customer Info */}
-                        <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                          <div className="bg-blue-100 rounded-full p-2">
-                            <User className="h-4 w-4 text-blue-600" />
+                        {/* Customer Info - Compact */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2 flex-1 min-w-0">
+                            <div className="bg-blue-100 rounded-full p-1.5">
+                              <User className="h-3 w-3 text-blue-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-gray-900 text-sm truncate">{order.customer.name}</div>
+                              <div className="text-xs text-gray-500">
+                                {formatDate(order.orderDate)}
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-gray-900 truncate">{order.customer.name}</div>
-                            <div className="text-sm text-gray-500 truncate">{order.customer.email}</div>
-                          </div>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                          <button
-                            onClick={() => handleViewOrder(order)}
-                            className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium"
-                          >
-                            <Eye className="h-4 w-4" />
-                            <span>View Details</span>
-                          </button>
                           
-                          <div className="flex items-center space-x-2">
+                          {/* Quick Actions */}
+                          <div className="flex items-center space-x-1">
+                            <button
+                              onClick={() => handleViewOrder(order)}
+                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
                             {order.status === 'pending' && (
                               <Button
                                 size="sm"
                                 onClick={() => handleUpdateStatus(order.id, 'confirmed')}
-                                className="bg-green-600 hover:bg-green-700 text-white"
+                                className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1"
                               >
-                                <CheckCircle className="h-4 w-4 mr-1" />
+                                <CheckCircle className="h-3 w-3 mr-1" />
                                 Confirm
                               </Button>
                             )}
@@ -342,20 +346,20 @@ const OrdersPage = () => {
                               <Button
                                 size="sm"
                                 onClick={() => handleUpdateStatus(order.id, 'preparing')}
-                                className="bg-orange-600 hover:bg-orange-700 text-white"
+                                className="bg-orange-600 hover:bg-orange-700 text-white text-xs px-2 py-1"
                               >
-                                <Clock className="h-4 w-4 mr-1" />
-                                Start Prep
+                                <Clock className="h-3 w-3 mr-1" />
+                                Prep
                               </Button>
                             )}
                             {order.status === 'preparing' && (
                               <Button
                                 size="sm"
                                 onClick={() => handleUpdateStatus(order.id, 'ready')}
-                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1"
                               >
-                                <CheckCircle className="h-4 w-4 mr-1" />
-                                Mark Ready
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Ready
                               </Button>
                             )}
                           </div>
@@ -379,203 +383,194 @@ const OrdersPage = () => {
         }}
         title=""
         size="xl"
+        className="max-w-4xl"
       >
         {selectedOrder && (
-          <div className="max-h-[calc(100vh-120px)] overflow-y-auto">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-grub-red to-red-600 text-white rounded-xl p-4 sm:p-6 mb-6 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                  <h2 className="text-xl sm:text-2xl font-bold">Order #{selectedOrder.id.split('_')[1]}</h2>
-                  <p className="text-red-100 text-sm mt-1">
-                    {new Date(selectedOrder.orderDate).toLocaleDateString('en-US', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl sm:text-3xl font-bold">${selectedOrder.total}</div>
-                  <div className="text-red-100 text-sm">{selectedOrder.items.length} items</div>
+          <div className="flex flex-col h-full">
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-grub-red to-red-600 text-white rounded-lg p-2.5 sm:p-3 -mx-2 sm:-mx-4 -mt-2 sm:-mt-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-3">
+                  <div>
+                    <h2 className="text-base sm:text-lg font-bold">Order #{selectedOrder.id.split('_')[1]}</h2>
+                    <p className="text-red-100 text-xs">
+                      {formatDate(selectedOrder.orderDate)}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg sm:text-xl font-bold">${selectedOrder.total}</div>
+                    <div className="text-red-100 text-xs">{selectedOrder.items.length} items</div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="space-y-6">
+              <div className="space-y-2.5 sm:space-y-3">
               {/* Status and Actions */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-gray-50 rounded-xl">
-                <div className="flex items-center space-x-3">
-                  <span className={`inline-flex items-center px-3 py-2 rounded-full text-sm font-medium ${getStatusColor(selectedOrder.status)}`}>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-2.5 sm:p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs sm:text-sm font-medium ${getStatusColor(selectedOrder.status)}`}>
                     {getStatusIcon(selectedOrder.status)}
-                    <span className="ml-2 capitalize">{selectedOrder.status.replace('_', ' ')}</span>
+                    <span className="ml-1 capitalize">{selectedOrder.status.replace('_', ' ')}</span>
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   {selectedOrder.status === 'pending' && (
                     <Button
+                      size="sm"
                       onClick={() => {
                         handleUpdateStatus(selectedOrder.id, 'confirmed');
                         setShowOrderModal(false);
                         setSelectedOrder(null);
                       }}
-                      className="bg-green-600 hover:bg-green-700 text-white"
+                      className="bg-green-600 hover:bg-green-700 text-white text-xs"
                     >
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Confirm Order
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Confirm
                     </Button>
                   )}
                   {selectedOrder.status === 'confirmed' && (
                     <Button
+                      size="sm"
                       onClick={() => {
                         handleUpdateStatus(selectedOrder.id, 'preparing');
                         setShowOrderModal(false);
                         setSelectedOrder(null);
                       }}
-                      className="bg-orange-600 hover:bg-orange-700 text-white"
+                      className="bg-orange-600 hover:bg-orange-700 text-white text-xs"
                     >
-                      <Clock className="h-4 w-4 mr-2" />
-                      Start Preparing
+                      <Clock className="h-3 w-3 mr-1" />
+                      Start Prep
                     </Button>
                   )}
                   {selectedOrder.status === 'preparing' && (
                     <Button
+                      size="sm"
                       onClick={() => {
                         handleUpdateStatus(selectedOrder.id, 'ready');
                         setShowOrderModal(false);
                         setSelectedOrder(null);
                       }}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs"
                     >
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Mark Ready
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Ready
                     </Button>
                   )}
                 </div>
               </div>
 
-              {/* Customer Information */}
-              <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6">
-                <div className="flex items-center mb-4">
-                  <div className="bg-blue-100 rounded-full p-2 mr-3">
-                    <User className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900">Customer Information</h3>
-                </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-3">
-                    <div>
-                      <div className="font-semibold text-gray-900 text-lg">{selectedOrder.customer.name}</div>
+              {/* Customer & Items Combined */}
+              <div className="grid grid-cols-1 gap-2.5">
+                {/* Customer Information - Compact */}
+                <div className="bg-white border border-gray-200 rounded-lg p-2.5 sm:p-3">
+                  <div className="flex items-center mb-2">
+                    <div className="bg-blue-100 rounded-full p-1 mr-2">
+                      <User className="h-3 w-3 text-blue-600" />
                     </div>
-                    <div className="flex items-center text-gray-600">
-                      <Mail className="h-4 w-4 mr-2 text-blue-500" />
-                      <span className="text-sm break-all">{selectedOrder.customer.email}</span>
-                    </div>
-                    <div className="flex items-center text-gray-600">
-                      <Phone className="h-4 w-4 mr-2 text-blue-500" />
-                      <span className="text-sm">{selectedOrder.customer.phone}</span>
-                    </div>
+                    <h3 className="text-xs sm:text-sm font-semibold text-gray-900">Customer & Delivery</h3>
                   </div>
                   
-                  <div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="space-y-1.5">
+                      <div className="font-medium text-gray-900 text-xs sm:text-sm">{selectedOrder.customer.name}</div>
+                      <div className="flex items-center text-gray-600">
+                        <Mail className="h-2.5 w-2.5 mr-1 text-blue-500" />
+                        <span className="text-xs break-all">{selectedOrder.customer.email}</span>
+                      </div>
+                      <div className="flex items-center text-gray-600">
+                        <Phone className="h-2.5 w-2.5 mr-1 text-blue-500" />
+                        <span className="text-xs">{selectedOrder.customer.phone}</span>
+                      </div>
+                    </div>
                     <div className="flex items-start text-gray-600">
-                      <MapPin className="h-4 w-4 mr-2 mt-1 text-blue-500 flex-shrink-0" />
-                      <div className="text-sm">
-                        <p className="font-medium text-gray-900 mb-1">Delivery Address</p>
-                        <p className="break-words">{selectedOrder.deliveryAddress}</p>
-                      </div>
+                      <MapPin className="h-2.5 w-2.5 mr-1 mt-0.5 text-blue-500 flex-shrink-0" />
+                      <span className="text-xs break-words">{selectedOrder.deliveryAddress}</span>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Order Items */}
-              <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center">
-                    <div className="bg-green-100 rounded-full p-2 mr-3">
-                      <Package className="h-5 w-5 text-green-600" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900">Order Items</h3>
-                  </div>
-                  <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
-                    {selectedOrder.items.length} items
-                  </span>
-                </div>
-                
-                <div className="space-y-3">
-                  {selectedOrder.items.map((item, index) => (
-                    <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-gray-50 rounded-lg gap-2">
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-gray-900 mb-1 break-words">{item.name}</div>
-                        <div className="text-sm text-gray-600">
-                          ${item.price} × {item.quantity}
-                        </div>
+                {/* Order Items - Compact */}
+                <div className="bg-white border border-gray-200 rounded-lg p-2.5 sm:p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center">
+                      <div className="bg-green-100 rounded-full p-1 mr-2">
+                        <Package className="h-3 w-3 text-green-600" />
                       </div>
-                      <div className="text-right">
-                        <div className="font-bold text-lg text-grub-red">
+                      <h3 className="text-xs sm:text-sm font-semibold text-gray-900">Order Items</h3>
+                    </div>
+                    <span className="bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded-full text-xs font-medium">
+                      {selectedOrder.items.length}
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-1.5 max-h-28 overflow-y-auto">
+                    {selectedOrder.items.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between p-1.5 bg-gray-50 rounded text-xs">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-gray-900 truncate">{item.name}</div>
+                          <div className="text-gray-600">${item.price} × {item.quantity}</div>
+                        </div>
+                        <div className="font-bold text-grub-red ml-2">
                           ${(item.price * item.quantity).toFixed(2)}
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* Order Total */}
-              <div className="bg-gradient-to-r from-grub-red/5 to-red-100/50 border-2 border-grub-red/20 rounded-xl p-4 sm:p-6">
+              {/* Order Total - Compact */}
+              <div className="bg-gradient-to-r from-grub-red/5 to-red-100/50 border border-grub-red/20 rounded-lg p-2.5 sm:p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <div className="bg-grub-red/10 rounded-full p-3 mr-4">
-                      <DollarSign className="h-6 w-6 text-grub-red" />
+                    <div className="bg-grub-red/10 rounded-full p-1.5 mr-2">
+                      <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-grub-red" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">Order Total</h3>
-                      <p className="text-gray-600 text-sm">Including all items</p>
+                      <h3 className="text-xs sm:text-sm font-semibold text-gray-900">Order Total</h3>
+                      <p className="text-gray-600 text-xs">All items</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-2xl sm:text-3xl font-bold text-grub-red">${selectedOrder.total}</div>
-                  </div>
+                  <div className="text-lg sm:text-xl font-bold text-grub-red">${selectedOrder.total}</div>
                 </div>
               </div>
 
-              {/* Special Instructions */}
+              {/* Special Instructions - Compact */}
               {selectedOrder.notes && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 sm:p-6">
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 sm:p-3">
                   <div className="flex items-start">
-                    <div className="bg-amber-100 rounded-full p-2 mr-3 flex-shrink-0">
-                      <Calendar className="h-5 w-5 text-amber-600" />
+                    <div className="bg-amber-100 rounded-full p-1 mr-2 flex-shrink-0">
+                      <Calendar className="h-3 w-3 text-amber-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Special Instructions</h3>
-                      <p className="text-gray-700 leading-relaxed break-words">{selectedOrder.notes}</p>
+                      <h3 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1">Notes</h3>
+                      <p className="text-gray-700 text-xs break-words">{selectedOrder.notes}</p>
                     </div>
                   </div>
                 </div>
               )}
-              
-              {/* Modal Footer */}
-              <div className="border-t bg-gray-50 px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:justify-end gap-3 mt-6 -mx-4 sm:-mx-6 -mb-4 sm:-mb-6 rounded-b-xl">
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    setShowOrderModal(false);
-                    setSelectedOrder(null);
-                  }}
-                  className="w-full sm:w-auto"
-                >
-                  Close
-                </Button>
-                <Button
-                  onClick={() => window.print()}
-                  className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  Print Order
-                </Button>
               </div>
+            </div>
+            
+            {/* Modal Footer - Outside scrollable area */}
+            <div className="border-t bg-white px-0 py-3 flex flex-col sm:flex-row sm:justify-end gap-2 mt-4 flex-shrink-0 mb-2 lg:mb-0">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setShowOrderModal(false);
+                  setSelectedOrder(null);
+                }}
+                className="w-full sm:w-auto text-sm py-2.5"
+              >
+                Close
+              </Button>
+              <Button
+                onClick={() => window.print()}
+                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white text-sm py-2.5"
+              >
+                Print Order
+              </Button>
             </div>
           </div>
         )}

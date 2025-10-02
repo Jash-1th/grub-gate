@@ -202,6 +202,312 @@ const AnalyticsPage = () => {
     revenue: item.revenue
   }));
 
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <div className="space-y-6">
+            {/* Metrics Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+              {metrics.map((metric, index) => {
+                const Icon = metric.icon;
+                const isPositive = metric.change > 0;
+                return (
+                  <Card key={index} className={`hover:shadow-lg transition-all duration-200 border-l-4 ${metric.borderColor}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${metric.bgColor} mb-3`}>
+                            <Icon className={`h-5 w-5 ${metric.color}`} />
+                          </div>
+                          <p className="text-sm font-medium text-gray-600 mb-1 truncate">
+                            {metric.title}
+                          </p>
+                          <p className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+                            {metric.value}
+                          </p>
+                          <div className={`flex items-center text-sm ${
+                            isPositive ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {isPositive ? (
+                              <ArrowUpRight className="h-4 w-4 mr-1" />
+                            ) : (
+                              <ArrowDownRight className="h-4 w-4 mr-1" />
+                            )}
+                            <span className="font-medium">{Math.abs(metric.change)}%</span>
+                            <span className="text-gray-500 ml-1 text-xs">vs last period</span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        );
+
+      case 'revenue':
+        return (
+          <div className="space-y-6">
+            {/* Revenue Metrics */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {metrics.filter(m => m.title.includes('Revenue') || m.title.includes('Order')).map((metric, index) => {
+                const Icon = metric.icon;
+                const isPositive = metric.change > 0;
+                return (
+                  <Card key={index} className={`hover:shadow-lg transition-all duration-200 border-l-4 ${metric.borderColor}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${metric.bgColor} mb-3`}>
+                            <Icon className={`h-5 w-5 ${metric.color}`} />
+                          </div>
+                          <p className="text-sm font-medium text-gray-600 mb-1 truncate">
+                            {metric.title}
+                          </p>
+                          <p className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+                            {metric.value}
+                          </p>
+                          <div className={`flex items-center text-sm ${
+                            isPositive ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {isPositive ? (
+                              <ArrowUpRight className="h-4 w-4 mr-1" />
+                            ) : (
+                              <ArrowDownRight className="h-4 w-4 mr-1" />
+                            )}
+                            <span className="font-medium">{Math.abs(metric.change)}%</span>
+                            <span className="text-gray-500 ml-1 text-xs">vs last period</span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+            
+            {/* Revenue Chart */}
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold">Revenue Trend Analysis</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ChartComponent 
+                  data={mockAnalytics.chartData.revenue} 
+                  type="line" 
+                />
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+      case 'customers':
+        return (
+          <div className="space-y-6">
+            {/* Customer Metrics */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {metrics.filter(m => m.title.includes('Customers') || m.title.includes('Conversion')).map((metric, index) => {
+                const Icon = metric.icon;
+                const isPositive = metric.change > 0;
+                return (
+                  <Card key={index} className={`hover:shadow-lg transition-all duration-200 border-l-4 ${metric.borderColor}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${metric.bgColor} mb-3`}>
+                            <Icon className={`h-5 w-5 ${metric.color}`} />
+                          </div>
+                          <p className="text-sm font-medium text-gray-600 mb-1 truncate">
+                            {metric.title}
+                          </p>
+                          <p className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+                            {metric.value}
+                          </p>
+                          <div className={`flex items-center text-sm ${
+                            isPositive ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {isPositive ? (
+                              <ArrowUpRight className="h-4 w-4 mr-1" />
+                            ) : (
+                              <ArrowDownRight className="h-4 w-4 mr-1" />
+                            )}
+                            <span className="font-medium">{Math.abs(metric.change)}%</span>
+                            <span className="text-gray-500 ml-1 text-xs">vs last period</span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            {/* Customer Insights */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg font-semibold">Customer Segments</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center p-4 bg-blue-50 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {mockCustomers.filter(c => c.status === 'active').length}
+                        </div>
+                        <div className="text-sm text-gray-600">Active Customers</div>
+                      </div>
+                      <div className="text-center p-4 bg-green-50 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">
+                          {mockCustomers.filter(c => c.totalOrders > 5).length}
+                        </div>
+                        <div className="text-sm text-gray-600">Loyal Customers</div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg font-semibold">Top Customers</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {mockCustomers
+                      .sort((a, b) => b.totalSpent - a.totalSpent)
+                      .slice(0, 5)
+                      .map((customer, index) => (
+                        <div key={customer.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-grub-red text-white rounded-full flex items-center justify-center text-sm font-bold">
+                              {customer.name.charAt(0)}
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-900">{customer.name}</div>
+                              <div className="text-sm text-gray-500">{customer.totalOrders} orders</div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold text-grub-red">${customer.totalSpent.toFixed(0)}</div>
+                            <div className="text-sm text-gray-500">total spent</div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        );
+
+      case 'performance':
+        return (
+          <div className="space-y-6">
+            {/* Performance Metrics */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {metrics.filter(m => m.title.includes('Prep Time') || m.title.includes('Avg Order') || m.title.includes('Conversion')).map((metric, index) => {
+                const Icon = metric.icon;
+                const isPositive = metric.change > 0;
+                return (
+                  <Card key={index} className={`hover:shadow-lg transition-all duration-200 border-l-4 ${metric.borderColor}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${metric.bgColor} mb-3`}>
+                            <Icon className={`h-5 w-5 ${metric.color}`} />
+                          </div>
+                          <p className="text-sm font-medium text-gray-600 mb-1 truncate">
+                            {metric.title}
+                          </p>
+                          <p className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+                            {metric.value}
+                          </p>
+                          <div className={`flex items-center text-sm ${
+                            isPositive ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {isPositive ? (
+                              <ArrowUpRight className="h-4 w-4 mr-1" />
+                            ) : (
+                              <ArrowDownRight className="h-4 w-4 mr-1" />
+                            )}
+                            <span className="font-medium">{Math.abs(metric.change)}%</span>
+                            <span className="text-gray-500 ml-1 text-xs">vs last period</span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            {/* Performance Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg font-semibold">Order Status Distribution</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {orderStatusData.map((status, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div 
+                            className="w-4 h-4 rounded-full" 
+                            style={{ backgroundColor: status.color }}
+                          ></div>
+                          <span className="text-sm font-medium text-gray-700">{status.name}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-bold text-gray-900">{status.value}</span>
+                          <span className="text-xs text-gray-500">
+                            ({((status.value / totalOrders) * 100).toFixed(1)}%)
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg font-semibold">Top Performing Items</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {topItemsData.slice(0, 5).map((item, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex items-center justify-center w-8 h-8 bg-grub-red text-white rounded-full text-sm font-bold">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-900">{item.name}</div>
+                            <div className="text-sm text-gray-500">{item.orders} orders</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-grub-red">${item.revenue.toFixed(0)}</div>
+                          <div className="text-sm text-gray-500">revenue</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -261,281 +567,9 @@ const AnalyticsPage = () => {
           </div>
         </div>
 
-        {/* Metrics Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-          {metrics.map((metric, index) => {
-            const Icon = metric.icon;
-            const isPositive = metric.change > 0;
-            return (
-              <Card key={index} className={`hover:shadow-lg transition-all duration-200 border-l-4 ${metric.borderColor}`}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${metric.bgColor} mb-3`}>
-                        <Icon className={`h-5 w-5 ${metric.color}`} />
-                      </div>
-                      <p className="text-sm font-medium text-gray-600 mb-1 truncate">
-                        {metric.title}
-                      </p>
-                      <p className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                        {metric.value}
-                      </p>
-                      <div className={`flex items-center text-sm ${
-                        isPositive ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {isPositive ? (
-                          <ArrowUpRight className="h-4 w-4 mr-1" />
-                        ) : (
-                          <ArrowDownRight className="h-4 w-4 mr-1" />
-                        )}
-                        <span className="font-medium">{Math.abs(metric.change)}%</span>
-                        <span className="text-gray-500 ml-1 text-xs">vs last period</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+        {/* Tab Content */}
+        {renderTabContent()}
 
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Revenue Trend */}
-          <div className="xl:col-span-2">
-            <Card className="h-full">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-semibold">Revenue Trend</CardTitle>
-                  <div className="flex items-center space-x-2">
-                    <div className="flex items-center space-x-1">
-                      <div className="w-3 h-3 bg-grub-red rounded-full"></div>
-                      <span className="text-sm text-gray-600">Revenue</span>
-                    </div>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ChartComponent 
-                  data={mockAnalytics.chartData.revenue} 
-                  type="line" 
-                />
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Order Status Distribution */}
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-semibold">Order Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {orderStatusData.map((status, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div 
-                        className="w-4 h-4 rounded-full" 
-                        style={{ backgroundColor: status.color }}
-                      ></div>
-                      <span className="text-sm font-medium text-gray-700">{status.name}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm font-bold text-gray-900">{status.value}</span>
-                      <span className="text-xs text-gray-500">
-                        ({((status.value / totalOrders) * 100).toFixed(1)}%)
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Performance Insights */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Top Performing Items */}
-          <Card>
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold">Top Performing Items</CardTitle>
-                <Button variant="secondary" size="sm">
-                  <Eye className="h-4 w-4 mr-1" />
-                  View All
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {topItemsData.slice(0, 5).map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex items-center justify-center w-8 h-8 bg-grub-red text-white rounded-full text-sm font-bold">
-                        {index + 1}
-                      </div>
-                      <div>
-                        <div className="font-medium text-gray-900">{item.name}</div>
-                        <div className="text-sm text-gray-500">{item.orders} orders</div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-grub-red">${item.revenue.toFixed(0)}</div>
-                      <div className="text-sm text-gray-500">revenue</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Customer Insights */}
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-semibold">Customer Insights</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {mockCustomers.filter(c => c.status === 'active').length}
-                    </div>
-                    <div className="text-sm text-gray-600">Active Customers</div>
-                  </div>
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">
-                      ${(mockCustomers.reduce((sum, c) => sum + c.totalSpent, 0) / mockCustomers.length).toFixed(0)}
-                    </div>
-                    <div className="text-sm text-gray-600">Avg Customer Value</div>
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Top Customers</h4>
-                  <div className="space-y-2">
-                    {mockCustomers
-                      .sort((a, b) => b.totalSpent - a.totalSpent)
-                      .slice(0, 3)
-                      .map((customer, index) => (
-                        <div key={customer.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                          <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 bg-grub-red text-white rounded-full flex items-center justify-center text-sm font-bold">
-                              {customer.name.charAt(0)}
-                            </div>
-                            <div>
-                              <div className="font-medium text-sm text-gray-900">{customer.name}</div>
-                              <div className="text-xs text-gray-500">{customer.totalOrders} orders</div>
-                            </div>
-                          </div>
-                          <div className="text-sm font-bold text-grub-red">
-                            ${customer.totalSpent.toFixed(0)}
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Detailed Analytics Table */}
-        <Card>
-          <CardHeader className="pb-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <CardTitle className="text-lg font-semibold">Menu Item Performance</CardTitle>
-              <div className="flex items-center space-x-2">
-                <Button variant="secondary" size="sm">
-                  <Filter className="h-4 w-4 mr-1" />
-                  Filter
-                </Button>
-                <Button variant="secondary" size="sm">
-                  <Download className="h-4 w-4 mr-1" />
-                  Export
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {/* Mobile View */}
-            <div className="lg:hidden space-y-4">
-              {topItemsData.map((item, index) => (
-                <div key={index} className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                    <span className="bg-grub-red text-white px-2 py-1 rounded-full text-xs font-medium">
-                      #{index + 1}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-500">Orders:</span>
-                      <span className="font-medium text-gray-900 ml-1">{item.orders}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Revenue:</span>
-                      <span className="font-medium text-grub-red ml-1">${item.revenue.toFixed(2)}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Avg Price:</span>
-                      <span className="font-medium text-gray-900 ml-1">${(item.revenue / item.orders).toFixed(2)}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Performance:</span>
-                      <span className="font-medium text-green-600 ml-1">+{(Math.random() * 20 + 5).toFixed(1)}%</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Desktop Table View */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-4 px-4 font-semibold text-gray-900">Rank</th>
-                    <th className="text-left py-4 px-4 font-semibold text-gray-900">Item Name</th>
-                    <th className="text-left py-4 px-4 font-semibold text-gray-900">Orders</th>
-                    <th className="text-left py-4 px-4 font-semibold text-gray-900">Revenue</th>
-                    <th className="text-left py-4 px-4 font-semibold text-gray-900">Avg Price</th>
-                    <th className="text-left py-4 px-4 font-semibold text-gray-900">Performance</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topItemsData.map((item, index) => (
-                    <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                      <td className="py-4 px-4">
-                        <div className="flex items-center justify-center w-8 h-8 bg-grub-red text-white rounded-full text-sm font-bold">
-                          {index + 1}
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="font-semibold text-gray-900">{item.name}</div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className="font-medium text-gray-900">{item.orders}</span>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className="font-bold text-grub-red">${item.revenue.toFixed(2)}</span>
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className="text-gray-900">${(item.revenue / item.orders).toFixed(2)}</span>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center">
-                          <ArrowUpRight className="h-4 w-4 text-green-600 mr-1" />
-                          <span className="text-green-600 font-medium">+{(Math.random() * 20 + 5).toFixed(1)}%</span>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

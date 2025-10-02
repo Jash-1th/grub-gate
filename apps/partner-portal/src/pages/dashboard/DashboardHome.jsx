@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { 
   TrendingUp, 
   ShoppingBag, 
@@ -8,13 +9,15 @@ import {
   Clock,
   Star,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Plus
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@grub-gate/ui';
 import { mockAnalytics, mockOrders, mockMenuItems } from '../../lib/mock-data.js';
 
 const DashboardHome = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   const stats = [
     {
@@ -158,40 +161,55 @@ const DashboardHome = () => {
         {/* Top Menu Items */}
         <Card>
           <CardHeader className="pb-3 lg:pb-4">
-            <CardTitle className="text-lg lg:text-xl">{t('analytics.metrics.topItems')}</CardTitle>
+            <CardTitle className="text-lg lg:text-xl">Top Selling Items</CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-3 lg:space-y-4">
-              {topMenuItems.map((item, index) => (
-                <div key={item.id} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2 lg:space-x-3 min-w-0">
-                    <div className="h-7 w-7 lg:h-8 lg:w-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs lg:text-sm font-medium text-gray-600">
-                        {index + 1}
-                      </span>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-medium text-gray-900 text-sm lg:text-base truncate">
-                        {item.name}
-                      </p>
-                      <div className="flex items-center">
-                        <Star className="h-3 w-3 lg:h-4 lg:w-4 text-yellow-400 fill-current" />
-                        <span className="text-xs lg:text-sm text-gray-500 ml-1">
-                          {item.rating}
+              {topMenuItems.length > 0 ? (
+                topMenuItems.map((item, index) => (
+                  <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div className="flex items-center space-x-2 lg:space-x-3 min-w-0">
+                      <div className="h-7 w-7 lg:h-8 lg:w-8 bg-grub-red text-white rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs lg:text-sm font-bold">
+                          {index + 1}
                         </span>
                       </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900 text-sm lg:text-base truncate">
+                          {item.name}
+                        </p>
+                        <div className="flex items-center">
+                          <Star className="h-3 w-3 lg:h-4 lg:w-4 text-yellow-400 fill-current" />
+                          <span className="text-xs lg:text-sm text-gray-500 ml-1">
+                            {item.rating} • ${item.price}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="font-bold text-grub-red text-sm lg:text-base">
+                        {item.totalOrders}
+                      </p>
+                      <p className="text-xs lg:text-sm text-gray-500">
+                        orders
+                      </p>
                     </div>
                   </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="font-medium text-gray-900 text-sm lg:text-base">
-                      {item.totalOrders}
-                    </p>
-                    <p className="text-xs lg:text-sm text-gray-500">
-                      {t('dashboard.stats.orders')}
-                    </p>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <ShoppingBag className="h-6 w-6 text-gray-400" />
                   </div>
+                  <p className="text-gray-500 text-sm">No menu items yet</p>
+                  <button 
+                    onClick={() => navigate('/dashboard/menu')}
+                    className="mt-2 text-grub-red text-sm font-medium hover:text-grub-red-light"
+                  >
+                    Add your first menu item
+                  </button>
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
@@ -204,37 +222,46 @@ const DashboardHome = () => {
         </CardHeader>
         <CardContent className="pt-0">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-4">
-            <button className="p-3 lg:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+            <button 
+              onClick={() => navigate('/dashboard/menu')}
+              className="p-3 lg:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-grub-red transition-all text-left group"
+            >
               <div className="flex items-center space-x-2 lg:space-x-3">
-                <div className="h-8 w-8 lg:h-10 lg:w-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <ShoppingBag className="h-4 w-4 lg:h-5 lg:w-5 text-blue-600" />
+                <div className="h-8 w-8 lg:h-10 lg:w-10 bg-blue-100 group-hover:bg-blue-200 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
+                  <Plus className="h-4 w-4 lg:h-5 lg:w-5 text-blue-600" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-medium text-gray-900 text-sm lg:text-base">Add Menu Item</p>
+                  <p className="font-medium text-gray-900 text-sm lg:text-base group-hover:text-grub-red transition-colors">Add Menu Item</p>
                   <p className="text-xs lg:text-sm text-gray-500">Create a new dish</p>
                 </div>
               </div>
             </button>
             
-            <button className="p-3 lg:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+            <button 
+              onClick={() => navigate('/dashboard/analytics')}
+              className="p-3 lg:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-grub-red transition-all text-left group"
+            >
               <div className="flex items-center space-x-2 lg:space-x-3">
-                <div className="h-8 w-8 lg:h-10 lg:w-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="h-8 w-8 lg:h-10 lg:w-10 bg-green-100 group-hover:bg-green-200 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
                   <TrendingUp className="h-4 w-4 lg:h-5 lg:w-5 text-green-600" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-medium text-gray-900 text-sm lg:text-base">View Analytics</p>
+                  <p className="font-medium text-gray-900 text-sm lg:text-base group-hover:text-grub-red transition-colors">View Analytics</p>
                   <p className="text-xs lg:text-sm text-gray-500">Check performance</p>
                 </div>
               </div>
             </button>
             
-            <button className="p-3 lg:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+            <button 
+              onClick={() => navigate('/dashboard/customers')}
+              className="p-3 lg:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-grub-red transition-all text-left group"
+            >
               <div className="flex items-center space-x-2 lg:space-x-3">
-                <div className="h-8 w-8 lg:h-10 lg:w-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="h-8 w-8 lg:h-10 lg:w-10 bg-purple-100 group-hover:bg-purple-200 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
                   <Users className="h-4 w-4 lg:h-5 lg:w-5 text-purple-600" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-medium text-gray-900 text-sm lg:text-base">Manage Customers</p>
+                  <p className="font-medium text-gray-900 text-sm lg:text-base group-hover:text-grub-red transition-colors">Manage Customers</p>
                   <p className="text-xs lg:text-sm text-gray-500">View customer data</p>
                 </div>
               </div>
