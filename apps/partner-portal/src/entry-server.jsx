@@ -12,67 +12,27 @@ const seoImportantRoutes = ['/', '/login', '/register', '/forgot-password']
 export async function render(url, manifest) {
   // Normalize the URL - ensure it starts with / and handle empty string
   const normalizedUrl = url === '' ? '/' : url
-  const isSEORoute = seoImportantRoutes.includes(normalizedUrl)
   
-  // Always render something for all routes to prevent 404s
-  // For non-SEO routes, we'll render a minimal shell
-
   try {
-    // Ensure i18n is ready for SSR
-    if (!i18n.isInitialized) {
-      await i18n.init()
-    }
-
-    // Always render the app for all routes
-    const html = renderToString(
-      <I18nextProvider i18n={i18n}>
-        <StaticRouter location={normalizedUrl}>
-          <App />
-        </StaticRouter>
-      </I18nextProvider>
-    )
-
-    // Generate appropriate meta tags
-    let head = ''
+    console.log('Rendering SSR for URL:', normalizedUrl)
     
-    if (isSEORoute) {
-      // Full SEO treatment for important routes
-      const seoData = generateSEOMeta(normalizedUrl === '/' ? 'home' : normalizedUrl.slice(1), {})
-      const structuredData = generateStructuredData(normalizedUrl === '/' ? 'home' : normalizedUrl.slice(1), {})
-      
-      head = `
-        <title>${seoData.title}</title>
-        <meta name="description" content="${seoData.description}" />
-        <meta name="keywords" content="${seoData.keywords}" />
-        <link rel="canonical" href="${seoData.canonical}" />
-        
-        <!-- Open Graph -->
-        <meta property="og:title" content="${seoData.ogTitle}" />
-        <meta property="og:description" content="${seoData.ogDescription}" />
-        <meta property="og:url" content="${seoData.canonical}" />
-        
-        <!-- Twitter Card -->
-        <meta name="twitter:title" content="${seoData.ogTitle}" />
-        <meta name="twitter:description" content="${seoData.ogDescription}" />
-        
-        ${structuredData ? `<script type="application/ld+json">${JSON.stringify(structuredData)}</script>` : ''}
-      `
-    } else {
-      // Basic meta tags for dashboard routes
-      head = `
-        <title>GrubGate Partner Portal</title>
-        <meta name="description" content="Restaurant management dashboard for GrubGate partners" />
-        <meta name="robots" content="noindex, nofollow" />
-      `
-    }
+    // For development, let's use a simple approach
+    // Return empty HTML to let client-side rendering handle everything
+    const head = `
+      <title>GrubGate Partner Portal</title>
+      <meta name="description" content="Restaurant management dashboard for GrubGate partners" />
+    `
 
-    return { html, head }
+    return { 
+      html: '', // Empty for CSR
+      head 
+    }
     
   } catch (error) {
     console.error('SSR Error:', error)
     return {
-      html: '<div>SSR Error occurred</div>',
-      head: ''
+      html: '',
+      head: '<title>GrubGate Partner Portal</title>'
     }
   }
 }

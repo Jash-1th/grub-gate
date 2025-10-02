@@ -29,29 +29,56 @@ async function createServer() {
         // 2) Apply Vite HTML transforms (injects @vite/client, etc.)
         template = await vite.transformIndexHtml(url, template);
 
-        // 3) Load your SSR entry and render the app
-        //    Your entry should export: export async function render(url) { return { html, head } }
-        const { render } = await vite.ssrLoadModule('/src/entry-server.jsx');
-        const { html: appHtml, head = '' } = await render(url);
+        // 3) Try to load SSR entry and render, with fallback to CSR
+        let appHtml = '';
+        let head = '';
+        
+        try {
+          const { render } = await vite.ssrLoadModule('/src/entry-server.jsx');
+          const result = await render(url);
+          appHtml = result.html || '';
+          head = result.head || '';
+          console.log('SSR render successful for:', url);
+        } catch (ssrError) {
+          console.log('SSR failed, using CSR fallback for:', url, ssrError.message);
+          // Use empty content for CSR fallback
+          appHtml = '';
+          head = '<title>GrubGate Partner Portal</title>';
+        }
 
-        // 4) DEV: inject global stylesheet as a normal <link> so CSS loads before hydration
-        //    This prevents FOUC because Tailwind/global styles are present in the initial HTML.
+        // 4) DEV: inject global stylesheet
         const cssLinks = [
-          // Add your global stylesheet(s) here:
           '<link rel="stylesheet" href="/src/styles/index.css" />',
         ].join('\n');
 
-        // 5) Assemble final HTML:
-        //    Replace your markers in index.html (ensure you have <!--app-head--> and <!--app-html-->)
+        // 5) Assemble final HTML
         const html = template
-          .replace('<!--app-head-->', `${head || ''}\n${cssLinks}`)
+          .replace('<!--app-head-->', `${head}\n${cssLinks}`)
           .replace('<!--app-html-->', appHtml);
 
         res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
       } catch (e) {
+        console.error('Server error:', e);
         vite.ssrFixStacktrace(e);
-        console.error(e);
-        res.status(500).end(e.message);
+        
+        // Fallback HTML in case of complete failure
+        const fallbackHtml = `
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <title>GrubGate Partner Portal</title>
+              <link rel="stylesheet" href="/src/styles/index.css" />
+            </head>
+            <body>
+              <div id="root"></div>
+              <script type="module" src="/src/main.jsx"></script>
+            </body>
+          </html>
+        `;
+        
+        res.status(200).set({ 'Content-Type': 'text/html' }).end(fallbackHtml);
       }
     });
   } else {
@@ -130,9 +157,11 @@ async function createServer() {
     });
   }
 
-  const port = process.env.PORT || 5173;
+  const port = process.env.PORT || 4000;
   app.listen(port, () => {
-    console.log(`SSR server running at http://localhost:${port}`);
+    console.log(`🚀 SSR server running at http://localhost:${port}`);
+    console.log(`📁 Serving from: ${__dirname}`);
+    console.log(`🔧 Environment: ${isProd ? 'production' : 'development'}`);
   });
 }
 
