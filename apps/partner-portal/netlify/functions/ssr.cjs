@@ -342,77 +342,140 @@ exports.handler = async (event, context) => {
     // Try to load the built assets
     const loadAssets = async () => {
       try {
-        // Try to fetch and parse the manifest
+        console.log('🔍 Attempting to load assets...');
+        
+        // First, try to fetch the Vite manifest
         const manifestResponse = await fetch('/manifest.json');
         if (manifestResponse.ok) {
           const manifest = await manifestResponse.json();
-          console.log('📋 Loaded Vite manifest');
+          console.log('📋 Vite manifest loaded:', Object.keys(manifest));
           
-          // Load CSS files
-          if (manifest['index.html'] && manifest['index.html'].css) {
-            manifest['index.html'].css.forEach(cssFile => {
-              const link = document.createElement('link');
-              link.rel = 'stylesheet';
-              link.href = '/' + cssFile;
-              document.head.appendChild(link);
-              console.log('🎨 Loaded CSS:', cssFile);
-            });
-          }
+          // Look for the main entry point in the manifest
+          const entryKey = Object.keys(manifest).find(key => 
+            key === 'index.html' || 
+            key === 'src/main.jsx' || 
+            key.includes('main.jsx') ||
+            key.includes('index.html')
+          );
           
-          // Load JS files
-          if (manifest['index.html'] && manifest['index.html'].file) {
-            const script = document.createElement('script');
-            script.type = 'module';
-            script.src = '/' + manifest['index.html'].file;
-            script.onload = () => console.log('✅ App loaded successfully');
-            script.onerror = () => console.error('❌ Failed to load app');
-            document.head.appendChild(script);
-          }
-        } else {
-          throw new Error('Manifest not found');
-        }
-      } catch (error) {
-        console.warn('⚠️ Manifest loading failed, trying fallback assets');
-        
-        // Fallback: try common asset patterns
-        const tryAsset = (src, type = 'script') => {
-          return new Promise((resolve) => {
-            if (type === 'script') {
+          if (entryKey && manifest[entryKey]) {
+            const entry = manifest[entryKey];
+            console.log('🎯 Found entry:', entryKey, entry);
+            
+            // Load CSS files
+            if (entry.css && Array.isArray(entry.css)) {
+              entry.css.forEach(cssFile => {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = cssFile.startsWith('/') ? cssFile : '/' + cssFile;
+                document.head.appendChild(link);
+                console.log('🎨 Loaded CSS:', cssFile);
+              });
+            }
+            
+            // Load main JS file
+            if (entry.file) {
               const script = document.createElement('script');
               script.type = 'module';
-              script.src = src;
+              script.src = entry.file.startsWith('/') ? entry.file : '/' + entry.file;
               script.onload = () => {
-                console.log('✅ Loaded:', src);
-                resolve(true);
+                console.log('✅ Main app loaded successfully');
+                // Hide loading screen after a short delay
+                setTimeout(() => {
+                  const loading = document.querySelector('.loading');
+                  if (loading) loading.style.display = 'none';
+                }, 1000);
               };
               script.onerror = () => {
-                console.warn('❌ Failed:', src);
-                resolve(false);
+                console.error('❌ Failed to load main app script');
+                tryFallbackAssets();
               };
               document.head.appendChild(script);
-            } else if (type === 'style') {
-              const link = document.createElement('link');
-              link.rel = 'stylesheet';
-              link.href = src;
-              link.onload = () => resolve(true);
-              link.onerror = () => resolve(false);
-              document.head.appendChild(link);
+              console.log('📦 Loading main script:', entry.file);
+              return; // Success, exit early
             }
-          });
-        };
+          }
+        }
         
-        // Try common asset paths
-        const assetPaths = [
-          '/assets/index.js',
-          '/assets/main.js', 
-          '/src/main.jsx'
-        ];
+        // If manifest loading failed, try fallback
+        throw new Error('Manifest parsing failed');
         
-        for (const path of assetPaths) {
-          const loaded = await tryAsset(path);
-          if (loaded) break;
+      } catch (error) {
+        console.warn('⚠️ Manifest loading failed:', error.message);
+        tryFallbackAssets();
+      }
+    };
+    
+    // Fallback asset loading
+    const tryFallbackAssets = async () => {
+      console.log('🔄 Trying fallback asset loading...');
+      
+      const tryAsset = (src, type = 'script') => {
+        return new Promise((resolve) => {
+          if (type === 'script') {
+            const script = document.createElement('script');
+            script.type = 'module';
+            script.src = src;
+            script.onload = () => {
+              console.log('✅ Fallback loaded:', src);
+              resolve(true);
+            };
+            script.onerror = () => {
+              console.warn('❌ Fallback failed:', src);
+              resolve(false);
+            };
+            document.head.appendChild(script);
+          } else if (type === 'style') {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = src;
+            link.onload = () => resolve(true);
+            link.onerror = () => resolve(false);
+            document.head.appendChild(link);
+          }
+        });
+      };
+      
+      // Try to find assets by scanning the page or making educated guesses
+      const commonPaths = [
+        '/assets/index.js',
+        '/assets/main.js',
+        '/assets/app.js',
+        '/src/main.jsx'
+      ];
+      
+      // Try CSS files first
+      const cssFiles = ['/assets/index.css', '/assets/main.css', '/assets/app.css'];
+      for (const css of cssFiles) {
+        await tryAsset(css, 'style');
+      }
+      
+      // Try JS files
+      for (const path of commonPaths) {
+        const loaded = await tryAsset(path);
+        if (loaded) {
+          setTimeout(() => {
+            const loading = document.querySelector('.loading');
+            if (loading) loading.style.display = 'none';
+          }, 1000);
+          break;
         }
       }
+      
+      // If nothing worked, show error message
+      setTimeout(() => {
+        const loading = document.querySelector('.loading');
+        if (loading && document.getElementById('root').children.length === 0) {
+          loading.innerHTML = \`
+            <div class="logo">G</div>
+            <h1>GrubGate Partner Portal</h1>
+            <p style="color: #ef4444;">Unable to load application assets.</p>
+            <p style="font-size: 14px; margin-top: 16px;">
+              <a href="/" style="color: #800020; text-decoration: underline;">Refresh Page</a>
+            </p>
+          \`;
+        }
+      }, 5000);
     };
     
     // Start loading assets
