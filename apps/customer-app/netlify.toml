@@ -1,13 +1,13 @@
-# Corrected netlify.toml
+# Netlify configuration for Customer App (Monorepo)
 
 [build]
-  # Use 'npm ci' for faster, more reliable builds and then run the build script.
-  command = "npm ci && npm run build"
+  # Build from root directory to install all workspace dependencies
+  command = "cd ../.. && npm ci && cd apps/customer-app && npm run build"
   
-  # The directory with the static assets from the client build.
+  # The directory with the static assets from the client build (relative to repo root)
   publish = "dist/client"
   
-  # The directory where your REGULAR Netlify Functions are located.
+  # The directory where your REGULAR Netlify Functions are located (relative to customer-app)
   functions = "netlify/functions"
 
 # This redirect rule is the key to making SSR work.

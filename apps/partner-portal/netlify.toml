@@ -1,14 +1,14 @@
-# Netlify configuration for GrubGate Partner Portal
+# Netlify configuration for Partner Portal (Monorepo)
 
 [build]
-  # Use 'npm ci' for faster, more reliable builds and then run the build script.
-  command = "npm ci && npm run build"
+  # Build from root directory to install all workspace dependencies
+  command = "cd ../.. && npm ci && cd apps/partner-portal && npm run build"
   
-  # The directory with the static assets from the client build.
-  publish = "dist/client"
+  # The directory with the static assets from the client build (relative to repo root)
+  publish = "apps/partner-portal/dist/client"
   
-  # The directory where your REGULAR Netlify Functions are located.
-  functions = "netlify/functions"
+  # The directory where your REGULAR Netlify Functions are located (relative to repo root)
+  functions = "apps/partner-portal/netlify/functions"
 
 # This redirect rule is the key to making SSR work.
 # It tells Netlify to send all page requests to your ssr.js function.
@@ -83,7 +83,4 @@
     Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
     Access-Control-Allow-Headers = "Content-Type, Authorization"
-
-
-
 

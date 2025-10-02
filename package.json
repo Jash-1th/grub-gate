@@ -15,6 +15,7 @@
     "dev:all": "concurrently \"npm run dev:customer\" \"npm run dev:partner\""
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "terser": "^5.44.0"
   }
 }
