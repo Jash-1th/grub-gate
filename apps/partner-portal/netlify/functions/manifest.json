@@ -1,0 +1,88 @@
+{
+  "name": "GrubGate Partner Portal",
+  "short_name": "GrubGate Partners",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FFFFFF",
+  "theme_color": "#800020",
+  "description": "GrubGate Partner Portal - Manage your restaurant business with subscription meal plans",
+  "categories": ["business", "food", "management", "productivity"],
+  "lang": "en",
+  "gcm_sender_id": "103953800507",
+  "icons": [
+    {
+      "src": "/icons/Logo.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your restaurant dashboard and analytics",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "/icons/Logo.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Menu Management",
+      "short_name": "Menu",
+      "description": "Manage your menu items and meal plans",
+      "url": "/dashboard/menu",
+      "icons": [
+        {
+          "src": "/icons/Logo.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "short_name": "Orders",
+      "description": "View and manage customer orders",
+      "url": "/dashboard/orders",
+      "icons": [
+        {
+          "src": "/icons/Logo.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "short_name": "Analytics",
+      "description": "Track your restaurant performance",
+      "url": "/dashboard/analytics",
+      "icons": [
+        {
+          "src": "/icons/Logo.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
+
+
+
+
+

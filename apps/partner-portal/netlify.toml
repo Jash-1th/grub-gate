@@ -10,8 +10,8 @@
   # The directory where your REGULAR Netlify Functions are located (relative to base directory)
   functions = "netlify/functions"
   
-  # Include the built HTML template in the functions bundle
-  included_files = ["dist/client/index.html"]
+  # Include the built HTML template and manifest in the functions bundle
+  included_files = ["dist/client/index.html", "dist/client/manifest.json"]
 
 [build.environment]
   # Specify Node.js version for compatibility

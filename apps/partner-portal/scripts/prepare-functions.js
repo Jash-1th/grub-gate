@@ -10,6 +10,8 @@ const __dirname = path.dirname(__filename);
 
 const sourceHtml = path.join(__dirname, '../dist/client/index.html');
 const targetHtml = path.join(__dirname, '../netlify/functions/index.html');
+const sourceManifest = path.join(__dirname, '../dist/client/manifest.json');
+const targetManifest = path.join(__dirname, '../netlify/functions/manifest.json');
 
 try {
   // Ensure the functions directory exists
@@ -24,6 +26,14 @@ try {
     console.log('✅ Copied HTML template to functions directory');
   } else {
     console.warn('⚠️  Built HTML template not found, functions will use fallback');
+  }
+
+  // Copy the Vite manifest to the functions directory
+  if (fs.existsSync(sourceManifest)) {
+    fs.copyFileSync(sourceManifest, targetManifest);
+    console.log('✅ Copied Vite manifest to functions directory');
+  } else {
+    console.warn('⚠️  Vite manifest not found, functions will use fallback asset names');
   }
 } catch (error) {
   console.error('❌ Error preparing functions:', error.message);

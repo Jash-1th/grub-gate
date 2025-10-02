@@ -4,6 +4,40 @@ const path = require('path');
 
 // Cache the HTML template to avoid reading it multiple times
 let cachedTemplate = null;
+let cachedManifest = null;
+
+// Get the Vite manifest to find correct asset filenames
+const getViteManifest = () => {
+  if (cachedManifest) {
+    return cachedManifest;
+  }
+  
+  try {
+    const manifestPaths = [
+      path.join(__dirname, 'manifest.json'), // Check functions directory first
+      path.join(__dirname, '../../dist/client/manifest.json'),
+      path.join(__dirname, '../../../dist/client/manifest.json'),
+      path.join(process.cwd(), 'dist/client/manifest.json')
+    ];
+    
+    for (const manifestPath of manifestPaths) {
+      try {
+        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+        cachedManifest = manifest;
+        console.log('Successfully loaded Vite manifest from:', manifestPath);
+        return manifest;
+      } catch (err) {
+        // Continue to next path
+      }
+    }
+    
+    console.warn('Vite manifest not found, using fallback asset names');
+    return null;
+  } catch (error) {
+    console.warn('Failed to read Vite manifest:', error.message);
+    return null;
+  }
+};
 
 // Read the HTML template
 const getHTMLTemplate = () => {
@@ -44,15 +78,35 @@ const getHTMLTemplate = () => {
   } catch (error) {
     console.error('Failed to read built HTML template, using fallback:', error.message);
     
-    // Fallback: create a minimal HTML template that works
+    // Fallback: create a minimal HTML template that works with production assets
     // This will use CSR (Client-Side Rendering) as a last resort
+    const manifest = getViteManifest();
+    let cssLinks = '';
+    let jsScripts = '';
+    
+    if (manifest) {
+      // Extract CSS and JS files from manifest
+      Object.values(manifest).forEach(entry => {
+        if (entry.css) {
+          entry.css.forEach(cssFile => {
+            cssLinks += `<link rel="stylesheet" href="/${cssFile}" />`;
+          });
+        }
+        if (entry.file && entry.file.endsWith('.js')) {
+          jsScripts += `<script type="module" src="/${entry.file}"></script>`;
+        }
+      });
+    } else {
+      // Fallback to hardcoded asset names from recent build
+      cssLinks = '<link rel="stylesheet" href="/assets/main-BMus0RaL.css" />';
+      jsScripts = '<script type="module" src="/assets/index-Z3AZW6eE.js"></script><script type="module" src="/assets/main-DjdNfWii.js"></script>';
+    }
+    
     return `
       <!DOCTYPE html>
       <html lang="en">
         <head>
           <meta charset="UTF-8" />
-          <link rel="icon" type="image/png" href="/icons/Logo.png" />
-          <link rel="apple-touch-icon" href="/icons/Logo.png" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
           <meta name="description" content="GrubGate Partner Portal - Manage your restaurant business with subscription meal plans." />
           <meta name="keywords" content="restaurant management, food delivery, meal subscription, business analytics, Montreal restaurants" />
@@ -72,10 +126,13 @@ const getHTMLTemplate = () => {
           <title>GrubGate Partner Portal - Restaurant Management Platform</title>
           
           <!--app-head-->
-          <script type="module" src="/src/main.jsx"></script>
+          
+          ${cssLinks}
         </head>
         <body>
           <div id="root"><!--app-html--></div>
+          
+          ${jsScripts}
         </body>
       </html>
     `;
