@@ -1,14 +1,14 @@
-# Netlify configuration for GrubGate Partner Portal
+# Netlify configuration for Partner Portal (Monorepo)
 
 [build]
   # Install dependencies from root (monorepo) and build the partner portal
   command = "cd ../.. && npm install && cd apps/partner-portal && npm run build"
   
-  # The directory with the static assets from the client build.
-  publish = "dist/client"
+  # The directory with the static assets from the client build (relative to repo root)
+  publish = "apps/partner-portal/dist/client"
   
-  # The directory where your REGULAR Netlify Functions are located.
-  functions = "netlify/functions"
+  # The directory where your REGULAR Netlify Functions are located (relative to repo root)
+  functions = "apps/partner-portal/netlify/functions"
 
 [build.environment]
   # Specify Node.js version for compatibility
@@ -89,7 +89,4 @@
     Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
     Access-Control-Allow-Headers = "Content-Type, Authorization"
-
-
-
 

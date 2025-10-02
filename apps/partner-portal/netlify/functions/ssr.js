@@ -1,30 +1,6 @@
-// Netlify Edge Function for GrubGate Partner Portal SSR
-import { renderToString } from 'react-dom/server';
-import React from 'react';
-import { StaticRouter } from 'react-router-dom/server';
-import { I18nextProvider } from 'react-i18next';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Import the SSR entry point
-let App;
-let i18n;
-
-try {
-  // Try to import the SSR build
-  const ssrModule = await import('../../dist/server/main.ssr.js');
-  App = ssrModule.default;
-  i18n = ssrModule.i18n;
-} catch (error) {
-  console.error('Failed to load SSR module:', error);
-  // Fallback to client-side rendering
-  App = null;
-  i18n = null;
-}
+// Netlify Serverless Function for GrubGate Partner Portal SSR
+const fs = require('fs');
+const path = require('path');
 
 // Read the HTML template
 const getHTMLTemplate = () => {
@@ -126,72 +102,71 @@ const generateMetaTags = (url, userAgent) => {
 };
 
 // Main handler function
-export default async (request, context) => {
-  const { url, headers } = request;
-  const userAgent = headers.get('user-agent') || '';
-  const acceptLanguage = headers.get('accept-language') || 'en';
+exports.handler = async (event, context) => {
+  const { path: urlPath, headers } = event;
+  const userAgent = headers['user-agent'] || '';
   
-  console.log('SSR Handler - URL:', url);
+  console.log('SSR Handler - URL:', urlPath);
   console.log('SSR Handler - User Agent:', userAgent);
-  console.log('SSR Handler - Accept Language:', acceptLanguage);
   
   try {
     // Get the HTML template
     let html = getHTMLTemplate();
     
-    // If SSR module is available, try to render
-    if (App && i18n) {
+    // Try to load and render SSR
+    let ssrModule;
+    try {
+      // Import the SSR build
+      ssrModule = require('../../dist/server/entry-server.js');
+      console.log('SSR module loaded successfully');
+    } catch (error) {
+      console.log('SSR module not available, using CSR fallback:', error.message);
+    }
+    
+    if (ssrModule && ssrModule.render) {
       try {
         console.log('Attempting SSR render...');
         
-        // Extract the pathname from the URL
-        const urlObj = new URL(url);
-        const pathname = urlObj.pathname;
-        
-        // Render the app to string
-        const appHtml = renderToString(
-          React.createElement(I18nextProvider, { i18n },
-            React.createElement(StaticRouter, { location: pathname },
-              React.createElement(App)
-            )
-          )
-        );
+        // Render the app
+        const { html: appHtml, head = '' } = await ssrModule.render(urlPath || '/');
         
         // Replace the root div content
-        html = html.replace(
-          '<div id="root"><!--app-html--></div>',
-          `<div id="root">${appHtml}</div>`
-        );
+        if (appHtml) {
+          html = html.replace(
+            '<div id="root"><!--app-html--></div>',
+            `<div id="root">${appHtml}</div>`
+          );
+        }
         
         // Replace the head content with dynamic meta tags
-        const metaTags = generateMetaTags(pathname, userAgent);
-        html = html.replace('<!--app-head-->', metaTags);
+        const metaTags = generateMetaTags(urlPath || '/', userAgent);
+        html = html.replace('<!--app-head-->', `${head}\n${metaTags}`);
         
         console.log('SSR render successful');
       } catch (ssrError) {
         console.error('SSR render failed, falling back to CSR:', ssrError);
         // Keep the original HTML for client-side rendering
+        const metaTags = generateMetaTags(urlPath || '/', userAgent);
+        html = html.replace('<!--app-head-->', metaTags);
       }
     } else {
       console.log('SSR module not available, using CSR fallback');
       // Replace the head content with dynamic meta tags
-      const urlObj = new URL(url);
-      const metaTags = generateMetaTags(urlObj.pathname, userAgent);
+      const metaTags = generateMetaTags(urlPath || '/', userAgent);
       html = html.replace('<!--app-head-->', metaTags);
     }
     
     // Return the HTML response
-    return new Response(html, {
-      status: 200,
+    return {
+      statusCode: 200,
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
-        'Expires': '0',
-        'X-SSR': App ? 'true' : 'false',
-        'X-Render-Time': new Date().toISOString()
-      }
-    });
+        'Expires': '0'
+      },
+      body: html
+    };
     
   } catch (error) {
     console.error('SSR handler error:', error);
@@ -213,20 +188,22 @@ export default async (request, context) => {
           <h1 class="error">GrubGate Partner Portal</h1>
           <p>Loading your restaurant management platform...</p>
           <div id="root"></div>
-          <script type="module" src="/src/entry-client.jsx"></script>
+          <script type="module" src="/src/main.jsx"></script>
         </body>
       </html>
     `;
     
-    return new Response(errorHtml, {
-      status: 200,
+    return {
+      statusCode: 200,
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'no-cache, no-store, must-revalidate'
-      }
-    });
+      },
+      body: errorHtml
+    };
   }
 };
+
 
 
 

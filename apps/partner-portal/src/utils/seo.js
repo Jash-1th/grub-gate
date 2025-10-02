@@ -72,3 +72,4 @@ export const generateStructuredData = (page, data = {}) => {
 
 
 
+
