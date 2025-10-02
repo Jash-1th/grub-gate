@@ -74,11 +74,11 @@ const MenuPage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="rounded-xl bg-gradient-to-r from-grub-red to-red-600 !text-white p-4 sm:p-6">
+      <div className="rounded-xl bg-gradient-to-r from-grub-red to-red-600 text-white p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold !text-white">{t('menu.title')}</h1>
-            <p className="!text-red-100 text-sm">{t('menu.subtitle')}</p>
+            <h1 className="text-xl sm:text-2xl font-bold">{t('menu.title')}</h1>
+            <p className="text-red-100 text-sm">{t('menu.subtitle')}</p>
           </div>
           <Button
             variant="primary"

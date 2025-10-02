@@ -34,11 +34,11 @@ const CustomersPage = () => {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-grub-red to-red-600 rounded-xl p-4 sm:p-6 !text-white">
+      <div className="bg-gradient-to-r from-grub-red to-red-600 rounded-xl p-4 sm:p-6 text-white">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold !text-white">Customer Management</h1>
-            <p className="!text-red-100 text-sm">Manage and track your customers</p>
+            <h1 className="text-xl sm:text-2xl font-bold">Customer Management</h1>
+            <p className="text-red-100 text-sm">Manage and track your customers</p>
           </div>
           <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
             <span className="text-sm font-medium">{filteredCustomers.length} Customers</span>

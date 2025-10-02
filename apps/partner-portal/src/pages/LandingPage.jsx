@@ -129,12 +129,12 @@ const LandingPage = () => {
             {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-6">
               {stats.map((stat, index) => (
-                <Card key={index} className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-200">
+                <Card key={index} className="bg-white/10 backdrop-blur-sm border-white/20">
                   <CardContent className="p-6 text-center">
-                    <div className="text-3xl font-bold !text-white mb-2 drop-shadow-sm">
+                    <div className="text-3xl font-bold text-white mb-2">
                       {stat.value}
                     </div>
-                    <div className="!text-red-100 text-sm font-medium drop-shadow-sm">
+                    <div className="text-red-100 text-sm">
                       {stat.label}
                     </div>
                   </CardContent>
