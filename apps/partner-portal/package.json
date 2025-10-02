@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:ssr": "node server.js",
-    "build": "vite build && vite build --config vite.config.ssr.js",
+    "build": "vite build && vite build --config vite.config.ssr.js && node scripts/prepare-functions.js",
     "build:client": "vite build",
     "build:server": "vite build --config vite.config.ssr.js",
     "build:ssr": "npm run build:client && npm run build:server",

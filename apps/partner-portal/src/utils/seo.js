@@ -1,43 +1,57 @@
 // SEO utilities for public pages
-export const generateSEOMeta = (page, data = {}) => {
+export const generateSEOMeta = (url, data = {}) => {
   const baseUrl = 'https://partners.grubgate.app'
+  
+  // Map URL paths to SEO data
+  const getPageKey = (url) => {
+    if (url === '/' || url === '') return 'home'
+    if (url === '/login') return 'login'
+    if (url === '/register') return 'register'
+    if (url === '/forgot-password') return 'forgotPassword'
+    if (url.startsWith('/dashboard')) return 'dashboard'
+    return 'home'
+  }
   
   const seoData = {
     home: {
       title: 'GrubGate Partner Portal - Join Montreal\'s Leading Restaurant Network',
       description: 'Join Montreal\'s leading restaurant network and grow your business with predictable revenue through subscription meal plans. Partner with GrubGate today.',
       keywords: 'restaurant partners, Montreal restaurants, food delivery, subscription meals, restaurant business',
-      ogTitle: 'GrubGate Partner Portal - Grow Your Restaurant Business',
-      ogDescription: 'Join Montreal\'s leading restaurant network and grow your business with predictable revenue.',
+      image: `${baseUrl}/icons/logo512.png`,
       canonical: baseUrl
     },
     login: {
       title: 'Login - GrubGate Partner Portal',
       description: 'Sign in to your GrubGate partner dashboard to manage your restaurant, orders, and analytics.',
       keywords: 'partner login, restaurant dashboard, GrubGate login',
-      ogTitle: 'Partner Login - GrubGate',
-      ogDescription: 'Sign in to your GrubGate partner dashboard.',
+      image: `${baseUrl}/icons/logo512.png`,
       canonical: `${baseUrl}/login`
     },
     register: {
       title: 'Join GrubGate - Partner Registration',
       description: 'Register your restaurant with GrubGate and start growing your business with subscription meal plans.',
       keywords: 'restaurant registration, join GrubGate, partner signup, restaurant partnership',
-      ogTitle: 'Join GrubGate - Partner Registration',
-      ogDescription: 'Register your restaurant with GrubGate and start growing your business.',
+      image: `${baseUrl}/icons/logo512.png`,
       canonical: `${baseUrl}/register`
     },
     forgotPassword: {
       title: 'Reset Password - GrubGate Partner Portal',
       description: 'Reset your GrubGate partner account password to regain access to your dashboard.',
       keywords: 'reset password, forgot password, GrubGate partner',
-      ogTitle: 'Reset Password - GrubGate Partner',
-      ogDescription: 'Reset your GrubGate partner account password.',
+      image: `${baseUrl}/icons/logo512.png`,
       canonical: `${baseUrl}/forgot-password`
+    },
+    dashboard: {
+      title: 'Dashboard - GrubGate Partner Portal',
+      description: 'Manage your restaurant dashboard, view analytics, and track your performance with GrubGate.',
+      keywords: 'restaurant dashboard, partner analytics, order management, GrubGate',
+      image: `${baseUrl}/icons/logo512.png`,
+      canonical: `${baseUrl}/dashboard`
     }
   }
 
-  return seoData[page] || seoData.home
+  const pageKey = getPageKey(url)
+  return seoData[pageKey] || seoData.home
 }
 
 export const generateStructuredData = (page, data = {}) => {

@@ -157,7 +157,7 @@ async function createServer() {
     });
   }
 
-  const port = process.env.PORT || 4000;
+  const port = process.env.PORT || 4001;
   app.listen(port, () => {
     console.log(`🚀 SSR server running at http://localhost:${port}`);
     console.log(`📁 Serving from: ${__dirname}`);

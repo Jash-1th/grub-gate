@@ -2,32 +2,80 @@
 const fs = require('fs');
 const path = require('path');
 
+// Cache the HTML template to avoid reading it multiple times
+let cachedTemplate = null;
+
 // Read the HTML template
 const getHTMLTemplate = () => {
+  if (cachedTemplate) {
+    return cachedTemplate;
+  }
+  
   try {
-    // Try to read the built HTML template first
-    const templatePath = path.join(__dirname, '../../dist/client/index.html');
-    const html = fs.readFileSync(templatePath, 'utf8');
-    console.log('Successfully loaded built HTML template');
-    return html;
+    // Try to read the HTML template from the functions directory first
+    const localTemplate = path.join(__dirname, 'index.html');
+    
+    if (fs.existsSync(localTemplate)) {
+      const html = fs.readFileSync(localTemplate, 'utf8');
+      console.log('Successfully loaded HTML template from functions directory');
+      cachedTemplate = html;
+      return html;
+    }
+    
+    // Fallback: try other possible locations
+    const possiblePaths = [
+      path.join(__dirname, '../../dist/client/index.html'),
+      path.join(__dirname, '../../../dist/client/index.html'),
+      path.join(process.cwd(), 'dist/client/index.html'),
+      path.join(process.cwd(), 'index.html')
+    ];
+    
+    for (const templatePath of possiblePaths) {
+      try {
+        const html = fs.readFileSync(templatePath, 'utf8');
+        console.log('Successfully loaded built HTML template from:', templatePath);
+        return html;
+      } catch (err) {
+        // Continue to next path
+      }
+    }
+    
+    throw new Error('No HTML template found in any location');
   } catch (error) {
     console.error('Failed to read built HTML template, using fallback:', error.message);
     
     // Fallback: create a minimal HTML template that works
+    // This will use CSR (Client-Side Rendering) as a last resort
     return `
       <!DOCTYPE html>
       <html lang="en">
         <head>
           <meta charset="UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <title>GrubGate Partner Portal</title>
           <link rel="icon" type="image/png" href="/icons/Logo.png" />
+          <link rel="apple-touch-icon" href="/icons/Logo.png" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+          <meta name="description" content="GrubGate Partner Portal - Manage your restaurant business with subscription meal plans." />
+          <meta name="keywords" content="restaurant management, food delivery, meal subscription, business analytics, Montreal restaurants" />
+          <meta name="author" content="GrubGate" />
+          
+          <!-- PWA Manifest -->
+          <link rel="manifest" href="/manifest.json" />
+          
+          <!-- Theme and Status Bar -->
           <meta name="theme-color" content="#800020" />
+          <meta name="msapplication-TileColor" content="#800020" />
+          <meta name="mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+          <meta name="apple-mobile-web-app-title" content="GrubGate Partners" />
+          
+          <title>GrubGate Partner Portal - Restaurant Management Platform</title>
+          
           <!--app-head-->
+          <script type="module" src="/src/main.jsx"></script>
         </head>
         <body>
           <div id="root"><!--app-html--></div>
-          <!-- Built scripts will be loaded automatically -->
         </body>
       </html>
     `;

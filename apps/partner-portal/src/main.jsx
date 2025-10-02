@@ -21,10 +21,16 @@ if (typeof window !== 'undefined' && rootEl) {
     </React.StrictMode>
   )
 
-  // For now, always use CSR to avoid hydration mismatches
-  // We can enable SSR later once we ensure server/client consistency
-  console.log('Rendering client-side...')
-  createRoot(rootEl).render(app)
+  // Check if the root has server-rendered content
+  const hasServerContent = rootEl.innerHTML.trim().length > 0 && !rootEl.innerHTML.includes('ssr-error')
+  
+  if (hasServerContent) {
+    console.log('Hydrating server-rendered content...')
+    hydrateRoot(rootEl, app)
+  } else {
+    console.log('Rendering client-side...')
+    createRoot(rootEl).render(app)
+  }
 }
 
 // Initialize PWA after app initialization
