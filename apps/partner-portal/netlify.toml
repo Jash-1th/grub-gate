@@ -1,8 +1,8 @@
 # Netlify configuration for GrubGate Partner Portal
 
 [build]
-  # Use 'npm ci' for faster, more reliable builds and then run the build script.
-  command = "npm ci && npm run build"
+  # Install dependencies from root (monorepo) and build the partner portal
+  command = "cd ../.. && npm install && cd apps/partner-portal && npm run build"
   
   # The directory with the static assets from the client build.
   publish = "dist/client"
