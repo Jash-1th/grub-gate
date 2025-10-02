@@ -6,12 +6,16 @@ import { useLocation } from 'react-router-dom';
  * - Scrolls to top on normal route changes (no hash)
  * - Does NOT force scroll to top when a hash is present, allowing
  *   hash/section navigation to animate from the current position.
+ * - SSR-safe: Only executes browser APIs on the client side
  */
 const ScrollManager = () => {
   const location = useLocation();
   const lastKeyRef = useRef(null);
 
   useEffect(() => {
+    // SSR-safe: Only run scroll logic in browser environment
+    if (typeof window === 'undefined') return;
+
     // If this navigation explicitly asks to skip top scroll (hash nav), honor it
     const skipTop = location.state && location.state.skipScrollTop;
 

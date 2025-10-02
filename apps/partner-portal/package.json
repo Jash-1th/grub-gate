@@ -11,7 +11,7 @@
     "build:server": "vite build --config vite.config.ssr.js",
     "build:ssr": "npm run build:client && npm run build:server",
     "preview": "vite preview",
-    "start": "NODE_ENV=production node server.js",
+    "start": "cross-env NODE_ENV=production node server.js",
     "lint": "eslint ."
   },
   "dependencies": {
@@ -39,6 +39,7 @@
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^5.0.3",
     "autoprefixer": "^10.4.21",
+    "cross-env": "^7.0.3",
     "eslint": "^9.33.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",

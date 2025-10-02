@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ScrollManager from './components/common/ScrollManager.jsx';
 import LoadingScreen from './components/common/LoadingScreen.jsx';
+import useClientLanguageDetection from './hooks/useClientLanguageDetection.js';
 
 // Layout Components
 import DashboardLayout from './components/layout/DashboardLayout.jsx';
@@ -31,6 +32,9 @@ function App() {
   console.log('🎨 App component is rendering!');
 
   const { i18n } = useTranslation();
+  
+  // Handle client-side language detection after hydration
+  useClientLanguageDetection();
 
   // Language switching handler
   const handleLanguageChange = (language) => {

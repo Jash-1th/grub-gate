@@ -7,7 +7,7 @@ import { en, fr } from '@grub-gate/locales';
 const isServer = typeof window === 'undefined';
 
 const i18nConfig = {
-  lng: 'en',
+  lng: 'en', // Always start with 'en' for consistent SSR
   fallbackLng: 'en',
   debug: false,
   
@@ -22,6 +22,7 @@ const i18nConfig = {
   },
 
   // Language detection configuration (only for client-side)
+  // Note: Detection will only happen after hydration to prevent mismatches
   ...(isServer ? {} : {
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],

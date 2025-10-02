@@ -22,17 +22,35 @@ if (typeof window !== 'undefined' && rootEl) {
   )
 
   // Check if the root has server-rendered content
-  const hasServerContent = rootEl.innerHTML.trim().length > 0 && !rootEl.innerHTML.includes('ssr-error')
+  // Only hydrate if there's actual React-rendered content (not just placeholder text)
+  const hasServerContent = rootEl.innerHTML.trim().length > 0 && 
+                           !rootEl.innerHTML.includes('ssr-error') &&
+                           !rootEl.innerHTML.includes('<!--app-html-->') &&
+                           !rootEl.innerHTML.includes('Loading GrubGate Partner Portal') &&
+                           (rootEl.innerHTML.includes('data-reactroot') || 
+                            rootEl.innerHTML.includes('class=') || 
+                            rootEl.innerHTML.includes('className=') ||
+                            rootEl.innerHTML.includes('<div') ||
+                            rootEl.innerHTML.includes('<nav') ||
+                            rootEl.innerHTML.includes('<main'))
   
   if (hasServerContent) {
     console.log('Hydrating server-rendered content...')
-    hydrateRoot(rootEl, app)
+    try {
+      hydrateRoot(rootEl, app)
+    } catch (error) {
+      console.warn('Hydration failed, falling back to client-side rendering:', error)
+      rootEl.innerHTML = ''
+      createRoot(rootEl).render(app)
+    }
   } else {
     console.log('Rendering client-side...')
     createRoot(rootEl).render(app)
   }
 }
 
-// Initialize PWA after app initialization
-initializePWA();
+// Initialize PWA after app initialization - only in browser environment
+if (typeof window !== 'undefined') {
+  initializePWA();
+}
 
