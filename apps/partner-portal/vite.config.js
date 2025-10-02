@@ -55,6 +55,9 @@ export default ({ mode }) => {
       minify: 'terser',
       target: 'esnext',
       rollupOptions: {
+        input: {
+          main: path.resolve(__dirname, 'index.html')
+        },
         output: {
           manualChunks: undefined
         }

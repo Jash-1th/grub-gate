@@ -5,10 +5,15 @@ const path = require('path');
 // Read the HTML template
 const getHTMLTemplate = () => {
   try {
+    // Try to read the built HTML template first
     const templatePath = path.join(__dirname, '../../dist/client/index.html');
-    return fs.readFileSync(templatePath, 'utf8');
+    const html = fs.readFileSync(templatePath, 'utf8');
+    console.log('Successfully loaded built HTML template');
+    return html;
   } catch (error) {
-    console.error('Failed to read HTML template:', error);
+    console.error('Failed to read built HTML template, using fallback:', error.message);
+    
+    // Fallback: create a minimal HTML template that works
     return `
       <!DOCTYPE html>
       <html lang="en">
@@ -16,10 +21,13 @@ const getHTMLTemplate = () => {
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <title>GrubGate Partner Portal</title>
+          <link rel="icon" type="image/png" href="/icons/Logo.png" />
+          <meta name="theme-color" content="#800020" />
+          <!--app-head-->
         </head>
         <body>
-          <div id="root"></div>
-          <script type="module" src="/src/entry-client.jsx"></script>
+          <div id="root"><!--app-html--></div>
+          <!-- Built scripts will be loaded automatically -->
         </body>
       </html>
     `;
@@ -109,6 +117,33 @@ exports.handler = async (event, context) => {
   console.log('SSR Handler - URL:', urlPath);
   console.log('SSR Handler - User Agent:', userAgent);
   
+  // Don't handle static assets - let Netlify serve them directly
+  if (urlPath.match(/\.(js|jsx|ts|tsx|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json|xml|txt|map)$/)) {
+    console.log('Static asset request, skipping SSR:', urlPath);
+    return {
+      statusCode: 404,
+      body: 'Static asset not found'
+    };
+  }
+  
+  // Don't handle src/ requests - these should be handled by Vite in development
+  if (urlPath.startsWith('/src/')) {
+    console.log('Source file request, skipping SSR:', urlPath);
+    return {
+      statusCode: 404,
+      body: 'Source file not found'
+    };
+  }
+  
+  // Don't handle assets/ requests - these are built static assets
+  if (urlPath.startsWith('/assets/')) {
+    console.log('Assets request, skipping SSR:', urlPath);
+    return {
+      statusCode: 404,
+      body: 'Asset not found'
+    };
+  }
+  
   try {
     // Get the HTML template
     let html = getHTMLTemplate();
@@ -126,6 +161,16 @@ exports.handler = async (event, context) => {
       '<div id="root"><!--app-html--></div>',
       '<div id="root"></div>'
     );
+    
+    // Replace development script with production scripts
+    // The built HTML should have the correct script tags, but if not, we'll fix it
+    if (html.includes('/src/main.jsx')) {
+      // This is the development template, replace with production script loading
+      html = html.replace(
+        '<script type="module" src="/src/main.jsx"></script>',
+        '<!-- Production scripts will be injected by Vite build process -->'
+      );
+    }
     
     // Return the HTML response
     return {
