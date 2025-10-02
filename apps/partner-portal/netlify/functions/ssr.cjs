@@ -22,19 +22,21 @@ const getViteManifest = () => {
     
     for (const manifestPath of manifestPaths) {
       try {
-        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-        cachedManifest = manifest;
-        console.log('Successfully loaded Vite manifest from:', manifestPath);
-        return manifest;
+        if (fs.existsSync(manifestPath)) {
+          const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+          cachedManifest = manifest;
+          console.log('✅ Successfully loaded Vite manifest from:', manifestPath);
+          return manifest;
+        }
       } catch (err) {
-        // Continue to next path
+        console.warn('Failed to parse manifest at:', manifestPath, err.message);
       }
     }
     
-    console.warn('Vite manifest not found, using fallback asset names');
+    console.warn('⚠️ Vite manifest not found in any location, using fallback');
     return null;
   } catch (error) {
-    console.warn('Failed to read Vite manifest:', error.message);
+    console.warn('❌ Failed to read Vite manifest:', error.message);
     return null;
   }
 };
@@ -97,9 +99,33 @@ const getHTMLTemplate = () => {
         }
       });
     } else {
-      // Fallback to hardcoded asset names from recent build
-      cssLinks = '<link rel="stylesheet" href="/assets/main-BMus0RaL.css" />';
-      jsScripts = '<script type="module" src="/assets/index-Z3AZW6eE.js"></script><script type="module" src="/assets/main-DjdNfWii.js"></script>';
+      // Fallback: Try to read the built HTML template to extract asset names
+      try {
+        const htmlTemplate = getHTMLTemplate();
+        if (htmlTemplate && htmlTemplate !== fallbackHTML) {
+          // Extract CSS and JS links from the built HTML
+          const cssMatch = htmlTemplate.match(/<link[^>]*href="([^"]*\.css)"[^>]*>/g);
+          const jsMatch = htmlTemplate.match(/<script[^>]*src="([^"]*\.js)"[^>]*>/g);
+          
+          if (cssMatch) {
+            cssLinks = cssMatch.join('\n          ');
+          }
+          if (jsMatch) {
+            jsScripts = jsMatch.join('\n          ');
+          }
+          
+          console.log('✅ Extracted assets from HTML template');
+        } else {
+          console.warn('⚠️ Using minimal fallback assets');
+          // Minimal fallback - let the browser handle missing assets gracefully
+          cssLinks = '<!-- CSS will be loaded dynamically -->';
+          jsScripts = '<script type="module">import("/assets/index.js").catch(() => console.warn("Assets loading..."))</script>';
+        }
+      } catch (err) {
+        console.warn('⚠️ Fallback asset extraction failed, using minimal assets');
+        cssLinks = '<!-- CSS will be loaded dynamically -->';
+        jsScripts = '<script type="module">import("/assets/index.js").catch(() => console.warn("Assets loading..."))</script>';
+      }
     }
     
     return `
