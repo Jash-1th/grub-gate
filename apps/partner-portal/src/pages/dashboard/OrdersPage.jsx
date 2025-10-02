@@ -90,11 +90,11 @@ const OrdersPage = () => {
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="bg-gradient-to-r from-grub-red to-red-600 rounded-2xl p-6 text-white">
+        <div className="bg-gradient-to-r from-grub-red to-red-600 rounded-2xl p-6 !text-white">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold">Orders Management</h1>
-              <p className="text-red-100 mt-1">Track and manage all your restaurant orders</p>
+              <h1 className="text-2xl sm:text-3xl font-bold !text-white">Orders Management</h1>
+              <p className="!text-red-100 mt-2">Track and manage all your restaurant orders</p>
             </div>
             <div className="flex items-center space-x-3">
               <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">

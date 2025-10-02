@@ -62,12 +62,12 @@ const DashboardHome = () => {
   return (
     <div className="space-y-4 lg:space-y-6">
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-grub-red to-grub-red-light rounded-lg p-4 lg:p-6 text-white">
-        <h1 className="text-xl lg:text-2xl font-bold mb-2">
+      <div className="bg-gradient-to-r from-grub-red to-grub-red-light rounded-lg p-4 lg:p-6 !text-white">
+        <h1 className="text-xl lg:text-2xl font-bold mb-2 !text-white">
           {t('dashboard.welcome', { name: 'Bistro Montreal' })}
         </h1>
-        <p className="text-red-100 text-sm lg:text-base">
-          {t('dashboard.overview')}
+        <p className="!text-red-100 text-sm lg:text-base">
+          {t('dashboard.subtitle')}
         </p>
       </div>
 

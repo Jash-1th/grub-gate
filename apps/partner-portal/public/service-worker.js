@@ -8,7 +8,6 @@ const IMAGE_CACHE = `grubgate-partner-images-v${CACHE_VERSION}`;
 // App Shell - Critical resources for instant loading
 const APP_SHELL_ASSETS = [
   '/',
-  '/index.html',
   '/manifest.json'
 ];
 
@@ -145,7 +144,7 @@ self.addEventListener('fetch', (event) => {
         
         // Return offline page for navigation requests
         if (request.destination === 'document') {
-          return caches.match('/index.html');
+          return caches.match('/');
         }
         
         throw error;
