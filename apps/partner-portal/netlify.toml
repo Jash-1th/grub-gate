@@ -10,6 +10,12 @@
   # The directory where your REGULAR Netlify Functions are located.
   functions = "netlify/functions"
 
+[build.environment]
+  # Specify Node.js version for compatibility
+  NODE_VERSION = "18"
+  # Set npm version to ensure compatibility
+  NPM_VERSION = "9"
+
 # This redirect rule is the key to making SSR work.
 # It tells Netlify to send all page requests to your ssr.js function.
 [[redirects]]
