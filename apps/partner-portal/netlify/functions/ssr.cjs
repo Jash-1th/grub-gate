@@ -240,158 +240,199 @@ const generateMetaTags = (url, userAgent) => {
   `;
 };
 
-// Main handler function
+// Simplified handler function to prevent timeouts
 exports.handler = async (event, context) => {
-  // Set a timeout to prevent 504 errors
   const startTime = Date.now();
-  const timeout = 8000; // 8 seconds max
   
   try {
-    const { path: urlPath, headers } = event;
-    const userAgent = headers['user-agent'] || '';
+    const { path: urlPath = '/', headers = {} } = event;
     
-    console.log('🚀 SSR Handler started - URL:', urlPath);
+    console.log('SSR Function called for:', urlPath);
     
-    // Quick timeout check
-    if (Date.now() - startTime > timeout) {
-      throw new Error('Function timeout');
-    }
-    
-    // Don't handle static assets - let Netlify serve them directly
-    if (urlPath.match(/\.(js|jsx|ts|tsx|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json|xml|txt|map)$/)) {
-      console.log('📄 Static asset request, skipping SSR:', urlPath);
+    // Don't handle static assets at all - return 404 immediately
+    if (urlPath.match(/\.(js|jsx|ts|tsx|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json|xml|txt|map)$/) || 
+        urlPath.startsWith('/assets/') || 
+        urlPath.startsWith('/api/') || 
+        urlPath.startsWith('/.netlify/')) {
+      console.log('Static asset or API request, returning 404:', urlPath);
       return {
         statusCode: 404,
-        headers: {
-          'Content-Type': 'text/plain'
-        },
-        body: 'Static asset not found - should be served by Netlify directly'
+        headers: { 'Content-Type': 'text/plain' },
+        body: 'Not found'
       };
     }
     
-    // Don't handle assets/ requests - these are built static assets
-    if (urlPath.startsWith('/assets/')) {
-      console.log('📦 Assets directory request, skipping SSR:', urlPath);
-      return {
-        statusCode: 404,
-        headers: {
-          'Content-Type': 'text/plain'
-        },
-        body: 'Asset not found - should be served by Netlify directly'
-      };
-    }
-    
-    // Don't handle API or function requests
-    if (urlPath.startsWith('/api/') || urlPath.startsWith('/.netlify/')) {
-      console.log('🔧 API/Function request, skipping SSR:', urlPath);
-      return {
-        statusCode: 404,
-        body: 'API endpoint not found'
-      };
-    }
-    
-    // Get the HTML template quickly
-    let html;
-    try {
-      html = getHTMLTemplate();
-      console.log('✅ HTML template loaded');
-    } catch (err) {
-      console.warn('⚠️ Template loading failed, using minimal fallback');
-      html = `<!DOCTYPE html>
+    // Return a simple, working HTML page
+    const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GrubGate Partner Portal</title>
+  <meta name="description" content="Restaurant management platform for Montreal food delivery partners" />
   <meta name="theme-color" content="#800020" />
-</head>
-<body>
-  <div id="root"></div>
-  <script type="module">
-    // Fallback script loader
-    const scripts = ['/assets/index.js', '/assets/main.js'];
-    scripts.forEach(src => {
-      const script = document.createElement('script');
-      script.type = 'module';
-      script.src = src;
-      script.onerror = () => console.warn('Failed to load:', src);
-      document.head.appendChild(script);
-    });
-  </script>
-</body>
-</html>`;
-    }
-    
-    // Quick timeout check
-    if (Date.now() - startTime > timeout) {
-      throw new Error('Function timeout during HTML processing');
-    }
-    
-    // Simple meta tag injection for SEO
-    const title = urlPath.includes('/dashboard') ? 'Dashboard - GrubGate Partners' : 'GrubGate Partner Portal';
-    const description = 'Restaurant management platform for Montreal food delivery partners';
-    
-    // Replace placeholders if they exist
-    html = html.replace('<!--app-head-->', `<title>${title}</title><meta name="description" content="${description}" />`);
-    html = html.replace('<div id="root"><!--app-html--></div>', '<div id="root"></div>');
-    
-    console.log('✅ SSR completed in', Date.now() - startTime, 'ms');
-    
-    // Return the HTML response
-    return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      },
-      body: html
-    };
-    
-  } catch (error) {
-    console.error('❌ SSR handler error:', error.message);
-    
-    // Return a minimal working page that will load the app
-    const errorHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GrubGate Partner Portal</title>
-  <meta name="theme-color" content="#800020" />
+  <link rel="icon" type="image/png" href="/icons/Logo.png" />
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f9fafb; }
-    .loading { text-align: center; padding: 50px; color: #800020; }
-    .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #800020; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      margin: 0; 
+      padding: 0; 
+      background: #f9fafb; 
+      color: #111827;
+    }
+    .loading { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+      min-height: 100vh; 
+      text-align: center; 
+    }
+    .logo { 
+      width: 80px; 
+      height: 80px; 
+      background: #800020; 
+      border-radius: 16px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      color: white; 
+      font-size: 24px; 
+      font-weight: bold; 
+      margin-bottom: 24px;
+    }
+    .spinner { 
+      border: 3px solid #e5e7eb; 
+      border-top: 3px solid #800020; 
+      border-radius: 50%; 
+      width: 32px; 
+      height: 32px; 
+      animation: spin 1s linear infinite; 
+      margin: 16px auto;
+    }
+    @keyframes spin { 
+      0% { transform: rotate(0deg); } 
+      100% { transform: rotate(360deg); } 
+    }
+    h1 { 
+      margin: 0 0 8px 0; 
+      font-size: 28px; 
+      font-weight: 700; 
+      color: #800020; 
+    }
+    p { 
+      margin: 0; 
+      color: #6b7280; 
+      font-size: 16px; 
+    }
   </style>
 </head>
 <body>
   <div class="loading">
+    <div class="logo">G</div>
     <h1>GrubGate Partner Portal</h1>
     <div class="spinner"></div>
     <p>Loading your restaurant management platform...</p>
   </div>
   <div id="root"></div>
+  
   <script type="module">
-    // Try to load the main app assets
-    const loadScript = (src) => {
-      const script = document.createElement('script');
-      script.type = 'module';
-      script.src = src;
-      script.onload = () => console.log('✅ Loaded:', src);
-      script.onerror = () => console.warn('❌ Failed to load:', src);
-      document.head.appendChild(script);
+    console.log('🚀 Starting GrubGate Partner Portal...');
+    
+    // Try to load the built assets
+    const loadAssets = async () => {
+      try {
+        // Try to fetch and parse the manifest
+        const manifestResponse = await fetch('/manifest.json');
+        if (manifestResponse.ok) {
+          const manifest = await manifestResponse.json();
+          console.log('📋 Loaded Vite manifest');
+          
+          // Load CSS files
+          if (manifest['index.html'] && manifest['index.html'].css) {
+            manifest['index.html'].css.forEach(cssFile => {
+              const link = document.createElement('link');
+              link.rel = 'stylesheet';
+              link.href = '/' + cssFile;
+              document.head.appendChild(link);
+              console.log('🎨 Loaded CSS:', cssFile);
+            });
+          }
+          
+          // Load JS files
+          if (manifest['index.html'] && manifest['index.html'].file) {
+            const script = document.createElement('script');
+            script.type = 'module';
+            script.src = '/' + manifest['index.html'].file;
+            script.onload = () => console.log('✅ App loaded successfully');
+            script.onerror = () => console.error('❌ Failed to load app');
+            document.head.appendChild(script);
+          }
+        } else {
+          throw new Error('Manifest not found');
+        }
+      } catch (error) {
+        console.warn('⚠️ Manifest loading failed, trying fallback assets');
+        
+        // Fallback: try common asset patterns
+        const tryAsset = (src, type = 'script') => {
+          return new Promise((resolve) => {
+            if (type === 'script') {
+              const script = document.createElement('script');
+              script.type = 'module';
+              script.src = src;
+              script.onload = () => {
+                console.log('✅ Loaded:', src);
+                resolve(true);
+              };
+              script.onerror = () => {
+                console.warn('❌ Failed:', src);
+                resolve(false);
+              };
+              document.head.appendChild(script);
+            } else if (type === 'style') {
+              const link = document.createElement('link');
+              link.rel = 'stylesheet';
+              link.href = src;
+              link.onload = () => resolve(true);
+              link.onerror = () => resolve(false);
+              document.head.appendChild(link);
+            }
+          });
+        };
+        
+        // Try common asset paths
+        const assetPaths = [
+          '/assets/index.js',
+          '/assets/main.js', 
+          '/src/main.jsx'
+        ];
+        
+        for (const path of assetPaths) {
+          const loaded = await tryAsset(path);
+          if (loaded) break;
+        }
+      }
     };
     
-    // Try common asset paths
-    const possiblePaths = ['/assets/index.js', '/assets/main.js', '/src/main.jsx'];
-    possiblePaths.forEach(loadScript);
+    // Start loading assets
+    loadAssets();
+    
+    // Hide loading screen when app mounts
+    const observer = new MutationObserver(() => {
+      const root = document.getElementById('root');
+      if (root && root.children.length > 0) {
+        document.querySelector('.loading').style.display = 'none';
+        observer.disconnect();
+      }
+    });
+    
+    observer.observe(document.getElementById('root'), { childList: true });
   </script>
 </body>
-</html>
-    `;
+</html>`;
+    
+    console.log('✅ SSR completed in', Date.now() - startTime, 'ms');
     
     return {
       statusCode: 200,
@@ -399,7 +440,21 @@ exports.handler = async (event, context) => {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'no-cache, no-store, must-revalidate'
       },
-      body: errorHtml
+      body: html
+    };
+    
+  } catch (error) {
+    console.error('❌ SSR Error:', error);
+    
+    // Ultra-minimal fallback
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+      body: `<!DOCTYPE html>
+<html><head><title>GrubGate</title></head>
+<body><div id="root"></div>
+<script type="module" src="/src/main.jsx"></script>
+</body></html>`
     };
   }
 };
