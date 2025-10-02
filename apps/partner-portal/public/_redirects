@@ -1,12 +1,13 @@
-# Static assets
+# Netlify redirects for SPA routing
+# Static assets first
 /assets/*  /assets/:splat  200
 /icons/*   /icons/:splat   200
 /images/*  /images/:splat  200
 /manifest.json  /manifest.json  200
 /service-worker.js  /service-worker.js  200
 
-# API routes
+# API routes to functions
 /api/*  /.netlify/functions/:splat  200
 
-# SPA fallback - all other routes go to SSR function
-/*  /.netlify/functions/ssr  200
+# All other routes (including /register, /login, /dashboard/*) go to SSR function
+/*  /.netlify/functions/ssr  200!

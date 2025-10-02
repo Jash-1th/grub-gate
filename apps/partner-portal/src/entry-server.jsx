@@ -6,21 +6,16 @@ import i18n from './config/i18n.js'
 import App from './App.jsx'
 import { generateSEOMeta, generateStructuredData } from './utils/seo.js'
 
-// Public routes that should be SSR
-const publicRoutes = ['/', '/login', '/register', '/forgot-password']
+// Routes that should get full SSR treatment
+const seoImportantRoutes = ['/', '/login', '/register', '/forgot-password']
 
 export async function render(url, manifest) {
   // Normalize the URL - ensure it starts with / and handle empty string
   const normalizedUrl = url === '' ? '/' : url
-  const isPublicRoute = publicRoutes.includes(normalizedUrl)
+  const isSEORoute = seoImportantRoutes.includes(normalizedUrl)
   
-  if (!isPublicRoute) {
-    // For dashboard routes, return minimal HTML (CSR)
-    return {
-      html: '',
-      head: ''
-    }
-  }
+  // Always render something for all routes to prevent 404s
+  // For non-SEO routes, we'll render a minimal shell
 
   try {
     // Ensure i18n is ready for SSR
@@ -28,7 +23,7 @@ export async function render(url, manifest) {
       await i18n.init()
     }
 
-    // For public routes, do SSR
+    // Always render the app for all routes
     const html = renderToString(
       <I18nextProvider i18n={i18n}>
         <StaticRouter location={normalizedUrl}>
@@ -37,27 +32,39 @@ export async function render(url, manifest) {
       </I18nextProvider>
     )
 
-    // Generate SEO meta tags
-    const seoData = generateSEOMeta(normalizedUrl === '/' ? 'home' : normalizedUrl.slice(1), {})
-    const structuredData = generateStructuredData(normalizedUrl === '/' ? 'home' : normalizedUrl.slice(1), {})
+    // Generate appropriate meta tags
+    let head = ''
     
-    const head = `
-      <title>${seoData.title}</title>
-      <meta name="description" content="${seoData.description}" />
-      <meta name="keywords" content="${seoData.keywords}" />
-      <link rel="canonical" href="${seoData.canonical}" />
+    if (isSEORoute) {
+      // Full SEO treatment for important routes
+      const seoData = generateSEOMeta(normalizedUrl === '/' ? 'home' : normalizedUrl.slice(1), {})
+      const structuredData = generateStructuredData(normalizedUrl === '/' ? 'home' : normalizedUrl.slice(1), {})
       
-      <!-- Open Graph -->
-      <meta property="og:title" content="${seoData.ogTitle}" />
-      <meta property="og:description" content="${seoData.ogDescription}" />
-      <meta property="og:url" content="${seoData.canonical}" />
-      
-      <!-- Twitter Card -->
-      <meta name="twitter:title" content="${seoData.ogTitle}" />
-      <meta name="twitter:description" content="${seoData.ogDescription}" />
-      
-      ${structuredData ? `<script type="application/ld+json">${JSON.stringify(structuredData)}</script>` : ''}
-    `
+      head = `
+        <title>${seoData.title}</title>
+        <meta name="description" content="${seoData.description}" />
+        <meta name="keywords" content="${seoData.keywords}" />
+        <link rel="canonical" href="${seoData.canonical}" />
+        
+        <!-- Open Graph -->
+        <meta property="og:title" content="${seoData.ogTitle}" />
+        <meta property="og:description" content="${seoData.ogDescription}" />
+        <meta property="og:url" content="${seoData.canonical}" />
+        
+        <!-- Twitter Card -->
+        <meta name="twitter:title" content="${seoData.ogTitle}" />
+        <meta name="twitter:description" content="${seoData.ogDescription}" />
+        
+        ${structuredData ? `<script type="application/ld+json">${JSON.stringify(structuredData)}</script>` : ''}
+      `
+    } else {
+      // Basic meta tags for dashboard routes
+      head = `
+        <title>GrubGate Partner Portal</title>
+        <meta name="description" content="Restaurant management dashboard for GrubGate partners" />
+        <meta name="robots" content="noindex, nofollow" />
+      `
+    }
 
     return { html, head }
     
