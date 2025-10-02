@@ -22,8 +22,8 @@ export default defineConfig({
     rollupOptions: {
       input: './src/entry-server.jsx',
       output: {
-        format: 'es',
-        entryFileNames: 'main.ssr.js'
+        format: 'cjs',
+        entryFileNames: 'entry-server.js'
       }
     },
     // Don't minify SSR bundle for better debugging
@@ -39,6 +39,7 @@ export default defineConfig({
     jsxImportSource: 'react'
   }
 })
+
 
 
 

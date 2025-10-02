@@ -76,12 +76,13 @@ const DashboardHome = () => {
           return (
             <Card key={index} className="hover:shadow-md transition-shadow">
               <CardContent className="p-4 lg:p-6">
-                <div className="flex items-start justify-between">
-                  <div className="min-w-0">
-                    <div className="flex items-center space-x-2">
-                      <p className="text-sm font-medium text-gray-600 truncate">
-                        {stat.title}
-                      </p>
+                <div className="flex flex-col space-y-3">
+                  {/* Header Row */}
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-gray-600">
+                      {stat.title}
+                    </p>
+                    <div className="flex items-center space-x-2 flex-shrink-0">
                       <span className={`inline-flex items-center text-xs font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
                         {isPositive ? (
                           <ArrowUpRight className="h-4 w-4 mr-0.5" />
@@ -90,14 +91,15 @@ const DashboardHome = () => {
                         )}
                         {Math.abs(stat.change)}%
                       </span>
+                      <span className="text-xs text-gray-500">{t('dashboard.stats.thisWeek')}</span>
                     </div>
-                    <p className="mt-2 text-2xl lg:text-3xl font-extrabold text-gray-900">
+                  </div>
+                  
+                  {/* Value and Icon Row */}
+                  <div className="flex items-center justify-between">
+                    <p className="text-2xl lg:text-3xl font-extrabold text-gray-900">
                       {stat.value}
                     </p>
-                  </div>
-
-                  <div className="flex items-center space-x-3 flex-shrink-0">
-                    <span className="hidden sm:inline text-xs text-gray-500">{t('dashboard.stats.thisWeek')}</span>
                     <div className={`h-10 w-10 rounded-full flex items-center justify-center ${stat.bgColor}`}>
                       <Icon className={`h-5 w-5 ${stat.color}`} />
                     </div>
@@ -245,6 +247,7 @@ const DashboardHome = () => {
 };
 
 export default DashboardHome;
+
 
 
 

@@ -201,7 +201,7 @@ const MenuPage = () => {
         title={editingItem ? t('menu.editItem') : t('menu.addItem')}
         size="lg"
       >
-        <div className="space-y-5 pb-20">
+        <div className="space-y-5 max-h-[calc(100vh-200px)] overflow-y-auto pb-4">
           {/* Segmented tabs */}
           <div className="flex items-center justify-between">
             <div className="inline-flex bg-gray-100 rounded-lg p-1 text-sm">
@@ -340,8 +340,10 @@ const MenuPage = () => {
             </div>
           )}
 
-          {/* Footer actions */}
-          <div className="sticky bottom-0 left-0 right-0 z-10 -mx-4 sm:mx-0 bg-white/95 backdrop-blur border-t px-4 py-3 flex flex-col sm:flex-row sm:justify-end gap-2">
+        </div>
+        
+        {/* Footer actions - Outside scrollable area */}
+        <div className="border-t bg-white px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:justify-end gap-3 mt-4">
             <Button
               variant="secondary"
               className="w-full sm:w-auto border-gray-300 hover:bg-gray-50"
@@ -355,7 +357,6 @@ const MenuPage = () => {
             >
               {editingItem ? t('common.save') : t('menu.addItem')}
             </Button>
-          </div>
         </div>
       </Modal>
     </div>
@@ -363,6 +364,7 @@ const MenuPage = () => {
 };
 
 export default MenuPage;
+
 
 
 

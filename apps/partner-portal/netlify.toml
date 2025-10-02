@@ -2,7 +2,7 @@
 
 [build]
   # Build from root directory to install all workspace dependencies
-  command = "npm ci && npm run build:partner"
+  command = "cd ../.. && npm ci && cd apps/partner-portal && npm run build"
   
   # The directory with the static assets from the client build (relative to repo root)
   publish = "apps/partner-portal/dist/client"
@@ -83,3 +83,4 @@
     Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
     Access-Control-Allow-Headers = "Content-Type, Authorization"
+
