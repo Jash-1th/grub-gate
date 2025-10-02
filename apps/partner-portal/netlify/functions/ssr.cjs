@@ -344,64 +344,43 @@ exports.handler = async (event, context) => {
       try {
         console.log('🔍 Attempting to load assets...');
         
-        // First, try to fetch the Vite manifest
-        const manifestResponse = await fetch('/manifest.json');
-        if (manifestResponse.ok) {
-          const manifest = await manifestResponse.json();
-          console.log('📋 Vite manifest loaded:', Object.keys(manifest));
-          
-          // Look for the main entry point in the manifest
-          const entryKey = Object.keys(manifest).find(key => 
-            key === 'index.html' || 
-            key === 'src/main.jsx' || 
-            key.includes('main.jsx') ||
-            key.includes('index.html')
-          );
-          
-          if (entryKey && manifest[entryKey]) {
-            const entry = manifest[entryKey];
-            console.log('🎯 Found entry:', entryKey, entry);
-            
-            // Load CSS files
-            if (entry.css && Array.isArray(entry.css)) {
-              entry.css.forEach(cssFile => {
-                const link = document.createElement('link');
-                link.rel = 'stylesheet';
-                link.href = cssFile.startsWith('/') ? cssFile : '/' + cssFile;
-                document.head.appendChild(link);
-                console.log('🎨 Loaded CSS:', cssFile);
-              });
-            }
-            
-            // Load main JS file
-            if (entry.file) {
-              const script = document.createElement('script');
-              script.type = 'module';
-              script.src = entry.file.startsWith('/') ? entry.file : '/' + entry.file;
-              script.onload = () => {
-                console.log('✅ Main app loaded successfully');
-                // Hide loading screen after a short delay
-                setTimeout(() => {
-                  const loading = document.querySelector('.loading');
-                  if (loading) loading.style.display = 'none';
-                }, 1000);
-              };
-              script.onerror = () => {
-                console.error('❌ Failed to load main app script');
-                tryFallbackAssets();
-              };
-              document.head.appendChild(script);
-              console.log('📦 Loading main script:', entry.file);
-              return; // Success, exit early
-            }
-          }
-        }
+        // Load the exact assets from the current build
+        // These are the actual filenames from the built HTML template
+        const cssFile = '/assets/main-BOyiGeqN.css';
+        const jsFile = '/assets/main-NiQ5K0SD.js';
         
-        // If manifest loading failed, try fallback
-        throw new Error('Manifest parsing failed');
+        console.log('🎨 Loading CSS:', cssFile);
+        const cssLink = document.createElement('link');
+        cssLink.rel = 'stylesheet';
+        cssLink.href = cssFile;
+        cssLink.onload = () => console.log('✅ CSS loaded successfully');
+        cssLink.onerror = () => console.warn('❌ CSS failed to load');
+        document.head.appendChild(cssLink);
+        
+        console.log('📦 Loading JS:', jsFile);
+        const jsScript = document.createElement('script');
+        jsScript.type = 'module';
+        jsScript.crossOrigin = 'anonymous';
+        jsScript.src = jsFile;
+        jsScript.onload = () => {
+          console.log('✅ Main app loaded successfully');
+          // Hide loading screen after app mounts
+          setTimeout(() => {
+            const root = document.getElementById('root');
+            if (root && root.children.length > 0) {
+              const loading = document.querySelector('.loading');
+              if (loading) loading.style.display = 'none';
+            }
+          }, 500);
+        };
+        jsScript.onerror = () => {
+          console.error('❌ Failed to load main app script');
+          tryFallbackAssets();
+        };
+        document.head.appendChild(jsScript);
         
       } catch (error) {
-        console.warn('⚠️ Manifest loading failed:', error.message);
+        console.warn('⚠️ Asset loading failed:', error.message);
         tryFallbackAssets();
       }
     };
@@ -437,23 +416,38 @@ exports.handler = async (event, context) => {
       };
       
       // Try to find assets by scanning the page or making educated guesses
+      // Based on recent build output, try these specific patterns
       const commonPaths = [
+        '/assets/index-Cl5UzX2o.js',  // Current build hash
+        '/assets/main-NiQ5K0SD.js',   // Current build hash
         '/assets/index.js',
         '/assets/main.js',
-        '/assets/app.js',
-        '/src/main.jsx'
+        '/assets/app.js'
       ];
       
-      // Try CSS files first
-      const cssFiles = ['/assets/index.css', '/assets/main.css', '/assets/app.css'];
+      // Try CSS files first - use current build hash
+      const cssFiles = [
+        '/assets/main-BOyiGeqN.css',  // Current build hash
+        '/assets/index.css', 
+        '/assets/main.css', 
+        '/assets/app.css'
+      ];
+      
+      console.log('🎨 Trying CSS files...');
       for (const css of cssFiles) {
-        await tryAsset(css, 'style');
+        const loaded = await tryAsset(css, 'style');
+        if (loaded) {
+          console.log('✅ CSS loaded:', css);
+          break;
+        }
       }
       
+      console.log('📦 Trying JS files...');
       // Try JS files
       for (const path of commonPaths) {
         const loaded = await tryAsset(path);
         if (loaded) {
+          console.log('✅ JS loaded:', path);
           setTimeout(() => {
             const loading = document.querySelector('.loading');
             if (loading) loading.style.display = 'none';
