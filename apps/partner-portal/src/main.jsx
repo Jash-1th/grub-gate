@@ -21,16 +21,10 @@ if (typeof window !== 'undefined' && rootEl) {
     </React.StrictMode>
   )
 
-  // Check if SSR content exists
-  if (rootEl.hasChildNodes() && rootEl.innerHTML.trim() !== '') {
-    // Hydrate SSR markup
-    console.log('Hydrating SSR content...')
-    hydrateRoot(rootEl, app)
-  } else {
-    // CSR fallback
-    console.log('Rendering client-side...')
-    createRoot(rootEl).render(app)
-  }
+  // For now, always use CSR to avoid hydration mismatches
+  // We can enable SSR later once we ensure server/client consistency
+  console.log('Rendering client-side...')
+  createRoot(rootEl).render(app)
 }
 
 // Initialize PWA after app initialization

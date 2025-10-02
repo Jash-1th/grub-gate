@@ -113,48 +113,19 @@ exports.handler = async (event, context) => {
     // Get the HTML template
     let html = getHTMLTemplate();
     
-    // Try to load and render SSR
-    let ssrModule;
-    try {
-      // Import the SSR build
-      ssrModule = require('../../dist/server/entry-server.js');
-      console.log('SSR module loaded successfully');
-    } catch (error) {
-      console.log('SSR module not available, using CSR fallback:', error.message);
-    }
+    // For now, use CSR (Client-Side Rendering) to avoid hydration issues
+    // This ensures the app works reliably while we can optimize SSR later
+    console.log('Using CSR fallback for reliable routing');
     
-    if (ssrModule && ssrModule.render) {
-      try {
-        console.log('Attempting SSR render...');
-        
-        // Render the app
-        const { html: appHtml, head = '' } = await ssrModule.render(urlPath || '/');
-        
-        // Replace the root div content
-        if (appHtml) {
-          html = html.replace(
-            '<div id="root"><!--app-html--></div>',
-            `<div id="root">${appHtml}</div>`
-          );
-        }
-        
-        // Replace the head content with dynamic meta tags
-        const metaTags = generateMetaTags(urlPath || '/', userAgent);
-        html = html.replace('<!--app-head-->', `${head}\n${metaTags}`);
-        
-        console.log('SSR render successful');
-      } catch (ssrError) {
-        console.error('SSR render failed, falling back to CSR:', ssrError);
-        // Keep the original HTML for client-side rendering
-        const metaTags = generateMetaTags(urlPath || '/', userAgent);
-        html = html.replace('<!--app-head-->', metaTags);
-      }
-    } else {
-      console.log('SSR module not available, using CSR fallback');
-      // Replace the head content with dynamic meta tags
-      const metaTags = generateMetaTags(urlPath || '/', userAgent);
-      html = html.replace('<!--app-head-->', metaTags);
-    }
+    // Generate appropriate meta tags based on the route
+    const metaTags = generateMetaTags(urlPath || '/', userAgent);
+    html = html.replace('<!--app-head-->', metaTags);
+    
+    // Ensure the root div is empty for client-side rendering
+    html = html.replace(
+      '<div id="root"><!--app-html--></div>',
+      '<div id="root"></div>'
+    );
     
     // Return the HTML response
     return {
