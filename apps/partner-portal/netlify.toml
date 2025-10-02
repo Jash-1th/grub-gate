@@ -4,11 +4,11 @@
   # Install dependencies from root (monorepo) and build the partner portal
   command = "cd ../.. && npm install && cd apps/partner-portal && npm run build"
   
-  # The directory with the static assets from the client build (relative to repo root)
-  publish = "apps/partner-portal/dist/client"
+  # The directory with the static assets from the client build (relative to base directory)
+  publish = "dist/client"
   
-  # The directory where your REGULAR Netlify Functions are located (relative to repo root)
-  functions = "apps/partner-portal/netlify/functions"
+  # The directory where your REGULAR Netlify Functions are located (relative to base directory)
+  functions = "netlify/functions"
 
 [build.environment]
   # Specify Node.js version for compatibility
