@@ -8,6 +8,26 @@ export default {
   presets: [
     require('../../packages/config/tailwind-preset.js')
   ],
+  safelist: [
+    // Ensure custom brand colors are never purged
+    'bg-grub-red',
+    'bg-grub-red-light',
+    'bg-grub-red-dark',
+    'text-grub-red',
+    'text-grub-red-light',
+    'text-grub-red-dark',
+    'border-grub-red',
+    'border-grub-red-light',
+    'border-grub-red-dark',
+    'from-grub-red',
+    'to-grub-red-dark',
+    'hover:bg-grub-red',
+    'hover:text-grub-red',
+    // Gradient classes
+    'bg-gradient-to-br',
+    'from-grub-red',
+    'to-grub-red-dark',
+  ],
   theme: {
     extend: {
       // Partner portal specific theme extensions can go here

@@ -6,6 +6,7 @@ import ErrorBoundary from './components/common/ErrorBoundary.jsx'
 import './styles/index.css'
 import './config/i18n.js'
 import { initializePWA } from './pwa.js'
+import './utils/debug-styles.js'
 
 const rootEl = document.getElementById('root')
 

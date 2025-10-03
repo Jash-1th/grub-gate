@@ -5,6 +5,13 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Fallback CSS custom properties for brand colors */
+    --grub-red: #800020;
+    --grub-red-light: #a0002a;
+    --grub-red-dark: #600015;
+  }
+  
   html {
     font-family: 'Inter', system-ui, sans-serif;
   }
@@ -15,6 +22,19 @@
   
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Poppins', system-ui, sans-serif;
+  }
+  
+  /* Fallback classes in case Tailwind purges custom colors */
+  .bg-grub-red-fallback {
+    background-color: var(--grub-red) !important;
+  }
+  
+  .text-grub-red-fallback {
+    color: var(--grub-red) !important;
+  }
+  
+  .gradient-grub-fallback {
+    background: linear-gradient(to bottom right, var(--grub-red), var(--grub-red-dark)) !important;
   }
 }
 
