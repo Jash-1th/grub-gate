@@ -133,8 +133,9 @@ exports.handler = async (event, context) => {
   <link rel="manifest" href="/manifest.json" />
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; }
-    .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+    .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: white; z-index: 9999; }
     .logo { width: 60px; height: 60px; background: #800020; border-radius: 12px; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; margin-bottom: 16px; }
+    .loading.hidden { display: none; }
   </style>
 </head>
 <body>
@@ -146,6 +147,26 @@ exports.handler = async (event, context) => {
   <div id="root"></div>
   <link rel="stylesheet" href="/assets/main-CRYXJeK2.css" />
   <script type="module" src="/assets/main-DePyc7YF.js"></script>
+  <script>
+    // Hide loading screen when React app mounts
+    const observer = new MutationObserver(() => {
+      const root = document.getElementById('root');
+      if (root && root.children.length > 0) {
+        const loading = document.querySelector('.loading');
+        if (loading) {
+          loading.classList.add('hidden');
+        }
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.getElementById('root'), { childList: true });
+    
+    // Fallback: hide loading after 3 seconds
+    setTimeout(() => {
+      const loading = document.querySelector('.loading');
+      if (loading) loading.classList.add('hidden');
+    }, 3000);
+  </script>
 </body>
 </html>`;
     
