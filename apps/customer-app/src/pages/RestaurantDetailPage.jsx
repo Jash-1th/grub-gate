@@ -18,6 +18,7 @@ import ProUserFeatures from '../components/restaurant/ProUserFeatures';
 import FloatingPreferencesButton from '../components/restaurant/FloatingPreferencesButton';
 import NextStepButton from '../components/restaurant/NextStepButton';
 import UserTypeSelectionModal from '../components/shared/UserTypeSelectionModal';
+import RestaurantSwitchModal from '../components/modals/RestaurantSwitchModal';
 
 const RestaurantDetailPage = () => {
   const { id } = useParams();
@@ -28,8 +29,14 @@ const RestaurantDetailPage = () => {
   const contextDay = searchParams.get('day');
   const contextSlot = searchParams.get('slot');
   const contextUserType = searchParams.get('userType');
+  const contextSource = searchParams.get('source');
+  const contextWeek = parseInt(searchParams.get('week')) || 0; // Default to current week (0)
   const contextPreferences = searchParams.get('preferences');
   const isFromMenuSelection = !!(contextDay && contextSlot);
+  
+  // Only allow meal planning when coming from weekly-menu workflow with day/slot context
+  // Disable meal planning for menu browsing (View Full Menu button) and general restaurant browsing
+  const isMealPlanningEnabled = contextSource === 'weekly-menu' && isFromMenuSelection;
   
   // State for active day tab - initialize from context if available
   const [activeDay, setActiveDay] = useState(contextDay || 'monday');
@@ -61,17 +68,35 @@ const RestaurantDetailPage = () => {
   const [showItemDetails, setShowItemDetails] = useState(false);
 
   // Meal plan context
-  const { addItemToPlan, removeItemFromPlan, getMealItems, mealPlan } = useMealPlan();
+  const { 
+    addItemToPlan, 
+    removeItemFromPlan, 
+    getMealItems, 
+    mealPlan, 
+    getTotalItemsCount, 
+    getRestaurantsInPlan, 
+    clearAllPlan,
+    // Week-specific functions
+    addItemToPlanWeek,
+    removeItemFromPlanWeek,
+    getWeekMealItems,
+    getRestaurantsInWeekPlan
+  } = useMealPlan();
   
   // Toast context
-  const { showMealPlanSuccess } = useToast();
+  const { showMealPlanSuccess, showError } = useToast();
   
   // Planning context (only get postal code)
   const { postalCode } = usePlanning();
 
   // State for user type selection (show modal on first visit)
-  const [showUserTypeModal, setShowUserTypeModal] = useState(true);
-  const [hasSelectedUserType, setHasSelectedUserType] = useState(false);
+  const [showUserTypeModal, setShowUserTypeModal] = useState(false); // Disabled modal
+  const [hasSelectedUserType, setHasSelectedUserType] = useState(true); // Default to true since modal is disabled
+
+  // State for restaurant switch confirmation
+  const [showRestaurantSwitchModal, setShowRestaurantSwitchModal] = useState(false);
+  const [pendingItem, setPendingItem] = useState(null);
+  const [switchModalData, setSwitchModalData] = useState(null);
 
   // Get restaurant data from unified source
   const restaurant = useMemo(() => {
@@ -148,10 +173,21 @@ const RestaurantDetailPage = () => {
 
   // Handle add to plan for weekly builder
   const handleAddToPlan = (item, day, mealType) => {
-    // For pro users, add directly using current day/meal selection
+    // For pro users, add directly using current day/meal selection (week-aware)
     if (userType === 'pro') {
-      addItemToPlan(item, day, mealType, restaurant.name);
-      showMealPlanSuccess(item.name, day, mealType, restaurant.name, item.price);
+      const result = addItemToPlanWeek(item, day, mealType, restaurant.name, contextWeek, userType);
+      if (result.success) {
+        showMealPlanSuccess(item.name, day, mealType, restaurant.name, item.price);
+      } else if (result.error === 'RESTAURANT_SWITCH_CONFIRMATION') {
+        // Show confirmation modal for restaurant switch
+        setPendingItem({ item, day, mealType });
+        setSwitchModalData({
+          existingRestaurant: result.existingRestaurant,
+          newRestaurant: result.newRestaurant,
+          itemCount: getTotalItemsCount()
+        });
+        setShowRestaurantSwitchModal(true);
+      }
     }
     // For normal users, this function won't be called directly from cards
     // They will use handleAddToPlanFromDetails instead
@@ -160,11 +196,25 @@ const RestaurantDetailPage = () => {
   // Handle final add to plan from day/meal selector
   const handleConfirmAddToPlan = () => {
     if (selectedItem) {
-      addItemToPlan(selectedItem, activeDay, selectedMealType, restaurant.name);
-      showMealPlanSuccess(selectedItem.name, activeDay, selectedMealType, restaurant.name, selectedItem.price);
-      setShowDayMealSelector(false);
-      setSelectedItem(null);
-      // Removed automatic scrolling to prevent unwanted scroll behavior
+      const result = addItemToPlanWeek(selectedItem, activeDay, selectedMealType, restaurant.name, contextWeek, userType);
+      if (result.success) {
+        showMealPlanSuccess(selectedItem.name, activeDay, selectedMealType, restaurant.name, selectedItem.price);
+        setShowDayMealSelector(false);
+        setSelectedItem(null);
+        // Removed automatic scrolling to prevent unwanted scroll behavior
+      } else if (result.error === 'RESTAURANT_SWITCH_CONFIRMATION') {
+        // Show confirmation modal for restaurant switch
+        setPendingItem({ item: selectedItem, day: activeDay, mealType: selectedMealType });
+        setSwitchModalData({
+          existingRestaurant: result.existingRestaurant,
+          newRestaurant: result.newRestaurant,
+          itemCount: getTotalItemsCount()
+        });
+        setShowRestaurantSwitchModal(true);
+        setShowDayMealSelector(false); // Close the day/meal selector
+      } else if (result.error === 'RESTAURANT_LIMIT_EXCEEDED') {
+        showError('Restaurant Limit Reached', result.message, { duration: 8000 });
+      }
     }
   };
 
@@ -180,14 +230,15 @@ const RestaurantDetailPage = () => {
     setShowItemDetails(true);
   };
 
-  // Handle remove from plan
+  // Handle remove from plan (week-aware)
   const handleRemoveFromPlan = (item) => {
     // Find the meal plan item with matching item id
-    const mealItems = getMealItems(activeDay, selectedMealType);
+    const mealItems = getWeekMealItems(activeDay, selectedMealType, contextWeek);
     const mealPlanItem = mealItems.find(mealItem => mealItem.id === item.id);
     
     if (mealPlanItem && mealPlanItem.planId) {
-      removeItemFromPlan(mealPlanItem.planId, activeDay, selectedMealType);
+      // Use week-specific remove function
+      removeItemFromPlanWeek(mealPlanItem.planId, activeDay, selectedMealType, contextWeek);
     } else {
       console.warn('Could not find meal plan item to remove:', item.id);
     }
@@ -201,15 +252,110 @@ const RestaurantDetailPage = () => {
 
   // Handle add to plan from item details
   const handleAddToPlanFromDetails = (item) => {
-    // Add item directly to plan with selected day and meal
-    addItemToPlan(item, activeDay, selectedMealType, restaurant.name);
-    showMealPlanSuccess(item.name, activeDay, selectedMealType, restaurant.name, item.price);
+    // Add item directly to plan with selected day and meal (week-aware)
+    const result = addItemToPlanWeek(item, activeDay, selectedMealType, restaurant.name, contextWeek, userType);
     
-    // Close the item details modal
-    setShowItemDetails(false);
-    setSelectedDetailItem(null);
+    if (result.success) {
+      showMealPlanSuccess(item.name, activeDay, selectedMealType, restaurant.name, item.price);
+      
+      // Close the item details modal
+      setShowItemDetails(false);
+      setSelectedDetailItem(null);
+    } else {
+      // Handle restaurant restriction errors
+      if (result.error === 'RESTAURANT_SWITCH_CONFIRMATION') {
+        // Show confirmation modal for restaurant switch
+        setPendingItem({ item, day: activeDay, mealType: selectedMealType });
+        setSwitchModalData({
+          existingRestaurant: result.existingRestaurant,
+          newRestaurant: result.newRestaurant,
+          itemCount: getTotalItemsCount()
+        });
+        setShowRestaurantSwitchModal(true);
+      } else if (result.error === 'RESTAURANT_LIMIT_EXCEEDED') {
+        // Show error toast for other restrictions
+        showError('Restaurant Limit Reached', result.message, { duration: 8000 });
+      }
+    }
+  };
+
+  // Handle restaurant switch confirmation
+  const handleConfirmRestaurantSwitch = () => {
+    if (pendingItem) {
+      if (pendingItem.action === 'SELECT_RESTAURANT') {
+        // Clear meal plan and navigate to weekly menu with new restaurant
+        clearAllPlan();
+        
+        // Navigate to weekly menu with selected restaurant
+        navigate(`/weekly-menu?restaurantId=${pendingItem.restaurantId}&restaurantName=${encodeURIComponent(pendingItem.restaurantName || '')}`);
+        
+        // Close modal and clear data
+        setShowRestaurantSwitchModal(false);
+        setPendingItem(null);
+        setSwitchModalData(null);
+      } else {
+        // Add item with force replace flag (week-aware)
+        const result = addItemToPlanWeek(
+          pendingItem.item, 
+          pendingItem.day, 
+          pendingItem.mealType, 
+          restaurant.name, 
+          contextWeek,
+          userType, 
+          true // forceReplace = true
+        );
+        
+        if (result.success) {
+          showMealPlanSuccess(pendingItem.item.name, pendingItem.day, pendingItem.mealType, restaurant.name, pendingItem.item.price);
+          
+          // Close modals
+          setShowRestaurantSwitchModal(false);
+          setShowItemDetails(false);
+          setSelectedDetailItem(null);
+          
+          // Clear pending data
+          setPendingItem(null);
+          setSwitchModalData(null);
+        }
+      }
+    }
+  };
+
+  const handleCancelRestaurantSwitch = () => {
+    setShowRestaurantSwitchModal(false);
+    setPendingItem(null);
+    setSwitchModalData(null);
+  };
+
+  // Handle "Select This Restaurant" button click
+  const handleSelectRestaurant = () => {
+    // Pro users can always navigate directly - no restrictions
+    if (userType === 'pro') {
+      navigate(`/weekly-menu?restaurantId=${restaurant?.id}&restaurantName=${encodeURIComponent(restaurant?.name || '')}&week=${contextWeek}`);
+      return;
+    }
     
-    // Removed automatic scrolling to prevent unwanted scroll behavior
+    // For normal users, check for restaurant conflicts (week-aware)
+    const currentRestaurants = getRestaurantsInWeekPlan(contextWeek);
+    
+    // If no restaurants in plan, or this restaurant is already selected, navigate directly
+    if (currentRestaurants.length === 0 || currentRestaurants.includes(restaurant.name)) {
+      navigate(`/weekly-menu?restaurantId=${restaurant?.id}&restaurantName=${encodeURIComponent(restaurant?.name || '')}&week=${contextWeek}`);
+      return;
+    }
+    
+    // If there are items from a different restaurant, show confirmation modal (normal users only)
+    setSwitchModalData({
+      existingRestaurant: currentRestaurants[0],
+      newRestaurant: restaurant.name,
+      itemCount: getTotalItemsCount()
+    });
+    setPendingItem({ 
+      action: 'SELECT_RESTAURANT',
+      restaurantId: restaurant?.id,
+      restaurantName: restaurant?.name
+    });
+    setShowRestaurantSwitchModal(true);
   };
 
   // Handle user type selection
@@ -225,17 +371,16 @@ const RestaurantDetailPage = () => {
     setShowPreferences(false);
   };
 
-  // Check if an item is already in the meal plan
+  // Check if an item is already in the meal plan (week-aware)
   const isItemInPlan = (itemId) => {
-    if (!mealPlan || !Array.isArray(mealPlan)) return false;
-    return mealPlan.some(planItem => planItem.item.id === itemId);
+    const mealItems = getWeekMealItems(activeDay, selectedMealType, contextWeek);
+    return mealItems.some(planItem => planItem.id === itemId);
   };
 
-
-  // Get meal plan entries for a specific item
+  // Get meal plan entries for a specific item (week-aware)
   const getItemPlanEntries = (itemId) => {
-    if (!mealPlan || !Array.isArray(mealPlan)) return [];
-    return mealPlan.filter(planItem => planItem.item.id === itemId);
+    const mealItems = getWeekMealItems(activeDay, selectedMealType, contextWeek);
+    return mealItems.filter(planItem => planItem.id === itemId);
   };
 
   // Helper functions
@@ -357,10 +502,11 @@ const RestaurantDetailPage = () => {
         scrollToPreferences={scrollToPreferences}
       />
 
-      {/* User Type Toggle */}
+      {/* User Type Toggle - Pro option disabled */}
       <UserTypeToggle 
         userType={userType}
         onUserTypeChange={setUserType}
+        disableProOption={true}
       />
 
       {/* Floating Navbar */}
@@ -404,6 +550,11 @@ const RestaurantDetailPage = () => {
               {hasSelectedUserType && (
                 <MenuItemsGrid 
                   items={restaurant?.foodItems?.filter(item => {
+                    // First check availability for the selected day and meal type
+                    const isAvailable = item.availability?.[activeDay]?.[selectedMealType];
+                    if (!isAvailable) return false;
+                    
+                    // Then check preferences
                     if (selectedPreferences.length === 0) return true;
                     return selectedPreferences.some(pref => 
                       item.dietaryPreferences?.includes(pref)
@@ -418,9 +569,10 @@ const RestaurantDetailPage = () => {
                   isItemInPlan={isItemInPlan}
                   getItemPlanEntries={getItemPlanEntries}
                   title="Menu Items"
-                  subtitle="Click any item to view details"
+                  subtitle={isMealPlanningEnabled ? "Click any item to add to your plan" : "Browse our delicious menu items"}
                   emptyStateMessage="No menu items available"
                   isFromMenuSelection={isFromMenuSelection}
+                  isMealPlanningEnabled={isMealPlanningEnabled}
                 />
               )}
           </div>
@@ -466,9 +618,10 @@ const RestaurantDetailPage = () => {
                 isItemInPlan={isItemInPlan}
                 getItemPlanEntries={getItemPlanEntries}
                 title={`${selectedMealType === 'lunch' ? 'Lunch' : 'Dinner'} Planning`}
-                subtitle={`Planning for ${DAYS_OF_WEEK.find(d => d.id === activeDay)?.name}`}
+                subtitle={isMealPlanningEnabled ? `Planning for ${DAYS_OF_WEEK.find(d => d.id === activeDay)?.name}` : "Browse our delicious menu items"}
                 emptyStateMessage={`No ${selectedMealType} items available for ${DAYS_OF_WEEK.find(d => d.id === activeDay)?.name}`}
                 showProBadges={true}
+                isMealPlanningEnabled={isMealPlanningEnabled}
               />
             </div>
           </div>
@@ -476,8 +629,40 @@ const RestaurantDetailPage = () => {
       )}
 
 
-      {/* Next Step Button */}
-      <NextStepButton />
+      {/* Action Button - Only show when NOT in meal planning mode */}
+      {!isMealPlanningEnabled && (
+        <div className="fixed bottom-20 sm:bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+          <button
+            onClick={contextSource === 'menu-browse' ? () => navigate(`/weekly-menu?restaurantId=${restaurant?.id}&restaurantName=${encodeURIComponent(restaurant?.name || '')}`) : handleSelectRestaurant}
+            className="bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-4 px-8 rounded-xl shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 flex items-center space-x-3 whitespace-nowrap"
+          >
+            <span>{contextSource === 'menu-browse' ? 'Back to Weekly Menu' : 'Select This Restaurant'}</span>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={contextSource === 'menu-browse' ? "M10 19l-7-7m0 0l7-7m-7 7h18" : "M9 5l7 7-7 7"} />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {/* Back to Weekly Planning Button - Only show when IN meal planning mode */}
+      {isMealPlanningEnabled && (
+        <div className="fixed bottom-20 sm:bottom-6 left-1/2 transform -translate-x-1/2 sm:left-6 sm:transform-none z-[60] flex flex-col gap-3">
+          {/* Quick Day/Slot Indicator */}
+          <div className="bg-white rounded-lg shadow-lg border border-gray-200 px-4 py-2 text-center">
+            <div className="text-xs text-gray-600">Currently planning</div>
+            <div className="text-sm font-semibold text-grub-red">
+              {DAYS_OF_WEEK.find(d => d.id === activeDay)?.name} {selectedMealType.charAt(0).toUpperCase() + selectedMealType.slice(1)}
+            </div>
+          </div>
+          
+          {/* Back to Weekly Planning Button */}
+          <NextStepButton 
+            destination={`/weekly-menu?restaurantId=${restaurant?.id}&restaurantName=${encodeURIComponent(restaurant?.name || '')}`}
+            buttonText="Back to Weekly Planning"
+            className="shadow-xl"
+          />
+        </div>
+      )}
 
       {/* Item Details Modal */}
       <ItemDetailsModal 
@@ -491,15 +676,26 @@ const RestaurantDetailPage = () => {
         onAddToPlan={handleAddToPlanFromDetails}
         onDayChange={setActiveDay}
         onMealTypeChange={setSelectedMealType}
+        isMealPlanningEnabled={isMealPlanningEnabled}
       />
 
-      {/* User Type Selection Modal */}
-      <UserTypeSelectionModal
+      {/* Restaurant Switch Confirmation Modal */}
+      <RestaurantSwitchModal
+        isOpen={showRestaurantSwitchModal}
+        onClose={handleCancelRestaurantSwitch}
+        onConfirm={handleConfirmRestaurantSwitch}
+        existingRestaurant={switchModalData?.existingRestaurant}
+        newRestaurant={switchModalData?.newRestaurant}
+        itemCount={switchModalData?.itemCount}
+      />
+
+      {/* User Type Selection Modal - Temporarily commented out */}
+      {/* <UserTypeSelectionModal
         isOpen={showUserTypeModal}
         onClose={() => setShowUserTypeModal(false)}
         onConfirm={handleUserTypeSelection}
         restaurantName={restaurant?.name || 'this restaurant'}
-      />
+      /> */}
     </div>
   );
 };

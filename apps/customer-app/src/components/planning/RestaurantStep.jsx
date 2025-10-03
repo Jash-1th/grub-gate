@@ -65,7 +65,7 @@ const RestaurantStep = ({ onNext, onBack }) => {
               <div className="w-8 h-0.5 bg-gray-300"></div>
               
               <div className="flex items-center">
-                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-grub-red rounded-full flex items-center justify-center">
                   <span className="text-white text-sm font-bold">2</span>
                 </div>
                 <span className="ml-2 text-sm font-medium text-gray-900">Restaurants</span>
@@ -84,7 +84,7 @@ const RestaurantStep = ({ onNext, onBack }) => {
             {/* Continue Button */}
             <button
               onClick={onNext}
-              className="inline-flex items-center px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200"
+              className="inline-flex items-center px-6 py-2 bg-grub-red hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200"
             >
               Continue to Plans
               <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,7 +132,7 @@ const RestaurantStep = ({ onNext, onBack }) => {
               </button>
               <button
                 onClick={onNext}
-                className="px-8 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-lg transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
+                className="px-8 py-2 bg-gradient-to-r from-grub-red to-red-700 hover:from-grub-red hover:to-red-800 text-white font-semibold rounded-lg transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
               >
                 Continue to Subscription Plans
               </button>

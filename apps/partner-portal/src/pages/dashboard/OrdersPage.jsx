@@ -18,7 +18,7 @@ import {
   MoreVertical
 } from 'lucide-react';
 import { Button, Input, Card, CardContent, CardHeader, CardTitle, Modal } from '@grub-gate/ui';
-import { mockOrders } from '../../lib/mock-data.js';
+import { mockWeeklyPlans } from '../../lib/mock-data.js';
 
 const OrdersPage = () => {
   const { t } = useTranslation();
@@ -27,13 +27,64 @@ const OrdersPage = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
 
-  // Consistent date formatting to prevent hydration mismatch
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+
+  // Get current day name
+  const getCurrentDayName = () => {
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const today = new Date();
+    return days[today.getDay()];
+  };
+
+  // Get today's meals from weekly plans
+  const getTodaysMeals = () => {
+    const currentDay = getCurrentDayName();
+    const todaysMeals = [];
+    
+    mockWeeklyPlans.forEach(plan => {
+      if (plan.status === 'active' && plan.meals[currentDay]) {
+        const dayMeals = plan.meals[currentDay];
+        
+        // Add lunch if exists
+        if (dayMeals.lunch) {
+          todaysMeals.push({
+            id: `${plan.id}_${currentDay}_lunch`,
+            customer: plan.customer,
+            items: [dayMeals.lunch],
+            total: dayMeals.lunch.price,
+            status: 'pending',
+            orderDate: new Date().toISOString(),
+            deliveryDate: new Date().toISOString(),
+            deliveryAddress: plan.deliveryAddress,
+            notes: plan.notes,
+            mealType: 'lunch',
+            deliveryTime: dayMeals.lunch.deliveryTime,
+            planId: plan.id,
+            isWeeklyPlan: true
+          });
+        }
+        
+        // Add dinner if exists
+        if (dayMeals.dinner) {
+          todaysMeals.push({
+            id: `${plan.id}_${currentDay}_dinner`,
+            customer: plan.customer,
+            items: [dayMeals.dinner],
+            total: dayMeals.dinner.price,
+            status: 'pending',
+            orderDate: new Date().toISOString(),
+            deliveryDate: new Date().toISOString(),
+            deliveryAddress: plan.deliveryAddress,
+            notes: plan.notes,
+            mealType: 'dinner',
+            deliveryTime: dayMeals.dinner.deliveryTime,
+            planId: plan.id,
+            isWeeklyPlan: true
+          });
+        }
+      }
+    });
+    
+    return todaysMeals;
   };
 
   const statuses = [
@@ -46,7 +97,8 @@ const OrdersPage = () => {
     { value: 'cancelled', label: t('orders.statuses.cancelled') }
   ];
 
-  const filteredOrders = mockOrders.filter(order => {
+  // Get today's meals from weekly plans
+  const filteredOrders = getTodaysMeals().filter(order => {
     const matchesSearch = order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          order.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
@@ -93,8 +145,12 @@ const OrdersPage = () => {
         <div className="bg-gradient-to-r from-grub-red to-red-600 rounded-2xl p-6 text-white">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold">Orders Management</h1>
-              <p className="text-red-100 mt-1">Track and manage all your restaurant orders</p>
+              <h1 className="text-2xl sm:text-3xl font-bold">
+                Today's Weekly Plan Orders
+              </h1>
+              <p className="text-red-100 mt-1">
+                Current day's lunch and dinner from weekly meal plans - {getCurrentDayName().charAt(0).toUpperCase() + getCurrentDayName().slice(1)}
+              </p>
             </div>
             <div className="flex items-center space-x-3">
               <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
@@ -163,7 +219,7 @@ const OrdersPage = () => {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
-                    placeholder="Search orders by customer name or order ID..."
+                    placeholder="Search weekly plan orders by customer name..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
@@ -193,8 +249,8 @@ const OrdersPage = () => {
             <Card>
               <CardContent className="p-8 text-center">
                 <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No orders found</h3>
-                <p className="text-gray-500">Try adjusting your search or filter criteria.</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No weekly plan orders for today</h3>
+                <p className="text-gray-500">No lunch or dinner orders from weekly meal plans scheduled for {getCurrentDayName()}.</p>
               </CardContent>
             </Card>
           ) : (
@@ -210,9 +266,10 @@ const OrdersPage = () => {
                             <th className="text-left py-4 px-6 font-semibold text-gray-900">Order ID</th>
                             <th className="text-left py-4 px-6 font-semibold text-gray-900">Customer</th>
                             <th className="text-left py-4 px-6 font-semibold text-gray-900">Items</th>
+                            <th className="text-left py-4 px-6 font-semibold text-gray-900">Meal Type</th>
                             <th className="text-left py-4 px-6 font-semibold text-gray-900">Total</th>
                             <th className="text-left py-4 px-6 font-semibold text-gray-900">Status</th>
-                            <th className="text-left py-4 px-6 font-semibold text-gray-900">Date</th>
+                            <th className="text-left py-4 px-6 font-semibold text-gray-900">Delivery Time</th>
                             <th className="text-left py-4 px-6 font-semibold text-gray-900">Actions</th>
                           </tr>
                         </thead>
@@ -232,6 +289,15 @@ const OrdersPage = () => {
                                 <span className="text-gray-900">{order.items.length} items</span>
                               </td>
                               <td className="py-4 px-6">
+                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                  order.mealType === 'lunch' 
+                                    ? 'bg-yellow-100 text-yellow-800' 
+                                    : 'bg-purple-100 text-purple-800'
+                                }`}>
+                                  {order.mealType === 'lunch' ? '🍽️ Lunch' : '🍽️ Dinner'}
+                                </span>
+                              </td>
+                              <td className="py-4 px-6">
                                 <span className="font-bold text-lg text-grub-red">${order.total}</span>
                               </td>
                               <td className="py-4 px-6">
@@ -241,7 +307,9 @@ const OrdersPage = () => {
                                 </span>
                               </td>
                               <td className="py-4 px-6">
-                                <span className="text-gray-900">{formatDate(order.orderDate)}</span>
+                                <span className="text-gray-900">
+                                  {order.deliveryTime}
+                                </span>
                               </td>
                               <td className="py-4 px-6">
                                 <div className="flex items-center space-x-2">
@@ -303,6 +371,13 @@ const OrdersPage = () => {
                               {getStatusIcon(order.status)}
                               <span className="ml-1">{order.status}</span>
                             </span>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                              order.mealType === 'lunch' 
+                                ? 'bg-yellow-100 text-yellow-800' 
+                                : 'bg-purple-100 text-purple-800'
+                            }`}>
+                              {order.mealType === 'lunch' ? '🍽️ Lunch' : '🍽️ Dinner'}
+                            </span>
                           </div>
                           <div className="text-right">
                             <div className="font-bold text-lg text-grub-red">${order.total}</div>
@@ -319,7 +394,7 @@ const OrdersPage = () => {
                             <div className="flex-1 min-w-0">
                               <div className="font-medium text-gray-900 text-sm truncate">{order.customer.name}</div>
                               <div className="text-xs text-gray-500">
-                                {formatDate(order.orderDate)}
+                                Delivery: {order.deliveryTime}
                               </div>
                             </div>
                           </div>
@@ -393,14 +468,25 @@ const OrdersPage = () => {
               <div className="bg-gradient-to-r from-grub-red to-red-600 text-white rounded-lg p-2.5 sm:p-3 -mx-2 sm:-mx-4 -mt-2 sm:-mt-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-3">
                   <div>
-                    <h2 className="text-base sm:text-lg font-bold">Order #{selectedOrder.id.split('_')[1]}</h2>
+                    <h2 className="text-base sm:text-lg font-bold">
+                      Weekly Plan - {selectedOrder.mealType}
+                    </h2>
                     <p className="text-red-100 text-xs">
-                      {formatDate(selectedOrder.orderDate)}
+                      {getCurrentDayName().charAt(0).toUpperCase() + getCurrentDayName().slice(1)} - Delivery: {selectedOrder.deliveryTime}
                     </p>
                   </div>
                   <div className="text-right">
                     <div className="text-lg sm:text-xl font-bold">${selectedOrder.total}</div>
-                    <div className="text-red-100 text-xs">{selectedOrder.items.length} items</div>
+                    <div className="text-red-100 text-xs">
+                      {selectedOrder.items.length} items
+                      <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        selectedOrder.mealType === 'lunch' 
+                          ? 'bg-yellow-100 text-yellow-800' 
+                          : 'bg-purple-100 text-purple-800'
+                      }`}>
+                        {selectedOrder.mealType === 'lunch' ? '🍽️ Lunch' : '🍽️ Dinner'}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>

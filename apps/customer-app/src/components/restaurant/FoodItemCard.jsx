@@ -159,7 +159,7 @@ const FoodItemCard = ({
               <div className="flex flex-wrap gap-1 mt-2">
                 {planEntries.slice(0, 2).map((entry, index) => (
                   <span key={index} className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
-                    {entry.day.charAt(0).toUpperCase() + entry.day.slice(1)} {entry.mealType}
+                    {(entry.dayId || entry.day || '').charAt(0).toUpperCase() + (entry.dayId || entry.day || '').slice(1)} {entry.mealType}
                   </span>
                 ))}
                 {planEntries.length > 2 && (

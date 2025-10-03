@@ -60,8 +60,8 @@ export const ToastProvider = ({ children }) => {
     return addToast({
       type: 'success',
       title: 'Added to Meal Plan! 🎉',
-      message: `${itemName} has been added to your meal plan`,
-      duration: 5000,
+      message: `${itemName} added to ${day.charAt(0).toUpperCase() + day.slice(1)} ${mealType}. Click "Back to Weekly Planning" to add more meals!`,
+      duration: 6000,
       itemData: {
         day,
         mealType,

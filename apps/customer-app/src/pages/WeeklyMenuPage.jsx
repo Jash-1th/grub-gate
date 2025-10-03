@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMealPlan } from '../contexts/MealPlanContext';
 import { useToast } from '../contexts/ToastContext';
 import { usePlanning } from '../contexts/PlanningContext';
+import { unifiedRestaurants } from '../data/unifiedRestaurants';
+import RestaurantSwitchModal from '../components/modals/RestaurantSwitchModal';
+import RestaurantSelectionModal from '../components/modals/RestaurantSelectionModal';
 
 // Enhanced Meal Slot Component with more features
-const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postalCode }) => {
+const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postalCode, selectedRestaurant, selectedWeek = 0, onShowRestaurantSelectionModal }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const hasItems = actualMealItems && actualMealItems.length > 0;
@@ -15,11 +18,13 @@ const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postal
 
   const handleSlotClick = () => {
     if (hasItems) {
-      navigate(`/meal-plan/${day}`);
+      navigate(`/meal-plan/${day}?week=${selectedWeek}`);
+    } else if (selectedRestaurant) {
+      // Navigate to selected restaurant with day, slot, and week context
+      navigate(`/restaurant/${selectedRestaurant.id}?day=${day}&slot=${mealType}&week=${selectedWeek}&userType=normal&source=weekly-menu`);
     } else {
-      // Include postal code in the navigation URL
-      const postalParam = postalCode ? `&postal=${postalCode}` : '';
-      navigate(`/plan/restaurants?source=weekly-menu&day=${day}&slot=${mealType}${postalParam}`);
+      // Show restaurant selection modal instead of direct navigation
+      onShowRestaurantSelectionModal(day, mealType);
     }
   };
 
@@ -113,7 +118,7 @@ const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postal
               Add {mealType}
             </div>
             <div className="hidden sm:flex text-xs text-grub-red/70 font-medium group-hover:text-red-600 transition-colors duration-200 items-center justify-center">
-              <span>Browse restaurants</span>
+              <span>{selectedRestaurant ? `From ${selectedRestaurant.name}` : 'Browse restaurants'}</span>
               <svg className="w-3 h-3 ml-1 group-hover:translate-x-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
@@ -128,38 +133,189 @@ const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postal
 const WeeklyMenuPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { mealPlan, removeItemFromPlan, getTotalItemsCount, getWeeklyPlanSummary, clearAllPlan } = useMealPlan();
+  const [searchParams] = useSearchParams();
+  const { 
+    mealPlan, 
+    removeItemFromPlan, 
+    getTotalItemsCount, 
+    getWeeklyPlanSummary, 
+    clearAllPlan, 
+    getRestaurantsInPlan,
+    // Week-specific functions
+    getWeekPlan,
+    getWeekMealItems,
+    getWeekTotalItems,
+    getWeekTotalCost,
+    removeItemFromPlanWeek,
+    getRestaurantsInWeekPlan,
+    getRestaurantsInAllWeeks,
+    clearWeek
+  } = useMealPlan();
   const { showToast } = useToast();
   const { postalCode } = usePlanning();
   const [isClient, setIsClient] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState(0); // 0 = current week, 1 = next week, etc.
+  
+  // Restaurant switch modal state
+  const [showRestaurantSwitchModal, setShowRestaurantSwitchModal] = useState(false);
+  const [switchModalData, setSwitchModalData] = useState(null);
+  
+  // Restaurant selection modal state
+  const [showRestaurantSelectionModal, setShowRestaurantSelectionModal] = useState(false);
+  const [selectionModalData, setSelectionModalData] = useState(null);
+  
+  // Get restaurant info from URL parameters or detect from week's meal plan
+  const urlRestaurantId = searchParams.get('restaurantId');
+  const urlRestaurantName = searchParams.get('restaurantName');
+  
+  // Get restaurants in the selected week's meal plan
+  const weekRestaurants = getRestaurantsInWeekPlan(selectedWeek);
+  
+  // Get restaurants from ALL weeks (for normal users who can only select one restaurant)
+  const allWeeksRestaurants = getRestaurantsInAllWeeks();
+  
+  // Determine selected restaurant: URL parameter takes priority, then detect from meal plan
+  const selectedRestaurant = useMemo(() => {
+    // If URL has restaurant info, use that
+    if (urlRestaurantId) {
+      return unifiedRestaurants.find(r => r.id === parseInt(urlRestaurantId));
+    }
+    
+    // For normal users: if there's exactly one restaurant across ALL weeks, show that restaurant for both weeks
+    // This ensures consistency - if user has items from Restaurant A in Week 1, Week 2 should also show Restaurant A
+    if (allWeeksRestaurants.length === 1) {
+      return unifiedRestaurants.find(r => r.name === allWeeksRestaurants[0]);
+    }
+    
+    // Fallback: if there's exactly one restaurant in the current week's meal plan, use that
+    if (weekRestaurants.length === 1) {
+      return unifiedRestaurants.find(r => r.name === weekRestaurants[0]);
+    }
+    
+    // No restaurant selected
+    return null;
+  }, [urlRestaurantId, allWeeksRestaurants, weekRestaurants, selectedWeek]);
+
+  const selectedRestaurantId = selectedRestaurant?.id;
+  const selectedRestaurantName = selectedRestaurant?.name;
+
+  // Get current restaurants in meal plan
+  const currentRestaurants = getRestaurantsInPlan();
+
+  // Helper functions for date ranges (SSR-safe)
+  const getWeekDateRange = (weekOffset = 0) => {
+    if (!isClient) return ''; // Prevent SSR hydration mismatch
+    
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay() + (weekOffset * 7)); // Sunday + week offset
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6); // Saturday
+    
+    return `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+  };
+
+  const getCurrentWeekDateRange = () => getWeekDateRange(0);
+  const getNextWeekDateRange = () => getWeekDateRange(1);
+
+  // Get specific day date for a week (SSR-safe)
+  const getDayDateForWeek = (dayIndex, weekOffset = 0) => {
+    if (!isClient) return ''; // Prevent SSR hydration mismatch
+    
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay() + (weekOffset * 7)); // Sunday + week offset
+    const targetDay = new Date(startOfWeek);
+    targetDay.setDate(startOfWeek.getDate() + dayIndex); // Add day index (0=Sunday, 1=Monday, etc.)
+    
+    return targetDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   const handleRemoveItem = (planId, day, mealType) => {
-    removeItemFromPlan(planId, day, mealType);
+    removeItemFromPlanWeek(planId, day, mealType, selectedWeek);
     showToast('Item removed from meal plan', 'success');
   };
 
   const handleClearAll = () => {
-    if (window.confirm('Are you sure you want to clear your entire meal plan?')) {
+    if (window.confirm(`Are you sure you want to clear your entire ${selectedWeek === 0 ? 'current week' : 'next week'} meal plan?`)) {
       clearAllPlan();
       showToast('Meal plan cleared', 'success');
     }
   };
 
-  const totalItems = getTotalItemsCount();
-  const weeklySummary = getWeeklyPlanSummary();
+  const handleSelectOtherRestaurant = () => {
+    // Normal users can only select ONE restaurant for BOTH weeks
+    // Check for restaurants across ALL weeks, not just current week
+    const allWeeksRestaurants = getRestaurantsInAllWeeks();
+    const totalItemsAllWeeks = getWeekTotalItems(0) + getWeekTotalItems(1); // Both weeks
+    
+    // If there are items from any restaurant in any week, show confirmation modal
+    if (allWeeksRestaurants.length > 0 && totalItemsAllWeeks > 0) {
+      setSwitchModalData({
+        existingRestaurant: allWeeksRestaurants[0], // Show first restaurant
+        newRestaurant: 'Browse Restaurants',
+        itemCount: totalItemsAllWeeks // Total items across both weeks
+      });
+      setShowRestaurantSwitchModal(true);
+    } else {
+      // No items in any week, navigate directly to restaurant selection
+      const postalParam = postalCode ? `&postal=${postalCode}` : '';
+      navigate(`/plan/restaurants?source=plan${postalParam}`);
+    }
+  };
 
-  // Calculate total cost
-  const totalCost = Object.values(mealPlan).reduce((total, day) => {
-    const dayTotal = [...day.lunch, ...day.dinner].reduce((daySum, item) => {
-      return daySum + parseFloat(item.price || 0);
-    }, 0);
-    return total + dayTotal;
-  }, 0);
+  const handleConfirmRestaurantSwitch = () => {
+    // Clear BOTH weeks' meal plans (since normal users can only have one restaurant for both weeks)
+    clearWeek(0); // Clear current week
+    clearWeek(1); // Clear next week
+    
+    // Close modal
+    setShowRestaurantSwitchModal(false);
+    setSwitchModalData(null);
+    
+    // Navigate to restaurant selection
+    const postalParam = postalCode ? `&postal=${postalCode}` : '';
+    navigate(`/plan/restaurants?source=plan${postalParam}`);
+    
+    // Show success message
+    showToast('Both weeks cleared. Select a new restaurant for bi-weekly planning!', 'success');
+  };
+
+  const handleCloseRestaurantSwitchModal = () => {
+    setShowRestaurantSwitchModal(false);
+    setSwitchModalData(null);
+  };
+
+  const handleShowRestaurantSelectionModal = (day, mealType) => {
+    setSelectionModalData({ day, mealType, week: selectedWeek });
+    setShowRestaurantSelectionModal(true);
+  };
+
+  const handleConfirmRestaurantSelection = () => {
+    // Close modal
+    setShowRestaurantSelectionModal(false);
+    setSelectionModalData(null);
+    
+    // Navigate to general restaurant selection (like after entering pincode)
+    // No day/slot context - user is starting fresh to select a restaurant
+    const postalParam = postalCode ? `&postal=${postalCode}` : '';
+    navigate(`/plan/restaurants?source=plan${postalParam}`);
+  };
+
+  const handleCloseRestaurantSelectionModal = () => {
+    setShowRestaurantSelectionModal(false);
+    setSelectionModalData(null);
+  };
+
+  // Get week-specific data
+  const currentWeekPlan = getWeekPlan(selectedWeek);
+  const totalItems = getWeekTotalItems(selectedWeek);
+  const totalCost = getWeekTotalCost(selectedWeek);
+  const weeklySummary = getWeeklyPlanSummary();
 
   if (!isClient) {
     return (
@@ -208,20 +364,136 @@ const WeeklyMenuPage = () => {
         </div>
       </div>
 
+      {/* Week Selector */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-center">
+            <div className="bg-gray-100 rounded-xl p-1 shadow-inner">
+              <div className="flex">
+                {/* Current Week Button */}
+                <button
+                  onClick={() => setSelectedWeek(0)}
+                  className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                    selectedWeek === 0
+                      ? 'bg-white text-grub-red shadow-md'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg">📅</span>
+                    <span>This Week</span>
+                  </div>
+                </button>
+
+                {/* Next Week Button */}
+                <button
+                  onClick={() => setSelectedWeek(1)}
+                  className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                    selectedWeek === 1
+                      ? 'bg-white text-grub-red shadow-md'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg">📆</span>
+                    <span>Next Week</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          {/* Week Date Range Display */}
+          <div className="text-center mt-3">
+            <p className="text-sm text-gray-600">
+              {isClient && (
+                selectedWeek === 0 ? (
+                  <>
+                    <span className="font-medium">Current Week:</span> {getCurrentWeekDateRange()}
+                  </>
+                ) : (
+                  <>
+                    <span className="font-medium">Next Week:</span> {getNextWeekDateRange()}
+                  </>
+                )
+              )}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Selected Restaurant Banner */}
+      {selectedRestaurant && (
+        <div className="bg-white border-b border-gray-200 shadow-sm">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-grub-red to-red-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">🍽️</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Planning meals from {selectedRestaurant.name}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Click any empty slot to add meals from this restaurant • {selectedRestaurant.cuisine} • ⭐ {selectedRestaurant.rating}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => navigate(`/restaurant/${selectedRestaurant.id}?source=menu-browse`)}
+                  className="px-4 py-2 bg-grub-red text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                >
+                  View Full Menu
+                </button>
+                <button
+                  onClick={handleSelectOtherRestaurant}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                >
+                  Select Other Restaurant
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Current Restaurants Info - Show when there are items in plan */}
+      {currentRestaurants.length > 0 && (
+        <div className="bg-gray-50 border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 text-sm">🏪</span>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-900">
+                    Current Restaurant{currentRestaurants.length > 1 ? 's' : ''}: {currentRestaurants.join(', ')}
+                  </div>
+                  <div className="text-xs text-gray-600">
+                    {currentRestaurants.length === 1 
+                      ? 'Normal users can only select from one restaurant' 
+                      : 'Pro users can select from multiple restaurants'
+                    }
+                  </div>
+                </div>
+              </div>
+              {currentRestaurants.length === 1 && (
+                <div className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
+                  Normal User
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Quick Actions */}
-        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
-          <button
-            onClick={() => navigate('/plan/restaurants?source=plan')}
-            className="flex items-center justify-center px-4 py-3 bg-grub-red hover:bg-red-700 text-white font-semibold rounded-xl transition-colors duration-200 touch-manipulation"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            <span className="text-sm sm:text-base">Add More Meals</span>
-          </button>
-
-          {totalItems > 0 && (
+        {totalItems > 0 && (
+          <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
             <button
               onClick={handleClearAll}
               className="flex items-center justify-center px-4 py-3 border border-red-300 text-red-700 font-semibold rounded-xl hover:bg-red-50 transition-colors duration-200 touch-manipulation"
@@ -231,17 +503,19 @@ const WeeklyMenuPage = () => {
               </svg>
               <span className="text-sm sm:text-base">Clear All</span>
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Weekly Calendar */}
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-200 p-3 sm:p-6 mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-2">
-            <h2 className="text-lg sm:text-2xl font-bold text-gray-900">This Week's Menu</h2>
+            <h2 className="text-lg sm:text-2xl font-bold text-gray-900">
+              {selectedWeek === 0 ? "This Week's Menu" : "Next Week's Menu"}
+            </h2>
             <div className="flex items-center justify-center sm:justify-end space-x-2">
               <span className="text-xs sm:text-sm text-gray-500">Week of</span>
               <span className="text-xs sm:text-sm font-semibold text-gray-900">
-                {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                {isClient ? getWeekDateRange(selectedWeek) : ''}
               </span>
             </div>
           </div>
@@ -250,8 +524,8 @@ const WeeklyMenuPage = () => {
           <div className="block sm:hidden space-y-4">
             {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, index) => {
               const dayKey = day.toLowerCase();
-              const lunchItems = mealPlan[dayKey]?.lunch || [];
-              const dinnerItems = mealPlan[dayKey]?.dinner || [];
+              const lunchItems = getWeekMealItems(dayKey, 'lunch', selectedWeek);
+              const dinnerItems = getWeekMealItems(dayKey, 'dinner', selectedWeek);
               const totalDayItems = lunchItems.length + dinnerItems.length;
               
               return (
@@ -260,7 +534,7 @@ const WeeklyMenuPage = () => {
                     <div>
                       <h3 className="font-bold text-gray-900">{day}</h3>
                       <p className="text-xs text-gray-600">
-                        {new Date(Date.now() + index * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        {isClient ? getDayDateForWeek(index + 1, selectedWeek) : ''}
                       </p>
                     </div>
                     <div className="text-right">
@@ -283,6 +557,9 @@ const WeeklyMenuPage = () => {
                         actualMealItems={lunchItems}
                         onRemoveItem={handleRemoveItem}
                         postalCode={postalCode}
+                        selectedRestaurant={selectedRestaurant}
+                        selectedWeek={selectedWeek}
+                        onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
                       />
                     </div>
                     
@@ -298,6 +575,9 @@ const WeeklyMenuPage = () => {
                         actualMealItems={dinnerItems}
                         onRemoveItem={handleRemoveItem}
                         postalCode={postalCode}
+                        selectedRestaurant={selectedRestaurant}
+                        selectedWeek={selectedWeek}
+                        onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
                       />
                     </div>
                   </div>
@@ -312,19 +592,24 @@ const WeeklyMenuPage = () => {
               <div className="grid grid-cols-8 gap-3 mb-4">
                 {/* Header row */}
                 <div className="p-3"></div>
-                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, index) => (
-                  <div key={day} className="p-3 text-center">
-                    <div className="bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg px-4 py-3 shadow-sm">
-                      <div className="text-sm font-bold text-gray-900">{day}</div>
-                      <div className="text-xs text-gray-600 font-medium">
-                        {new Date(Date.now() + index * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      </div>
-                      <div className="text-xs text-grub-red font-semibold mt-1">
-                        {weeklySummary[day.toLowerCase()]?.total || 0} items
+                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, index) => {
+                  const dayKey = day.toLowerCase();
+                  const dayTotalItems = getWeekMealItems(dayKey, 'lunch', selectedWeek).length + getWeekMealItems(dayKey, 'dinner', selectedWeek).length;
+                  
+                  return (
+                    <div key={day} className="p-3 text-center">
+                      <div className="bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg px-4 py-3 shadow-sm">
+                        <div className="text-sm font-bold text-gray-900">{day}</div>
+                        <div className="text-xs text-gray-600 font-medium">
+                          {isClient ? getDayDateForWeek(index + 1, selectedWeek) : ''}
+                        </div>
+                        <div className="text-xs text-grub-red font-semibold mt-1">
+                          {dayTotalItems} items
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 
                 {/* Lunch row */}
                 <div className="p-3 flex items-center">
@@ -342,9 +627,12 @@ const WeeklyMenuPage = () => {
                     key={`lunch-${day}`}
                     day={day}
                     mealType="lunch"
-                    actualMealItems={mealPlan[day]?.lunch || []}
+                    actualMealItems={getWeekMealItems(day, 'lunch', selectedWeek)}
                     onRemoveItem={handleRemoveItem}
                     postalCode={postalCode}
+                    selectedRestaurant={selectedRestaurant}
+                    selectedWeek={selectedWeek}
+                    onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
                   />
                 ))}
                 
@@ -364,9 +652,12 @@ const WeeklyMenuPage = () => {
                     key={`dinner-${day}`}
                     day={day}
                     mealType="dinner"
-                    actualMealItems={mealPlan[day]?.dinner || []}
+                    actualMealItems={getWeekMealItems(day, 'dinner', selectedWeek)}
                     onRemoveItem={handleRemoveItem}
                     postalCode={postalCode}
+                    selectedRestaurant={selectedRestaurant}
+                    selectedWeek={selectedWeek}
+                    onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
                   />
                 ))}
               </div>
@@ -434,13 +725,6 @@ const WeeklyMenuPage = () => {
             </div>
             <div className="space-y-3">
               <button
-                onClick={() => navigate('/plan/restaurants?source=plan')}
-                className="w-full text-left p-3 rounded-lg border border-gray-200 hover:border-grub-red hover:bg-red-50 transition-colors duration-200"
-              >
-                <div className="font-medium text-gray-900">Add More Meals</div>
-                <div className="text-sm text-gray-600">Browse restaurants</div>
-              </button>
-              <button
                 onClick={() => navigate('/subscription')}
                 className="w-full text-left p-3 rounded-lg bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 border-2 border-red-500 relative overflow-hidden"
               >
@@ -465,29 +749,28 @@ const WeeklyMenuPage = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Preferences</h3>
-              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <div className="text-sm text-gray-600">
-                Customize your meal preferences and dietary restrictions to get better recommendations.
-              </div>
-              <button
-                onClick={() => navigate('/plan')}
-                className="w-full p-3 bg-grub-red hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200"
-              >
-                Update Preferences
-              </button>
-            </div>
-          </div>
         </div>
       </div>
+      
+      {/* Restaurant Switch Modal */}
+      <RestaurantSwitchModal
+        isOpen={showRestaurantSwitchModal}
+        onClose={handleCloseRestaurantSwitchModal}
+        onConfirm={handleConfirmRestaurantSwitch}
+        existingRestaurant={switchModalData?.existingRestaurant}
+        newRestaurant={switchModalData?.newRestaurant}
+        itemCount={switchModalData?.itemCount}
+      />
+      
+      {/* Restaurant Selection Modal */}
+      <RestaurantSelectionModal
+        isOpen={showRestaurantSelectionModal}
+        onClose={handleCloseRestaurantSelectionModal}
+        onConfirm={handleConfirmRestaurantSelection}
+        day={selectionModalData?.day}
+        mealType={selectionModalData?.mealType}
+        week={selectionModalData?.week}
+      />
     </div>
   );
 };

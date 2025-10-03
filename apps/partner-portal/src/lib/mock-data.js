@@ -452,3 +452,145 @@ export const partnerTestimonials = [
 
 export const featuredPartnerTestimonials = partnerTestimonials.slice(0, 6);
 
+// Mock weekly meal plans data
+export const mockWeeklyPlans = [
+  {
+    id: 'plan_001',
+    customer: {
+      id: 'cust_001',
+      name: 'Marie Dubois',
+      email: 'marie.dubois@email.com',
+      phone: '+1 (514) 555-0101'
+    },
+    planType: 'weekly',
+    startDate: '2024-01-15T00:00:00Z',
+    endDate: '2024-01-21T23:59:59Z',
+    status: 'active',
+    deliveryAddress: '456 Rue Sherbrooke, Montreal, QC H3A 1A1',
+    notes: 'Please ring doorbell twice',
+    meals: {
+      monday: {
+        lunch: { id: 'item_003', name: 'Ratatouille', quantity: 1, price: 22.99, deliveryTime: '12:00' },
+        dinner: { id: 'item_001', name: 'Coq au Vin', quantity: 1, price: 28.99, deliveryTime: '18:30' }
+      },
+      tuesday: {
+        lunch: { id: 'item_005', name: 'French Onion Soup', quantity: 1, price: 12.99, deliveryTime: '12:00' },
+        dinner: { id: 'item_002', name: 'Bouillabaisse', quantity: 1, price: 32.99, deliveryTime: '19:00' }
+      },
+      wednesday: {
+        lunch: { id: 'item_003', name: 'Ratatouille', quantity: 1, price: 22.99, deliveryTime: '12:00' },
+        dinner: { id: 'item_001', name: 'Coq au Vin', quantity: 1, price: 28.99, deliveryTime: '18:30' }
+      },
+      thursday: {
+        lunch: { id: 'item_005', name: 'French Onion Soup', quantity: 1, price: 12.99, deliveryTime: '12:00' },
+        dinner: { id: 'item_002', name: 'Bouillabaisse', quantity: 1, price: 32.99, deliveryTime: '19:00' }
+      },
+      friday: {
+        lunch: { id: 'item_003', name: 'Ratatouille', quantity: 1, price: 22.99, deliveryTime: '12:00' },
+        dinner: { id: 'item_001', name: 'Coq au Vin', quantity: 1, price: 28.99, deliveryTime: '18:30' }
+      },
+      saturday: {
+        lunch: { id: 'item_005', name: 'French Onion Soup', quantity: 1, price: 12.99, deliveryTime: '12:00' },
+        dinner: { id: 'item_002', name: 'Bouillabaisse', quantity: 1, price: 32.99, deliveryTime: '19:00' }
+      },
+      sunday: {
+        lunch: { id: 'item_003', name: 'Ratatouille', quantity: 1, price: 22.99, deliveryTime: '12:00' },
+        dinner: { id: 'item_001', name: 'Coq au Vin', quantity: 1, price: 28.99, deliveryTime: '18:30' }
+      }
+    },
+    totalWeeklyValue: 287.86
+  },
+  {
+    id: 'plan_002',
+    customer: {
+      id: 'cust_002',
+      name: 'Jean-Pierre Martin',
+      email: 'jp.martin@email.com',
+      phone: '+1 (514) 555-0102'
+    },
+    planType: 'weekly',
+    startDate: '2024-01-15T00:00:00Z',
+    endDate: '2024-01-21T23:59:59Z',
+    status: 'active',
+    deliveryAddress: '789 Avenue du Parc, Montreal, QC H2V 4G1',
+    notes: 'Leave at front door',
+    meals: {
+      monday: {
+        lunch: { id: 'item_005', name: 'French Onion Soup', quantity: 1, price: 12.99, deliveryTime: '12:30' },
+        dinner: { id: 'item_002', name: 'Bouillabaisse', quantity: 1, price: 32.99, deliveryTime: '19:30' }
+      },
+      tuesday: {
+        lunch: { id: 'item_003', name: 'Ratatouille', quantity: 1, price: 22.99, deliveryTime: '12:30' },
+        dinner: { id: 'item_001', name: 'Coq au Vin', quantity: 1, price: 28.99, deliveryTime: '19:30' }
+      },
+      wednesday: {
+        lunch: { id: 'item_005', name: 'French Onion Soup', quantity: 1, price: 12.99, deliveryTime: '12:30' },
+        dinner: { id: 'item_002', name: 'Bouillabaisse', quantity: 1, price: 32.99, deliveryTime: '19:30' }
+      },
+      thursday: {
+        lunch: { id: 'item_003', name: 'Ratatouille', quantity: 1, price: 22.99, deliveryTime: '12:30' },
+        dinner: { id: 'item_001', name: 'Coq au Vin', quantity: 1, price: 28.99, deliveryTime: '19:30' }
+      },
+      friday: {
+        lunch: { id: 'item_005', name: 'French Onion Soup', quantity: 1, price: 12.99, deliveryTime: '12:30' },
+        dinner: { id: 'item_002', name: 'Bouillabaisse', quantity: 1, price: 32.99, deliveryTime: '19:30' }
+      },
+      saturday: {
+        lunch: { id: 'item_003', name: 'Ratatouille', quantity: 1, price: 22.99, deliveryTime: '12:30' },
+        dinner: { id: 'item_001', name: 'Coq au Vin', quantity: 1, price: 28.99, deliveryTime: '19:30' }
+      },
+      sunday: {
+        lunch: { id: 'item_005', name: 'French Onion Soup', quantity: 1, price: 12.99, deliveryTime: '12:30' },
+        dinner: { id: 'item_002', name: 'Bouillabaisse', quantity: 1, price: 32.99, deliveryTime: '19:30' }
+      }
+    },
+    totalWeeklyValue: 321.86
+  },
+  {
+    id: 'plan_003',
+    customer: {
+      id: 'cust_003',
+      name: 'Sophie Tremblay',
+      email: 'sophie.tremblay@email.com',
+      phone: '+1 (514) 555-0103'
+    },
+    planType: 'weekly',
+    startDate: '2024-01-15T00:00:00Z',
+    endDate: '2024-01-21T23:59:59Z',
+    status: 'active',
+    deliveryAddress: '321 Rue Saint-Denis, Montreal, QC H2X 3K8',
+    notes: 'Vegetarian meals only',
+    meals: {
+      monday: {
+        lunch: { id: 'item_003', name: 'Ratatouille', quantity: 1, price: 22.99, deliveryTime: '11:30' },
+        dinner: { id: 'item_003', name: 'Ratatouille', quantity: 1, price: 22.99, deliveryTime: '18:00' }
+      },
+      tuesday: {
+        lunch: { id: 'item_005', name: 'French Onion Soup', quantity: 1, price: 12.99, deliveryTime: '11:30' },
+        dinner: { id: 'item_003', name: 'Ratatouille', quantity: 1, price: 22.99, deliveryTime: '18:00' }
+      },
+      wednesday: {
+        lunch: { id: 'item_003', name: 'Ratatouille', quantity: 1, price: 22.99, deliveryTime: '11:30' },
+        dinner: { id: 'item_005', name: 'French Onion Soup', quantity: 1, price: 12.99, deliveryTime: '18:00' }
+      },
+      thursday: {
+        lunch: { id: 'item_005', name: 'French Onion Soup', quantity: 1, price: 12.99, deliveryTime: '11:30' },
+        dinner: { id: 'item_003', name: 'Ratatouille', quantity: 1, price: 22.99, deliveryTime: '18:00' }
+      },
+      friday: {
+        lunch: { id: 'item_003', name: 'Ratatouille', quantity: 1, price: 22.99, deliveryTime: '11:30' },
+        dinner: { id: 'item_003', name: 'Ratatouille', quantity: 1, price: 22.99, deliveryTime: '18:00' }
+      },
+      saturday: {
+        lunch: { id: 'item_005', name: 'French Onion Soup', quantity: 1, price: 12.99, deliveryTime: '11:30' },
+        dinner: { id: 'item_003', name: 'Ratatouille', quantity: 1, price: 22.99, deliveryTime: '18:00' }
+      },
+      sunday: {
+        lunch: { id: 'item_003', name: 'Ratatouille', quantity: 1, price: 22.99, deliveryTime: '11:30' },
+        dinner: { id: 'item_005', name: 'French Onion Soup', quantity: 1, price: 12.99, deliveryTime: '18:00' }
+      }
+    },
+    totalWeeklyValue: 251.86
+  }
+];
+

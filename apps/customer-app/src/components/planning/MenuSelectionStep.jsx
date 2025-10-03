@@ -16,6 +16,7 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
   // Get URL parameters
   const day = searchParams.get('day') || 'monday';
   const slot = searchParams.get('slot') || 'lunch';
+  const week = searchParams.get('week') || '0'; // Default to current week
   const urlPostalCode = searchParams.get('postal');
   const source = searchParams.get('source'); // 'plan' or 'weekly-menu'
   
@@ -346,9 +347,9 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
               {isFromWeeklyMenu && (
                 <div className="inline-flex items-center bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-4 py-2 text-white">
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z" />
                   </svg>
-                  <span className="font-medium">{capitalizeFirst(day)} {capitalizeFirst(slot)}</span>
+                  <span className="font-medium">{week === '0' ? 'This Week' : 'Next Week'} • {capitalizeFirst(day)} {capitalizeFirst(slot)}</span>
                 </div>
               )}
             </div>
@@ -402,12 +403,15 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
                 <div
                   key={restaurant.id}
                   onClick={() => {
-                    // Include day and slot parameters when coming from weekly menu
+                    // Include day, slot, and week parameters when coming from weekly menu
                     const params = new URLSearchParams();
                     if (isFromWeeklyMenu) {
                       params.set('day', day);
                       params.set('slot', slot);
+                      params.set('week', week);
                       params.set('source', 'weekly-menu');
+                    } else if (isFromPlan) {
+                      params.set('source', 'plan');
                     }
                     const queryString = params.toString();
                     const url = queryString ? `/restaurant/${restaurant.id}?${queryString}` : `/restaurant/${restaurant.id}`;
@@ -491,7 +495,7 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
 
                     <button className="w-full bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white py-2 sm:py-3 px-3 sm:px-4 rounded-lg font-semibold transition-all duration-200 transform group-hover:scale-105 shadow-lg hover:shadow-xl text-sm sm:text-base">
                       <span className="sm:hidden">View Menu</span>
-                      <span className="hidden sm:inline">View Menu & Order</span>
+                      <span className="hidden sm:inline">View Menu</span>
                     </button>
                   </div>
                 </div>
@@ -526,7 +530,7 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
       {/* Bottom Action Bar - Hidden when modals are open */}
       {!isModalOpen && (
         <div className="bg-white border-t shadow-lg fixed bottom-16 sm:bottom-0 left-0 right-0 z-10 pb-safe">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-3">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             {/* Left side - Optional summary or info */}
             <div className="hidden lg:flex items-center text-sm text-gray-600">
@@ -538,40 +542,59 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
 
             {/* Action Buttons - Enhanced desktop layout */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 lg:gap-4 w-full sm:w-auto">
-              {/* Change Location Button - Secondary style */}
+              {/* Back Button - Changes based on source */}
               <button
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  console.log('Change Location clicked!'); // Debug log
-                  // Navigate back to location selection
-                  navigate('/plan');
+                  if (isFromWeeklyMenu) {
+                    // Navigate back to weekly menu with week parameter
+                    navigate(`/weekly-menu?week=${week}`);
+                  } else {
+                    // Navigate back to location selection
+                    navigate('/plan');
+                  }
                 }}
-                className="group px-4 sm:px-6 lg:px-8 py-2.5 lg:py-3 border-2 border-gray-300 text-gray-700 font-medium rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base lg:min-w-[160px] shadow-sm hover:shadow-md"
+                className="group px-4 sm:px-6 lg:px-8 py-2 lg:py-2.5 border-2 border-gray-300 text-gray-700 font-medium rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base lg:min-w-[160px] shadow-sm hover:shadow-md"
               >
                 <svg className="w-4 h-4 lg:w-5 lg:h-5 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                <span className="font-semibold">Change Location</span>
+                <span className="font-semibold">
+                  {isFromWeeklyMenu ? 'Back to Weekly Menu' : 'Change Location'}
+                </span>
               </button>
 
-              {/* Continue Button - Primary style with enhanced desktop design */}
+              {/* Continue Button - Changes based on source */}
               <button
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  console.log('Continue to Subscription Plans clicked!'); // Debug log
-                  // Navigate to weekly menu to see the meal planning calendar
-                  navigate('/weekly-menu');
+                  if (isFromWeeklyMenu) {
+                    // Navigate back to weekly menu with week parameter
+                    navigate(`/weekly-menu?week=${week}`);
+                  } else {
+                    // Navigate to weekly menu to see the meal planning calendar
+                    navigate('/weekly-menu');
+                  }
                 }}
-                className="group relative px-6 sm:px-8 lg:px-10 py-2.5 lg:py-3 bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-700 hover:via-red-700 hover:to-red-800 text-white font-bold rounded-xl transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 text-sm sm:text-base lg:min-w-[220px] overflow-hidden"
+                className="group relative px-6 sm:px-8 lg:px-10 py-2 lg:py-2.5 bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-700 hover:via-red-700 hover:to-red-800 text-white font-bold rounded-xl transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 text-sm sm:text-base lg:min-w-[220px] overflow-hidden"
               >
                 {/* Subtle shine effect for desktop */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700 hidden lg:block"></div>
                 
                 <span className="relative z-10">
-                  <span className="hidden sm:inline">Continue to Subscription Plans</span>
-                  <span className="sm:hidden">Continue</span>
+                  {isFromWeeklyMenu ? (
+                    <>
+                      <span className="hidden sm:inline">Back to Weekly Menu</span>
+                      <span className="sm:hidden">Back to Menu</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="hidden sm:inline">Continue to Subscription Plans</span>
+                      <span className="sm:hidden">Continue</span>
+                    </>
+                  )}
                 </span>
                 <svg className="relative z-10 w-4 h-4 lg:w-5 lg:h-5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m0-7H3" />

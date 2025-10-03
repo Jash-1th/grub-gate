@@ -9,6 +9,7 @@ const ItemDetailsModal = ({
   selectedMealType, 
   isFromMenuSelection = false,
   hideAddButton = false,
+  isMealPlanningEnabled = true,
   onClose, 
   onAddToPlan, 
   onDayChange, 
@@ -153,7 +154,8 @@ const ItemDetailsModal = ({
           )}
 
           {/* Meal Planning Section - Enhanced for both user types */}
-          <div className="mb-6">
+          {isMealPlanningEnabled && (
+            <div className="mb-6">
             {/* Show current selection for all users */}
             <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
               <div className="flex items-center justify-between mb-3">
@@ -256,9 +258,10 @@ const ItemDetailsModal = ({
               </div>
             )}
           </div>
+          )}
 
-          {/* Add to Plan Button - Show unless explicitly hidden */}
-          {!hideAddButton && (
+          {/* Add to Plan Button - Show unless explicitly hidden and meal planning is enabled */}
+          {!hideAddButton && isMealPlanningEnabled && (
              <button
               onClick={() => onAddToPlan(item)}
               className={`w-full font-semibold py-3 sm:py-3 px-4 sm:px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base touch-manipulation ${

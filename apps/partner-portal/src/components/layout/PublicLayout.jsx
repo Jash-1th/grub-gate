@@ -20,6 +20,12 @@ const PublicLayout = ({ onLanguageChange }) => {
   // Navigation items for desktop
   const navigationItems = [
     {
+      type: 'route',
+      href: '/',
+      label: t('navigation.home', 'Home'),
+      isActive: location.pathname === '/'
+    },
+    {
       type: 'scroll',
       href: '#benefits',
       label: t('navigation.benefits', 'Benefits'),

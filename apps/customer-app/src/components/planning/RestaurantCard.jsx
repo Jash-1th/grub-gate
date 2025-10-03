@@ -85,7 +85,7 @@ const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore }) => 
           {/* Popular/Top Rated Badges */}
           <div className="absolute top-3 left-3 flex gap-2">
             {restaurant.isPopular && (
-              <span className="px-2 py-1 bg-red-500 text-white text-xs font-semibold rounded-full shadow-lg">
+              <span className="px-2 py-1 bg-grub-red text-white text-xs font-semibold rounded-full shadow-lg">
                 Popular
               </span>
             )}
@@ -112,7 +112,7 @@ const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore }) => 
         <div className="p-4 sm:p-6 flex flex-col flex-1">
           {/* Restaurant Name and Cuisine */}
           <div className="mb-3">
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 group-hover:text-red-600 transition-colors duration-300">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 group-hover:text-grub-red transition-colors duration-300">
               {restaurant.name}
             </h3>
             <p className="text-sm text-gray-500 font-medium">{restaurant.cuisine}</p>
@@ -163,7 +163,7 @@ const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore }) => 
           <div className="mt-auto">
             <button 
               onClick={handleExploreRestaurant}
-              className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 shadow-lg hover:shadow-xl"
+              className="w-full bg-gradient-to-r from-grub-red to-red-600 hover:from-grub-red hover:to-red-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-grub-red focus:ring-offset-2 shadow-lg hover:shadow-xl"
             >
               <div className="flex items-center justify-center space-x-2">
                 <span>Explore Restaurant</span>

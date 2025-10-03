@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useMealPlan } from '../contexts/MealPlanContext';
 import { useToast } from '../contexts/ToastContext';
 import { usePlanning } from '../contexts/PlanningContext';
@@ -10,7 +10,9 @@ import ItemDetailsModal from '../components/restaurant/ItemDetailsModal';
 const DayMealPlanPage = () => {
   const { day } = useParams();
   const navigate = useNavigate();
-  const { mealPlan, removeItemFromPlan } = useMealPlan();
+  const [searchParams] = useSearchParams();
+  const week = parseInt(searchParams.get('week')) || 0; // Default to current week
+  const { getWeekMealItems, removeItemFromPlanWeek } = useMealPlan();
   const { showMealPlanSuccess } = useToast();
   const { postalCode } = usePlanning();
   const [selectedMealType, setSelectedMealType] = useState('lunch');
@@ -20,8 +22,9 @@ const DayMealPlanPage = () => {
   const [showItemDetails, setShowItemDetails] = useState(false);
 
   const dayName = DAYS_OF_WEEK.find(d => d.id === day)?.name || day;
-  const dayItems = mealPlan[day] || { lunch: [], dinner: [] };
-  const currentMealItems = dayItems[selectedMealType] || [];
+  const lunchItems = getWeekMealItems(day, 'lunch', week);
+  const dinnerItems = getWeekMealItems(day, 'dinner', week);
+  const currentMealItems = selectedMealType === 'lunch' ? lunchItems : dinnerItems;
 
   // Group items by ID to show quantities
   const groupedItems = currentMealItems.reduce((acc, item) => {
@@ -42,7 +45,7 @@ const DayMealPlanPage = () => {
   }, []);
 
   const handleRemoveItem = (item) => {
-    removeItemFromPlan(item.planId, day, selectedMealType);
+    removeItemFromPlanWeek(item.planId, day, selectedMealType, week);
     // Show success toast
     showMealPlanSuccess(
       `${item.name} removed from ${selectedMealType}`,
@@ -54,9 +57,26 @@ const DayMealPlanPage = () => {
   };
 
   const handleAddMoreItems = () => {
-    // Navigate to restaurants page with day, slot, and postal code filters applied
+    // Get restaurant info from current meal items to navigate directly to that restaurant
+    const allDayItems = [...lunchItems, ...dinnerItems];
+    
+    if (allDayItems.length > 0) {
+      // Get the first restaurant from the meal items
+      const restaurantName = allDayItems[0].restaurantName;
+      
+      // Find the restaurant ID from the unified restaurants data
+      const restaurant = unifiedRestaurants.find(r => r.name === restaurantName);
+      
+      if (restaurant) {
+        // Navigate directly to the restaurant page with meal planning context
+        navigate(`/restaurant/${restaurant.id}?day=${day}&slot=${selectedMealType}&week=${week}&userType=normal&source=weekly-menu`);
+        return;
+      }
+    }
+    
+    // Fallback: Navigate to restaurant selection if no restaurant found
     const postalParam = postalCode ? `&postal=${postalCode}` : '';
-    navigate(`/plan/restaurants?source=weekly-menu&day=${day}&slot=${selectedMealType}${postalParam}`);
+    navigate(`/plan/restaurants?source=weekly-menu&day=${day}&slot=${selectedMealType}&week=${week}${postalParam}`);
   };
 
   const handleItemClick = (item) => {
@@ -65,20 +85,13 @@ const DayMealPlanPage = () => {
     setShowItemDetails(true);
   };
 
-  const handleGoToRestaurant = (restaurantName) => {
-    // Find restaurant by name and navigate to its detail page
-    const restaurant = unifiedRestaurants.find(r => r.name === restaurantName);
-    if (restaurant) {
-      navigate(`/restaurant/${restaurant.id}?day=${day}&meal=${selectedMealType}`);
-    }
-  };
 
   const getTotalCost = () => {
     return currentMealItems.reduce((sum, item) => sum + parseFloat(item.price), 0).toFixed(2);
   };
 
   const getTotalItems = () => {
-    return dayItems.lunch.length + dayItems.dinner.length;
+    return lunchItems.length + dinnerItems.length;
   };
 
   return (
@@ -100,7 +113,7 @@ const DayMealPlanPage = () => {
                 </button>
                 <div className="min-w-0 flex-1">
                   <h1 className="text-lg font-bold text-gray-900 truncate">
-                    {dayName} Meal Plan
+                    {week === 0 ? 'This Week' : 'Next Week'} • {dayName} Meal Plan
                   </h1>
                   <p className="text-gray-600 text-sm">
                     {getTotalItems()} total items planned
@@ -123,7 +136,7 @@ const DayMealPlanPage = () => {
               </button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
-                  {dayName} Meal Plan
+                  {week === 0 ? 'This Week' : 'Next Week'} • {dayName} Meal Plan
                 </h1>
                 <p className="text-gray-600 mt-1">
                   {getTotalItems()} total items planned for this day
@@ -152,7 +165,7 @@ const DayMealPlanPage = () => {
                   <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
-                  <span className="text-sm md:text-base">Lunch ({dayItems.lunch.length})</span>
+                  <span className="text-sm md:text-base">Lunch ({lunchItems.length})</span>
                 </div>
               </button>
               <button
@@ -167,7 +180,7 @@ const DayMealPlanPage = () => {
                   <svg className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-1.85.63-3.55 1.69-4.9L16.9 18.31C15.55 19.37 13.85 20 12 20z"/>
                   </svg>
-                  <span className="text-sm md:text-base">Dinner ({dayItems.dinner.length})</span>
+                  <span className="text-sm md:text-base">Dinner ({dinnerItems.length})</span>
                 </div>
               </button>
             </div>
@@ -237,7 +250,7 @@ const DayMealPlanPage = () => {
                       <div className="flex-1">
                         <h3 className="text-lg font-semibold text-gray-900 mb-2">{groupedItem.name}</h3>
                         <button
-                          onClick={() => handleGoToRestaurant(groupedItem.restaurantName)}
+                          onClick={() => handleItemClick(groupedItem)}
                           className="text-grub-red hover:text-red-600 font-medium text-sm transition-colors duration-200"
                         >
                           {groupedItem.restaurantName} →
@@ -278,18 +291,19 @@ const DayMealPlanPage = () => {
 
                     {/* Actions - Push to bottom */}
                     <div className="mt-auto space-y-3">
-                      {/* View Restaurant Button - Full Width */}
+                      {/* View Item Details Button - Full Width */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleGoToRestaurant(groupedItem.restaurantName);
+                          handleItemClick(groupedItem);
                         }}
                         className="w-full bg-blue-500 text-white py-2.5 px-4 rounded-lg font-medium hover:bg-blue-600 transition-colors duration-200 flex items-center justify-center space-x-2"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
-                        <span>View Restaurant</span>
+                        <span>View Item Details</span>
                       </button>
 
                       {/* Remove Actions */}
@@ -373,8 +387,9 @@ const DayMealPlanPage = () => {
         isOpen={showItemDetails}
         item={selectedDetailItem}
         userType="normal"
-        isFromMenuSelection={true}
+        isFromMenuSelection={false}
         hideAddButton={true}
+        isMealPlanningEnabled={false}
         onClose={() => {
           setShowItemDetails(false);
           setSelectedDetailItem(null);

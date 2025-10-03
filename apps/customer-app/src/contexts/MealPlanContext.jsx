@@ -1,7 +1,28 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 
-// Initial state for the meal plan
+// Initial state for the meal plan (supports multiple weeks)
 const initialState = {
+  weeklyPlans: {
+    week0: { // Current week
+      monday: { lunch: [], dinner: [] },
+      tuesday: { lunch: [], dinner: [] },
+      wednesday: { lunch: [], dinner: [] },
+      thursday: { lunch: [], dinner: [] },
+      friday: { lunch: [], dinner: [] },
+      saturday: { lunch: [], dinner: [] },
+      sunday: { lunch: [], dinner: [] }
+    },
+    week1: { // Next week
+      monday: { lunch: [], dinner: [] },
+      tuesday: { lunch: [], dinner: [] },
+      wednesday: { lunch: [], dinner: [] },
+      thursday: { lunch: [], dinner: [] },
+      friday: { lunch: [], dinner: [] },
+      saturday: { lunch: [], dinner: [] },
+      sunday: { lunch: [], dinner: [] }
+    }
+  },
+  // Keep backward compatibility
   weeklyPlan: {
     monday: { lunch: [], dinner: [] },
     tuesday: { lunch: [], dinner: [] },
@@ -20,7 +41,11 @@ const MEAL_PLAN_ACTIONS = {
   REMOVE_ITEM: 'REMOVE_ITEM',
   CLEAR_DAY: 'CLEAR_DAY',
   CLEAR_ALL: 'CLEAR_ALL',
-  LOAD_FROM_STORAGE: 'LOAD_FROM_STORAGE'
+  LOAD_FROM_STORAGE: 'LOAD_FROM_STORAGE',
+  // New week-specific actions
+  ADD_ITEM_TO_WEEK: 'ADD_ITEM_TO_WEEK',
+  REMOVE_ITEM_FROM_WEEK: 'REMOVE_ITEM_FROM_WEEK',
+  CLEAR_WEEK: 'CLEAR_WEEK'
 };
 
 // Reducer function
@@ -110,6 +135,109 @@ const mealPlanReducer = (state, action) => {
       return action.payload || initialState;
     }
 
+    case MEAL_PLAN_ACTIONS.ADD_ITEM_TO_WEEK: {
+      const { item, day, mealType, restaurantName, week } = action.payload;
+      const weekKey = `week${week}`;
+      
+      // Create the meal plan item with additional metadata
+      const mealPlanItem = {
+        ...item,
+        planId: `${Date.now()}_${Math.random()}`,
+        addedAt: new Date().toISOString(),
+        dayId: day,
+        mealType: mealType,
+        restaurantName: restaurantName,
+        week: week
+      };
+
+      const newState = {
+        ...state,
+        weeklyPlans: {
+          ...state.weeklyPlans,
+          [weekKey]: {
+            ...state.weeklyPlans[weekKey],
+            [day]: {
+              ...state.weeklyPlans[weekKey][day],
+              [mealType]: [...state.weeklyPlans[weekKey][day][mealType], mealPlanItem]
+            }
+          }
+        }
+      };
+
+      // Update total items count
+      newState.totalItems = Object.values(newState.weeklyPlans).reduce((total, week) => {
+        return total + Object.values(week).reduce((weekTotal, dayMeals) => {
+          return weekTotal + dayMeals.lunch.length + dayMeals.dinner.length;
+        }, 0);
+      }, 0);
+
+      // Save to localStorage
+      localStorage.setItem('mealPlan', JSON.stringify(newState));
+      return newState;
+    }
+
+    case MEAL_PLAN_ACTIONS.REMOVE_ITEM_FROM_WEEK: {
+      const { planId, day, mealType, week } = action.payload;
+      const weekKey = `week${week}`;
+
+      const newState = {
+        ...state,
+        weeklyPlans: {
+          ...state.weeklyPlans,
+          [weekKey]: {
+            ...state.weeklyPlans[weekKey],
+            [day]: {
+              ...state.weeklyPlans[weekKey][day],
+              [mealType]: state.weeklyPlans[weekKey][day][mealType].filter(item => item.planId !== planId)
+            }
+          }
+        }
+      };
+
+      // Update total items count
+      newState.totalItems = Object.values(newState.weeklyPlans).reduce((total, week) => {
+        return total + Object.values(week).reduce((weekTotal, dayMeals) => {
+          return weekTotal + dayMeals.lunch.length + dayMeals.dinner.length;
+        }, 0);
+      }, 0);
+
+      // Save to localStorage
+      localStorage.setItem('mealPlan', JSON.stringify(newState));
+      return newState;
+    }
+
+    case MEAL_PLAN_ACTIONS.CLEAR_WEEK: {
+      const { week } = action.payload;
+      const weekKey = `week${week}`;
+
+      const newState = {
+        ...state,
+        weeklyPlans: {
+          ...state.weeklyPlans,
+          [weekKey]: {
+            monday: { lunch: [], dinner: [] },
+            tuesday: { lunch: [], dinner: [] },
+            wednesday: { lunch: [], dinner: [] },
+            thursday: { lunch: [], dinner: [] },
+            friday: { lunch: [], dinner: [] },
+            saturday: { lunch: [], dinner: [] },
+            sunday: { lunch: [], dinner: [] }
+          }
+        }
+      };
+
+      // Update total items count
+      newState.totalItems = Object.values(newState.weeklyPlans).reduce((total, week) => {
+        return total + Object.values(week).reduce((weekTotal, dayMeals) => {
+          return weekTotal + dayMeals.lunch.length + dayMeals.dinner.length;
+        }, 0);
+      }, 0);
+
+      // Save to localStorage
+      localStorage.setItem('mealPlan', JSON.stringify(newState));
+      return newState;
+    }
+
     default:
       return state;
   }
@@ -135,12 +263,48 @@ export const MealPlanProvider = ({ children }) => {
     }
   }, []);
 
+  // Helper function to get all restaurants in current meal plan
+  const getRestaurantsInPlan = () => {
+    const restaurants = new Set();
+    Object.values(state.weeklyPlan).forEach(day => {
+      [...day.lunch, ...day.dinner].forEach(item => {
+        if (item.restaurantName) {
+          restaurants.add(item.restaurantName);
+        }
+      });
+    });
+    return Array.from(restaurants);
+  };
+
   // Action creators
-  const addItemToPlan = (item, day, mealType, restaurantName) => {
+  const addItemToPlan = (item, day, mealType, restaurantName, userType = 'normal', forceReplace = false) => {
+    // Check restaurant restriction for normal users
+    if (userType === 'normal') {
+      const existingRestaurants = getRestaurantsInPlan();
+      if (existingRestaurants.length > 0 && !existingRestaurants.includes(restaurantName)) {
+        if (!forceReplace) {
+          // Return confirmation needed - user can choose to clear and switch
+          return {
+            success: false,
+            error: 'RESTAURANT_SWITCH_CONFIRMATION',
+            message: `You already have items from ${existingRestaurants[0]}. Switching to ${restaurantName} will clear your current meal plan.`,
+            existingRestaurant: existingRestaurants[0],
+            newRestaurant: restaurantName,
+            needsConfirmation: true
+          };
+        } else {
+          // User confirmed - clear existing plan and add new item
+          dispatch({ type: MEAL_PLAN_ACTIONS.CLEAR_ALL });
+        }
+      }
+    }
+
     dispatch({
       type: MEAL_PLAN_ACTIONS.ADD_ITEM,
       payload: { item, day, mealType, restaurantName }
     });
+
+    return { success: true };
   };
 
   const removeItemFromPlan = (planId, day, mealType) => {
@@ -159,6 +323,50 @@ export const MealPlanProvider = ({ children }) => {
 
   const clearAllPlan = () => {
     dispatch({ type: MEAL_PLAN_ACTIONS.CLEAR_ALL });
+  };
+
+  // Week-specific action creators
+  const addItemToPlanWeek = (item, day, mealType, restaurantName, week = 0, userType = 'normal', forceReplace = false) => {
+    // Check restaurant restriction for normal users (same logic as original)
+    if (userType === 'normal') {
+      const existingRestaurants = getRestaurantsInPlan();
+      if (existingRestaurants.length > 0 && !existingRestaurants.includes(restaurantName)) {
+        if (!forceReplace) {
+          return {
+            success: false,
+            error: 'RESTAURANT_SWITCH_CONFIRMATION',
+            message: `You already have items from ${existingRestaurants[0]}. Switching to ${restaurantName} will clear your current meal plan.`,
+            existingRestaurant: existingRestaurants[0],
+            newRestaurant: restaurantName,
+            needsConfirmation: true
+          };
+        } else {
+          // User confirmed - clear existing plan and add new item
+          dispatch({ type: MEAL_PLAN_ACTIONS.CLEAR_ALL });
+        }
+      }
+    }
+
+    dispatch({
+      type: MEAL_PLAN_ACTIONS.ADD_ITEM_TO_WEEK,
+      payload: { item, day, mealType, restaurantName, week }
+    });
+
+    return { success: true };
+  };
+
+  const removeItemFromPlanWeek = (planId, day, mealType, week = 0) => {
+    dispatch({
+      type: MEAL_PLAN_ACTIONS.REMOVE_ITEM_FROM_WEEK,
+      payload: { planId, day, mealType, week }
+    });
+  };
+
+  const clearWeek = (week = 0) => {
+    dispatch({
+      type: MEAL_PLAN_ACTIONS.CLEAR_WEEK,
+      payload: { week }
+    });
   };
 
   // Helper functions
@@ -202,6 +410,68 @@ export const MealPlanProvider = ({ children }) => {
     return getItemQuantityInPlan(itemId, day, mealType) > 0;
   };
 
+  // Week-specific helper functions
+  const getWeekPlan = (week = 0) => {
+    const weekKey = `week${week}`;
+    return state.weeklyPlans[weekKey] || initialState.weeklyPlans[weekKey];
+  };
+
+  const getWeekDayItems = (day, week = 0) => {
+    const weekPlan = getWeekPlan(week);
+    return weekPlan[day] || { lunch: [], dinner: [] };
+  };
+
+  const getWeekMealItems = (day, mealType, week = 0) => {
+    const weekPlan = getWeekPlan(week);
+    return weekPlan[day]?.[mealType] || [];
+  };
+
+  const getWeekTotalItems = (week = 0) => {
+    const weekPlan = getWeekPlan(week);
+    return Object.values(weekPlan).reduce((total, dayMeals) => {
+      return total + dayMeals.lunch.length + dayMeals.dinner.length;
+    }, 0);
+  };
+
+  const getWeekTotalCost = (week = 0) => {
+    const weekPlan = getWeekPlan(week);
+    return Object.values(weekPlan).reduce((total, dayMeals) => {
+      const dayTotal = [...dayMeals.lunch, ...dayMeals.dinner].reduce((daySum, item) => {
+        return daySum + parseFloat(item.price || 0);
+      }, 0);
+      return total + dayTotal;
+    }, 0);
+  };
+
+  // Get restaurants in a specific week's plan
+  const getRestaurantsInWeekPlan = (week = 0) => {
+    const restaurants = new Set();
+    const weekPlan = getWeekPlan(week);
+    Object.values(weekPlan).forEach(day => {
+      [...day.lunch, ...day.dinner].forEach(item => {
+        if (item.restaurantName) {
+          restaurants.add(item.restaurantName);
+        }
+      });
+    });
+    return Array.from(restaurants);
+  };
+
+  // Get restaurants from ALL weeks (for normal users who can only select one restaurant)
+  const getRestaurantsInAllWeeks = () => {
+    const restaurants = new Set();
+    Object.values(state.weeklyPlans).forEach(weekPlan => {
+      Object.values(weekPlan).forEach(day => {
+        [...day.lunch, ...day.dinner].forEach(item => {
+          if (item.restaurantName) {
+            restaurants.add(item.restaurantName);
+          }
+        });
+      });
+    });
+    return Array.from(restaurants);
+  };
+
   const value = {
     // State
     weeklyPlan: state.weeklyPlan,
@@ -214,6 +484,11 @@ export const MealPlanProvider = ({ children }) => {
     clearDay,
     clearAllPlan,
     
+    // Week-specific actions
+    addItemToPlanWeek,
+    removeItemFromPlanWeek,
+    clearWeek,
+    
     // Helpers
     getDayItems,
     getDayItemsCount,
@@ -221,7 +496,17 @@ export const MealPlanProvider = ({ children }) => {
     getTotalItemsCount,
     getWeeklyPlanSummary,
     getItemQuantityInPlan,
-    isItemInPlan
+    isItemInPlan,
+    getRestaurantsInPlan,
+    
+    // Week-specific helpers
+    getWeekPlan,
+    getWeekDayItems,
+    getWeekMealItems,
+    getWeekTotalItems,
+    getWeekTotalCost,
+    getRestaurantsInWeekPlan,
+    getRestaurantsInAllWeeks
   };
 
   return (

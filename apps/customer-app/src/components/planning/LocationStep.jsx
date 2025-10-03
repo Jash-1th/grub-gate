@@ -50,10 +50,10 @@ const LocationStep = ({ onNext }) => {
             {/* Left Content */}
             <div className="max-w-xl mx-auto lg:mx-0 text-center lg:text-left">
               <div className="mb-6 sm:mb-8">
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-grub-red mb-4 sm:mb-6 leading-tight">
                   {t('mealPlanning.hero.title')}
                   <br />
-                  <span className="text-grub-red bg-gradient-to-r from-red-600 to-red-500 bg-clip-text text-transparent">
+                  <span className="text-grub-red bg-gradient-to-r from-grub-red to-red-500 bg-clip-text text-transparent">
                     {t('mealPlanning.hero.subtitle')}
                   </span>
                 </h1>
@@ -66,7 +66,7 @@ const LocationStep = ({ onNext }) => {
               {/* Enhanced Postal Code Input Container - Responsive */}
               <div className="mb-6">
                 <div className="relative group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-red-600 to-orange-600 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+                  <div className="absolute -inset-1 bg-gradient-to-r from-grub-red to-orange-600 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
                   <div className="relative backdrop-blur-sm bg-white/90 border border-white/50 rounded-2xl p-1.5 sm:p-2 shadow-2xl">
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-0">
                       <input
@@ -80,7 +80,7 @@ const LocationStep = ({ onNext }) => {
                       />
                       <button
                         onClick={handleFindMeals}
-                        className="px-4 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-grub-red to-red-600 text-white rounded-xl font-semibold text-sm sm:text-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 sm:mr-1 whitespace-nowrap"
+                        className="px-4 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-grub-red to-red-600 text-white rounded-xl font-semibold text-sm sm:text-lg hover:from-grub-red hover:to-grub-red transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-grub-red focus:ring-offset-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 sm:mr-1 whitespace-nowrap"
                       >
                         {t('mealPlanning.hero.findMealsButton')}
                       </button>

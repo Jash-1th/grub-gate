@@ -245,6 +245,103 @@ export const unifiedRestaurants = [
           saturday: { lunch: false, dinner: true },
           sunday: { lunch: false, dinner: false }
         }
+      },
+      // Always Available Normal User Items
+      {
+        id: 110,
+        planId: 'chez-laurent-classic-burger-110',
+        name: 'Classic French Burger',
+        price: 16.99,
+        description: 'Juicy beef patty with French cheese, lettuce, tomato, and special sauce.',
+        longDescription: 'Premium beef patty with aged French cheese, fresh lettuce, ripe tomatoes, and our signature French sauce on a brioche bun. Served with crispy fries.',
+        category: 'Always Available',
+        dietaryPreferences: [],
+        ingredients: ['Beef patty', 'French cheese', 'Lettuce', 'Tomato', 'Brioche bun', 'Special sauce'],
+        nutritionInfo: { calories: 520, protein: '28g', carbs: '35g', fat: '28g' },
+        spiceLevel: 0,
+        preparationTime: '12-15 min',
+        image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        availability: {
+          monday: { lunch: true, dinner: true },
+          tuesday: { lunch: true, dinner: true },
+          wednesday: { lunch: true, dinner: true },
+          thursday: { lunch: true, dinner: true },
+          friday: { lunch: true, dinner: true },
+          saturday: { lunch: true, dinner: true },
+          sunday: { lunch: true, dinner: true }
+        }
+      },
+      {
+        id: 111,
+        planId: 'chez-laurent-caesar-salad-111',
+        name: 'Caesar Salad',
+        price: 12.99,
+        description: 'Fresh romaine lettuce with parmesan, croutons, and Caesar dressing.',
+        longDescription: 'Crisp romaine lettuce tossed with aged parmesan cheese, house-made croutons, and our traditional Caesar dressing.',
+        category: 'Always Available',
+        dietaryPreferences: ['vegetarian'],
+        ingredients: ['Romaine lettuce', 'Parmesan cheese', 'Croutons', 'Caesar dressing'],
+        nutritionInfo: { calories: 280, protein: '12g', carbs: '18g', fat: '18g' },
+        spiceLevel: 0,
+        preparationTime: '8-10 min',
+        image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        availability: {
+          monday: { lunch: true, dinner: true },
+          tuesday: { lunch: true, dinner: true },
+          wednesday: { lunch: true, dinner: true },
+          thursday: { lunch: true, dinner: true },
+          friday: { lunch: true, dinner: true },
+          saturday: { lunch: true, dinner: true },
+          sunday: { lunch: true, dinner: true }
+        }
+      },
+      {
+        id: 112,
+        planId: 'chez-laurent-grilled-chicken-112',
+        name: 'Grilled Chicken Breast',
+        price: 19.99,
+        description: 'Herb-seasoned grilled chicken breast with seasonal vegetables.',
+        longDescription: 'Tender grilled chicken breast marinated in French herbs, served with seasonal roasted vegetables and your choice of sauce.',
+        category: 'Always Available',
+        dietaryPreferences: ['gluten-free', 'dairy-free'],
+        ingredients: ['Chicken breast', 'French herbs', 'Seasonal vegetables', 'Olive oil'],
+        nutritionInfo: { calories: 420, protein: '38g', carbs: '15g', fat: '22g' },
+        spiceLevel: 0,
+        preparationTime: '15-18 min',
+        image: 'https://images.unsplash.com/photo-1532550907401-a500c9a57435?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        availability: {
+          monday: { lunch: true, dinner: true },
+          tuesday: { lunch: true, dinner: true },
+          wednesday: { lunch: true, dinner: true },
+          thursday: { lunch: true, dinner: true },
+          friday: { lunch: true, dinner: true },
+          saturday: { lunch: true, dinner: true },
+          sunday: { lunch: true, dinner: true }
+        }
+      },
+      {
+        id: 113,
+        planId: 'chez-laurent-pasta-marinara-113',
+        name: 'Pasta Marinara',
+        price: 14.99,
+        description: 'Classic spaghetti with homemade marinara sauce and fresh basil.',
+        longDescription: 'Al dente spaghetti tossed in our house-made marinara sauce with fresh basil, garlic, and a touch of parmesan cheese.',
+        category: 'Always Available',
+        dietaryPreferences: ['vegetarian'],
+        ingredients: ['Spaghetti', 'Marinara sauce', 'Fresh basil', 'Garlic', 'Parmesan cheese'],
+        nutritionInfo: { calories: 380, protein: '14g', carbs: '65g', fat: '8g' },
+        spiceLevel: 0,
+        preparationTime: '10-12 min',
+        image: 'https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        availability: {
+          monday: { lunch: true, dinner: true },
+          tuesday: { lunch: true, dinner: true },
+          wednesday: { lunch: true, dinner: true },
+          thursday: { lunch: true, dinner: true },
+          friday: { lunch: true, dinner: true },
+          saturday: { lunch: true, dinner: true },
+          sunday: { lunch: true, dinner: true }
+        }
       }
     ]
   },
@@ -334,6 +431,79 @@ export const unifiedRestaurants = [
         spiceLevel: 0,
         preparationTime: '5 min',
         image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        availability: {
+          monday: { lunch: true, dinner: true },
+          tuesday: { lunch: true, dinner: true },
+          wednesday: { lunch: true, dinner: true },
+          thursday: { lunch: true, dinner: true },
+          friday: { lunch: true, dinner: true },
+          saturday: { lunch: true, dinner: true },
+          sunday: { lunch: true, dinner: true }
+        }
+      },
+      // Always Available Normal User Items
+      {
+        id: 514,
+        planId: 'bella-vista-pepperoni-pizza-514',
+        name: 'Pepperoni Pizza',
+        price: 20.99,
+        description: 'Classic pepperoni pizza with mozzarella cheese and tomato sauce.',
+        longDescription: 'Traditional wood-fired pepperoni pizza with fresh mozzarella, San Marzano tomato sauce, and premium pepperoni on our signature thin crust.',
+        category: 'Always Available',
+        dietaryPreferences: [],
+        ingredients: ['Pizza dough', 'Mozzarella cheese', 'Tomato sauce', 'Pepperoni'],
+        nutritionInfo: { calories: 580, protein: '24g', carbs: '48g', fat: '32g' },
+        spiceLevel: 0,
+        preparationTime: '15-18 min',
+        image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        availability: {
+          monday: { lunch: true, dinner: true },
+          tuesday: { lunch: true, dinner: true },
+          wednesday: { lunch: true, dinner: true },
+          thursday: { lunch: true, dinner: true },
+          friday: { lunch: true, dinner: true },
+          saturday: { lunch: true, dinner: true },
+          sunday: { lunch: true, dinner: true }
+        }
+      },
+      {
+        id: 515,
+        planId: 'bella-vista-chicken-parmigiana-515',
+        name: 'Chicken Parmigiana',
+        price: 24.99,
+        description: 'Breaded chicken breast with marinara sauce and melted mozzarella.',
+        longDescription: 'Tender breaded chicken breast topped with our house marinara sauce and melted mozzarella cheese, served with spaghetti.',
+        category: 'Always Available',
+        dietaryPreferences: [],
+        ingredients: ['Chicken breast', 'Breadcrumbs', 'Marinara sauce', 'Mozzarella cheese', 'Spaghetti'],
+        nutritionInfo: { calories: 650, protein: '42g', carbs: '45g', fat: '28g' },
+        spiceLevel: 0,
+        preparationTime: '18-22 min',
+        image: 'https://images.unsplash.com/photo-1632778149955-e80f8ceca2e8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        availability: {
+          monday: { lunch: true, dinner: true },
+          tuesday: { lunch: true, dinner: true },
+          wednesday: { lunch: true, dinner: true },
+          thursday: { lunch: true, dinner: true },
+          friday: { lunch: true, dinner: true },
+          saturday: { lunch: true, dinner: true },
+          sunday: { lunch: true, dinner: true }
+        }
+      },
+      {
+        id: 516,
+        planId: 'bella-vista-caprese-salad-516',
+        name: 'Caprese Salad',
+        price: 13.99,
+        description: 'Fresh mozzarella, tomatoes, and basil with balsamic glaze.',
+        longDescription: 'Fresh buffalo mozzarella with ripe tomatoes, fresh basil leaves, extra virgin olive oil, and aged balsamic glaze.',
+        category: 'Always Available',
+        dietaryPreferences: ['vegetarian', 'gluten-free'],
+        ingredients: ['Buffalo mozzarella', 'Tomatoes', 'Fresh basil', 'Olive oil', 'Balsamic glaze'],
+        nutritionInfo: { calories: 280, protein: '16g', carbs: '12g', fat: '20g' },
+        spiceLevel: 0,
+        preparationTime: '8-10 min',
+        image: 'https://images.unsplash.com/photo-1608897013039-887f21d8c804?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
         availability: {
           monday: { lunch: true, dinner: true },
           tuesday: { lunch: true, dinner: true },
@@ -1273,6 +1443,26 @@ export const getTopRatedRestaurantsNear = (postalCode) => {
 // Legacy exports for backward compatibility
 export const featuredRestaurants = unifiedRestaurants.slice(0, 6);
 export const nearbyRestaurants = unifiedRestaurants.slice(0, 4);
+
+// Debug function to check always available items
+export const getAlwaysAvailableItems = () => {
+  const alwaysAvailable = [];
+  unifiedRestaurants.forEach(restaurant => {
+    if (restaurant.foodItems) {
+      restaurant.foodItems.forEach(item => {
+        if (item.category === 'Always Available') {
+          alwaysAvailable.push({
+            restaurantName: restaurant.name,
+            itemName: item.name,
+            price: item.price,
+            availability: item.availability
+          });
+        }
+      });
+    }
+  });
+  return alwaysAvailable;
+};
 
 // Export as default for easy importing
 export default unifiedRestaurants;

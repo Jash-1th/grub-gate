@@ -76,7 +76,7 @@ const SubscriptionStep = ({ onBack }) => {
               <div className="w-8 h-0.5 bg-gray-300"></div>
               
               <div className="flex items-center">
-                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-grub-red rounded-full flex items-center justify-center">
                   <span className="text-white text-sm font-bold">3</span>
                 </div>
                 <span className="ml-2 text-sm font-medium text-gray-900">Subscribe</span>

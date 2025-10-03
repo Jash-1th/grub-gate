@@ -15,7 +15,8 @@ const MenuItemsGrid = ({
   subtitle,
   emptyStateMessage,
   showProBadges = false,
-  isFromMenuSelection = false
+  isFromMenuSelection = false,
+  isMealPlanningEnabled = true
 }) => {
   const isPro = userType === 'pro';
 
@@ -84,9 +85,10 @@ const MenuItemsGrid = ({
               selectedMealType={selectedMealType}
               restaurantName={restaurantName}
               showClickHint={true}
-              hideAddButton={false}
+              hideAddButton={!isMealPlanningEnabled}
               isInPlan={isItemInPlan ? isItemInPlan(item.id) : false}
               planEntries={getItemPlanEntries ? getItemPlanEntries(item.id) : []}
+              isMealPlanningEnabled={isMealPlanningEnabled}
             />
             
             {/* Pro Enhancement - Match Badge */}
