@@ -8,6 +8,7 @@ export default ({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   
   return defineConfig({
+    base: mode === 'production' ? '/' : '/',
     define: {
       // Only expose VITE_ prefixed environment variables for security
       'import.meta.env': env,
@@ -54,12 +55,16 @@ export default ({ mode }) => {
       sourcemap: true,
       minify: 'terser',
       target: 'esnext',
+      assetsDir: 'assets',
       rollupOptions: {
         input: {
           main: path.resolve(__dirname, 'index.html')
         },
         output: {
-          manualChunks: undefined
+          manualChunks: undefined,
+          assetFileNames: 'assets/[name]-[hash][extname]',
+          chunkFileNames: 'assets/[name]-[hash].js',
+          entryFileNames: 'assets/[name]-[hash].js'
         }
       }
     },

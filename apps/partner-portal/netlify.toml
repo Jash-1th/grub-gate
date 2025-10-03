@@ -52,6 +52,7 @@
   force = true
 
 # Serve JavaScript modules and other static files directly with proper MIME types
+# Note: Assets are in /assets/ directory, so these rules handle both patterns
 [[redirects]]
   from = "/*.js"
   to = "/:splat.js"

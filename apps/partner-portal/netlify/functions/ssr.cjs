@@ -262,6 +262,20 @@ exports.handler = async (event, context) => {
       };
     }
     
+    // Try to get the actual built HTML template first
+    const htmlTemplate = getHTMLTemplate();
+    if (htmlTemplate && htmlTemplate.includes('<script') && htmlTemplate.includes('assets/')) {
+      console.log('✅ Using built HTML template with correct asset paths');
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
+        },
+        body: htmlTemplate
+      };
+    }
+    
     // Return a simple, working HTML page
     const html = `<!DOCTYPE html>
 <html lang="en">
@@ -345,9 +359,20 @@ exports.handler = async (event, context) => {
         console.log('🔍 Attempting to load assets...');
         
         // Load the exact assets from the current build
-        // These are the actual filenames from the built HTML template
-        const cssFile = '/assets/main-BOyiGeqN.css';
-        const jsFile = '/assets/main-NiQ5K0SD.js';
+        // Get actual filenames from the Vite manifest
+        const manifest = await fetch('/manifest.json').then(r => r.json()).catch(() => null);
+        
+        let cssFile = '/assets/main-BOyiGeqN.css';  // fallback
+        let jsFile = '/assets/main-NiQ5K0SD.js';    // fallback
+        
+        if (manifest) {
+          // Find the main entry point
+          const mainEntry = manifest['src/main.jsx'] || manifest['main.jsx'] || manifest['index.html'];
+          if (mainEntry) {
+            if (mainEntry.file) jsFile = '/' + mainEntry.file;
+            if (mainEntry.css && mainEntry.css[0]) cssFile = '/' + mainEntry.css[0];
+          }
+        }
         
         console.log('🎨 Loading CSS:', cssFile);
         const cssLink = document.createElement('link');
