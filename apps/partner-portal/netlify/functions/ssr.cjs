@@ -2,168 +2,8 @@
 const fs = require('fs');
 const path = require('path');
 
-// Cache the HTML template to avoid reading it multiple times
+// Simple cached template - avoid complex operations that could timeout
 let cachedTemplate = null;
-let cachedManifest = null;
-
-// Get the Vite manifest to find correct asset filenames
-const getViteManifest = () => {
-  if (cachedManifest) {
-    return cachedManifest;
-  }
-  
-  try {
-    const manifestPaths = [
-      path.join(__dirname, 'manifest.json'), // Check functions directory first
-      path.join(__dirname, '../../dist/client/manifest.json'),
-      path.join(__dirname, '../../../dist/client/manifest.json'),
-      path.join(process.cwd(), 'dist/client/manifest.json')
-    ];
-    
-    for (const manifestPath of manifestPaths) {
-      try {
-        if (fs.existsSync(manifestPath)) {
-          const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-          cachedManifest = manifest;
-          console.log('✅ Successfully loaded Vite manifest from:', manifestPath);
-          return manifest;
-        }
-      } catch (err) {
-        console.warn('Failed to parse manifest at:', manifestPath, err.message);
-      }
-    }
-    
-    console.warn('⚠️ Vite manifest not found in any location, using fallback');
-    return null;
-  } catch (error) {
-    console.warn('❌ Failed to read Vite manifest:', error.message);
-    return null;
-  }
-};
-
-// Read the HTML template
-const getHTMLTemplate = () => {
-  if (cachedTemplate) {
-    return cachedTemplate;
-  }
-  
-  try {
-    // Try to read the HTML template from the functions directory first
-    const localTemplate = path.join(__dirname, 'index.html');
-    
-    if (fs.existsSync(localTemplate)) {
-      const html = fs.readFileSync(localTemplate, 'utf8');
-      console.log('Successfully loaded HTML template from functions directory');
-      cachedTemplate = html;
-      return html;
-    }
-    
-    // Fallback: try other possible locations
-    const possiblePaths = [
-      path.join(__dirname, '../../dist/client/index.html'),
-      path.join(__dirname, '../../../dist/client/index.html'),
-      path.join(process.cwd(), 'dist/client/index.html'),
-      path.join(process.cwd(), 'index.html')
-    ];
-    
-    for (const templatePath of possiblePaths) {
-      try {
-        const html = fs.readFileSync(templatePath, 'utf8');
-        console.log('Successfully loaded built HTML template from:', templatePath);
-        return html;
-      } catch (err) {
-        // Continue to next path
-      }
-    }
-    
-    throw new Error('No HTML template found in any location');
-  } catch (error) {
-    console.error('Failed to read built HTML template, using fallback:', error.message);
-    
-    // Fallback: create a minimal HTML template that works with production assets
-    // This will use CSR (Client-Side Rendering) as a last resort
-    const manifest = getViteManifest();
-    let cssLinks = '';
-    let jsScripts = '';
-    
-    if (manifest) {
-      // Extract CSS and JS files from manifest
-      Object.values(manifest).forEach(entry => {
-        if (entry.css) {
-          entry.css.forEach(cssFile => {
-            cssLinks += `<link rel="stylesheet" href="/${cssFile}" />`;
-          });
-        }
-        if (entry.file && entry.file.endsWith('.js')) {
-          jsScripts += `<script type="module" src="/${entry.file}"></script>`;
-        }
-      });
-    } else {
-      // Fallback: Try to read the built HTML template to extract asset names
-      try {
-        const htmlTemplate = getHTMLTemplate();
-        if (htmlTemplate && htmlTemplate !== fallbackHTML) {
-          // Extract CSS and JS links from the built HTML
-          const cssMatch = htmlTemplate.match(/<link[^>]*href="([^"]*\.css)"[^>]*>/g);
-          const jsMatch = htmlTemplate.match(/<script[^>]*src="([^"]*\.js)"[^>]*>/g);
-          
-          if (cssMatch) {
-            cssLinks = cssMatch.join('\n          ');
-          }
-          if (jsMatch) {
-            jsScripts = jsMatch.join('\n          ');
-          }
-          
-          console.log('✅ Extracted assets from HTML template');
-        } else {
-          console.warn('⚠️ Using minimal fallback assets');
-          // Minimal fallback - let the browser handle missing assets gracefully
-          cssLinks = '<!-- CSS will be loaded dynamically -->';
-          jsScripts = '<script type="module">import("/assets/index.js").catch(() => console.warn("Assets loading..."))</script>';
-        }
-      } catch (err) {
-        console.warn('⚠️ Fallback asset extraction failed, using minimal assets');
-        cssLinks = '<!-- CSS will be loaded dynamically -->';
-        jsScripts = '<script type="module">import("/assets/index.js").catch(() => console.warn("Assets loading..."))</script>';
-      }
-    }
-    
-    return `
-      <!DOCTYPE html>
-      <html lang="en">
-        <head>
-          <meta charset="UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-          <meta name="description" content="GrubGate Partner Portal - Manage your restaurant business with subscription meal plans." />
-          <meta name="keywords" content="restaurant management, food delivery, meal subscription, business analytics, Montreal restaurants" />
-          <meta name="author" content="GrubGate" />
-          
-          <!-- PWA Manifest -->
-          <link rel="manifest" href="/manifest.json" />
-          
-          <!-- Theme and Status Bar -->
-          <meta name="theme-color" content="#800020" />
-          <meta name="msapplication-TileColor" content="#800020" />
-          <meta name="mobile-web-app-capable" content="yes" />
-          <meta name="apple-mobile-web-app-capable" content="yes" />
-          <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-          <meta name="apple-mobile-web-app-title" content="GrubGate Partners" />
-          
-          <title>GrubGate Partner Portal - Restaurant Management Platform</title>
-          
-          <!--app-head-->
-          
-          ${cssLinks}
-        </head>
-        <body>
-          <div id="root"><!--app-html--></div>
-          
-          ${jsScripts}
-        </body>
-      </html>
-    `;
-  }
-};
 
 // Generate meta tags for SEO
 const generateMetaTags = (url, userAgent) => {
@@ -240,281 +80,74 @@ const generateMetaTags = (url, userAgent) => {
   `;
 };
 
-// Simplified handler function to prevent timeouts
+// Ultra-simple handler to prevent timeouts
 exports.handler = async (event, context) => {
-  const startTime = Date.now();
-  
   try {
-    const { path: urlPath = '/', headers = {} } = event;
+    const { path: urlPath = '/' } = event;
     
-    console.log('SSR Function called for:', urlPath);
-    
-    // Don't handle static assets at all - return 404 immediately
+    // Don't handle static assets - let Netlify serve them directly
     if (urlPath.match(/\.(js|jsx|ts|tsx|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json|xml|txt|map)$/) || 
         urlPath.startsWith('/assets/') || 
         urlPath.startsWith('/api/') || 
         urlPath.startsWith('/.netlify/')) {
-      console.log('Static asset or API request, returning 404:', urlPath);
       return {
         statusCode: 404,
         headers: { 'Content-Type': 'text/plain' },
         body: 'Not found'
       };
     }
-    
-    // Try to get the actual built HTML template first
-    const htmlTemplate = getHTMLTemplate();
-    if (htmlTemplate && htmlTemplate.includes('<script') && htmlTemplate.includes('assets/')) {
-      console.log('✅ Using built HTML template with correct asset paths');
+
+    // Try to read the built HTML template quickly
+    if (!cachedTemplate) {
+      try {
+        const templatePath = path.join(__dirname, 'index.html');
+        if (fs.existsSync(templatePath)) {
+          cachedTemplate = fs.readFileSync(templatePath, 'utf8');
+        }
+      } catch (err) {
+        // Ignore errors, use fallback
+      }
+    }
+
+    // If we have the template, use it
+    if (cachedTemplate) {
       return {
         statusCode: 200,
         headers: {
           'Content-Type': 'text/html; charset=utf-8',
           'Cache-Control': 'no-cache, no-store, must-revalidate'
         },
-        body: htmlTemplate
+        body: cachedTemplate
       };
     }
     
-    // Return a simple, working HTML page
+    // Ultra-simple fallback HTML - no complex operations
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GrubGate Partner Portal</title>
-  <meta name="description" content="Restaurant management platform for Montreal food delivery partners" />
   <meta name="theme-color" content="#800020" />
   <link rel="icon" type="image/png" href="/icons/Logo.png" />
+  <link rel="manifest" href="/manifest.json" />
   <style>
-    body { 
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-      margin: 0; 
-      padding: 0; 
-      background: #f9fafb; 
-      color: #111827;
-    }
-    .loading { 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-      justify-content: center; 
-      min-height: 100vh; 
-      text-align: center; 
-    }
-    .logo { 
-      width: 80px; 
-      height: 80px; 
-      background: #800020; 
-      border-radius: 16px; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      color: white; 
-      font-size: 24px; 
-      font-weight: bold; 
-      margin-bottom: 24px;
-    }
-    .spinner { 
-      border: 3px solid #e5e7eb; 
-      border-top: 3px solid #800020; 
-      border-radius: 50%; 
-      width: 32px; 
-      height: 32px; 
-      animation: spin 1s linear infinite; 
-      margin: 16px auto;
-    }
-    @keyframes spin { 
-      0% { transform: rotate(0deg); } 
-      100% { transform: rotate(360deg); } 
-    }
-    h1 { 
-      margin: 0 0 8px 0; 
-      font-size: 28px; 
-      font-weight: 700; 
-      color: #800020; 
-    }
-    p { 
-      margin: 0; 
-      color: #6b7280; 
-      font-size: 16px; 
-    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; }
+    .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+    .logo { width: 60px; height: 60px; background: #800020; border-radius: 12px; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; margin-bottom: 16px; }
   </style>
 </head>
 <body>
   <div class="loading">
     <div class="logo">G</div>
     <h1>GrubGate Partner Portal</h1>
-    <div class="spinner"></div>
-    <p>Loading your restaurant management platform...</p>
+    <p>Loading...</p>
   </div>
   <div id="root"></div>
-  
-  <script type="module">
-    console.log('🚀 Starting GrubGate Partner Portal...');
-    
-    // Try to load the built assets
-    const loadAssets = async () => {
-      try {
-        console.log('🔍 Attempting to load assets...');
-        
-        // Load the exact assets from the current build
-        // Get actual filenames from the Vite manifest
-        const manifest = await fetch('/manifest.json').then(r => r.json()).catch(() => null);
-        
-        let cssFile = '/assets/main-BOyiGeqN.css';  // fallback
-        let jsFile = '/assets/main-NiQ5K0SD.js';    // fallback
-        
-        if (manifest) {
-          // Find the main entry point
-          const mainEntry = manifest['src/main.jsx'] || manifest['main.jsx'] || manifest['index.html'];
-          if (mainEntry) {
-            if (mainEntry.file) jsFile = '/' + mainEntry.file;
-            if (mainEntry.css && mainEntry.css[0]) cssFile = '/' + mainEntry.css[0];
-          }
-        }
-        
-        console.log('🎨 Loading CSS:', cssFile);
-        const cssLink = document.createElement('link');
-        cssLink.rel = 'stylesheet';
-        cssLink.href = cssFile;
-        cssLink.onload = () => console.log('✅ CSS loaded successfully');
-        cssLink.onerror = () => console.warn('❌ CSS failed to load');
-        document.head.appendChild(cssLink);
-        
-        console.log('📦 Loading JS:', jsFile);
-        const jsScript = document.createElement('script');
-        jsScript.type = 'module';
-        jsScript.crossOrigin = 'anonymous';
-        jsScript.src = jsFile;
-        jsScript.onload = () => {
-          console.log('✅ Main app loaded successfully');
-          // Hide loading screen after app mounts
-          setTimeout(() => {
-            const root = document.getElementById('root');
-            if (root && root.children.length > 0) {
-              const loading = document.querySelector('.loading');
-              if (loading) loading.style.display = 'none';
-            }
-          }, 500);
-        };
-        jsScript.onerror = () => {
-          console.error('❌ Failed to load main app script');
-          tryFallbackAssets();
-        };
-        document.head.appendChild(jsScript);
-        
-      } catch (error) {
-        console.warn('⚠️ Asset loading failed:', error.message);
-        tryFallbackAssets();
-      }
-    };
-    
-    // Fallback asset loading
-    const tryFallbackAssets = async () => {
-      console.log('🔄 Trying fallback asset loading...');
-      
-      const tryAsset = (src, type = 'script') => {
-        return new Promise((resolve) => {
-          if (type === 'script') {
-            const script = document.createElement('script');
-            script.type = 'module';
-            script.src = src;
-            script.onload = () => {
-              console.log('✅ Fallback loaded:', src);
-              resolve(true);
-            };
-            script.onerror = () => {
-              console.warn('❌ Fallback failed:', src);
-              resolve(false);
-            };
-            document.head.appendChild(script);
-          } else if (type === 'style') {
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = src;
-            link.onload = () => resolve(true);
-            link.onerror = () => resolve(false);
-            document.head.appendChild(link);
-          }
-        });
-      };
-      
-      // Try to find assets by scanning the page or making educated guesses
-      // Based on recent build output, try these specific patterns
-      const commonPaths = [
-        '/assets/index-Cl5UzX2o.js',  // Current build hash
-        '/assets/main-NiQ5K0SD.js',   // Current build hash
-        '/assets/index.js',
-        '/assets/main.js',
-        '/assets/app.js'
-      ];
-      
-      // Try CSS files first - use current build hash
-      const cssFiles = [
-        '/assets/main-BOyiGeqN.css',  // Current build hash
-        '/assets/index.css', 
-        '/assets/main.css', 
-        '/assets/app.css'
-      ];
-      
-      console.log('🎨 Trying CSS files...');
-      for (const css of cssFiles) {
-        const loaded = await tryAsset(css, 'style');
-        if (loaded) {
-          console.log('✅ CSS loaded:', css);
-          break;
-        }
-      }
-      
-      console.log('📦 Trying JS files...');
-      // Try JS files
-      for (const path of commonPaths) {
-        const loaded = await tryAsset(path);
-        if (loaded) {
-          console.log('✅ JS loaded:', path);
-          setTimeout(() => {
-            const loading = document.querySelector('.loading');
-            if (loading) loading.style.display = 'none';
-          }, 1000);
-          break;
-        }
-      }
-      
-      // If nothing worked, show error message
-      setTimeout(() => {
-        const loading = document.querySelector('.loading');
-        if (loading && document.getElementById('root').children.length === 0) {
-          loading.innerHTML = \`
-            <div class="logo">G</div>
-            <h1>GrubGate Partner Portal</h1>
-            <p style="color: #ef4444;">Unable to load application assets.</p>
-            <p style="font-size: 14px; margin-top: 16px;">
-              <a href="/" style="color: #800020; text-decoration: underline;">Refresh Page</a>
-            </p>
-          \`;
-        }
-      }, 5000);
-    };
-    
-    // Start loading assets
-    loadAssets();
-    
-    // Hide loading screen when app mounts
-    const observer = new MutationObserver(() => {
-      const root = document.getElementById('root');
-      if (root && root.children.length > 0) {
-        document.querySelector('.loading').style.display = 'none';
-        observer.disconnect();
-      }
-    });
-    
-    observer.observe(document.getElementById('root'), { childList: true });
-  </script>
+  <link rel="stylesheet" href="/assets/main-CRYXJeK2.css" />
+  <script type="module" src="/assets/main-DePyc7YF.js"></script>
 </body>
 </html>`;
-    
-    console.log('✅ SSR completed in', Date.now() - startTime, 'ms');
     
     return {
       statusCode: 200,
@@ -533,9 +166,9 @@ exports.handler = async (event, context) => {
       statusCode: 200,
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
       body: `<!DOCTYPE html>
-<html><head><title>GrubGate</title></head>
+<html><head><title>GrubGate</title><link rel="stylesheet" href="/assets/main-CRYXJeK2.css" /></head>
 <body><div id="root"></div>
-<script type="module" src="/src/main.jsx"></script>
+<script type="module" src="/assets/main-DePyc7YF.js"></script>
 </body></html>`
     };
   }
