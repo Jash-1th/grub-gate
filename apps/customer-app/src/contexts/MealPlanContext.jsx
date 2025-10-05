@@ -471,6 +471,7 @@ export const MealPlanProvider = ({ children }) => {
     const loadMealPlanFromDatabase = async () => {
       if (!isAuthenticated || !user) {
         console.log('⚠️ Not authenticated or no user, skipping database load');
+        setIsLoading(false); // Set loading to false for unauthenticated users
         return;
       }
       
@@ -524,6 +525,7 @@ export const MealPlanProvider = ({ children }) => {
           
           // Mark as loaded from database
           dispatch({ type: MEAL_PLAN_ACTIONS.SET_LOADED_FROM_DATABASE });
+          setIsLoading(false); // Set loading to false after successful database load
           return; // Successfully loaded from database, skip localStorage
         } else {
           console.log('⚠️ API response structure unexpected:', {
