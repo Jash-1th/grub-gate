@@ -848,7 +848,7 @@ const WeeklyMenuPage = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Weekly Summary</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Bi-Weekly Summary</h3>
               <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                 <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H9z" />
@@ -857,18 +857,24 @@ const WeeklyMenuPage = () => {
             </div>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-600">Total Meals</span>
-                <span className="font-semibold text-gray-900">{weekTotalItems}</span>
+                <span className="text-gray-600">Total Meals (Both Weeks)</span>
+                <span className="font-semibold text-gray-900">{totalItemsBothWeeks}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Estimated Cost</span>
-                <span className="font-semibold text-green-600">${totalCost.toFixed(2)}</span>
+                <span className="text-gray-600">Estimated Cost (Both Weeks)</span>
+                <span className="font-semibold text-green-600">${totalCostBothWeeks.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Avg per Meal</span>
                 <span className="font-semibold text-gray-900">
-                  ${weekTotalItems > 0 ? (totalCost / weekTotalItems).toFixed(2) : '0.00'}
+                  ${totalItemsBothWeeks > 0 ? (totalCostBothWeeks / totalItemsBothWeeks).toFixed(2) : '0.00'}
                 </span>
+              </div>
+              <div className="pt-2 border-t border-gray-100">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Current Week: {getWeekTotalItems(0)} meals</span>
+                  <span className="text-gray-500">Next Week: {getWeekTotalItems(1)} meals</span>
+                </div>
               </div>
             </div>
           </div>

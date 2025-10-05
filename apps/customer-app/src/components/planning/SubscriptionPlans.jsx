@@ -1,8 +1,49 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useMealPlan } from '../../contexts/MealPlanContext';
 
 const SubscriptionPlans = () => {
   const { t } = useTranslation();
+  const { getWeekTotalCost, getWeekTotalItems } = useMealPlan();
+  
+  // State to track selected subscription plan
+  const [selectedPlan, setSelectedPlan] = useState('biweekly');
+
+  // Calculate actual meal costs from user's meal plan
+  const biweeklyMealCost = getWeekTotalCost(0) + getWeekTotalCost(1);
+  const totalItems = getWeekTotalItems(0) + getWeekTotalItems(1);
+
+  // Calculate costs based on selected plan
+  const getServiceFeeForPlan = (planId) => {
+    switch (planId) {
+      case 'biweekly': return 19.99;
+      case 'fourweeks': return 39.99;
+      case 'sixweeks': return 59.99;
+      default: return 19.99;
+    }
+  };
+
+  const getMealCostForPlan = (planId) => {
+    switch (planId) {
+      case 'biweekly': return biweeklyMealCost;
+      case 'fourweeks': return biweeklyMealCost * 2; // 4 weeks = 2 biweeks
+      case 'sixweeks': return biweeklyMealCost * 3; // 6 weeks = 3 biweeks
+      default: return biweeklyMealCost;
+    }
+  };
+
+  const getPlanDurationText = (planId) => {
+    switch (planId) {
+      case 'biweekly': return 'Biweekly';
+      case 'fourweeks': return '4 Weeks';
+      case 'sixweeks': return '6 Weeks';
+      default: return 'Biweekly';
+    }
+  };
+
+  const currentServiceFee = getServiceFeeForPlan(selectedPlan);
+  const currentMealCost = getMealCostForPlan(selectedPlan);
+  const currentTotalCost = currentServiceFee + currentMealCost;
 
   const plans = [
     {
@@ -23,38 +64,38 @@ const SubscriptionPlans = () => {
       color: 'blue'
     },
     {
-      id: 'quarterly',
-      name: '3 Months Plan',
-      price: '$149.99',
-      period: 'every 3 months',
+      id: 'fourweeks',
+      name: '4 Weeks Plan',
+      price: '$39.99',
+      period: 'every 4 weeks',
       description: 'Best value for consistent planning',
       features: [
         'Everything in Bi-Weekly',
-        '90 days of meal planning',
+        '28 days of meal planning',
         'Advanced nutritional tracking',
         'Multiple dietary profiles',
         'Priority support',
         'Exclusive restaurant deals',
-        '15% savings vs bi-weekly'
+        '10% savings vs bi-weekly'
       ],
-      popular: true,
+      popular: false,
       color: 'grub-red'
     },
     {
-      id: 'biannual',
-      name: '6 Months Plan',
-      price: '$279.99',
-      period: 'every 6 months',
+      id: 'sixweeks',
+      name: '6 Weeks Plan',
+      price: '$59.99',
+      period: 'every 6 weeks',
       description: 'Maximum savings for committed users',
       features: [
-        'Everything in 3 Months',
-        '180 days of meal planning',
+        'Everything in 4 Weeks',
+        '42 days of meal planning',
         'Personal meal consultant',
         'Custom meal plans',
         'Restaurant partnerships',
         '24/7 phone support',
         'Early access to new features',
-        '25% savings vs bi-weekly'
+        '15% savings vs bi-weekly'
       ],
       popular: false,
       color: 'purple'
@@ -111,6 +152,74 @@ const SubscriptionPlans = () => {
           </p>
         </div>
 
+        {/* Cost Breakdown - Only show if user has meal plan items */}
+        {totalItems > 0 && (
+          <div className="mb-12">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Your Total Cost Breakdown</h3>
+                <p className="text-gray-600">Based on your current {totalItems} selected meal{totalItems !== 1 ? 's' : ''} for {getPlanDurationText(selectedPlan)} plan</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                {/* Service Fee */}
+                <div className="text-center p-4 bg-white rounded-lg border border-gray-200">
+                  <div className="w-12 h-12 mx-auto mb-3 bg-blue-500 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-1">Service Fee</h4>
+                  <p className="text-2xl font-bold text-blue-600">${currentServiceFee.toFixed(2)}</p>
+                  <p className="text-sm text-gray-600 mt-1">GrubGate platform access</p>
+                </div>
+
+                {/* Meal Costs */}
+                <div className="text-center p-4 bg-white rounded-lg border border-gray-200">
+                  <div className="w-12 h-12 mx-auto mb-3 bg-green-500 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                    </svg>
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-1">Meal Costs</h4>
+                  <p className="text-2xl font-bold text-green-600">${currentMealCost.toFixed(2)}</p>
+                  <p className="text-sm text-gray-600 mt-1">Restaurant food costs</p>
+                </div>
+
+                {/* Total Cost */}
+                <div className="text-center p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-lg border border-red-200">
+                  <div className="w-12 h-12 mx-auto mb-3 bg-grub-red rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-1">Total {getPlanDurationText(selectedPlan)}</h4>
+                  <p className="text-2xl font-bold text-red-700">${currentTotalCost.toFixed(2)}</p>
+                  <p className="text-sm text-gray-600 mt-1">Service + meals</p>
+                </div>
+              </div>
+
+              {/* Additional Info */}
+              <div className="mt-6 p-4 bg-white rounded-lg">
+                <div className="flex items-center justify-center space-x-6 text-sm text-gray-600">
+                  <span className="flex items-center">
+                    <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Meal costs vary by restaurant and selections
+                  </span>
+                  <span className="flex items-center">
+                    <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                    </svg>
+                    Service fee is fixed per plan
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 items-end">
           {plans.map((plan) => {
             const colors = getColorClasses(plan.color, plan.popular);
@@ -118,13 +227,24 @@ const SubscriptionPlans = () => {
             return (
               <div
                 key={plan.id}
-                className={`relative bg-gray-50 rounded-2xl shadow-lg border-2 ${colors.border} p-8 transform transition-all duration-200 hover:scale-105 flex flex-col h-full`}
+                onClick={() => setSelectedPlan(plan.id)}
+                className={`relative bg-gray-50 rounded-2xl shadow-lg border-2 ${selectedPlan === plan.id ? 'border-grub-red ring-2 ring-grub-red' : colors.border} p-8 transform transition-all duration-200 hover:scale-105 flex flex-col h-full cursor-pointer`}
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                     <span className="bg-grub-red text-white px-4 py-2 rounded-full text-sm font-semibold">
                       Most Popular
                     </span>
+                  </div>
+                )}
+
+                {selectedPlan === plan.id && (
+                  <div className="absolute -top-4 right-4">
+                    <div className="bg-green-500 text-white rounded-full p-2">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
                   </div>
                 )}
 
