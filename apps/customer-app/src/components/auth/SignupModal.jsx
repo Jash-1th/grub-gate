@@ -24,6 +24,9 @@ const SignupModal = () => {
   const [formErrors, setFormErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
   
+  // Local loading state to prevent multiple clicks
+  const [isLocalLoading, setIsLocalLoading] = useState(false);
+  
   // Welcome modal state
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [welcomeUserName, setWelcomeUserName] = useState('');
@@ -89,6 +92,12 @@ const SignupModal = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
+    
+    // Prevent multiple submissions
+    if (isLocalLoading || isLoading) {
+      return false;
+    }
     
     // Validate form
     const errors = validateForm();
@@ -101,6 +110,9 @@ const SignupModal = () => {
     setFormErrors({});
     clearError();
     setSuccessMessage('');
+    
+    // Set local loading state immediately
+    setIsLocalLoading(true);
     
     // Prepare registration data
     const nameParts = formData.name.trim().split(' ');
@@ -115,61 +127,69 @@ const SignupModal = () => {
       role: 'customer' // Default role for customer app
     };
     
-    // Attempt registration
-    const result = await register(registrationData);
-    
-    if (result.success) {
-      // Reset form
-      setFormData({
-        name: '',
-        email: '',
-        password: '',
-        confirmPassword: ''
-      });
-
-      if (result.autoLogin) {
-        // Close signup modal first
-        handleClose();
-        
-        // Show welcome modal with user's name
-        const firstName = formData.name.trim().split(' ')[0] || 'User';
-        setWelcomeUserName(firstName);
-        setShowWelcomeModal(true);
-        
-        // Show toast after a short delay (after welcome modal appears)
-        setTimeout(() => {
-          showSuccess(
-            'Account Created Successfully! 🎉',
-            `Welcome to GrubGate, ${firstName}! Start exploring delicious meals and planning your weekly menu.`,
-            { duration: 6000 }
-          );
-        }, 1000); // Show toast 1 second after welcome modal appears
-      } else {
-        // Fallback: show success message and switch to login modal
-        setSuccessMessage(result.message || 'Registration successful!');
-        setTimeout(() => {
-          switchToLogin();
-        }, 2000);
-      }
-    } else {
-      // Handle field-specific errors from backend
-      if (result.fieldErrors) {
-        const backendFieldErrors = {};
-        
-        // Map backend field names to frontend field names
-        Object.keys(result.fieldErrors).forEach(backendField => {
-          let frontendField = backendField;
-          
-          // Map backend fields to frontend fields
-          if (backendField === 'firstName' || backendField === 'lastName') {
-            frontendField = 'name'; // Both firstName and lastName errors show on name field
-          }
-          
-          backendFieldErrors[frontendField] = result.fieldErrors[backendField];
+    try {
+      // Attempt registration
+      const result = await register(registrationData);
+      
+      if (result.success) {
+        // Reset form
+        setFormData({
+          name: '',
+          email: '',
+          password: '',
+          confirmPassword: ''
         });
-        
-        setFormErrors(backendFieldErrors);
+
+        if (result.autoLogin) {
+          // Close signup modal first
+          handleClose();
+          
+          // Show welcome modal with user's name
+          const firstName = formData.name.trim().split(' ')[0] || 'User';
+          setWelcomeUserName(firstName);
+          setShowWelcomeModal(true);
+          
+          // Show toast after a short delay (after welcome modal appears)
+          setTimeout(() => {
+            showSuccess(
+              'Account Created Successfully! 🎉',
+              `Welcome to GrubGate, ${firstName}! Start exploring delicious meals and planning your weekly menu.`,
+              { duration: 6000 }
+            );
+          }, 1000); // Show toast 1 second after welcome modal appears
+        } else {
+          // Fallback: show success message and switch to login modal
+          setSuccessMessage(result.message || 'Registration successful!');
+          setTimeout(() => {
+            switchToLogin();
+          }, 2000);
+        }
+      } else {
+        // Handle field-specific errors from backend
+        if (result.fieldErrors) {
+          const backendFieldErrors = {};
+          
+          // Map backend field names to frontend field names
+          Object.keys(result.fieldErrors).forEach(backendField => {
+            let frontendField = backendField;
+            
+            // Map backend fields to frontend fields
+            if (backendField === 'firstName' || backendField === 'lastName') {
+              frontendField = 'name'; // Both firstName and lastName errors show on name field
+            }
+            
+            backendFieldErrors[frontendField] = result.fieldErrors[backendField];
+          });
+          
+          setFormErrors(backendFieldErrors);
+        }
       }
+    } catch (error) {
+      console.error('Registration error:', error);
+      setFormErrors({ general: 'Registration failed. Please try again.' });
+    } finally {
+      // Always clear local loading state
+      setIsLocalLoading(false);
     }
   };
 
@@ -193,7 +213,9 @@ const SignupModal = () => {
     clearError();
     // 4. Clear success message
     setSuccessMessage('');
-    // 5. Close the modal
+    // 5. Reset local loading state
+    setIsLocalLoading(false);
+    // 6. Close the modal
     closeSignupModal();
   };
 
@@ -225,7 +247,7 @@ const SignupModal = () => {
   }
 
   return (
-    <div className="modal-container">
+    <div className="signup-modal-container">
       {/* Modal Overlay - Semi-transparent backdrop */}
       <div className="modal-overlay">
         
@@ -290,7 +312,7 @@ const SignupModal = () => {
                     formErrors.name ? 'border-red-300 bg-red-50' : 'border-gray-300'
                   }`}
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || isLocalLoading}
                 />
                 {formErrors.name && (
                   <p className="mt-1 text-sm text-red-600">{formErrors.name}</p>
@@ -313,7 +335,7 @@ const SignupModal = () => {
                     formErrors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
                   }`}
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || isLocalLoading}
                 />
                 {formErrors.email && (
                   <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
@@ -336,7 +358,7 @@ const SignupModal = () => {
                     formErrors.password ? 'border-red-300 bg-red-50' : 'border-gray-300'
                   }`}
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || isLocalLoading}
                 />
                 {formErrors.password && (
                   <p className="mt-1 text-sm text-red-600">{formErrors.password}</p>
@@ -359,7 +381,7 @@ const SignupModal = () => {
                     formErrors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-300'
                   }`}
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || isLocalLoading}
                 />
                 {formErrors.confirmPassword && (
                   <p className="mt-1 text-sm text-red-600">{formErrors.confirmPassword}</p>
@@ -369,14 +391,14 @@ const SignupModal = () => {
               {/* Sign Up Button */}
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || isLocalLoading}
                 className={`w-full py-2 px-4 rounded-lg font-semibold text-base transition-colors duration-200 shadow-lg ${
-                  isLoading
+                  (isLoading || isLocalLoading)
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-grub-red text-white hover:bg-red-700 hover:shadow-xl transform hover:-translate-y-0.5 transition-transform'
                 }`}
               >
-                {isLoading ? (
+                {(isLoading || isLocalLoading) ? (
                   <div className="flex items-center justify-center">
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

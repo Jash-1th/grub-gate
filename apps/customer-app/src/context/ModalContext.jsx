@@ -18,6 +18,7 @@ export const ModalProvider = ({ children }) => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const openSignupModal = () => {
+    console.log('📝 Opening signup modal');
     setIsSignupModalOpen(true);
     // Prevent body scrolling when modal is open
     if (typeof document !== 'undefined') {
@@ -26,6 +27,7 @@ export const ModalProvider = ({ children }) => {
   };
 
   const closeSignupModal = () => {
+    console.log('❌ Closing signup modal');
     setIsSignupModalOpen(false);
     // Restore body scrolling when modal is closed
     if (typeof document !== 'undefined') {
@@ -42,6 +44,7 @@ export const ModalProvider = ({ children }) => {
   };
 
   const openLoginModal = () => {
+    console.log('🔑 Opening login modal');
     setIsLoginModalOpen(true);
     // Prevent body scrolling when modal is open
     if (typeof document !== 'undefined') {
@@ -50,6 +53,7 @@ export const ModalProvider = ({ children }) => {
   };
 
   const closeLoginModal = () => {
+    console.log('❌ Closing login modal');
     setIsLoginModalOpen(false);
     // Restore body scrolling when modal is closed
     if (typeof document !== 'undefined') {
@@ -67,14 +71,20 @@ export const ModalProvider = ({ children }) => {
 
   // Function to switch from signup modal to login modal
   const switchToLogin = () => {
+    console.log('🔄 Switching from signup to login modal');
     closeSignupModal();
-    openLoginModal();
+    setTimeout(() => {
+      openLoginModal();
+    }, 100); // Small delay to ensure cleanup
   };
 
   // Function to switch from login modal to signup modal
   const switchToSignup = () => {
+    console.log('🔄 Switching from login to signup modal');
     closeLoginModal();
-    openSignupModal();
+    setTimeout(() => {
+      openSignupModal();
+    }, 100); // Small delay to ensure cleanup
   };
 
   const value = {
