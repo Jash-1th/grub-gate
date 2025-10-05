@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import ChevronLeft from 'lucide-react/dist/esm/icons/chevron-left';
-import ChevronRight from 'lucide-react/dist/esm/icons/chevron-right';
-import Star from 'lucide-react/dist/esm/icons/star';
-import TrendingUp from 'lucide-react/dist/esm/icons/trending-up';
-import Users from 'lucide-react/dist/esm/icons/users';
-import Clock from 'lucide-react/dist/esm/icons/clock';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faChevronLeft, 
+  faChevronRight, 
+  faStar, 
+  faArrowTrendUp, 
+  faUsers, 
+  faClock 
+} from '@fortawesome/free-solid-svg-icons';
 
 const TestimonialsSection = ({ 
   testimonials = [], 
@@ -171,7 +174,7 @@ const TestimonialsSection = ({
             <div className="grid grid-cols-2 gap-4 text-center">
               <div className="bg-white rounded-lg p-3">
                 <div className="flex items-center justify-center mb-1">
-                  <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
+                  <FontAwesomeIcon icon={faArrowTrendUp} className="h-4 w-4 text-green-600 mr-1" />
                   <span className="text-sm font-semibold text-green-600">
                     {testimonial.revenueIncrease}
                   </span>
@@ -181,7 +184,7 @@ const TestimonialsSection = ({
               
               <div className="bg-white rounded-lg p-3">
                 <div className="flex items-center justify-center mb-1">
-                  <Users className="h-4 w-4 text-blue-600 mr-1" />
+                  <FontAwesomeIcon icon={faUsers} className="h-4 w-4 text-blue-600 mr-1" />
                   <span className="text-sm font-semibold text-blue-600">
                     {testimonial.orderCount?.toLocaleString()}
                   </span>
@@ -194,7 +197,7 @@ const TestimonialsSection = ({
           {/* Partnership Duration */}
           {testimonial.partnershipDuration && (
             <div className="mt-4 flex items-center justify-center text-sm text-gray-500">
-              <Clock className="h-4 w-4 mr-1" />
+              <FontAwesomeIcon icon={faClock} className="h-4 w-4 mr-1" />
               Partner for {testimonial.partnershipDuration}
             </div>
           )}
@@ -232,7 +235,7 @@ const TestimonialsSection = ({
                 className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-200 hover:bg-gray-50 hidden lg:block"
                 aria-label="Previous testimonials"
               >
-                <ChevronLeft className="h-6 w-6 text-gray-600" />
+                <FontAwesomeIcon icon={faChevronLeft} className="h-6 w-6 text-gray-600" />
               </button>
               
               <button
@@ -240,7 +243,7 @@ const TestimonialsSection = ({
                 className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-200 hover:bg-gray-50 hidden lg:block"
                 aria-label="Next testimonials"
               >
-                <ChevronRight className="h-6 w-6 text-gray-600" />
+                <FontAwesomeIcon icon={faChevronRight} className="h-6 w-6 text-gray-600" />
               </button>
             </>
           )}
@@ -265,7 +268,7 @@ const TestimonialsSection = ({
                 className="bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-200 hover:bg-gray-50"
                 aria-label="Previous testimonials"
               >
-                <ChevronLeft className="h-5 w-5 text-gray-600" />
+                <FontAwesomeIcon icon={faChevronLeft} className="h-5 w-5 text-gray-600" />
               </button>
               
               <button
@@ -273,7 +276,7 @@ const TestimonialsSection = ({
                 className="bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-200 hover:bg-gray-50"
                 aria-label="Next testimonials"
               >
-                <ChevronRight className="h-5 w-5 text-gray-600" />
+                <FontAwesomeIcon icon={faChevronRight} className="h-5 w-5 text-gray-600" />
               </button>
             </div>
           )}

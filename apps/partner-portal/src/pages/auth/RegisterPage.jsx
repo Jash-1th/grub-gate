@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router-dom';
-import Eye from 'lucide-react/dist/esm/icons/eye';
-import EyeOff from 'lucide-react/dist/esm/icons/eye-off';
-import Building from 'lucide-react/dist/esm/icons/building';
-import User from 'lucide-react/dist/esm/icons/user';
-import Mail from 'lucide-react/dist/esm/icons/mail';
-import Phone from 'lucide-react/dist/esm/icons/phone';
-import Lock from 'lucide-react/dist/esm/icons/lock';
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import Star from 'lucide-react/dist/esm/icons/star';
-import Award from 'lucide-react/dist/esm/icons/award';
-import Clock from 'lucide-react/dist/esm/icons/clock';
+import Eye from 'lucide-react/icons/eye';
+import EyeOff from 'lucide-react/icons/eye-off';
+import Building from 'lucide-react/icons/building';
+import User from 'lucide-react/icons/user';
+import Mail from 'lucide-react/icons/mail';
+import Phone from 'lucide-react/icons/phone';
+import Lock from 'lucide-react/icons/lock';
+import CheckCircle from 'lucide-react/icons/check-circle';
+import Star from 'lucide-react/icons/star';
+import Award from 'lucide-react/icons/award';
+import Clock from 'lucide-react/icons/clock';
 import { Button, Logo } from '@grub-gate/ui';
 
 const RegisterPage = () => {

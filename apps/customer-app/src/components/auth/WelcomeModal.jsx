@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
-import Heart from 'lucide-react/dist/esm/icons/heart';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCheckCircle, faStar, faHeart } from '@fortawesome/free-solid-svg-icons';
 
 const WelcomeModal = ({ isOpen, onClose, userName }) => {
   // Auto-close after 4 seconds
@@ -50,19 +49,19 @@ const WelcomeModal = ({ isOpen, onClose, userName }) => {
         <div className="bg-gradient-to-r from-grub-red to-red-600 px-6 py-8 text-center relative overflow-hidden">
           {/* Decorative elements */}
           <div className="absolute top-2 left-4 text-white opacity-20">
-            <Sparkles size={24} />
+            <FontAwesomeIcon icon={faStar} className="w-6 h-6" />
           </div>
           <div className="absolute top-4 right-6 text-white opacity-20">
-            <Heart size={20} />
+            <FontAwesomeIcon icon={faHeart} className="w-5 h-5" />
           </div>
           <div className="absolute bottom-2 right-4 text-white opacity-20">
-            <Sparkles size={18} />
+            <FontAwesomeIcon icon={faStar} className="w-4 h-4" />
           </div>
           
           {/* Success Icon */}
           <div className="mb-4 flex justify-center">
             <div className="bg-white bg-opacity-20 rounded-full p-3 animate-pulse">
-              <CheckCircle size={48} className="text-white" />
+              <FontAwesomeIcon icon={faCheckCircle} className="w-12 h-12 text-white" />
             </div>
           </div>
           

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import Mail from 'lucide-react/dist/esm/icons/mail';
-import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
+import Mail from 'lucide-react/icons/mail';
+import ArrowLeft from 'lucide-react/icons/arrow-left';
 import { Button, Input, Card, CardContent, Logo } from '@grub-gate/ui';
 
 const ForgotPasswordPage = () => {

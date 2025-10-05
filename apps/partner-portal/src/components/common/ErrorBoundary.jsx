@@ -1,6 +1,6 @@
 import React from 'react';
-import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
-import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import AlertCircle from 'lucide-react/icons/alert-circle';
+import RefreshCw from 'lucide-react/icons/refresh-cw';
 
 /**
  * Error Boundary Component

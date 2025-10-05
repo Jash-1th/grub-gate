@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import ChevronDown from 'lucide-react/dist/esm/icons/chevron-down';
-import ChevronUp from 'lucide-react/dist/esm/icons/chevron-up';
-import MessageCircle from 'lucide-react/dist/esm/icons/message-circle';
-import Phone from 'lucide-react/dist/esm/icons/phone';
-import Mail from 'lucide-react/dist/esm/icons/mail';
-import ExternalLink from 'lucide-react/dist/esm/icons/external-link';
+import ChevronDown from 'lucide-react/icons/chevron-down';
+import ChevronUp from 'lucide-react/icons/chevron-up';
+import MessageCircle from 'lucide-react/icons/message-circle';
+import Phone from 'lucide-react/icons/phone';
+import Mail from 'lucide-react/icons/mail';
+import ExternalLink from 'lucide-react/icons/external-link';
 import { Card, CardContent, CardHeader, CardTitle } from '@grub-gate/ui';
 
 /**

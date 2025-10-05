@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Save from 'lucide-react/dist/esm/icons/save';
-import Upload from 'lucide-react/dist/esm/icons/upload';
-import MapPin from 'lucide-react/dist/esm/icons/map-pin';
-import Clock from 'lucide-react/dist/esm/icons/clock';
-import Bell from 'lucide-react/dist/esm/icons/bell';
-import CreditCard from 'lucide-react/dist/esm/icons/credit-card';
+import Save from 'lucide-react/icons/save';
+import Upload from 'lucide-react/icons/upload';
+import MapPin from 'lucide-react/icons/map-pin';
+import Clock from 'lucide-react/icons/clock';
+import Bell from 'lucide-react/icons/bell';
+import CreditCard from 'lucide-react/icons/credit-card';
 import { Button, Input, Card, CardContent, CardHeader, CardTitle } from '@grub-gate/ui';
 import { mockRestaurant } from '../../lib/mock-data.js';
 
