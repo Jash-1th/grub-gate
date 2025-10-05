@@ -23,6 +23,9 @@ const LoginModal = () => {
   // Local error state for form validation
   const [formErrors, setFormErrors] = useState({});
   
+  // Local loading state to prevent multiple clicks
+  const [isLocalLoading, setIsLocalLoading] = useState(false);
+  
   // Welcome back modal state
   const [showWelcomeBackModal, setShowWelcomeBackModal] = useState(false);
   const [welcomeBackUserName, setWelcomeBackUserName] = useState('');
@@ -73,6 +76,11 @@ const LoginModal = () => {
     e.preventDefault();
     e.stopPropagation();
     
+    // Prevent multiple submissions
+    if (isLocalLoading || isLoading) {
+      return false;
+    }
+    
     // Validate form
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
@@ -83,6 +91,9 @@ const LoginModal = () => {
     // Clear any existing errors
     setFormErrors({});
     clearError();
+    
+    // Set local loading state immediately
+    setIsLocalLoading(true);
     
     // Call login function
     performLogin();
@@ -128,6 +139,9 @@ const LoginModal = () => {
     } catch (error) {
       console.error('Login error:', error);
       setFormErrors({ general: 'Login failed. Please try again.' });
+    } finally {
+      // Always clear local loading state
+      setIsLocalLoading(false);
     }
   };
 
@@ -148,6 +162,7 @@ const LoginModal = () => {
       password: ''
     });
     setFormErrors({});
+    setIsLocalLoading(false); // Reset local loading state
     clearError();
     closeLoginModal();
   };
@@ -251,7 +266,7 @@ const LoginModal = () => {
                     formErrors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
                   }`}
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || isLocalLoading}
                 />
                 {formErrors.email && (
                   <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
@@ -274,7 +289,7 @@ const LoginModal = () => {
                     formErrors.password ? 'border-red-300 bg-red-50' : 'border-gray-300'
                   }`}
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || isLocalLoading}
                 />
                 {formErrors.password && (
                   <p className="mt-1 text-sm text-red-600">{formErrors.password}</p>
@@ -295,14 +310,14 @@ const LoginModal = () => {
               {/* Login Button */}
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || isLocalLoading}
                 className={`w-full py-2 px-4 rounded-lg font-semibold text-base transition-colors duration-200 shadow-lg ${
-                  isLoading
+                  (isLoading || isLocalLoading)
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-grub-red text-white hover:bg-red-700 hover:shadow-xl transform hover:-translate-y-0.5 transition-transform'
                 }`}
               >
-                {isLoading ? (
+                {(isLoading || isLocalLoading) ? (
                   <div className="flex items-center justify-center">
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
