@@ -143,7 +143,8 @@ self.addEventListener('fetch', (event) => {
     url.hostname.includes('googleapis.com') ||
     url.hostname.includes('emailjs.com') ||
     url.hostname.includes('firebase.com') ||
-    url.hostname !== self.location.hostname
+    (url.hostname !== self.location.hostname && !url.hostname.includes('localhost')) ||
+    (url.hostname.includes('localhost') && url.port !== self.location.port && url.pathname.startsWith('/api/'))
   );
   
   if (isExternalAPI) {

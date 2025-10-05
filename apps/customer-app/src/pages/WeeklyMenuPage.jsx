@@ -4,12 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { useMealPlan } from '../contexts/MealPlanContext';
 import { useToast } from '../contexts/ToastContext';
 import { usePlanning } from '../contexts/PlanningContext';
-import { unifiedRestaurants } from '../data/unifiedRestaurants';
-import RestaurantSwitchModal from '../components/modals/RestaurantSwitchModal';
+import { useAuth } from '../contexts/AuthContext';
+// Removed static data import - using API data only
 import RestaurantSelectionModal from '../components/modals/RestaurantSelectionModal';
+import RestaurantSwitchModal from '../components/modals/RestaurantSwitchModal';
 
 // Enhanced Meal Slot Component with more features
-const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postalCode, selectedRestaurant, selectedWeek = 0, onShowRestaurantSelectionModal }) => {
+const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postalCode, selectedRestaurant, selectedWeek = 0, onShowRestaurantSelectionModal, isAuthenticated, hasLoadedFromDatabase }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const hasItems = actualMealItems && actualMealItems.length > 0;
@@ -20,8 +21,11 @@ const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postal
     if (hasItems) {
       navigate(`/meal-plan/${day}?week=${selectedWeek}`);
     } else if (selectedRestaurant) {
-      // Navigate to selected restaurant with day, slot, and week context
-      navigate(`/restaurant/${selectedRestaurant.id}?day=${day}&slot=${mealType}&week=${selectedWeek}&userType=normal&source=weekly-menu`);
+      // Navigate to selected restaurant with proper ID handling
+      // If it's from API (has MongoDB ObjectId), use that. Otherwise use numeric ID.
+      const restaurantId = selectedRestaurant.isApiRestaurant ? selectedRestaurant.id : selectedRestaurant.id;
+      const navigationUrl = `/restaurant/${restaurantId}?day=${day}&slot=${mealType}&week=${selectedWeek}&userType=normal&source=weekly-menu`;
+      navigate(navigationUrl);
     } else {
       // Show restaurant selection modal instead of direct navigation
       onShowRestaurantSelectionModal(day, mealType);
@@ -118,7 +122,14 @@ const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postal
               Add {mealType}
             </div>
             <div className="hidden sm:flex text-xs text-grub-red/70 font-medium group-hover:text-red-600 transition-colors duration-200 items-center justify-center">
-              <span>{selectedRestaurant ? `From ${selectedRestaurant.name}` : 'Browse restaurants'}</span>
+              <span>
+                {isAuthenticated && !hasLoadedFromDatabase 
+                  ? 'Loading...' 
+                  : selectedRestaurant 
+                    ? `From ${selectedRestaurant.name}` 
+                    : 'Browse restaurants'
+                }
+              </span>
               <svg className="w-3 h-3 ml-1 group-hover:translate-x-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
@@ -136,71 +147,142 @@ const WeeklyMenuPage = () => {
   const [searchParams] = useSearchParams();
   const { 
     mealPlan, 
+    weeklyPlan, 
+    totalItems, 
     removeItemFromPlan, 
-    getTotalItemsCount, 
-    getWeeklyPlanSummary, 
+    removeItemFromPlanWeek,
     clearAllPlan, 
-    getRestaurantsInPlan,
-    // Week-specific functions
+    clearDay,
     getWeekPlan,
+    getWeekDayItems,
     getWeekMealItems,
     getWeekTotalItems,
     getWeekTotalCost,
-    removeItemFromPlanWeek,
+    getWeeklyPlanSummary,
+    clearWeek,
+    getRestaurantsInPlan,
     getRestaurantsInWeekPlan,
     getRestaurantsInAllWeeks,
-    clearWeek
+    getRestaurantIdsInWeekPlan,
+    getRestaurantIdsInAllWeeks,
+    // Restaurant selection state and actions
+    selectedRestaurantId: mealPlanSelectedRestaurantId,
+    selectedRestaurantName: mealPlanSelectedRestaurantName,
+    selectedRestaurantData: mealPlanSelectedRestaurantData,
+    setSelectedRestaurant,
+    clearSelectedRestaurant,
+    clearAllMealPlanData,
+    // Loading states
+    isLoadingFromDatabase,
+    hasLoadedFromDatabase
   } = useMealPlan();
-  const { showToast } = useToast();
-  const { postalCode } = usePlanning();
+  const { showError, showSuccess, showInfo } = useToast();
+  const { postalCode, selectedRestaurant: planningSelectedRestaurant, updateSelectedRestaurant } = usePlanning();
+  const { isAuthenticated, user } = useAuth();
   const [isClient, setIsClient] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState(0); // 0 = current week, 1 = next week, etc.
   
-  // Restaurant switch modal state
-  const [showRestaurantSwitchModal, setShowRestaurantSwitchModal] = useState(false);
-  const [switchModalData, setSwitchModalData] = useState(null);
+  // Get restaurant info from URL parameters (moved to top to avoid reference errors)
+  const urlRestaurantId = searchParams.get('restaurantId');
+  const urlRestaurantName = searchParams.get('restaurantName');
+  
+  // Debug: Log restaurant data when it changes
+  useEffect(() => {
+    console.log('🔍 WeeklyMenuPage - Restaurant data changed:');
+    console.log('🔍 Database selectedRestaurantId:', mealPlanSelectedRestaurantId);
+    console.log('🔍 Database selectedRestaurantName:', mealPlanSelectedRestaurantName);
+    console.log('🔍 Database selectedRestaurantData:', mealPlanSelectedRestaurantData);
+    console.log('🔍 URL restaurantId:', urlRestaurantId);
+    console.log('🔍 URL restaurantName:', urlRestaurantName);
+  }, [mealPlanSelectedRestaurantId, mealPlanSelectedRestaurantName, mealPlanSelectedRestaurantData, urlRestaurantId, urlRestaurantName]);
+
+  // Clean up URL parameters on mount to ensure database is source of truth
+  useEffect(() => {
+    // If we have URL parameters but they don't match database, clean them up
+    if (hasLoadedFromDatabase && (urlRestaurantId || urlRestaurantName)) {
+      const shouldCleanUrl = 
+        (mealPlanSelectedRestaurantId && urlRestaurantId && String(mealPlanSelectedRestaurantId) !== String(urlRestaurantId)) ||
+        (mealPlanSelectedRestaurantName && urlRestaurantName && mealPlanSelectedRestaurantName !== decodeURIComponent(urlRestaurantName)) ||
+        (!mealPlanSelectedRestaurantId && !mealPlanSelectedRestaurantName && (urlRestaurantId || urlRestaurantName));
+      
+      if (shouldCleanUrl) {
+        console.log('🧹 Cleaning URL parameters - database is source of truth');
+        const currentWeek = searchParams.get('week') || '0';
+        navigate(`/weekly-menu?week=${currentWeek}`, { replace: true });
+      }
+    }
+  }, [hasLoadedFromDatabase, urlRestaurantId, urlRestaurantName, mealPlanSelectedRestaurantId, mealPlanSelectedRestaurantName, navigate, searchParams]);
   
   // Restaurant selection modal state
   const [showRestaurantSelectionModal, setShowRestaurantSelectionModal] = useState(false);
   const [selectionModalData, setSelectionModalData] = useState(null);
   
-  // Get restaurant info from URL parameters or detect from week's meal plan
-  const urlRestaurantId = searchParams.get('restaurantId');
-  const urlRestaurantName = searchParams.get('restaurantName');
+  // Restaurant switch modal state
+  const [showRestaurantSwitchModal, setShowRestaurantSwitchModal] = useState(false);
+  const [switchModalData, setSwitchModalData] = useState(null);
+
   
-  // Get restaurants in the selected week's meal plan
-  const weekRestaurants = getRestaurantsInWeekPlan(selectedWeek);
-  
-  // Get restaurants from ALL weeks (for normal users who can only select one restaurant)
-  const allWeeksRestaurants = getRestaurantsInAllWeeks();
-  
-  // Determine selected restaurant: URL parameter takes priority, then detect from meal plan
+  // DATABASE-FIRST restaurant selection logic - Database is single source of truth
   const selectedRestaurant = useMemo(() => {
-    // If URL has restaurant info, use that
-    if (urlRestaurantId) {
-      return unifiedRestaurants.find(r => r.id === parseInt(urlRestaurantId));
+    console.log('🔍 WeeklyMenuPage selectedRestaurant calculation (DATABASE FIRST):');
+    console.log('🔍 URL restaurantId:', urlRestaurantId);
+    console.log('🔍 Database selectedRestaurantId:', mealPlanSelectedRestaurantId);
+    console.log('🔍 Database selectedRestaurantName:', mealPlanSelectedRestaurantName);
+    console.log('🔍 isLoadingFromDatabase:', isLoadingFromDatabase);
+    console.log('🔍 hasLoadedFromDatabase:', hasLoadedFromDatabase);
+    
+    // Wait for database loading to complete before making decisions
+    if (isAuthenticated && !hasLoadedFromDatabase) {
+      console.log('⏳ Still loading from database, waiting...');
+      return null; // Don't show anything until database load is complete
     }
     
-    // For normal users: if there's exactly one restaurant across ALL weeks, show that restaurant for both weeks
-    // This ensures consistency - if user has items from Restaurant A in Week 1, Week 2 should also show Restaurant A
-    if (allWeeksRestaurants.length === 1) {
-      return unifiedRestaurants.find(r => r.name === allWeeksRestaurants[0]);
+    // ONLY Priority: Database selected restaurant (single source of truth)
+    if (mealPlanSelectedRestaurantId && mealPlanSelectedRestaurantName) {
+      console.log('✅ Using database restaurant (SINGLE SOURCE OF TRUTH):', mealPlanSelectedRestaurantId, mealPlanSelectedRestaurantName);
+      return {
+        id: mealPlanSelectedRestaurantId,
+        name: mealPlanSelectedRestaurantName,
+        cuisine: 'Restaurant',
+        rating: 4.5,
+        reviewCount: 0,
+        image: '/images/grub-gate-default-restaurant-img.jpg',
+        isApiRestaurant: true
+      };
     }
     
-    // Fallback: if there's exactly one restaurant in the current week's meal plan, use that
-    if (weekRestaurants.length === 1) {
-      return unifiedRestaurants.find(r => r.name === weekRestaurants[0]);
-    }
-    
-    // No restaurant selected
+    // No restaurant selected in database (after loading is complete)
+    console.log('❌ No restaurant selected - database is empty (ignoring URL params)');
+    console.log('🔍 URL params ignored - database is single source of truth');
     return null;
-  }, [urlRestaurantId, allWeeksRestaurants, weekRestaurants, selectedWeek]);
+  }, [
+    mealPlanSelectedRestaurantId, 
+    mealPlanSelectedRestaurantName,
+    isLoadingFromDatabase,
+    hasLoadedFromDatabase,
+    isAuthenticated
+  ]);
+
+  // Update planning context when selected restaurant changes (in useEffect to avoid setState during render)
+  useEffect(() => {
+    if (selectedRestaurant && (!planningSelectedRestaurant || planningSelectedRestaurant.id !== selectedRestaurant.id)) {
+      updateSelectedRestaurant(selectedRestaurant);
+    }
+  }, [selectedRestaurant, planningSelectedRestaurant, updateSelectedRestaurant]);
+
 
   const selectedRestaurantId = selectedRestaurant?.id;
   const selectedRestaurantName = selectedRestaurant?.name;
 
   // Get current restaurants in meal plan
-  const currentRestaurants = getRestaurantsInPlan();
+  const currentRestaurants = (() => {
+    try {
+      return getRestaurantsInPlan();
+    } catch (error) {
+      console.error('Error getting restaurants in plan:', error);
+      return [];
+    }
+  })();
 
   // Helper functions for date ranges (SSR-safe)
   const getWeekDateRange = (weekOffset = 0) => {
@@ -237,57 +319,65 @@ const WeeklyMenuPage = () => {
 
   const handleRemoveItem = (planId, day, mealType) => {
     removeItemFromPlanWeek(planId, day, mealType, selectedWeek);
-    showToast('Item removed from meal plan', 'success');
+    showSuccess('Item Removed', 'Item removed from meal plan');
   };
 
   const handleClearAll = () => {
     if (window.confirm(`Are you sure you want to clear your entire ${selectedWeek === 0 ? 'current week' : 'next week'} meal plan?`)) {
       clearAllPlan();
-      showToast('Meal plan cleared', 'success');
+      showSuccess('Meal Plan Cleared', 'Meal plan cleared successfully');
     }
   };
 
   const handleSelectOtherRestaurant = () => {
-    // Normal users can only select ONE restaurant for BOTH weeks
-    // Check for restaurants across ALL weeks, not just current week
-    const allWeeksRestaurants = getRestaurantsInAllWeeks();
-    const totalItemsAllWeeks = getWeekTotalItems(0) + getWeekTotalItems(1); // Both weeks
+    console.log('🔍 handleSelectOtherRestaurant called');
+    console.log('🔍 User:', user);
+    console.log('🔍 User type:', user?.userType);
+    console.log('🔍 Selected week:', selectedWeek);
+    console.log('🔍 Current selected restaurant ID:', mealPlanSelectedRestaurantId);
+    console.log('🔍 Current selected restaurant name:', mealPlanSelectedRestaurantName);
+    console.log('🔍 Current selected restaurant data:', mealPlanSelectedRestaurantData);
+    console.log('🔍 Type of restaurant ID:', typeof mealPlanSelectedRestaurantId);
+    console.log('🔍 Type of restaurant name:', typeof mealPlanSelectedRestaurantName);
     
-    // If there are items from any restaurant in any week, show confirmation modal
-    if (allWeeksRestaurants.length > 0 && totalItemsAllWeeks > 0) {
-      setSwitchModalData({
-        existingRestaurant: allWeeksRestaurants[0], // Show first restaurant
-        newRestaurant: 'Browse Restaurants',
-        itemCount: totalItemsAllWeeks // Total items across both weeks
-      });
-      setShowRestaurantSwitchModal(true);
+    // Check if user is normal and has a selected restaurant
+    // For now, assume all users are 'normal' for testing (or if user.userType is not set)
+    const userType = user?.userType || 'normal';
+    console.log('🔍 Determined user type:', userType);
+    
+    if (userType === 'normal') {
+      console.log('🔍 User is normal, checking for selected restaurant...');
+      
+      // Check if user has a selected restaurant (new approach)
+      if (mealPlanSelectedRestaurantId && mealPlanSelectedRestaurantName) {
+        console.log('🚨 User has selected restaurant! Should show modal...');
+        
+        // Get total items across both weeks for display
+        const totalItemsWeek0 = getWeekTotalItems(0);
+        const totalItemsWeek1 = getWeekTotalItems(1);
+        const totalItems = totalItemsWeek0 + totalItemsWeek1;
+        
+        console.log('🔍 Total items across all weeks:', totalItems);
+        
+        setSwitchModalData({
+          existingRestaurant: mealPlanSelectedRestaurantName,
+          newRestaurant: 'Browse Restaurants',
+          itemCount: totalItems
+        });
+        setShowRestaurantSwitchModal(true);
+        console.log('🚨 Modal state set to true');
+        return;
+      } else {
+        console.log('🔍 No selected restaurant found, will navigate directly');
+      }
     } else {
-      // No items in any week, navigate directly to restaurant selection
-      const postalParam = postalCode ? `&postal=${postalCode}` : '';
-      navigate(`/plan/restaurants?source=plan${postalParam}`);
+      console.log('🔍 User is not normal (or no user), will navigate directly');
     }
-  };
-
-  const handleConfirmRestaurantSwitch = () => {
-    // Clear BOTH weeks' meal plans (since normal users can only have one restaurant for both weeks)
-    clearWeek(0); // Clear current week
-    clearWeek(1); // Clear next week
     
-    // Close modal
-    setShowRestaurantSwitchModal(false);
-    setSwitchModalData(null);
-    
-    // Navigate to restaurant selection
+    // No selected restaurant or Pro user, navigate directly
     const postalParam = postalCode ? `&postal=${postalCode}` : '';
+    console.log('🔍 Navigating to:', `/plan/restaurants?source=plan${postalParam}`);
     navigate(`/plan/restaurants?source=plan${postalParam}`);
-    
-    // Show success message
-    showToast('Both weeks cleared. Select a new restaurant for bi-weekly planning!', 'success');
-  };
-
-  const handleCloseRestaurantSwitchModal = () => {
-    setShowRestaurantSwitchModal(false);
-    setSwitchModalData(null);
   };
 
   const handleShowRestaurantSelectionModal = (day, mealType) => {
@@ -311,11 +401,38 @@ const WeeklyMenuPage = () => {
     setSelectionModalData(null);
   };
 
+  const handleConfirmRestaurantSwitch = () => {
+    console.log('🔄 handleConfirmRestaurantSwitch called');
+    
+    // Clear all meal plan data and restaurant selection (with immediate database save)
+    clearAllMealPlanData();
+    
+    // Close modal
+    setShowRestaurantSwitchModal(false);
+    setSwitchModalData(null);
+    
+    // Navigate to restaurant selection
+    const postalParam = postalCode ? `&postal=${postalCode}` : '';
+    navigate(`/plan/restaurants?source=plan&week=${selectedWeek}${postalParam}`);
+    
+    // Show success message
+    showSuccess('All meal plans cleared. Select a new restaurant!', 'success');
+  };
+
+  const handleCloseRestaurantSwitchModal = () => {
+    setShowRestaurantSwitchModal(false);
+    setSwitchModalData(null);
+  };
+
   // Get week-specific data
   const currentWeekPlan = getWeekPlan(selectedWeek);
-  const totalItems = getWeekTotalItems(selectedWeek);
-  const totalCost = getWeekTotalCost(selectedWeek);
+  const weekTotalItems = getWeekTotalItems(selectedWeek);
+  const weekTotalCost = getWeekTotalCost(selectedWeek);
   const weeklySummary = getWeeklyPlanSummary();
+
+  // Get combined totals for both weeks
+  const totalItemsBothWeeks = getWeekTotalItems(0) + getWeekTotalItems(1);
+  const totalCostBothWeeks = getWeekTotalCost(0) + getWeekTotalCost(1);
 
   if (!isClient) {
     return (
@@ -336,7 +453,7 @@ const WeeklyMenuPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       {/* Header Section */}
       <div className="bg-gradient-to-r from-grub-red to-red-600 text-white">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
@@ -352,12 +469,12 @@ const WeeklyMenuPage = () => {
             
             <div className="flex justify-center sm:justify-end items-center gap-4 sm:gap-6">
               <div className="text-center">
-                <div className="text-xs sm:text-sm text-red-200">Total Items</div>
-                <div className="text-lg sm:text-2xl font-bold">{totalItems}</div>
+                <div className="text-xs sm:text-sm text-red-200">Total Items (Both Weeks)</div>
+                <div className="text-lg sm:text-2xl font-bold">{totalItemsBothWeeks}</div>
               </div>
               <div className="text-center">
-                <div className="text-xs sm:text-sm text-red-200">Estimated Cost</div>
-                <div className="text-lg sm:text-2xl font-bold text-yellow-200">${totalCost.toFixed(2)}</div>
+                <div className="text-xs sm:text-sm text-red-200">Estimated Cost (Both Weeks)</div>
+                <div className="text-lg sm:text-2xl font-bold text-yellow-200">${totalCostBothWeeks.toFixed(2)}</div>
               </div>
             </div>
           </div>
@@ -418,12 +535,24 @@ const WeeklyMenuPage = () => {
                 )
               )}
             </p>
+            
+            {/* Restaurant Restriction Indicator for Normal Users */}
+            {user?.userType === 'normal' && selectedRestaurant && (
+              <div className="mt-2 inline-flex items-center px-3 py-1 bg-orange-50 border border-orange-200 rounded-full">
+                <svg className="w-4 h-4 text-orange-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <span className="text-xs text-orange-800 font-medium">
+                  Restricted to {selectedRestaurant.name}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Selected Restaurant Banner */}
-      {selectedRestaurant && (
+      {(selectedRestaurant || (isAuthenticated && !hasLoadedFromDatabase)) && (
         <div className="bg-white border-b border-gray-200 shadow-sm">
           <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
@@ -432,27 +561,49 @@ const WeeklyMenuPage = () => {
                   <span className="text-white font-bold text-lg">🍽️</span>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Planning meals from {selectedRestaurant.name}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Click any empty slot to add meals from this restaurant • {selectedRestaurant.cuisine} • ⭐ {selectedRestaurant.rating}
-                  </p>
+                  {isAuthenticated && !hasLoadedFromDatabase ? (
+                    <>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        Loading your restaurant selection...
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Please wait while we load your meal plan
+                      </p>
+                    </>
+                  ) : selectedRestaurant ? (
+                    <>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        Planning meals from {selectedRestaurant.name}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Click any empty slot to add meals from this restaurant • {selectedRestaurant.cuisine} • ⭐ {selectedRestaurant.rating}
+                      </p>
+                    </>
+                  ) : null}
                 </div>
               </div>
               <div className="flex items-center space-x-3">
-                <button
-                  onClick={() => navigate(`/restaurant/${selectedRestaurant.id}?source=menu-browse`)}
-                  className="px-4 py-2 bg-grub-red text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
-                >
-                  View Full Menu
-                </button>
-                <button
-                  onClick={handleSelectOtherRestaurant}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
-                >
-                  Select Other Restaurant
-                </button>
+                {isAuthenticated && !hasLoadedFromDatabase ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-grub-red"></div>
+                    <span className="text-sm text-gray-600">Loading...</span>
+                  </div>
+                ) : selectedRestaurant ? (
+                  <>
+                    <button
+                      onClick={() => navigate(`/restaurant/${selectedRestaurant.id}?source=menu-browse`)}
+                      className="px-4 py-2 bg-grub-red text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                    >
+                      View Full Menu
+                    </button>
+                    <button
+                      onClick={handleSelectOtherRestaurant}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                    >
+                      Select Other Restaurant
+                    </button>
+                  </>
+                ) : null}
               </div>
             </div>
           </div>
@@ -492,7 +643,7 @@ const WeeklyMenuPage = () => {
 
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Quick Actions */}
-        {totalItems > 0 && (
+        {weekTotalItems > 0 && (
           <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
             <button
               onClick={handleClearAll}
@@ -559,7 +710,9 @@ const WeeklyMenuPage = () => {
                         postalCode={postalCode}
                         selectedRestaurant={selectedRestaurant}
                         selectedWeek={selectedWeek}
-                        onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
+                        onShowRestaurantSelectionModal={setShowRestaurantSelectionModal}
+                        isAuthenticated={isAuthenticated}
+                        hasLoadedFromDatabase={hasLoadedFromDatabase}
                       />
                     </div>
                     
@@ -578,6 +731,8 @@ const WeeklyMenuPage = () => {
                         selectedRestaurant={selectedRestaurant}
                         selectedWeek={selectedWeek}
                         onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
+                        isAuthenticated={isAuthenticated}
+                        hasLoadedFromDatabase={hasLoadedFromDatabase}
                       />
                     </div>
                   </div>
@@ -633,6 +788,8 @@ const WeeklyMenuPage = () => {
                     selectedRestaurant={selectedRestaurant}
                     selectedWeek={selectedWeek}
                     onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
+                    isAuthenticated={isAuthenticated}
+                    hasLoadedFromDatabase={hasLoadedFromDatabase}
                   />
                 ))}
                 
@@ -658,6 +815,8 @@ const WeeklyMenuPage = () => {
                     selectedRestaurant={selectedRestaurant}
                     selectedWeek={selectedWeek}
                     onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
+                    isAuthenticated={isAuthenticated}
+                    hasLoadedFromDatabase={hasLoadedFromDatabase}
                   />
                 ))}
               </div>
@@ -699,7 +858,7 @@ const WeeklyMenuPage = () => {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Total Meals</span>
-                <span className="font-semibold text-gray-900">{totalItems}</span>
+                <span className="font-semibold text-gray-900">{weekTotalItems}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Estimated Cost</span>
@@ -708,7 +867,7 @@ const WeeklyMenuPage = () => {
               <div className="flex justify-between">
                 <span className="text-gray-600">Avg per Meal</span>
                 <span className="font-semibold text-gray-900">
-                  ${totalItems > 0 ? (totalCost / totalItems).toFixed(2) : '0.00'}
+                  ${weekTotalItems > 0 ? (totalCost / weekTotalItems).toFixed(2) : '0.00'}
                 </span>
               </div>
             </div>
@@ -752,16 +911,6 @@ const WeeklyMenuPage = () => {
         </div>
       </div>
       
-      {/* Restaurant Switch Modal */}
-      <RestaurantSwitchModal
-        isOpen={showRestaurantSwitchModal}
-        onClose={handleCloseRestaurantSwitchModal}
-        onConfirm={handleConfirmRestaurantSwitch}
-        existingRestaurant={switchModalData?.existingRestaurant}
-        newRestaurant={switchModalData?.newRestaurant}
-        itemCount={switchModalData?.itemCount}
-      />
-      
       {/* Restaurant Selection Modal */}
       <RestaurantSelectionModal
         isOpen={showRestaurantSelectionModal}
@@ -770,6 +919,18 @@ const WeeklyMenuPage = () => {
         day={selectionModalData?.day}
         mealType={selectionModalData?.mealType}
         week={selectionModalData?.week}
+      />
+
+      {/* Restaurant Switch Modal */}
+      {console.log('🔍 Modal render - showRestaurantSwitchModal:', showRestaurantSwitchModal)}
+      {console.log('🔍 Modal render - switchModalData:', switchModalData)}
+      <RestaurantSwitchModal
+        isOpen={showRestaurantSwitchModal}
+        onClose={handleCloseRestaurantSwitchModal}
+        onConfirm={handleConfirmRestaurantSwitch}
+        existingRestaurant={switchModalData?.existingRestaurant}
+        newRestaurant={switchModalData?.newRestaurant}
+        itemCount={switchModalData?.itemCount}
       />
     </div>
   );

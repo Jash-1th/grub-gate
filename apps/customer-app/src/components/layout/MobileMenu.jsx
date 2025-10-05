@@ -85,28 +85,17 @@ const MobileMenu = ({ isOpen, onClose }) => {
             </div>
             
             {/* Auth Buttons */}
-            <div className="space-y-4">
-              <button
-                onClick={() => {
-                  openSignupModal();
-                  onClose();
-                }}
-                className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-grub-red to-red-600 text-white text-base font-semibold rounded-xl hover:opacity-90 transition-all transform hover:scale-[1.02] active:scale-95 shadow-lg"
-              >
-                {/* <UserPlusIcon className="w-5 h-3" /> */}
-                <span>{t('signup.button')}</span>
-              </button>
-              
-              <button
-                onClick={() => {
-                  toggleLoginModal(true);
-                  onClose();
-                }}
-                className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white border-2 border-gray-200 text-gray-800 text-base font-semibold rounded-xl hover:bg-gray-50 transition-all transform hover:scale-[1.02] active:scale-95 shadow-md"
-              >
-                {/* <ArrowRightOnRectangleIcon className="w-5 h-5" /> */}
-                <span>{t('login.button')}</span>
-              </button>
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <h3 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-grub-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                {t('account').toUpperCase()}
+              </h3>
+              <AuthButtons 
+                isMobile={true} 
+                className="w-full"
+              />
             </div>
           </div>
         </div>

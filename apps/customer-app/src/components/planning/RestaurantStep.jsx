@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePlanning } from '../../contexts/PlanningContext';
-import RestaurantGrid from './RestaurantGrid';
+import RestaurantGridContainer from './RestaurantGridContainer';
 
 const RestaurantStep = ({ onNext, onBack }) => {
   const { t } = useTranslation();
@@ -96,7 +96,7 @@ const RestaurantStep = ({ onNext, onBack }) => {
       </div>
 
       {/* Restaurant Grid Section */}
-      <RestaurantGrid 
+      <RestaurantGridContainer 
         postalCode={postalCode}
       />
 

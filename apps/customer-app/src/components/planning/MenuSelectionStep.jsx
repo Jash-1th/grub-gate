@@ -3,7 +3,8 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { usePlanning } from '../../contexts/PlanningContext';
 import { useMealPlan } from '../../contexts/MealPlanContext';
 import { getAllFoodItemsForDayAndSlot, getAllFoodItemsForDay, capitalizeFirst, groupItemsByCategory } from '../../utils/combinedMenuHelpers';
-import { unifiedRestaurants, getRestaurantsByPostalCode } from '../../data/unifiedRestaurants';
+import { unifiedRestaurants } from '../../data/unifiedRestaurants';
+import { getRestaurantsByPostalCode, getStaticRestaurantsByPostalCode } from '../../services/restaurantService';
 import FoodItemCard from '../restaurant/FoodItemCard';
 import RestaurantCard from './RestaurantCard';
 
@@ -73,19 +74,47 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
   }, []);
 
 
-  // Get nearby restaurants
-  const nearbyRestaurants = useMemo(() => {
-    if (!isClient) return [];
-    
-    // Get restaurants by postal code or all restaurants if no postal code
-    let restaurants;
-    if (effectivePostalCode && effectivePostalCode.length >= 3) {
-      restaurants = getRestaurantsByPostalCode(effectivePostalCode);
-    } else {
-      restaurants = [...unifiedRestaurants].sort((a, b) => b.rating - a.rating);
-    }
-    
-    return restaurants.slice(0, 8);
+  // State for nearby restaurants
+  const [nearbyRestaurants, setNearbyRestaurants] = useState([]);
+  const [restaurantsLoading, setRestaurantsLoading] = useState(false);
+
+  // Fetch nearby restaurants
+  useEffect(() => {
+    const fetchNearbyRestaurants = async () => {
+      if (!isClient) return;
+      
+      setRestaurantsLoading(true);
+      
+      try {
+        let restaurants;
+        if (effectivePostalCode && effectivePostalCode.length >= 3) {
+          // Try API first, fallback to static data
+          const result = await getRestaurantsByPostalCode(effectivePostalCode, { limit: 8 });
+          
+          if (result.success && result.data.length > 0) {
+            restaurants = result.data;
+          } else {
+            // Fallback to static data
+            const staticResult = await getStaticRestaurantsByPostalCode(effectivePostalCode);
+            restaurants = staticResult.success ? staticResult.data.slice(0, 8) : [];
+          }
+        } else {
+          // Use static data sorted by rating
+          restaurants = [...unifiedRestaurants].sort((a, b) => b.rating - a.rating).slice(0, 8);
+        }
+        
+        setNearbyRestaurants(restaurants);
+      } catch (error) {
+        console.error('Error fetching nearby restaurants:', error);
+        // Fallback to static data
+        const fallbackRestaurants = [...unifiedRestaurants].sort((a, b) => b.rating - a.rating).slice(0, 8);
+        setNearbyRestaurants(fallbackRestaurants);
+      } finally {
+        setRestaurantsLoading(false);
+      }
+    };
+
+    fetchNearbyRestaurants();
   }, [effectivePostalCode, isClient]);
 
   // Fetch data based on user type
@@ -166,7 +195,43 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
 
   // Render nearby restaurants section
   const renderNearbyRestaurants = () => {
+    if (restaurantsLoading) {
+      return (
+        <div className="mb-12">
+          {/* Postal Code Header */}
+          {effectivePostalCode && (
+            <div className="mb-6 text-center">
+              <div className="inline-flex items-center px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+                <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span className="text-blue-800 font-medium">Finding restaurants near {effectivePostalCode}...</span>
+              </div>
+            </div>
+          )}
+          
+          {/* Loading skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+            {[...Array(4)].map((_, index) => (
+              <div key={index} className="bg-white rounded-xl shadow-lg overflow-hidden animate-pulse">
+                <div className="h-48 bg-gray-200"></div>
+                <div className="p-6">
+                  <div className="h-6 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                  <div className="h-10 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
     if (nearbyRestaurants.length === 0) return null;
+
+    // All restaurants are available now (no restrictions)
+    const availableRestaurants = nearbyRestaurants;
 
     return (
       <div className="mb-12">
@@ -185,7 +250,7 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
         
         {/* Restaurant Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
-          {nearbyRestaurants.map((restaurant) => (
+          {availableRestaurants.map((restaurant) => (
             <RestaurantCard 
               key={restaurant.id}
               restaurant={restaurant}
@@ -295,7 +360,7 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-32 sm:pb-40">
+      <div className="min-h-screen bg-gray-50 pb-32 sm:pb-40">
       {/* Header */}
       <div className="bg-gradient-to-r from-grub-red to-red-600 text-white">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
@@ -574,7 +639,7 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
                     // Navigate back to weekly menu with week parameter
                     navigate(`/weekly-menu?week=${week}`);
                   } else {
-                    // Navigate to weekly menu to see the meal planning calendar
+                    // Navigate to weekly menu after restaurant selection
                     navigate('/weekly-menu');
                   }
                 }}
@@ -591,7 +656,7 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
                     </>
                   ) : (
                     <>
-                      <span className="hidden sm:inline">Continue to Subscription Plans</span>
+                      <span className="hidden sm:inline">Continue to Weekly Menu</span>
                       <span className="sm:hidden">Continue</span>
                     </>
                   )}

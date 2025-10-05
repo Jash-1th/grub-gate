@@ -1,0 +1,56 @@
+import axios from 'axios';
+
+// Create axios instance with base configuration
+const apiClient = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor to add auth token
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor to handle common errors
+apiClient.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    // Handle 401 unauthorized - token expired or invalid
+    if (error.response?.status === 401) {
+      // Only redirect if this is NOT a login attempt
+      // Login attempts should handle 401 errors themselves
+      const isLoginAttempt = error.config?.url?.includes('/auth/login');
+      
+      if (!isLoginAttempt) {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        // Redirect to login or refresh page for authenticated requests
+        window.location.href = '/';
+      }
+      // For login attempts, just pass the error through without redirecting
+    }
+    
+    // Handle network errors
+    if (!error.response) {
+      console.error('Network error:', error.message);
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
+export default apiClient;

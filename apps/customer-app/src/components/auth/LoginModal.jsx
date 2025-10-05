@@ -1,17 +1,31 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useModal } from '../../context/ModalContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
+import WelcomeBackModal from './WelcomeBackModal';
 import './modal-responsive.css';
 
 const LoginModal = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { isLoginModalOpen, closeLoginModal, switchToSignup } = useModal();
+  const { login, isLoading, error, clearError } = useAuth();
+  const { showSuccess } = useToast();
   
   // Form state management
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+  
+  // Local error state for form validation
+  const [formErrors, setFormErrors] = useState({});
+  
+  // Welcome back modal state
+  const [showWelcomeBackModal, setShowWelcomeBackModal] = useState(false);
+  const [welcomeBackUserName, setWelcomeBackUserName] = useState('');
 
   // Handle input changes
   const handleInputChange = (e) => {
@@ -20,12 +34,101 @@ const LoginModal = () => {
       ...prev,
       [name]: value
     }));
+    
+    // Clear field-specific errors when user starts typing
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+    
+    // Clear auth errors when user starts typing
+    if (error) {
+      clearError();
+    }
   };
 
-  // Handle form submission (frontend only for now)
+  // Validate form
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.email) {
+      errors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = 'Email is invalid';
+    }
+    
+    if (!formData.password) {
+      errors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+    }
+    
+    return errors;
+  };
+
+  // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Login form data:', formData);
+    e.stopPropagation();
+    
+    // Validate form
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return false;
+    }
+    
+    // Clear any existing errors
+    setFormErrors({});
+    clearError();
+    
+    // Call login function
+    performLogin();
+    return false;
+  };
+
+  // Separate async login function
+  const performLogin = async () => {
+    try {
+      const result = await login(formData.email, formData.password);
+      
+      if (result && result.success) {
+        // Success - immediately close modal to prevent any timing issues
+        console.log('✅ LoginModal: Login successful, closing modal immediately');
+        closeLoginModal();
+        
+        const firstName = result.user.firstName || result.user.name || 'User';
+        setWelcomeBackUserName(firstName);
+        
+        // Only show welcome modal if there's no pending redirect
+        const pendingRedirect = localStorage.getItem('pendingRedirect');
+        if (!pendingRedirect) {
+          setShowWelcomeBackModal(true);
+          setTimeout(() => {
+            showSuccess(
+              'Welcome Back! 🎉',
+              `Great to see you again, ${firstName}! Ready to continue your meal planning journey?`,
+              { duration: 5000 }
+            );
+          }, 800);
+        } else {
+          console.log('✅ LoginModal: Pending redirect detected, skipping welcome modal');
+        }
+      } else {
+        // Login failed - show error in modal
+        if (result && result.fieldErrors && Object.keys(result.fieldErrors).length > 0) {
+          setFormErrors(result.fieldErrors);
+        } else {
+          const errorMsg = result?.error || 'Invalid email or password. Please try again.';
+          setFormErrors({ general: errorMsg });
+        }
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setFormErrors({ general: 'Login failed. Please try again.' });
+    }
   };
 
   // Handle Google login (placeholder for now)
@@ -40,13 +143,19 @@ const LoginModal = () => {
 
   // Handle close with form reset
   const handleClose = () => {
-    // 1. Reset the form state
     setFormData({
       email: '',
       password: ''
     });
-    // 2. Close the modal
+    setFormErrors({});
+    clearError();
     closeLoginModal();
+  };
+
+  // Handle welcome back modal close
+  const handleWelcomeBackModalClose = () => {
+    setShowWelcomeBackModal(false);
+    setWelcomeBackUserName('');
   };
 
   // Handle sign up link click
@@ -70,6 +179,7 @@ const LoginModal = () => {
       document.removeEventListener('keydown', handleEscapeKey);
     };
   }, [isLoginModalOpen]);
+
 
   if (!isLoginModalOpen) {
     return null;
@@ -109,6 +219,20 @@ const LoginModal = () => {
 
           {/* Login Form */}
           <div className="px-6 pb-2">
+            {/* Global Error Message */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+            
+            {/* General Form Error */}
+            {formErrors.general && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{formErrors.general}</p>
+              </div>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-3">
               
               {/* Email Field */}
@@ -123,9 +247,15 @@ const LoginModal = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder={t('login.emailPlaceholder')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 text-gray-900 placeholder-gray-500"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
+                    formErrors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
                   required
+                  disabled={isLoading}
                 />
+                {formErrors.email && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
+                )}
               </div>
 
               {/* Password Field */}
@@ -140,9 +270,15 @@ const LoginModal = () => {
                   value={formData.password}
                   onChange={handleInputChange}
                   placeholder={t('login.passwordPlaceholder')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 text-gray-900 placeholder-gray-500"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
+                    formErrors.password ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
                   required
+                  disabled={isLoading}
                 />
+                {formErrors.password && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.password}</p>
+                )}
               </div>
 
               {/* Forgot Password Link */}
@@ -159,9 +295,24 @@ const LoginModal = () => {
               {/* Login Button */}
               <button
                 type="submit"
-                className="w-full bg-grub-red text-white py-2 px-4 rounded-lg font-semibold text-base hover:bg-red-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-transform"
+                disabled={isLoading}
+                className={`w-full py-2 px-4 rounded-lg font-semibold text-base transition-colors duration-200 shadow-lg ${
+                  isLoading
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-grub-red text-white hover:bg-red-700 hover:shadow-xl transform hover:-translate-y-0.5 transition-transform'
+                }`}
               >
-                {t('login.button')}
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Signing in...
+                  </div>
+                ) : (
+                  t('login.button')
+                )}
               </button>
             </form>
           </div>
@@ -224,6 +375,13 @@ const LoginModal = () => {
           </div>
         </div>
       </div>
+      
+      {/* Welcome Back Modal */}
+      <WelcomeBackModal
+        isOpen={showWelcomeBackModal}
+        onClose={handleWelcomeBackModalClose}
+        userName={welcomeBackUserName}
+      />
     </div>
   );
 };

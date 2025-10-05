@@ -3,20 +3,29 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useModal } from '../../context/ModalContext';
 import { usePlanning } from '../../contexts/PlanningContext';
+import { useAuth } from '../../contexts/AuthContext';
 import HowItWorksPlan from './HowItWorksPlan';
 import ScheduleDemo from './ScheduleDemo';
 
 const LocationStep = ({ onNext }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { openSignupModal } = useModal();
+  const { openLoginModal, openSignupModal } = useModal();
   const { updatePostalCode, updatePreferences } = usePlanning();
+  const { isAuthenticated } = useAuth();
   const [postalCode, setPostalCode] = useState('');
 
   const handleFindMeals = () => {
     if (postalCode.trim()) {
       // Update postal code in context
       updatePostalCode(postalCode.trim());
+      
+      // Check if user is authenticated before proceeding
+      if (!isAuthenticated) {
+        // Show login modal if user is not authenticated
+        openLoginModal();
+        return;
+      }
       
       // Navigate directly to restaurant step (no preferences selection here)
       navigate('/plan/restaurants?source=plan');

@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node server.js",
+    "dev": "vite",
+    "dev:ssr": "node server.js",
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build",
     "build:server": "vite build --config vite.config.ssr.js",
@@ -15,6 +16,7 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "autoprefixer": "^10.4.21",
+    "axios": "^1.12.2",
     "compression": "^1.8.1",
     "emailjs-com": "^3.2.0",
     "express": "^5.1.0",

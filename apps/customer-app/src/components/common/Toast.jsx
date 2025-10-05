@@ -87,10 +87,10 @@ const Toast = ({
 
   return (
     <div
-      className={`fixed top-4 right-4 z-50 w-80 transform transition-all duration-300 ease-in-out ${
+      className={`w-80 max-w-sm mx-4 transform transition-all duration-300 ease-in-out ${
         isVisible && !isExiting 
-          ? 'translate-x-0 opacity-100 scale-100' 
-          : 'translate-x-full opacity-0 scale-95'
+          ? 'translate-y-0 opacity-100 scale-100' 
+          : '-translate-y-full opacity-0 scale-95'
       }`}
     >
       <div className={`${styles.bg} rounded-xl shadow-2xl overflow-hidden min-h-[100px]`}>

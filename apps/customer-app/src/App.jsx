@@ -7,6 +7,7 @@ import { ModalProvider } from './context/ModalContext';
 import { MealPlanProvider } from './contexts/MealPlanContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { PlanningProvider } from './contexts/PlanningContext';
+import { AuthProvider } from './contexts/AuthContext';
 import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
 import About from './pages/About';
@@ -22,6 +23,7 @@ import SubscriptionPage from './pages/SubscriptionPage';
 import MenuSelectionStep from './components/planning/MenuSelectionStep';
 import LaunchScreen from './components/common/LaunchScreen';
 import ScrollToTop from './components/common/ScrollToTop';
+import ProtectedRoute from './components/guards/ProtectedRoute';
 import { useScrollToTop } from './hooks/useScrollToTop';
 import './App.css';
 
@@ -114,10 +116,11 @@ function App({ initialized = true }) {
 
   return (
     <I18nextProvider i18n={i18n}>
-      <ModalProvider>
-        <MealPlanProvider>
-          <PlanningProvider>
-            <ToastProvider>
+      <AuthProvider>
+        <ToastProvider>
+          <ModalProvider>
+            <MealPlanProvider>
+                <PlanningProvider>
             <div className="app-container">
           {/* Launch Screen - Only shown on first visit and after hydration */}
           {isClient && isFirstVisit && isLaunching && (
@@ -127,7 +130,7 @@ function App({ initialized = true }) {
           {/* Main App Content */}
           <div className="app-content">
             <ScrollToTop />
-            <Layout>
+              <Layout>
               <AnimatePresence mode="wait">
                 <Routes location={location} key={location.pathname}>
                   <Route path="/" element={<HomePage />} />
@@ -138,22 +141,43 @@ function App({ initialized = true }) {
                   <Route path="/plan" element={<MealPlanningFlowPage />} />
                   <Route path="/plan/:step" element={<MealPlanningFlowPage />} />
                   <Route path="/meal-planning" element={<MealPlanningPage />} />
-                  <Route path="/weekly-menu" element={<WeeklyMenuPage />} />
-                  <Route path="/subscription" element={<SubscriptionPage />} />
-                  <Route path="/restaurant/:id" element={<RestaurantDetailPage />} />
-                  <Route path="/meal-plan/:day" element={<DayMealPlanPage />} />
-                  <Route path="/plan/restaurants" element={<MenuSelectionStep />} />
+                  <Route path="/weekly-menu" element={
+                    <ProtectedRoute>
+                      <WeeklyMenuPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/subscription" element={
+                    <ProtectedRoute>
+                      <SubscriptionPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/restaurant/:id" element={
+                    <ProtectedRoute>
+                      <RestaurantDetailPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/meal-plan/:day" element={
+                    <ProtectedRoute>
+                      <DayMealPlanPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/plan/restaurants" element={
+                    <ProtectedRoute>
+                      <MenuSelectionStep />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/restaurants/weekly-menu" element={<WeeklyMenuPage />} />
                   {/* Add more routes as needed */}
                 </Routes>
               </AnimatePresence>
-            </Layout>
+              </Layout>
           </div>
         </div>
-            </ToastProvider>
-          </PlanningProvider>
-        </MealPlanProvider>
-      </ModalProvider>
+              </PlanningProvider>
+          </MealPlanProvider>
+        </ModalProvider>
+        </ToastProvider>
+      </AuthProvider>
     </I18nextProvider>
   );
 }

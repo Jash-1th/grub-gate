@@ -86,23 +86,24 @@ export const ToastProvider = ({ children }) => {
     <ToastContext.Provider value={value}>
       {children}
       
-      {/* Toast Container */}
-      <div className="fixed top-0 right-0 z-50 p-4 space-y-2 pointer-events-none">
-        {toasts.map((toast, index) => (
-          <div
-            key={toast.id}
-            className="pointer-events-auto"
-            style={{
-              transform: `translateY(${index * 10}px)`,
-              zIndex: 1000 - index
-            }}
-          >
-            <Toast
-              {...toast}
-              onClose={removeToast}
-            />
-          </div>
-        ))}
+      {/* Toast Container - Top Center Below Navbar */}
+      <div className="fixed top-16 md:top-20 left-1/2 transform -translate-x-1/2 z-[10000] pointer-events-none px-4 w-full max-w-sm">
+        <div className="flex flex-col space-y-3">
+          {toasts.map((toast, index) => (
+            <div
+              key={toast.id}
+              className="pointer-events-auto"
+              style={{
+                zIndex: 1000 - index
+              }}
+            >
+              <Toast
+                {...toast}
+                onClose={removeToast}
+              />
+            </div>
+          ))}
+        </div>
       </div>
     </ToastContext.Provider>
   );

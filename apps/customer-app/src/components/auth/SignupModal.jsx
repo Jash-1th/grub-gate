@@ -1,18 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useModal } from '../../context/ModalContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
+import WelcomeModal from './WelcomeModal';
 import './modal-responsive.css';
 
 const SignupModal = () => {
   const { t } = useTranslation();
   const { isSignupModalOpen, closeSignupModal, switchToLogin } = useModal();
+  const { register, isLoading, error, clearError } = useAuth();
+  const { showSuccess } = useToast();
   
   // Form state management
   const [formData, setFormData] = useState({
-    username: '',
+    name: '',
     email: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   });
+  
+  // Local error state for form validation
+  const [formErrors, setFormErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState('');
+  
+  // Welcome modal state
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [welcomeUserName, setWelcomeUserName] = useState('');
 
   // Handle input changes
   const handleInputChange = (e) => {
@@ -21,12 +35,142 @@ const SignupModal = () => {
       ...prev,
       [name]: value
     }));
+    
+    // Clear field-specific errors when user starts typing
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+    
+    // Clear auth errors when user starts typing
+    if (error) {
+      clearError();
+    }
+    
+    // Clear success message when user starts typing
+    if (successMessage) {
+      setSuccessMessage('');
+    }
   };
 
-  // Handle form submission (frontend only for now)
-  const handleSubmit = (e) => {
+  // Validate form
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.name.trim()) {
+      errors.name = 'Name is required';
+    } else if (formData.name.trim().length < 2) {
+      errors.name = 'Name must be at least 2 characters';
+    }
+    
+    if (!formData.email) {
+      errors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = 'Email is invalid';
+    }
+    
+    if (!formData.password) {
+      errors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+    }
+    
+    if (!formData.confirmPassword) {
+      errors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+    
+    return errors;
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Sign-up form data:', formData);
+    
+    // Validate form
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    
+    // Clear any existing errors
+    setFormErrors({});
+    clearError();
+    setSuccessMessage('');
+    
+    // Prepare registration data
+    const nameParts = formData.name.trim().split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || nameParts[0] || 'User';
+    
+    const registrationData = {
+      firstName: firstName,
+      lastName: lastName,
+      email: formData.email,
+      password: formData.password,
+      role: 'customer' // Default role for customer app
+    };
+    
+    // Attempt registration
+    const result = await register(registrationData);
+    
+    if (result.success) {
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
+      });
+
+      if (result.autoLogin) {
+        // Close signup modal first
+        handleClose();
+        
+        // Show welcome modal with user's name
+        const firstName = formData.name.trim().split(' ')[0] || 'User';
+        setWelcomeUserName(firstName);
+        setShowWelcomeModal(true);
+        
+        // Show toast after a short delay (after welcome modal appears)
+        setTimeout(() => {
+          showSuccess(
+            'Account Created Successfully! 🎉',
+            `Welcome to GrubGate, ${firstName}! Start exploring delicious meals and planning your weekly menu.`,
+            { duration: 6000 }
+          );
+        }, 1000); // Show toast 1 second after welcome modal appears
+      } else {
+        // Fallback: show success message and switch to login modal
+        setSuccessMessage(result.message || 'Registration successful!');
+        setTimeout(() => {
+          switchToLogin();
+        }, 2000);
+      }
+    } else {
+      // Handle field-specific errors from backend
+      if (result.fieldErrors) {
+        const backendFieldErrors = {};
+        
+        // Map backend field names to frontend field names
+        Object.keys(result.fieldErrors).forEach(backendField => {
+          let frontendField = backendField;
+          
+          // Map backend fields to frontend fields
+          if (backendField === 'firstName' || backendField === 'lastName') {
+            frontendField = 'name'; // Both firstName and lastName errors show on name field
+          }
+          
+          backendFieldErrors[frontendField] = result.fieldErrors[backendField];
+        });
+        
+        setFormErrors(backendFieldErrors);
+      }
+    }
   };
 
   // Handle Google sign-up (placeholder for now)
@@ -38,12 +182,25 @@ const SignupModal = () => {
   const handleClose = () => {
     // 1. Reset the form state
     setFormData({
-      username: '',
+      name: '',
       email: '',
-      password: ''
+      password: '',
+      confirmPassword: ''
     });
-    // 2. Close the modal
+    // 2. Clear form errors
+    setFormErrors({});
+    // 3. Clear auth errors
+    clearError();
+    // 4. Clear success message
+    setSuccessMessage('');
+    // 5. Close the modal
     closeSignupModal();
+  };
+
+  // Handle welcome modal close
+  const handleWelcomeModalClose = () => {
+    setShowWelcomeModal(false);
+    setWelcomeUserName('');
   };
 
   // Handle ESC key to close modal with form reset
@@ -101,29 +258,49 @@ const SignupModal = () => {
 
           {/* Sign-Up Form */}
           <div className="px-6 pb-2">
+            {/* Success Message */}
+            {successMessage && (
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm text-green-600">{successMessage}</p>
+              </div>
+            )}
+            
+            {/* Global Error Message */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-3">
               
-              {/* Username Field */}
+              {/* Name Field */}
               <div>
-                <label htmlFor="username" className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('signup.usernameLabel')}
+                <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Full Name
                 </label>
                 <input
                   type="text"
-                  id="username"
-                  name="username"
-                  value={formData.username}
+                  id="name"
+                  name="name"
+                  value={formData.name}
                   onChange={handleInputChange}
-                  placeholder={t('signup.usernamePlaceholder')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 text-gray-900 placeholder-gray-500"
+                  placeholder="Enter your full name"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
+                    formErrors.name ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
                   required
+                  disabled={isLoading}
                 />
+                {formErrors.name && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.name}</p>
+                )}
               </div>
 
               {/* Email Field */}
               <div>
                 <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('signup.emailLabel')}
+                  Email Address
                 </label>
                 <input
                   type="email"
@@ -131,16 +308,22 @@ const SignupModal = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  placeholder={t('signup.emailPlaceholder')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 text-gray-900 placeholder-gray-500"
+                  placeholder="Enter your email address"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
+                    formErrors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
                   required
+                  disabled={isLoading}
                 />
+                {formErrors.email && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
+                )}
               </div>
 
               {/* Password Field */}
               <div>
                 <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('signup.passwordLabel')}
+                  Password
                 </label>
                 <input
                   type="password"
@@ -148,18 +331,62 @@ const SignupModal = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  placeholder={t('signup.passwordPlaceholder')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 text-gray-900 placeholder-gray-500"
+                  placeholder="Create a password (min. 6 characters)"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
+                    formErrors.password ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
                   required
+                  disabled={isLoading}
                 />
+                {formErrors.password && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.password}</p>
+                )}
+              </div>
+
+              {/* Confirm Password Field */}
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  placeholder="Confirm your password"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
+                    formErrors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
+                  required
+                  disabled={isLoading}
+                />
+                {formErrors.confirmPassword && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.confirmPassword}</p>
+                )}
               </div>
 
               {/* Sign Up Button */}
               <button
                 type="submit"
-                className="w-full bg-grub-red text-white py-2 px-4 rounded-lg font-semibold text-base hover:bg-red-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-transform"
+                disabled={isLoading}
+                className={`w-full py-2 px-4 rounded-lg font-semibold text-base transition-colors duration-200 shadow-lg ${
+                  isLoading
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-grub-red text-white hover:bg-red-700 hover:shadow-xl transform hover:-translate-y-0.5 transition-transform'
+                }`}
               >
-                {t('signup.button')}
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Creating account...
+                  </div>
+                ) : (
+                  'Create Account'
+                )}
               </button>
             </form>
           </div>
@@ -222,6 +449,13 @@ const SignupModal = () => {
           </div>
         </div>
       </div>
+      
+      {/* Welcome Modal */}
+      <WelcomeModal
+        isOpen={showWelcomeModal}
+        onClose={handleWelcomeModalClose}
+        userName={welcomeUserName}
+      />
     </div>
   );
 };

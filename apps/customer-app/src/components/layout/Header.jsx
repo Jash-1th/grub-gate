@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { navigation, siteInfo } from '../../data';
 import LanguageSwitcher from '../common/LanguageSwitcher';
 import { useResponsiveNavigation } from '../../hooks/useResponsiveNavigation';
+import { useAuth } from '../../contexts/AuthContext';
 import AuthButtons from './AuthButtons';
 import MobileMenu from './MobileMenu';
 import NavIcon from './NavIcon';
@@ -21,6 +22,7 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { t } = useTranslation();
   const { isMobile } = useResponsiveNavigation();
+  const { isAuthenticated, user } = useAuth();
 
   // Set mounted state on client side
   useEffect(() => {
@@ -101,8 +103,25 @@ const Header = () => {
             </div>
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden">
+          {/* Mobile User Greeting & Menu Button */}
+          <div className="md:hidden flex items-center space-x-3">
+            {/* Mobile User Greeting */}
+            {isAuthenticated && user && (
+              <div className="flex items-center space-x-2 max-w-[200px] sm:max-w-none">
+                <div className="w-8 h-8 bg-gradient-to-r from-grub-red to-red-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-sm font-semibold">
+                    {(user.firstName || user.name || user.email.split('@')[0]).charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-medium text-gray-900 truncate">
+                    Hi, {user.firstName || user.name || user.email.split('@')[0]}! 👋
+                  </span>
+                </div>
+              </div>
+            )}
+            
+            {/* Mobile Menu Button */}
             <button
               onClick={toggleMobileMenu}
               className="p-2 text-gray-700 hover:text-grub-red hover:bg-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-grub-red"

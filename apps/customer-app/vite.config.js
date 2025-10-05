@@ -32,8 +32,8 @@ export default ({ mode }) => {
       // HMR Configuration
       hmr: {
         port: 24678,
-        host: '0.0.0.0',
-        clientPort: undefined,
+        host: 'localhost',
+        clientPort: 24678,
         overlay: true,
         protocol: 'ws'
       },

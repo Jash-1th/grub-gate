@@ -6,6 +6,10 @@ import { applyPreferenceFilter } from '../utils/filteringHelpers';
 import { useMealPlan } from '../contexts/MealPlanContext';
 import { useToast } from '../contexts/ToastContext';
 import { usePlanning } from '../contexts/PlanningContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useModal } from '../context/ModalContext';
+import { getRestaurant, getRestaurantMenu } from '../services/restaurantService';
+import { navigateToWeeklyMenuWithRestaurant } from '../utils/navigation';
 
 // Import new components
 import RestaurantHero from '../components/restaurant/RestaurantHero';
@@ -47,7 +51,7 @@ const RestaurantDetailPage = () => {
   // State for meal type selection - initialize from context if available
   const [selectedMealType, setSelectedMealType] = useState(contextSlot || 'lunch'); // 'lunch' or 'dinner'
   
-  // State for preferences selection - initialize from context if available
+  // State for preferences selection - initialize from URL context if available
   const [selectedPreferences, setSelectedPreferences] = useState(
     contextPreferences ? contextPreferences.split(',') : []
   ); // array of preference IDs
@@ -71,23 +75,46 @@ const RestaurantDetailPage = () => {
   const { 
     addItemToPlan, 
     removeItemFromPlan, 
-    getMealItems, 
-    mealPlan, 
-    getTotalItemsCount, 
-    getRestaurantsInPlan, 
     clearAllPlan,
     // Week-specific functions
     addItemToPlanWeek,
     removeItemFromPlanWeek,
     getWeekMealItems,
-    getRestaurantsInWeekPlan
+    getRestaurantsInWeekPlan,
+    getWeekTotalItems,
+    getRestaurantsInAllWeeks,
+    clearWeek,
+    // Restaurant selection functions
+    setSelectedRestaurant,
+    clearSelectedRestaurant,
+    clearAllMealPlanData,
+    // Restaurant selection state
+    selectedRestaurantId: mealPlanSelectedRestaurantId,
+    selectedRestaurantName: mealPlanSelectedRestaurantName,
+    selectedRestaurantData: mealPlanSelectedRestaurantData
   } = useMealPlan();
   
   // Toast context
   const { showMealPlanSuccess, showError } = useToast();
   
-  // Planning context (only get postal code)
-  const { postalCode } = usePlanning();
+  // Planning context (get postal code, preferences, and restaurant selection)
+  const { postalCode, selectedPreferences: planningPreferences, updateSelectedRestaurant } = usePlanning();
+
+  // Auth context
+  const { isAuthenticated, user } = useAuth();
+  
+  // Debug: Log restaurant data when it changes
+  useEffect(() => {
+    console.log('🔍 RestaurantDetailPage - Restaurant data changed:');
+    console.log('🔍 selectedRestaurantId:', mealPlanSelectedRestaurantId);
+    console.log('🔍 selectedRestaurantName:', mealPlanSelectedRestaurantName);
+    console.log('🔍 selectedRestaurantData:', mealPlanSelectedRestaurantData);
+    console.log('🔍 Type of restaurant ID:', typeof mealPlanSelectedRestaurantId);
+    console.log('🔍 Type of restaurant name:', typeof mealPlanSelectedRestaurantName);
+  }, [mealPlanSelectedRestaurantId, mealPlanSelectedRestaurantName, mealPlanSelectedRestaurantData]);
+
+  // Modal context
+  const { openLoginModal } = useModal();
 
   // State for user type selection (show modal on first visit)
   const [showUserTypeModal, setShowUserTypeModal] = useState(false); // Disabled modal
@@ -98,29 +125,107 @@ const RestaurantDetailPage = () => {
   const [pendingItem, setPendingItem] = useState(null);
   const [switchModalData, setSwitchModalData] = useState(null);
 
-  // Get restaurant data from unified source
-  const restaurant = useMemo(() => {
-    return unifiedRestaurants.find(r => r.id === parseInt(id));
-  }, [id]);
+  // State for API data
+  const [restaurant, setRestaurant] = useState(null);
+  const [menuItems, setMenuItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Load restaurant and menu data from API
+  useEffect(() => {
+    const loadRestaurantData = async () => {
+      if (!id) return;
+      
+      setLoading(true);
+      setError(null);
+      
+      try {
+        // Try API first
+        const menuParams = { userType };
+        
+        // If we have day and mealType from URL (for "add more items"), include them
+        if (contextDay && contextSlot) {
+          menuParams.day = contextDay;
+          menuParams.mealType = contextSlot;
+        }
+        
+        const [restaurantResult, menuResult] = await Promise.all([
+          getRestaurant(id),
+          getRestaurantMenu(id, menuParams)
+        ]);
+        
+        if (restaurantResult.success && menuResult.success) {
+          setRestaurant(restaurantResult.data);
+          setMenuItems(menuResult.data.menuItems || []);
+          
+          // Update planning context with this restaurant (for UI state only)
+          updateSelectedRestaurant(restaurantResult.data);
+          
+          // NOTE: We don't automatically save to database here
+          // Restaurant selection is only saved when user clicks "Select This Restaurant"
+        } else {
+          // No static fallback - API must work for proper functionality
+          setError('Restaurant not found. Please check your connection and try again.');
+        }
+      } catch (err) {
+        // No static fallback - API must work for proper functionality
+        console.error('RestaurantDetailPage: API error:', err);
+        setError('Failed to load restaurant data. Please check your connection and try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadRestaurantData();
+  }, [id, userType]);
+
+  // Sync local preferences with planning preferences when they change
+  useEffect(() => {
+    // Only sync if no URL preferences and we have planning preferences
+    if (!contextPreferences && planningPreferences && planningPreferences.length > 0) {
+      setSelectedPreferences(planningPreferences);
+    }
+  }, [planningPreferences, contextPreferences]);
 
   // Get all food items for this restaurant
   const allFoodItems = useMemo(() => {
-    if (!restaurant || !restaurant.foodItems) return { lunch: [], dinner: [] };
     
-    // Filter items based on availability for the active day
-    const lunchItems = restaurant.foodItems.filter(item => 
-      item.availability[activeDay]?.lunch
-    );
-    const dinnerItems = restaurant.foodItems.filter(item => 
-      item.availability[activeDay]?.dinner
-    );
+    if (!menuItems || menuItems.length === 0) {
+      return { lunch: [], dinner: [] };
+    }
     
-    return { lunch: lunchItems, dinner: dinnerItems };
-  }, [restaurant, activeDay]);
+    // Apply preference filtering to all menu items first
+    const preferenceFilteredItems = applyPreferenceFilter(menuItems, selectedPreferences);
+    
+    // Debug logging for preference filtering (can be removed in production)
+    if (selectedPreferences.length > 0) {
+      console.log('🔍 RestaurantDetailPage: Filtering', menuItems.length, 'items by preferences:', selectedPreferences);
+      console.log('🔍 RestaurantDetailPage: Showing', preferenceFilteredItems.length, 'filtered items');
+    }
+    
+    if (userType === 'normal') {
+      // For normal users: Backend already filtered for always-available items
+      // Show preference-filtered items for both lunch and dinner since they're available every day/meal
+      return { 
+        lunch: preferenceFilteredItems, 
+        dinner: preferenceFilteredItems 
+      };
+    } else {
+      // For pro users: Filter preference-filtered items based on availability for the active day
+      const lunchItems = preferenceFilteredItems.filter(item => {
+        return item.availability && item.availability[activeDay]?.lunch;
+      });
+      const dinnerItems = preferenceFilteredItems.filter(item => {
+        return item.availability && item.availability[activeDay]?.dinner;
+      });
+      
+      return { lunch: lunchItems, dinner: dinnerItems };
+    }
+  }, [menuItems, activeDay, userType, selectedPreferences]);
 
   // Organize items by day and meal type based on user type
   const weeklyMenuData = useMemo(() => {
-    if (!restaurant || !restaurant.foodItems) return {};
+    if (!menuItems || menuItems.length === 0) return {};
     
     const weekData = {};
     
@@ -132,33 +237,26 @@ const RestaurantDetailPage = () => {
     });
 
     if (userType === 'normal') {
-      // For normal users: Show all items that are available for the selected day/meal
-      const filteredItems = applyPreferenceFilter(restaurant.foodItems, selectedPreferences);
+      // For normal users: Backend already filtered for always-available items
+      // Show all items for every day since they're available every day/meal
+      const filteredItems = applyPreferenceFilter(menuItems, selectedPreferences);
       
       DAYS_OF_WEEK.forEach(day => {
-        // Filter items based on their availability for this specific day
-        const lunchItems = filteredItems.filter(item => 
-          item.availability[day.id]?.lunch
-        );
-        const dinnerItems = filteredItems.filter(item => 
-          item.availability[day.id]?.dinner
-        );
-        
         weekData[day.id] = {
-          lunch: lunchItems,
-          dinner: dinnerItems
+          lunch: filteredItems,  // All always-available items for lunch
+          dinner: filteredItems  // All always-available items for dinner
         };
       });
     } else {
       // For pro users: Same logic but with more detailed availability checking
-      const filteredItems = applyPreferenceFilter(restaurant.foodItems, selectedPreferences);
+      const filteredItems = applyPreferenceFilter(menuItems, selectedPreferences);
       
       DAYS_OF_WEEK.forEach(day => {
         const lunchItems = filteredItems.filter(item => 
-          item.availability[day.id]?.lunch
+          item.availability && item.availability[day.id]?.lunch
         );
         const dinnerItems = filteredItems.filter(item => 
-          item.availability[day.id]?.dinner
+          item.availability && item.availability[day.id]?.dinner
         );
         
         weekData[day.id] = {
@@ -169,24 +267,30 @@ const RestaurantDetailPage = () => {
     }
 
     return weekData;
-  }, [restaurant, userType, selectedPreferences]);
+  }, [menuItems, userType, selectedPreferences]);
 
   // Handle add to plan for weekly builder
-  const handleAddToPlan = (item, day, mealType) => {
+  const handleAddToPlan = async (item, day, mealType) => {
+    // Check authentication first
+    if (!isAuthenticated) {
+      // Store current page URL for redirect after login
+      const currentUrl = window.location.pathname + window.location.search;
+      localStorage.setItem('redirectAfterLogin', currentUrl);
+      
+      // Show login modal
+      openLoginModal();
+      showError('Please log in to add items to your meal plan');
+      return;
+    }
+
     // For pro users, add directly using current day/meal selection (week-aware)
     if (userType === 'pro') {
-      const result = addItemToPlanWeek(item, day, mealType, restaurant.name, contextWeek, userType);
+      const result = await addItemToPlanWeek(item, day, mealType, restaurant.name, contextWeek, userType, false, restaurant.id);
       if (result.success) {
         showMealPlanSuccess(item.name, day, mealType, restaurant.name, item.price);
-      } else if (result.error === 'RESTAURANT_SWITCH_CONFIRMATION') {
-        // Show confirmation modal for restaurant switch
-        setPendingItem({ item, day, mealType });
-        setSwitchModalData({
-          existingRestaurant: result.existingRestaurant,
-          newRestaurant: result.newRestaurant,
-          itemCount: getTotalItemsCount()
-        });
-        setShowRestaurantSwitchModal(true);
+      } else if (result.error === 'AUTHENTICATION_REQUIRED') {
+        openLoginModal();
+        showError(result.message);
       }
     }
     // For normal users, this function won't be called directly from cards
@@ -194,9 +298,9 @@ const RestaurantDetailPage = () => {
   };
 
   // Handle final add to plan from day/meal selector
-  const handleConfirmAddToPlan = () => {
+  const handleConfirmAddToPlan = async () => {
     if (selectedItem) {
-      const result = addItemToPlanWeek(selectedItem, activeDay, selectedMealType, restaurant.name, contextWeek, userType);
+      const result = await addItemToPlanWeek(selectedItem, activeDay, selectedMealType, restaurant.name, contextWeek, userType, false, restaurant.id);
       if (result.success) {
         showMealPlanSuccess(selectedItem.name, activeDay, selectedMealType, restaurant.name, selectedItem.price);
         setShowDayMealSelector(false);
@@ -212,8 +316,9 @@ const RestaurantDetailPage = () => {
         });
         setShowRestaurantSwitchModal(true);
         setShowDayMealSelector(false); // Close the day/meal selector
-      } else if (result.error === 'RESTAURANT_LIMIT_EXCEEDED') {
-        showError('Restaurant Limit Reached', result.message, { duration: 8000 });
+      } else if (result.error === 'AUTHENTICATION_REQUIRED') {
+        openLoginModal();
+        showError(result.message);
       }
     }
   };
@@ -251,9 +356,9 @@ const RestaurantDetailPage = () => {
   };
 
   // Handle add to plan from item details
-  const handleAddToPlanFromDetails = (item) => {
+  const handleAddToPlanFromDetails = async (item) => {
     // Add item directly to plan with selected day and meal (week-aware)
-    const result = addItemToPlanWeek(item, activeDay, selectedMealType, restaurant.name, contextWeek, userType);
+    const result = await addItemToPlanWeek(item, activeDay, selectedMealType, restaurant.name, contextWeek, userType, false, restaurant.id);
     
     if (result.success) {
       showMealPlanSuccess(item.name, activeDay, selectedMealType, restaurant.name, item.price);
@@ -272,37 +377,60 @@ const RestaurantDetailPage = () => {
           itemCount: getTotalItemsCount()
         });
         setShowRestaurantSwitchModal(true);
-      } else if (result.error === 'RESTAURANT_LIMIT_EXCEEDED') {
-        // Show error toast for other restrictions
-        showError('Restaurant Limit Reached', result.message, { duration: 8000 });
+      } else if (result.error === 'AUTHENTICATION_REQUIRED') {
+        // Store current page URL for redirect after login
+        const currentUrl = window.location.pathname + window.location.search;
+        localStorage.setItem('redirectAfterLogin', currentUrl);
+        
+        // Show login modal
+        openLoginModal();
+        showError(result.message);
       }
     }
   };
 
+  // Helper function to get total items count across all weeks
+  const getTotalItemsCount = () => {
+    return getWeekTotalItems(0) + getWeekTotalItems(1);
+  };
+
   // Handle restaurant switch confirmation
-  const handleConfirmRestaurantSwitch = () => {
+  const handleConfirmRestaurantSwitch = async () => {
     if (pendingItem) {
       if (pendingItem.action === 'SELECT_RESTAURANT') {
-        // Clear meal plan and navigate to weekly menu with new restaurant
-        clearAllPlan();
+        // Handle restaurant selection - clear all meal plan data and navigate
+        console.log('🔄 Confirming restaurant switch to:', pendingItem.restaurantName);
         
-        // Navigate to weekly menu with selected restaurant
-        navigate(`/weekly-menu?restaurantId=${pendingItem.restaurantId}&restaurantName=${encodeURIComponent(pendingItem.restaurantName || '')}`);
+        // Clear all meal plan data and restaurant selection (with immediate database save)
+        clearAllMealPlanData();
         
-        // Close modal and clear data
+        // Save new restaurant selection to database
+        setSelectedRestaurant(pendingItem.restaurantId, pendingItem.restaurantName, restaurant);
+        
+        // Close modal
         setShowRestaurantSwitchModal(false);
-        setPendingItem(null);
         setSwitchModalData(null);
+        setPendingItem(null);
+        
+        // Navigate to weekly menu (database will show selected restaurant)
+        const navigationUrl = `/weekly-menu?week=${pendingItem.week}`;
+        console.log('🔄 Navigating to:', navigationUrl);
+        navigate(navigationUrl);
+        
+        // Show success message
+        showMealPlanSuccess('Restaurant switched successfully!', '', '', pendingItem.restaurantName, 0);
+        
       } else {
-        // Add item with force replace flag (week-aware)
-        const result = addItemToPlanWeek(
+        // Handle item addition with force replace flag (week-aware)
+        const result = await addItemToPlanWeek(
           pendingItem.item, 
           pendingItem.day, 
           pendingItem.mealType, 
           restaurant.name, 
           contextWeek,
           userType, 
-          true // forceReplace = true
+          true, // forceReplace = true
+          restaurant.id // restaurantId
         );
         
         if (result.success) {
@@ -329,33 +457,90 @@ const RestaurantDetailPage = () => {
 
   // Handle "Select This Restaurant" button click
   const handleSelectRestaurant = () => {
+    console.log('🔄 handleSelectRestaurant called');
+    console.log('🔄 Restaurant data:', restaurant);
+    console.log('🔄 Restaurant ID from URL params:', id);
+    console.log('🔄 Restaurant ID from restaurant object:', restaurant?.id);
+    console.log('🔄 User type:', userType);
+    console.log('🔄 Context week:', contextWeek);
+    
+    // Use the ID from URL params if restaurant.id is not available
+    const restaurantId = restaurant?.id || id;
+    const restaurantName = restaurant?.name || 'Unknown Restaurant';
+    
+    console.log('🔄 Using restaurantId:', restaurantId);
+    console.log('🔄 Using restaurantName:', restaurantName);
+    console.log('🔄 User type check:', userType, 'typeof:', typeof userType);
+    
+    // Determine user type from auth context (like WeeklyMenuPage does)
+    const actualUserType = user?.userType || 'normal';
+    console.log('🔄 Actual user type from auth:', actualUserType);
+    console.log('🔄 State userType (from URL):', userType);
+    
     // Pro users can always navigate directly - no restrictions
-    if (userType === 'pro') {
-      navigate(`/weekly-menu?restaurantId=${restaurant?.id}&restaurantName=${encodeURIComponent(restaurant?.name || '')}&week=${contextWeek}`);
+    if (actualUserType === 'pro') {
+      console.log('🔄 Pro user detected - navigating directly');
+      navigateToWeeklyMenuWithRestaurant(navigate, setSelectedRestaurant, restaurantId, restaurantName, restaurant, contextWeek);
       return;
     }
     
-    // For normal users, check for restaurant conflicts (week-aware)
-    const currentRestaurants = getRestaurantsInWeekPlan(contextWeek);
+    console.log('🔄 Normal user detected - continuing with conflict checking...');
     
-    // If no restaurants in plan, or this restaurant is already selected, navigate directly
-    if (currentRestaurants.length === 0 || currentRestaurants.includes(restaurant.name)) {
-      navigate(`/weekly-menu?restaurantId=${restaurant?.id}&restaurantName=${encodeURIComponent(restaurant?.name || '')}&week=${contextWeek}`);
+    // For normal users, check for existing selected restaurant in database
+    console.log('🔍 Checking existing selected restaurant...');
+    console.log('🔍 Current selectedRestaurantId:', mealPlanSelectedRestaurantId);
+    console.log('🔍 Current selectedRestaurantName:', mealPlanSelectedRestaurantName);
+    console.log('🔍 Current restaurantId (from URL/data):', restaurantId);
+    console.log('🔍 Current restaurantName (from data):', restaurantName);
+    console.log('🔍 Restaurant ID comparison:', mealPlanSelectedRestaurantId, '===', restaurantId, '?', mealPlanSelectedRestaurantId === restaurantId);
+    console.log('🔍 Restaurant Name comparison:', mealPlanSelectedRestaurantName, '===', restaurantName, '?', mealPlanSelectedRestaurantName === restaurantName);
+    
+    // If no restaurant selected yet, save selection and navigate directly
+    if (!mealPlanSelectedRestaurantId && !mealPlanSelectedRestaurantName) {
+      console.log('✅ No restaurant selected yet, saving selection and navigating directly');
+      navigateToWeeklyMenuWithRestaurant(navigate, setSelectedRestaurant, restaurantId, restaurantName, restaurant, contextWeek);
       return;
     }
     
-    // If there are items from a different restaurant, show confirmation modal (normal users only)
+    // If same restaurant is selected, navigate directly (no data loss)
+    // Convert both IDs to strings for comparison (in case one is ObjectId and other is string)
+    const selectedIdStr = String(mealPlanSelectedRestaurantId);
+    const currentIdStr = String(restaurantId);
+    
+    if (selectedIdStr === currentIdStr || mealPlanSelectedRestaurantName === restaurantName) {
+      console.log('✅ Same restaurant selected, navigating directly');
+      console.log('✅ ID match:', selectedIdStr === currentIdStr, 'Name match:', mealPlanSelectedRestaurantName === restaurantName);
+      navigateToWeeklyMenuWithRestaurant(navigate, setSelectedRestaurant, restaurantId, restaurantName, restaurant, contextWeek);
+      return;
+    }
+    
+    // Different restaurant selected - show confirmation modal
+    console.log('🚨 Different restaurant detected, showing confirmation modal');
+    const totalItemsWeek0 = getWeekTotalItems(0);
+    const totalItemsWeek1 = getWeekTotalItems(1);
+    const totalItems = totalItemsWeek0 + totalItemsWeek1;
+    
+    console.log('🚨 Total items across weeks:', totalItems);
+    console.log('🚨 Setting modal data...');
+    
     setSwitchModalData({
-      existingRestaurant: currentRestaurants[0],
-      newRestaurant: restaurant.name,
-      itemCount: getTotalItemsCount()
+      existingRestaurant: mealPlanSelectedRestaurantName,
+      newRestaurant: restaurantName,
+      itemCount: totalItems
     });
-    setPendingItem({ 
+    
+    // Store the pending restaurant selection
+    console.log('🚨 Setting pending item...');
+    setPendingItem({
       action: 'SELECT_RESTAURANT',
-      restaurantId: restaurant?.id,
-      restaurantName: restaurant?.name
+      restaurantId: restaurantId,
+      restaurantName: restaurantName,
+      week: contextWeek
     });
+    
+    console.log('🚨 Setting modal to show...');
     setShowRestaurantSwitchModal(true);
+    console.log('🚨 Modal should now be visible!');
   };
 
   // Handle user type selection
@@ -459,26 +644,41 @@ const RestaurantDetailPage = () => {
     if (element) {
       const elementRect = element.getBoundingClientRect();
       const absoluteElementTop = elementRect.top + window.pageYOffset;
-      const offset = 150;
-      
-      window.scrollTo({
-        top: absoluteElementTop - offset,
-        behavior: 'smooth'
-      });
+      const middle = absoluteElementTop - (window.innerHeight / 2);
+      window.scrollTo({ top: middle, behavior: 'smooth' });
     }
   };
 
-  // Restaurant not found
-  if (!restaurant) {
+  // Show loading state
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Restaurant Not Found</h1>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-grub-red mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading Restaurant</h2>
+          <p className="text-gray-600">Please wait while we fetch the menu...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Unable to Load Restaurant</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={() => navigate('/plan')}
-            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-300"
+            className="bg-grub-red text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors duration-200"
           >
-            Back to Restaurants
+            Back to Planning
           </button>
         </div>
       </div>
@@ -486,8 +686,7 @@ const RestaurantDetailPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
+        <div className="min-h-screen bg-gray-50">
       <RestaurantHero 
         restaurant={restaurant}
         pageTitle={getPageTitle()}
@@ -547,19 +746,13 @@ const RestaurantDetailPage = () => {
               )}
 
               {/* Menu Items Grid */}
-              {hasSelectedUserType && (
-                <MenuItemsGrid 
-                  items={restaurant?.foodItems?.filter(item => {
-                    // First check availability for the selected day and meal type
-                    const isAvailable = item.availability?.[activeDay]?.[selectedMealType];
-                    if (!isAvailable) return false;
-                    
-                    // Then check preferences
-                    if (selectedPreferences.length === 0) return true;
-                    return selectedPreferences.some(pref => 
-                      item.dietaryPreferences?.includes(pref)
-                    );
-                  }) || []}
+              {hasSelectedUserType && (() => {
+                console.log('🍽️ Normal User MenuItemsGrid - selectedMealType:', selectedMealType);
+                console.log('🍽️ Normal User MenuItemsGrid - allFoodItems:', allFoodItems);
+                console.log('🍽️ Normal User MenuItemsGrid - items being passed:', allFoodItems[selectedMealType]);
+                return (
+                  <MenuItemsGrid 
+                    items={allFoodItems[selectedMealType] || []}
                   userType={userType}
                   selectedDay={activeDay}
                   selectedMealType={selectedMealType}
@@ -570,11 +763,12 @@ const RestaurantDetailPage = () => {
                   getItemPlanEntries={getItemPlanEntries}
                   title="Menu Items"
                   subtitle={isMealPlanningEnabled ? "Click any item to add to your plan" : "Browse our delicious menu items"}
-                  emptyStateMessage="No menu items available"
-                  isFromMenuSelection={isFromMenuSelection}
-                  isMealPlanningEnabled={isMealPlanningEnabled}
-                />
-              )}
+                    emptyStateMessage="No menu items available"
+                    isFromMenuSelection={isFromMenuSelection}
+                    isMealPlanningEnabled={isMealPlanningEnabled}
+                  />
+                );
+              })()}
           </div>
         </div>
         </div>
@@ -633,7 +827,7 @@ const RestaurantDetailPage = () => {
       {!isMealPlanningEnabled && (
         <div className="fixed bottom-20 sm:bottom-6 left-1/2 transform -translate-x-1/2 z-50">
           <button
-            onClick={contextSource === 'menu-browse' ? () => navigate(`/weekly-menu?restaurantId=${restaurant?.id}&restaurantName=${encodeURIComponent(restaurant?.name || '')}`) : handleSelectRestaurant}
+            onClick={contextSource === 'menu-browse' ? () => navigate(`/weekly-menu`) : handleSelectRestaurant}
             className="bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-4 px-8 rounded-xl shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 flex items-center space-x-3 whitespace-nowrap"
           >
             <span>{contextSource === 'menu-browse' ? 'Back to Weekly Menu' : 'Select This Restaurant'}</span>
@@ -657,7 +851,7 @@ const RestaurantDetailPage = () => {
           
           {/* Back to Weekly Planning Button */}
           <NextStepButton 
-            destination={`/weekly-menu?restaurantId=${restaurant?.id}&restaurantName=${encodeURIComponent(restaurant?.name || '')}`}
+            destination={`/weekly-menu`}
             buttonText="Back to Weekly Planning"
             className="shadow-xl"
           />
@@ -679,7 +873,10 @@ const RestaurantDetailPage = () => {
         isMealPlanningEnabled={isMealPlanningEnabled}
       />
 
+
       {/* Restaurant Switch Confirmation Modal */}
+      {console.log('🔍 RestaurantDetailPage Modal render - showRestaurantSwitchModal:', showRestaurantSwitchModal)}
+      {console.log('🔍 RestaurantDetailPage Modal render - switchModalData:', switchModalData)}
       <RestaurantSwitchModal
         isOpen={showRestaurantSwitchModal}
         onClose={handleCancelRestaurantSwitch}
@@ -696,7 +893,7 @@ const RestaurantDetailPage = () => {
         onConfirm={handleUserTypeSelection}
         restaurantName={restaurant?.name || 'this restaurant'}
       /> */}
-    </div>
+      </div>
   );
 };
 

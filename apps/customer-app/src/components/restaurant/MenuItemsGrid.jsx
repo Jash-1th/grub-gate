@@ -74,13 +74,13 @@ const MenuItemsGrid = ({
         {items.map((item) => (
           <div 
             key={`${item.id}-${selectedMealType}`} 
-            className="relative cursor-pointer h-full" 
-            onClick={() => onItemClick(item)}
+            className="relative h-full"
           >
             <FoodItemCard
               item={item}
               onAddToPlan={() => onItemClick(item)}
               onRemoveFromPlan={onRemoveFromPlan}
+              onItemClick={onItemClick}
               selectedDay={selectedDay}
               selectedMealType={selectedMealType}
               restaurantName={restaurantName}

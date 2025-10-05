@@ -1,0 +1,385 @@
+// FILE: src/models/Order.js
+const mongoose = require('mongoose');
+
+const orderItemSchema = new mongoose.Schema({
+  menuItemId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'MenuItem',
+    required: true
+  },
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  price: {
+    type: Number,
+    required: true,
+    min: [0, 'Price cannot be negative']
+  },
+  quantity: {
+    type: Number,
+    required: true,
+    min: [1, 'Quantity must be at least 1']
+  },
+  specialInstructions: {
+    type: String,
+    trim: true,
+    maxlength: [200, 'Special instructions cannot exceed 200 characters']
+  }
+}, { _id: false });
+
+const deliveryAddressSchema = new mongoose.Schema({
+  street: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  city: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  province: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  postalCode: {
+    type: String,
+    required: true,
+    trim: true,
+    uppercase: true
+  },
+  instructions: {
+    type: String,
+    trim: true,
+    maxlength: [200, 'Delivery instructions cannot exceed 200 characters']
+  }
+}, { _id: false });
+
+const orderSchema = new mongoose.Schema({
+  orderNumber: {
+    type: String,
+    unique: true,
+    required: true
+  },
+  customerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'Customer ID is required']
+  },
+  restaurantId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Restaurant',
+    required: [true, 'Restaurant ID is required']
+  },
+  type: {
+    type: String,
+    enum: ['single', 'weekly-plan'],
+    required: true,
+    default: 'single'
+  },
+  items: [orderItemSchema],
+  subtotal: {
+    type: Number,
+    required: true,
+    min: [0, 'Subtotal cannot be negative']
+  },
+  deliveryFee: {
+    type: Number,
+    required: true,
+    min: [0, 'Delivery fee cannot be negative']
+  },
+  tax: {
+    type: Number,
+    required: true,
+    min: [0, 'Tax cannot be negative']
+  },
+  total: {
+    type: Number,
+    required: true,
+    min: [0, 'Total cannot be negative']
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'confirmed', 'preparing', 'ready', 'out-for-delivery', 'delivered', 'cancelled'],
+    default: 'pending'
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'paid', 'failed', 'refunded'],
+    default: 'pending'
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['card', 'cash', 'digital-wallet'],
+    default: 'card'
+  },
+  paymentIntentId: {
+    type: String,
+    trim: true
+  },
+  deliveryAddress: deliveryAddressSchema,
+  deliveryTime: {
+    requested: Date,
+    estimated: Date,
+    actual: Date
+  },
+  mealType: {
+    type: String,
+    enum: ['lunch', 'dinner'],
+    required: function() {
+      return this.type === 'weekly-plan';
+    }
+  },
+  specialInstructions: {
+    type: String,
+    trim: true,
+    maxlength: [500, 'Special instructions cannot exceed 500 characters']
+  },
+  notes: {
+    type: String,
+    trim: true,
+    maxlength: [500, 'Notes cannot exceed 500 characters']
+  },
+  weeklyPlanId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'WeeklyPlan',
+    required: function() {
+      return this.type === 'weekly-plan';
+    }
+  },
+  cancelReason: {
+    type: String,
+    trim: true
+  },
+  cancelledAt: Date,
+  estimatedDeliveryTime: {
+    type: Number, // in minutes
+    min: [10, 'Estimated delivery time must be at least 10 minutes']
+  }
+}, {
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Virtual for formatted order number
+orderSchema.virtual('formattedOrderNumber').get(function() {
+  return `#${this.orderNumber}`;
+});
+
+// Virtual for total items count
+orderSchema.virtual('totalItems').get(function() {
+  return this.items.reduce((total, item) => total + item.quantity, 0);
+});
+
+// Virtual for delivery status
+orderSchema.virtual('deliveryStatus').get(function() {
+  switch (this.status) {
+    case 'pending':
+    case 'confirmed':
+      return 'Order received';
+    case 'preparing':
+      return 'Being prepared';
+    case 'ready':
+      return 'Ready for pickup';
+    case 'out-for-delivery':
+      return 'Out for delivery';
+    case 'delivered':
+      return 'Delivered';
+    case 'cancelled':
+      return 'Cancelled';
+    default:
+      return 'Unknown';
+  }
+});
+
+// Virtual for can be cancelled
+orderSchema.virtual('canBeCancelled').get(function() {
+  return ['pending', 'confirmed'].includes(this.status);
+});
+
+// Indexes for performance
+orderSchema.index({ customerId: 1, createdAt: -1 });
+orderSchema.index({ restaurantId: 1, createdAt: -1 });
+orderSchema.index({ orderNumber: 1 });
+orderSchema.index({ status: 1 });
+orderSchema.index({ paymentStatus: 1 });
+orderSchema.index({ weeklyPlanId: 1 });
+orderSchema.index({ type: 1, status: 1 });
+
+// Pre-save middleware to generate order number
+orderSchema.pre('save', async function(next) {
+  if (this.isNew && !this.orderNumber) {
+    const count = await this.constructor.countDocuments();
+    const date = new Date();
+    const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
+    this.orderNumber = `GG${dateStr}${String(count + 1).padStart(4, '0')}`;
+  }
+  next();
+});
+
+// Pre-save middleware to calculate estimated delivery time
+orderSchema.pre('save', async function(next) {
+  if (this.isNew || this.isModified('restaurantId')) {
+    try {
+      const Restaurant = mongoose.model('Restaurant');
+      const restaurant = await Restaurant.findById(this.restaurantId);
+      if (restaurant) {
+        this.estimatedDeliveryTime = restaurant.deliverySettings.avgDeliveryTime;
+        
+        // Set estimated delivery time if not already set
+        if (!this.deliveryTime.estimated) {
+          this.deliveryTime.estimated = new Date(Date.now() + this.estimatedDeliveryTime * 60000);
+        }
+      }
+    } catch (error) {
+      console.error('Error calculating estimated delivery time:', error);
+    }
+  }
+  next();
+});
+
+// Instance method to calculate totals
+orderSchema.methods.calculateTotals = function(deliveryFee = 0, taxRate = 0.13) {
+  this.subtotal = this.items.reduce((total, item) => total + (item.price * item.quantity), 0);
+  this.deliveryFee = deliveryFee;
+  this.tax = Math.round((this.subtotal + this.deliveryFee) * taxRate * 100) / 100;
+  this.total = Math.round((this.subtotal + this.deliveryFee + this.tax) * 100) / 100;
+  return this;
+};
+
+// Instance method to update status
+orderSchema.methods.updateStatus = function(newStatus, notes = '') {
+  const validTransitions = {
+    'pending': ['confirmed', 'cancelled'],
+    'confirmed': ['preparing', 'cancelled'],
+    'preparing': ['ready', 'cancelled'],
+    'ready': ['out-for-delivery', 'delivered'],
+    'out-for-delivery': ['delivered'],
+    'delivered': [],
+    'cancelled': []
+  };
+
+  if (!validTransitions[this.status].includes(newStatus)) {
+    throw new Error(`Cannot transition from ${this.status} to ${newStatus}`);
+  }
+
+  this.status = newStatus;
+  
+  if (newStatus === 'cancelled') {
+    this.cancelledAt = new Date();
+    this.cancelReason = notes;
+  }
+  
+  if (newStatus === 'delivered') {
+    this.deliveryTime.actual = new Date();
+  }
+
+  return this.save();
+};
+
+// Instance method to cancel order
+orderSchema.methods.cancel = function(reason = 'Cancelled by customer') {
+  if (!this.canBeCancelled) {
+    throw new Error('Order cannot be cancelled at this stage');
+  }
+  
+  return this.updateStatus('cancelled', reason);
+};
+
+// Instance method to add item
+orderSchema.methods.addItem = function(menuItem, quantity = 1, specialInstructions = '') {
+  const existingItemIndex = this.items.findIndex(
+    item => item.menuItemId.toString() === menuItem._id.toString()
+  );
+
+  if (existingItemIndex > -1) {
+    this.items[existingItemIndex].quantity += quantity;
+  } else {
+    this.items.push({
+      menuItemId: menuItem._id,
+      name: menuItem.name,
+      price: menuItem.price,
+      quantity,
+      specialInstructions
+    });
+  }
+
+  return this;
+};
+
+// Instance method to remove item
+orderSchema.methods.removeItem = function(menuItemId) {
+  this.items = this.items.filter(
+    item => item.menuItemId.toString() !== menuItemId.toString()
+  );
+  return this;
+};
+
+// Static method to get orders by date range
+orderSchema.statics.getOrdersByDateRange = function(startDate, endDate, restaurantId = null) {
+  const query = {
+    createdAt: {
+      $gte: startDate,
+      $lte: endDate
+    }
+  };
+  
+  if (restaurantId) {
+    query.restaurantId = restaurantId;
+  }
+  
+  return this.find(query).sort({ createdAt: -1 });
+};
+
+// Static method to get revenue stats
+orderSchema.statics.getRevenueStats = function(restaurantId, startDate, endDate) {
+  const matchQuery = {
+    restaurantId: mongoose.Types.ObjectId(restaurantId),
+    paymentStatus: 'paid',
+    createdAt: {
+      $gte: startDate,
+      $lte: endDate
+    }
+  };
+
+  return this.aggregate([
+    { $match: matchQuery },
+    {
+      $group: {
+        _id: null,
+        totalRevenue: { $sum: '$total' },
+        totalOrders: { $sum: 1 },
+        averageOrderValue: { $avg: '$total' }
+      }
+    }
+  ]);
+};
+
+// Static method to get popular items
+orderSchema.statics.getPopularItems = function(restaurantId, limit = 10) {
+  return this.aggregate([
+    {
+      $match: {
+        restaurantId: mongoose.Types.ObjectId(restaurantId),
+        status: { $ne: 'cancelled' }
+      }
+    },
+    { $unwind: '$items' },
+    {
+      $group: {
+        _id: '$items.menuItemId',
+        name: { $first: '$items.name' },
+        totalQuantity: { $sum: '$items.quantity' },
+        totalRevenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } }
+      }
+    },
+    { $sort: { totalQuantity: -1 } },
+    { $limit: limit }
+  ]);
+};
+
+module.exports = mongoose.model('Order', orderSchema);

@@ -603,3 +603,74 @@ To demonstrate the functionality, please refactor the following:
  left to the login button add another button with runded border radius which is switch for en and french
 
 Please generate all the necessary code, including the new files, component, and modifications to existing files, while strictly adhering to the SSR-safe best practices for react-i18next.
+
+grub-gate/
+├── 📄 package.json                     # Monorepo workspace config
+├── 📄 package-lock.json               # Dependencies lock
+├── 📄 .gitignore                      # Git ignore rules
+├── 📄 .nvmrc                          # Node version (v18+)
+├── 📄 NETLIFY_DEPLOYMENT_GUIDE.md     # Deployment docs
+├── 📄 prompt.txt                      # Project documentation
+├── 📁 node_modules/                   # Root dependencies
+│
+├── 📁 apps/                           # Applications workspace
+│   ├── 📁 customer-app/               # Public React app (SSR)
+│   │   ├── 📄 package.json            # App dependencies
+│   │   ├── 📄 vite.config.js          # Vite build config
+│   │   ├── 📄 vite.config.ssr.js      # SSR config
+│   │   ├── 📄 server.js               # Express SSR server
+│   │   ├── 📄 tailwind.config.js      # Tailwind config
+│   │   ├── 📄 netlify.toml            # Netlify deployment
+│   │   ├── 📄 index.html              # HTML template
+│   │   ├── 📁 public/                 # Static assets (8 items)
+│   │   ├── 📁 netlify/                # Netlify functions
+│   │   └── 📁 src/                    # Source code (114 items)
+│   │       ├── 📄 App.jsx             # Main app component
+│   │       ├── 📄 main.jsx            # Client entry point
+│   │       ├── 📄 main.ssr.jsx        # SSR entry point
+│   │       ├── 📄 index.css           # Global styles
+│   │       ├── 📄 firebase.js         # Firebase config
+│   │       ├── 📄 i18n.js             # Internationalization
+│   │       ├── 📄 pwa.js              # PWA functionality
+│   │       ├── 📁 components/         # React components (66 items)
+│   │       ├── 📁 pages/              # Page components (11 items)
+│   │       ├── 📁 contexts/           # React contexts (3 items)
+│   │       ├── 📁 hooks/              # Custom hooks (5 items)
+│   │       ├── 📁 data/               # Static data (10 items)
+│   │       ├── 📁 utils/              # Utility functions (5 items)
+│   │       ├── 📁 assets/             # Images/icons (2 items)
+│   │       └── 📁 config/             # App configuration (1 item)
+│   │
+│   └── 📁 partner-portal/             # Restaurant dashboard
+│       ├── 📄 package.json            # App dependencies
+│       ├── 📄 vite.config.js          # Vite build config
+│       ├── 📄 vite.config.ssr.js      # SSR config
+│       ├── 📄 server.js               # Express SSR server
+│       ├── 📄 tailwind.config.js      # Tailwind config
+│       ├── 📄 netlify.toml            # Netlify deployment
+│       ├── 📄 index.html              # HTML template
+│       ├── 📄 deploy.sh               # Deployment script
+│       ├── 📄 .env.example            # Environment template
+│       ├── 📁 public/                 # Static assets (4 items)
+│       ├── 📁 src/                    # Source code (36 items)
+│       ├── 📁 scripts/                # Build scripts (1 item)
+│       ├── 📁 netlify/                # Netlify functions (3 items)
+│       └── 📁 dist/                   # Build output
+│
+└── 📁 packages/                       # Shared packages workspace
+    ├── 📁 ui/                         # Shared UI components
+    │   ├── 📄 package.json            # Package config
+    │   ├── 📄 index.js                # Main exports
+    │   ├── 📁 components/             # UI components (8 items)
+    │   └── 📁 hooks/                  # Custom hooks (1 item)
+    │
+    ├── 📁 config/                     # Shared configuration
+    │   ├── 📄 package.json            # Package config
+    │   ├── 📄 index.js                # Main exports
+    │   └── 📄 tailwind-preset.js      # Tailwind preset
+    │
+    └── 📁 locales/                    # Internationalization
+        ├── 📄 package.json            # Package config
+        ├── 📄 index.js                # Main exports
+        ├── 📄 en.json                 # English translations
+        └── 📄 fr.json                 # French translations

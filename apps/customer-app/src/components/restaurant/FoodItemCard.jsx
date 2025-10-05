@@ -11,7 +11,8 @@ const FoodItemCard = ({
   showClickHint = false,
   hideAddButton = false,
   isInPlan = false,
-  planEntries = []
+  planEntries = [],
+  onItemClick
 }) => {
   const { getItemQuantityInPlan, isItemInPlan: checkItemInPlan } = useMealPlan();
   
@@ -60,8 +61,18 @@ const FoodItemCard = ({
     return stars;
   };
 
+  const handleCardClick = (e) => {
+    // Only trigger if clicking on the card itself, not on buttons
+    if (e.target === e.currentTarget || e.target.closest('button') === null) {
+      onItemClick && onItemClick(item);
+    }
+  };
+
   return (
-    <div className="group relative bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border border-gray-100 h-full flex flex-col">
+    <div 
+      className="group relative bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border border-gray-100 h-full flex flex-col cursor-pointer"
+      onClick={handleCardClick}
+    >
       {/* Popular Badge */}
       {item.isPopular && (
         <div className="absolute top-2 left-2 z-10">

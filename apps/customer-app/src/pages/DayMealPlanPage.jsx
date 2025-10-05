@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useMealPlan } from '../contexts/MealPlanContext';
 import { useToast } from '../contexts/ToastContext';
 import { usePlanning } from '../contexts/PlanningContext';
+import { useAuth } from '../contexts/AuthContext';
 import { DAYS_OF_WEEK } from '../utils/filteringAlgorithms';
-import { unifiedRestaurants } from '../data/unifiedRestaurants';
+// Removed static data import - using API data only
 import ItemDetailsModal from '../components/restaurant/ItemDetailsModal';
 
 const DayMealPlanPage = () => {
@@ -12,9 +13,10 @@ const DayMealPlanPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const week = parseInt(searchParams.get('week')) || 0; // Default to current week
-  const { getWeekMealItems, removeItemFromPlanWeek } = useMealPlan();
+  const { getWeekMealItems, removeItemFromPlanWeek, getRestaurantsInAllWeeks, getRestaurantsInWeekPlan, getRestaurantIdsInWeekPlan, getRestaurantIdsInAllWeeks } = useMealPlan();
   const { showMealPlanSuccess } = useToast();
-  const { postalCode } = usePlanning();
+  const { postalCode, selectedRestaurant: planningSelectedRestaurant } = usePlanning();
+  const { isAuthenticated, user } = useAuth();
   const [selectedMealType, setSelectedMealType] = useState('lunch');
   
   // State for item details modal
@@ -25,6 +27,64 @@ const DayMealPlanPage = () => {
   const lunchItems = getWeekMealItems(day, 'lunch', week);
   const dinnerItems = getWeekMealItems(day, 'dinner', week);
   const currentMealItems = selectedMealType === 'lunch' ? lunchItems : dinnerItems;
+
+  // Get restaurant IDs in meal plan (using actual IDs instead of names)
+  const weekRestaurantIds = getRestaurantIdsInWeekPlan(week);
+  const allWeeksRestaurantIds = getRestaurantIdsInAllWeeks();
+  
+  // Debug logs for restaurant detection
+  console.log('🔍 DayMealPlanPage: weekRestaurantIds:', weekRestaurantIds);
+  console.log('🔍 DayMealPlanPage: allWeeksRestaurantIds:', allWeeksRestaurantIds);
+  
+  // Determine selected restaurant using planning context first, then meal plan IDs
+  const selectedRestaurant = useMemo(() => {
+    console.log('🔍 DayMealPlanPage: planningSelectedRestaurant:', planningSelectedRestaurant);
+    console.log('🔍 DayMealPlanPage: allWeeksRestaurantIds:', allWeeksRestaurantIds);
+    console.log('🔍 DayMealPlanPage: weekRestaurantIds:', weekRestaurantIds);
+    
+    // Priority 1: Planning context restaurant (has correct MongoDB ObjectId)
+    if (planningSelectedRestaurant) {
+      // Verify it matches the meal plan restaurant IDs
+      if (allWeeksRestaurantIds.length === 1 && planningSelectedRestaurant.id === allWeeksRestaurantIds[0]) {
+        console.log('🔍 DayMealPlanPage: Using planning context restaurant (matches all weeks)');
+        return planningSelectedRestaurant;
+      } else if (weekRestaurantIds.length === 1 && planningSelectedRestaurant.id === weekRestaurantIds[0]) {
+        console.log('🔍 DayMealPlanPage: Using planning context restaurant (matches current week)');
+        return planningSelectedRestaurant;
+      } else if (allWeeksRestaurantIds.length === 0 && weekRestaurantIds.length === 0) {
+        console.log('🔍 DayMealPlanPage: Using planning context restaurant (no meal plan items)');
+        return planningSelectedRestaurant;
+      }
+    }
+    
+    // Priority 2: For normal users: if there's exactly one restaurant across ALL weeks, use that restaurant ID
+    if (allWeeksRestaurantIds.length === 1) {
+      const restaurantId = allWeeksRestaurantIds[0];
+      console.log('🔍 DayMealPlanPage: Found restaurant ID by allWeeks:', restaurantId);
+      // Create a simple restaurant object with the actual ID from database
+      return { id: restaurantId, name: 'Selected Restaurant' };
+    }
+    
+    // Priority 3: Fallback: if there's exactly one restaurant in the current week's meal plan, use that
+    if (weekRestaurantIds.length === 1) {
+      const restaurantId = weekRestaurantIds[0];
+      console.log('🔍 DayMealPlanPage: Found restaurant ID by week:', restaurantId);
+      // Create a simple restaurant object with the actual ID from database
+      return { id: restaurantId, name: 'Selected Restaurant' };
+    }
+    
+    // Priority 4: Transition fallback - if we have items but no restaurant IDs (old meal plan items)
+    // Use planning context restaurant if available
+    if ((lunchItems.length > 0 || dinnerItems.length > 0) && planningSelectedRestaurant) {
+      console.log('🔍 DayMealPlanPage: Using planning context restaurant as fallback for items without restaurantId');
+      return planningSelectedRestaurant;
+    }
+    
+    // No restaurant selected
+    console.log('🔍 DayMealPlanPage: No restaurant selected');
+    return null;
+  }, [planningSelectedRestaurant, allWeeksRestaurantIds, weekRestaurantIds, week, lunchItems, dinnerItems]);
+
 
   // Group items by ID to show quantities
   const groupedItems = currentMealItems.reduce((acc, item) => {
@@ -57,26 +117,18 @@ const DayMealPlanPage = () => {
   };
 
   const handleAddMoreItems = () => {
-    // Get restaurant info from current meal items to navigate directly to that restaurant
-    const allDayItems = [...lunchItems, ...dinnerItems];
+    console.log('🔍 DayMealPlanPage: selectedRestaurant:', selectedRestaurant);
     
-    if (allDayItems.length > 0) {
-      // Get the first restaurant from the meal items
-      const restaurantName = allDayItems[0].restaurantName;
-      
-      // Find the restaurant ID from the unified restaurants data
-      const restaurant = unifiedRestaurants.find(r => r.name === restaurantName);
-      
-      if (restaurant) {
-        // Navigate directly to the restaurant page with meal planning context
-        navigate(`/restaurant/${restaurant.id}?day=${day}&slot=${selectedMealType}&week=${week}&userType=normal&source=weekly-menu`);
-        return;
-      }
+    if (selectedRestaurant) {
+      // Use the restaurant ID from selectedRestaurant (which now contains the actual database ID)
+      const navigationUrl = `/restaurant/${selectedRestaurant.id}?day=${day}&slot=${selectedMealType}&week=${week}&userType=normal&source=weekly-menu`;
+      console.log('🔍 DayMealPlanPage: Navigating to:', navigationUrl);
+      navigate(navigationUrl);
+    } else {
+      // Fallback: Navigate to restaurant selection if no restaurant found
+      const postalParam = postalCode ? `&postal=${postalCode}` : '';
+      navigate(`/plan/restaurants?source=weekly-menu&day=${day}&slot=${selectedMealType}&week=${week}${postalParam}`);
     }
-    
-    // Fallback: Navigate to restaurant selection if no restaurant found
-    const postalParam = postalCode ? `&postal=${postalCode}` : '';
-    navigate(`/plan/restaurants?source=weekly-menu&day=${day}&slot=${selectedMealType}&week=${week}${postalParam}`);
   };
 
   const handleItemClick = (item) => {
