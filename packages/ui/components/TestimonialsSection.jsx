@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Star, TrendingUp, Users, Clock } from 'lucide-react';
+import ChevronLeft from 'lucide-react/dist/esm/icons/chevron-left';
+import ChevronRight from 'lucide-react/dist/esm/icons/chevron-right';
+import Star from 'lucide-react/dist/esm/icons/star';
+import TrendingUp from 'lucide-react/dist/esm/icons/trending-up';
+import Users from 'lucide-react/dist/esm/icons/users';
+import Clock from 'lucide-react/dist/esm/icons/clock';
 
 const TestimonialsSection = ({ 
   testimonials = [], 

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { clsx } from 'clsx';
-import { X } from 'lucide-react';
+import X from 'lucide-react/dist/esm/icons/x';
 
 const Modal = ({
   isOpen,

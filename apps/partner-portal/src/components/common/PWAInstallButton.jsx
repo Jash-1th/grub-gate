@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Check, X } from 'lucide-react';
+import Download from 'lucide-react/dist/esm/icons/download';
+import Check from 'lucide-react/dist/esm/icons/check';
+import X from 'lucide-react/dist/esm/icons/x';
 import { promptInstallApp, isInstallPromptAvailable, isAppInstalled } from '../../pwa';
 
 /**

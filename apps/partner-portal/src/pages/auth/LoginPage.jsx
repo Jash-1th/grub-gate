@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, ChefHat, Users, TrendingUp, Shield } from 'lucide-react';
+import Eye from 'lucide-react/dist/esm/icons/eye';
+import EyeOff from 'lucide-react/dist/esm/icons/eye-off';
+import Mail from 'lucide-react/dist/esm/icons/mail';
+import Lock from 'lucide-react/dist/esm/icons/lock';
+import ChefHat from 'lucide-react/dist/esm/icons/chef-hat';
+import Users from 'lucide-react/dist/esm/icons/users';
+import TrendingUp from 'lucide-react/dist/esm/icons/trending-up';
+import Shield from 'lucide-react/dist/esm/icons/shield';
 import { Button, Logo } from '@grub-gate/ui';
 
 const LoginPage = () => {

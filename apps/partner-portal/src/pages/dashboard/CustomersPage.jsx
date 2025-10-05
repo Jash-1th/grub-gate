@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, Mail, Phone, Calendar, DollarSign, ShoppingBag } from 'lucide-react';
+import Search from 'lucide-react/dist/esm/icons/search';
+import Mail from 'lucide-react/dist/esm/icons/mail';
+import Phone from 'lucide-react/dist/esm/icons/phone';
+import Calendar from 'lucide-react/dist/esm/icons/calendar';
+import DollarSign from 'lucide-react/dist/esm/icons/dollar-sign';
+import ShoppingBag from 'lucide-react/dist/esm/icons/shopping-bag';
 import { Input, Card, CardContent, CardHeader, CardTitle } from '@grub-gate/ui';
 import { mockCustomers } from '../../lib/mock-data.js';
 

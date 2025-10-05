@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
-import { CheckCircle, Coffee, Heart } from 'lucide-react';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import Coffee from 'lucide-react/dist/esm/icons/coffee';
+import Heart from 'lucide-react/dist/esm/icons/heart';
 
 const WelcomeBackModal = ({ isOpen, onClose, userName }) => {
   // Auto-close after 3 seconds (shorter than registration welcome)

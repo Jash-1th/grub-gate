@@ -2,7 +2,8 @@ import React from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Logo, Button } from '@grub-gate/ui';
-import { Globe, ChevronDown } from 'lucide-react';
+import Globe from 'lucide-react/dist/esm/icons/globe';
+import ChevronDown from 'lucide-react/dist/esm/icons/chevron-down';
 import PublicMobileBottomNav from './PublicMobileBottomNav';
 
 const PublicLayout = ({ onLanguageChange }) => {
