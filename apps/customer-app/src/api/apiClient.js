@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getStorageItem, removeStorageItem } from '../utils/ssrSafeStorage';
 
 // Create axios instance with base configuration
 const apiClient = axios.create({
@@ -12,7 +13,7 @@ const apiClient = axios.create({
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('authToken');
+    const token = getStorageItem('authToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -36,10 +37,12 @@ apiClient.interceptors.response.use(
       const isLoginAttempt = error.config?.url?.includes('/auth/login');
       
       if (!isLoginAttempt) {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('user');
+        removeStorageItem('authToken');
+        removeStorageItem('user');
         // Redirect to login or refresh page for authenticated requests
-        window.location.href = '/';
+        if (typeof window !== 'undefined') {
+          window.location.href = '/';
+        }
       }
       // For login attempts, just pass the error through without redirecting
     }

@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
 import apiClient from '../api/apiClient';
+import { getStorageItem, setStorageItem, removeStorageItem } from '../utils/ssrSafeStorage';
 
 // Auth Context
 const AuthContext = createContext();
@@ -103,19 +104,23 @@ const authReducer = (state, action) => {
 // Auth Provider Component
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
+  const [isClient, setIsClient] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Check for existing auth on mount
+  // SSR Safety - only run on client side
   useEffect(() => {
+    setIsClient(true);
+    
     console.log('🔍 AuthContext: Checking for existing auth on mount');
-    const token = localStorage.getItem('authToken');
-    const user = localStorage.getItem('user');
+    const token = getStorageItem('authToken');
+    const user = getStorageItem('user');
     
     console.log('🔍 AuthContext: Found token:', !!token);
     console.log('🔍 AuthContext: Found user:', !!user);
     
     if (token && user) {
       try {
-        const parsedUser = JSON.parse(user);
+        const parsedUser = typeof user === 'string' ? JSON.parse(user) : user;
         console.log('✅ AuthContext: Restoring auth state for user:', parsedUser);
         dispatch({
           type: AUTH_ACTIONS.SET_USER,
@@ -123,66 +128,67 @@ export const AuthProvider = ({ children }) => {
         });
       } catch (error) {
         console.error('❌ AuthContext: Error parsing stored user data:', error);
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('user');
+        removeStorageItem('authToken');
+        removeStorageItem('user');
       }
     } else {
       console.log('❌ AuthContext: No existing auth found');
     }
+    
+    setIsLoading(false);
   }, []);
 
-  // Handle pending redirect after authentication state is set
+  // Handle pending redirect after authentication state is set (client-side only)
   useEffect(() => {
-    if (state.isAuthenticated && !state.isLoading) {
-      const pendingRedirect = localStorage.getItem('pendingRedirect');
-      if (pendingRedirect) {
-        console.log('🔄 AuthContext: Processing pending redirect to:', pendingRedirect);
-        localStorage.removeItem('pendingRedirect');
-        
-        // Also clean up any remaining redirectAfterLogin and loginInProgress
-        localStorage.removeItem('redirectAfterLogin');
-        localStorage.removeItem('loginInProgress');
-        
-        // Validate the redirect URL
-        try {
-          const url = new URL(pendingRedirect, window.location.origin);
-          if (url.origin === window.location.origin) {
-            setTimeout(() => {
-              console.log('🔄 AuthContext: Executing redirect to:', pendingRedirect);
-              // Before redirecting, ensure auth state is properly set
-              if (!state.isAuthenticated) {
-                console.log('🔄 AuthContext: Auth state not set, forcing state update before redirect');
-                const storedToken = localStorage.getItem('authToken');
-                const storedUser = localStorage.getItem('user');
-                if (storedToken && storedUser) {
-                  try {
-                    const parsedUser = JSON.parse(storedUser);
-                    dispatch({
-                      type: AUTH_ACTIONS.SET_USER,
-                      payload: { user: parsedUser, token: storedToken },
-                    });
-                  } catch (e) {
-                    console.error('Error parsing stored user:', e);
-                  }
+    if (!isClient || !state.isAuthenticated || state.isLoading) return;
+    
+    const pendingRedirect = getStorageItem('pendingRedirect');
+    if (pendingRedirect) {
+      console.log('🔄 AuthContext: Processing pending redirect to:', pendingRedirect);
+      removeStorageItem('pendingRedirect');
+      
+      
+      // Validate the redirect URL
+      try {
+        const url = new URL(pendingRedirect, window.location.origin);
+        if (url.origin === window.location.origin) {
+          setTimeout(() => {
+            console.log('🔄 AuthContext: Executing redirect to:', pendingRedirect);
+            // Before redirecting, ensure auth state is properly set
+            if (!state.isAuthenticated) {
+              console.log('🔄 AuthContext: Auth state not set, forcing state update before redirect');
+              const storedToken = getStorageItem('authToken');
+              const storedUser = getStorageItem('user');
+              if (storedToken && storedUser) {
+                try {
+                  const parsedUser = typeof storedUser === 'string' ? JSON.parse(storedUser) : storedUser;
+                  dispatch({
+                    type: AUTH_ACTIONS.SET_USER,
+                    payload: { user: parsedUser, token: storedToken },
+                  });
+                } catch (e) {
+                  console.error('Error parsing stored user:', e);
                 }
               }
+            }
+            if (typeof window !== 'undefined') {
               window.location.href = pendingRedirect;
-            }, 500); // Increased timeout to ensure state is set
-          } else {
-            console.warn('🚨 AuthContext: Invalid redirect URL origin, ignoring redirect');
-            localStorage.removeItem('loginInProgress');
-          }
-        } catch (e) {
-          console.warn('🚨 AuthContext: Invalid redirect URL format, ignoring redirect:', e);
-          localStorage.removeItem('loginInProgress');
+            }
+          }, 500); // Increased timeout to ensure state is set
+        } else {
+          console.warn('🚨 AuthContext: Invalid redirect URL origin, ignoring redirect');
+          removeStorageItem('loginInProgress');
         }
-      } else {
-        // Clean up any stale redirect URLs and flags when user is authenticated
-        localStorage.removeItem('redirectAfterLogin');
-        localStorage.removeItem('loginInProgress');
+      } catch (e) {
+        console.warn('🚨 AuthContext: Invalid redirect URL format, ignoring redirect:', e);
+        removeStorageItem('loginInProgress');
       }
+    } else {
+      // Clean up any stale redirect URLs and flags when user is authenticated
+      removeStorageItem('redirectAfterLogin');
+      removeStorageItem('loginInProgress');
     }
-  }, [state.isAuthenticated, state.isLoading]);
+  }, [state.isAuthenticated, state.isLoading, isClient]);
 
   // Login function
   const login = async (email, password) => {
@@ -197,8 +203,8 @@ export const AuthProvider = ({ children }) => {
       const { accessToken, user } = response.data.data;
 
       // Store in localStorage
-      localStorage.setItem('authToken', accessToken);
-      localStorage.setItem('user', JSON.stringify(user));
+      setStorageItem('authToken', accessToken);
+      setStorageItem('user', user);
 
       dispatch({
         type: AUTH_ACTIONS.LOGIN_SUCCESS,
@@ -209,20 +215,20 @@ export const AuthProvider = ({ children }) => {
       console.log('✅ AuthContext: Token stored:', accessToken);
 
       // Handle redirect after login - using a flag to trigger redirect in useEffect
-      const redirectUrl = localStorage.getItem('redirectAfterLogin');
+      const redirectUrl = getStorageItem('redirectAfterLogin');
       console.log('🔄 AuthContext: Checking for redirect URL:', redirectUrl);
       
       if (redirectUrl && redirectUrl !== '/') {
         console.log('🔄 AuthContext: Setting up redirect to:', redirectUrl);
         // Set a flag to trigger redirect after state updates
-        localStorage.setItem('pendingRedirect', redirectUrl);
-        localStorage.removeItem('redirectAfterLogin');
+        setStorageItem('pendingRedirect', redirectUrl);
+        removeStorageItem('redirectAfterLogin');
         
         // Also set a temporary flag to prevent AuthGuard from opening modal again
-        localStorage.setItem('loginInProgress', 'true');
+        setStorageItem('loginInProgress', 'true');
         // Set a longer timeout to ensure authentication state is fully established
         setTimeout(() => {
-          localStorage.removeItem('loginInProgress');
+          removeStorageItem('loginInProgress');
         }, 5000); // Increased to 5 seconds for better reliability
       } else {
         console.log('🔄 AuthContext: No valid redirect URL found, staying on current page');
@@ -288,11 +294,11 @@ export const AuthProvider = ({ children }) => {
         const { accessToken, refreshToken, user } = response.data.data;
         
         // Store tokens
-        localStorage.setItem('authToken', accessToken);
+        setStorageItem('authToken', accessToken);
         if (refreshToken) {
-          localStorage.setItem('refreshToken', refreshToken);
+          setStorageItem('refreshToken', refreshToken);
         }
-        localStorage.setItem('user', JSON.stringify(user));
+        setStorageItem('user', user);
 
         // Update state to logged in
         dispatch({ 
@@ -357,8 +363,8 @@ export const AuthProvider = ({ children }) => {
 
   // Logout function
   const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
+    removeStorageItem('authToken');
+    removeStorageItem('user');
     dispatch({ type: AUTH_ACTIONS.LOGOUT });
   };
 
@@ -373,7 +379,21 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     clearError,
+    isClient,
+    isLoading,
   };
+
+  // Show loading state during SSR and initial client hydration
+  if (!isClient || isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-grub-red mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={value}>

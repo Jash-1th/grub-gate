@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getStorageItem, setStorageItem, removeStorageItem } from '../utils/ssrSafeStorage';
 
 const PlanningContext = createContext();
 
@@ -21,66 +22,50 @@ export const PlanningProvider = ({ children }) => {
     setIsClient(true);
     
     // Load data from localStorage on client side
-    if (typeof window !== 'undefined') {
-      const savedPostalCode = localStorage.getItem('grubgate_postal_code');
-      const savedPreferences = localStorage.getItem('grubgate_preferences');
-      const savedRestaurant = localStorage.getItem('grubgate_selected_restaurant');
-      
-      if (savedPostalCode) {
-        setPostalCode(savedPostalCode);
-      }
-      
-      if (savedPreferences) {
-        try {
-          setSelectedPreferences(JSON.parse(savedPreferences));
-        } catch (e) {
-          console.error('Error parsing saved preferences:', e);
-        }
-      }
-      
-      if (savedRestaurant) {
-        try {
-          setSelectedRestaurant(JSON.parse(savedRestaurant));
-        } catch (e) {
-          console.error('Error parsing saved restaurant:', e);
-        }
-      }
+    const savedPostalCode = getStorageItem('grubgate_postal_code');
+    const savedPreferences = getStorageItem('grubgate_preferences');
+    const savedRestaurant = getStorageItem('grubgate_selected_restaurant');
+    
+    if (savedPostalCode) {
+      setPostalCode(savedPostalCode);
+    }
+    
+    if (savedPreferences) {
+      setSelectedPreferences(savedPreferences);
+    }
+    
+    if (savedRestaurant) {
+      setSelectedRestaurant(savedRestaurant);
     }
   }, []);
 
   // Handler for postal code updates
   const updatePostalCode = (newPostalCode) => {
     setPostalCode(newPostalCode);
-    if (typeof window !== 'undefined') {
-      if (newPostalCode) {
-        localStorage.setItem('grubgate_postal_code', newPostalCode);
-      } else {
-        localStorage.removeItem('grubgate_postal_code');
-      }
+    if (newPostalCode) {
+      setStorageItem('grubgate_postal_code', newPostalCode);
+    } else {
+      removeStorageItem('grubgate_postal_code');
     }
   };
 
   // Handler for preferences updates
   const updatePreferences = (newPreferences) => {
     setSelectedPreferences(newPreferences);
-    if (typeof window !== 'undefined') {
-      if (newPreferences && newPreferences.length > 0) {
-        localStorage.setItem('grubgate_preferences', JSON.stringify(newPreferences));
-      } else {
-        localStorage.removeItem('grubgate_preferences');
-      }
+    if (newPreferences && newPreferences.length > 0) {
+      setStorageItem('grubgate_preferences', newPreferences);
+    } else {
+      removeStorageItem('grubgate_preferences');
     }
   };
 
   // Handler for restaurant selection updates
   const updateSelectedRestaurant = (restaurant) => {
     setSelectedRestaurant(restaurant);
-    if (typeof window !== 'undefined') {
-      if (restaurant) {
-        localStorage.setItem('grubgate_selected_restaurant', JSON.stringify(restaurant));
-      } else {
-        localStorage.removeItem('grubgate_selected_restaurant');
-      }
+    if (restaurant) {
+      setStorageItem('grubgate_selected_restaurant', restaurant);
+    } else {
+      removeStorageItem('grubgate_selected_restaurant');
     }
   };
 
@@ -89,11 +74,9 @@ export const PlanningProvider = ({ children }) => {
     setPostalCode('');
     setSelectedPreferences([]);
     setSelectedRestaurant(null);
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('grubgate_postal_code');
-      localStorage.removeItem('grubgate_preferences');
-      localStorage.removeItem('grubgate_selected_restaurant');
-    }
+    removeStorageItem('grubgate_postal_code');
+    removeStorageItem('grubgate_preferences');
+    removeStorageItem('grubgate_selected_restaurant');
   };
 
   const value = {
