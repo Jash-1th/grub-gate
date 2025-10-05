@@ -212,8 +212,60 @@ export const MealPlanProvider = ({ children }) => {
     setIsClient(true);
     
     const loadMealPlanData = async () => {
+      try {
+        if (isAuthenticated && user) {
+          // Try to load from database first
+          try {
+            const response = await apiClient.get('/weekly-plans/me');
+            if (response.data?.status === 'success' && response.data?.data) {
+              const { weeklyPlans, totalItems } = response.data.data;
+              dispatch({
+                type: MEAL_PLAN_ACTIONS.LOAD_FROM_DATABASE,
+                payload: { weeklyPlans, totalItems }
+              });
+              return; // Exit early on success
+            }
+          } catch (error) {
+            console.log('Could not load from database, falling back to localStorage:', error.message);
+          }
+        }
+        
+        // Fallback to localStorage (for both authenticated and non-authenticated users)
+        const savedWeeklyPlans = getStorageItem('weeklyPlans');
+        const savedMealPlan = getStorageItem('mealPlan');
+        
+        if (savedWeeklyPlans) {
+          dispatch({
+            type: MEAL_PLAN_ACTIONS.LOAD_FROM_DATABASE,
+            payload: { weeklyPlans: savedWeeklyPlans, totalItems: savedWeeklyPlans.totalItems || 0 }
+          });
+        } else if (savedMealPlan) {
+          // Handle legacy meal plan format
+          dispatch({
+            type: MEAL_PLAN_ACTIONS.LOAD_FROM_DATABASE,
+            payload: { weeklyPlans: { week0: savedMealPlan.weeklyPlan }, totalItems: savedMealPlan.totalItems || 0 }
+          });
+        }
+        // If no data exists, state remains at initialState (empty meal plan)
+        
+      } catch (error) {
+        console.error('Error loading meal plan data:', error);
+        // On error, use initial state (empty meal plan)
+      } finally {
+        // ALWAYS stop loading, regardless of success/failure/no data
+        setIsLoading(false);
+      }
+    };
+
+    loadMealPlanData();
+  }, []); // ✅ Remove dependencies to prevent re-runs
+
+  // Handle authentication changes separately (load user data when they log in)
+  useEffect(() => {
+    if (!isClient || isLoading) return;
+    
+    const loadUserData = async () => {
       if (isAuthenticated && user) {
-        // Try to load from database first
         try {
           const response = await apiClient.get('/weekly-plans/me');
           if (response.data?.status === 'success' && response.data?.data) {
@@ -222,36 +274,15 @@ export const MealPlanProvider = ({ children }) => {
               type: MEAL_PLAN_ACTIONS.LOAD_FROM_DATABASE,
               payload: { weeklyPlans, totalItems }
             });
-            setIsLoading(false);
-            return;
           }
         } catch (error) {
-          console.log('Could not load from database, falling back to localStorage:', error.message);
+          console.log('Could not sync with database after login:', error.message);
         }
       }
-      
-      // Fallback to localStorage
-      const savedWeeklyPlans = getStorageItem('weeklyPlans');
-      const savedMealPlan = getStorageItem('mealPlan');
-      
-      if (savedWeeklyPlans) {
-        dispatch({
-          type: MEAL_PLAN_ACTIONS.LOAD_FROM_DATABASE,
-          payload: { weeklyPlans: savedWeeklyPlans, totalItems: savedWeeklyPlans.totalItems || 0 }
-        });
-      } else if (savedMealPlan) {
-        // Handle legacy meal plan format
-        dispatch({
-          type: MEAL_PLAN_ACTIONS.LOAD_FROM_DATABASE,
-          payload: { weeklyPlans: { week0: savedMealPlan.weeklyPlan }, totalItems: savedMealPlan.totalItems || 0 }
-        });
-      }
-      
-      setIsLoading(false);
     };
 
-    loadMealPlanData();
-  }, [isAuthenticated, user]);
+    loadUserData();
+  }, [isAuthenticated, user, isClient, isLoading]);
 
   // Auto-save to localStorage and database (client-side only)
   useEffect(() => {

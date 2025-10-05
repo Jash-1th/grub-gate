@@ -14,7 +14,7 @@ import { navigation } from '../../data';
 const AuthButtons = ({ className = '', isMobile = false }) => {
   const { t } = useTranslation();
   const { openSignupModal, toggleLoginModal } = useModal();
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout, isLoading } = useAuth();
 
   // Handle logout
   const handleLogout = () => {
@@ -48,11 +48,21 @@ const AuthButtons = ({ className = '', isMobile = false }) => {
         {/* Logout button */}
         <button
           onClick={handleLogout}
-          className={`whitespace-nowrap px-4 py-2 font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 shadow-sm hover:shadow-md ${
-            isMobile ? 'w-full text-base py-3' : 'text-sm'
-          }`}
+          disabled={isLoading}
+          className={`whitespace-nowrap px-4 py-2 font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 ${
+            isLoading 
+              ? 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed' 
+              : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 shadow-sm hover:shadow-md'
+          } ${isMobile ? 'w-full text-base py-3' : 'text-sm'}`}
         >
-          Logout
+          {isLoading ? (
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400 mr-2"></div>
+              <span>Logging out...</span>
+            </div>
+          ) : (
+            'Logout'
+          )}
         </button>
       </div>
     );

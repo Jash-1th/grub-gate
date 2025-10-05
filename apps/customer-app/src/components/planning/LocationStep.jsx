@@ -14,21 +14,33 @@ const LocationStep = ({ onNext }) => {
   const { updatePostalCode, updatePreferences } = usePlanning();
   const { isAuthenticated } = useAuth();
   const [postalCode, setPostalCode] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
 
-  const handleFindMeals = () => {
+  const handleFindMeals = async () => {
     if (postalCode.trim()) {
-      // Update postal code in context
-      updatePostalCode(postalCode.trim());
+      setIsSearching(true);
       
-      // Check if user is authenticated before proceeding
-      if (!isAuthenticated) {
-        // Show login modal if user is not authenticated
-        openLoginModal();
-        return;
+      try {
+        // Update postal code in context
+        updatePostalCode(postalCode.trim());
+        
+        // Simulate API call to validate postal code and fetch restaurants
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Check if user is authenticated before proceeding
+        if (!isAuthenticated) {
+          // Show login modal if user is not authenticated
+          openLoginModal();
+          return;
+        }
+        
+        // Navigate directly to restaurant step (no preferences selection here)
+        navigate('/plan/restaurants?source=plan');
+      } catch (error) {
+        console.error('Error searching for restaurants:', error);
+      } finally {
+        setIsSearching(false);
       }
-      
-      // Navigate directly to restaurant step (no preferences selection here)
-      navigate('/plan/restaurants?source=plan');
     }
   };
 
@@ -89,9 +101,17 @@ const LocationStep = ({ onNext }) => {
                       />
                       <button
                         onClick={handleFindMeals}
-                        className="px-4 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-grub-red to-red-600 text-white rounded-xl font-semibold text-sm sm:text-lg hover:from-grub-red hover:to-grub-red transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-grub-red focus:ring-offset-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 sm:mr-1 whitespace-nowrap"
+                        disabled={isSearching || !postalCode.trim()}
+                        className="px-4 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-grub-red to-red-600 text-white rounded-xl font-semibold text-sm sm:text-lg hover:from-grub-red hover:to-grub-red transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-grub-red focus:ring-offset-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 sm:mr-1 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-lg"
                       >
-                        {t('mealPlanning.hero.findMealsButton')}
+                        {isSearching ? (
+                          <div className="flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white mr-2"></div>
+                            <span>Searching...</span>
+                          </div>
+                        ) : (
+                          t('mealPlanning.hero.findMealsButton')
+                        )}
                       </button>
                     </div>
                   </div>

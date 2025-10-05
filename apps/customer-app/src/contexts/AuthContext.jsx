@@ -10,6 +10,7 @@ const AUTH_ACTIONS = {
   LOGIN_START: 'LOGIN_START',
   LOGIN_SUCCESS: 'LOGIN_SUCCESS',
   LOGIN_FAILURE: 'LOGIN_FAILURE',
+  LOGOUT_START: 'LOGOUT_START',
   LOGOUT: 'LOGOUT',
   REGISTER_START: 'REGISTER_START',
   REGISTER_SUCCESS: 'REGISTER_SUCCESS',
@@ -66,12 +67,20 @@ const authReducer = (state, action) => {
         error: action.payload,
       };
 
+    case AUTH_ACTIONS.LOGOUT_START:
+      return {
+        ...state,
+        isLoading: true,
+        error: null,
+      };
+
     case AUTH_ACTIONS.LOGOUT:
       return {
         ...state,
         user: null,
         token: null,
         isAuthenticated: false,
+        isLoading: false,
         error: null,
       };
 
@@ -362,10 +371,23 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Logout function
-  const logout = () => {
-    removeStorageItem('authToken');
-    removeStorageItem('user');
-    dispatch({ type: AUTH_ACTIONS.LOGOUT });
+  const logout = async () => {
+    dispatch({ type: AUTH_ACTIONS.LOGOUT_START });
+    
+    try {
+      // Simulate API call for logout (if needed)
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      removeStorageItem('authToken');
+      removeStorageItem('user');
+      dispatch({ type: AUTH_ACTIONS.LOGOUT });
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Even if logout fails, clear local data
+      removeStorageItem('authToken');
+      removeStorageItem('user');
+      dispatch({ type: AUTH_ACTIONS.LOGOUT });
+    }
   };
 
   // Clear error function
