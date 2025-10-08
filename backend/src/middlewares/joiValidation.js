@@ -103,6 +103,15 @@ const userSchemas = {
         'any.required': 'Password is required'
       }),
     
+    phoneNumber: Joi.string()
+      .pattern(/^\+?[1-9]\d{1,14}$/)
+      .required()
+      .messages({
+        'string.empty': 'Phone number is required',
+        'string.pattern.base': 'Please provide a valid phone number',
+        'any.required': 'Phone number is required'
+      }),
+    
     phone: Joi.string()
       .pattern(/^\+?[\d\s\-\(\)]+$/)
       .optional()
@@ -215,28 +224,37 @@ const userSchemas = {
         'any.only': 'User type must be either customer or partner'
       }),
     
+    // Flag for OTP-only verification (like partner flow)
+    verifyOnly: Joi.boolean().optional(),
+    
     firstName: Joi.string()
       .min(2)
       .max(50)
       .trim()
-      .required()
+      .when('verifyOnly', {
+        is: true,
+        then: Joi.optional(),
+        otherwise: Joi.optional()
+      })
       .messages({
         'string.empty': 'First name is required',
         'string.min': 'First name must be at least 2 characters long',
-        'string.max': 'First name cannot exceed 50 characters',
-        'any.required': 'First name is required'
+        'string.max': 'First name cannot exceed 50 characters'
       }),
     
     lastName: Joi.string()
       .min(2)
       .max(50)
       .trim()
-      .required()
+      .when('verifyOnly', {
+        is: true,
+        then: Joi.optional(),
+        otherwise: Joi.optional()
+      })
       .messages({
         'string.empty': 'Last name is required',
         'string.min': 'Last name must be at least 2 characters long',
-        'string.max': 'Last name cannot exceed 50 characters',
-        'any.required': 'Last name is required'
+        'string.max': 'Last name cannot exceed 50 characters'
       }),
     
     email: Joi.string()
@@ -274,6 +292,46 @@ const userSchemas = {
         'string.min': 'Username must be at least 3 characters long',
         'string.max': 'Username cannot exceed 30 characters',
         'string.alphanum': 'Username must contain only letters and numbers'
+      })
+  }),
+
+  // Simple OTP verification (just check if user exists)
+  verifyOTPOnly: Joi.object({
+    identifier: Joi.string()
+      .required()
+      .custom((value, helpers) => {
+        // Check if it's a valid email
+        const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+        // Check if it's a valid phone number (E.164 format)
+        const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+        
+        if (!emailRegex.test(value) && !phoneRegex.test(value)) {
+          return helpers.error('identifier.invalid');
+        }
+        return value;
+      })
+      .messages({
+        'string.empty': 'Email or phone number is required',
+        'any.required': 'Email or phone number is required',
+        'identifier.invalid': 'Please provide a valid email address or phone number'
+      }),
+    
+    otp: Joi.string()
+      .length(6)
+      .pattern(/^\d{6}$/)
+      .required()
+      .messages({
+        'string.empty': 'OTP is required',
+        'string.length': 'OTP must be exactly 6 digits',
+        'string.pattern.base': 'OTP must contain only numbers',
+        'any.required': 'OTP is required'
+      }),
+    
+    userType: Joi.string()
+      .valid('customer', 'partner')
+      .optional()
+      .messages({
+        'any.only': 'User type must be either customer or partner'
       })
   }),
 
@@ -549,7 +607,11 @@ const partnerSchemas = {
     otp: Joi.string()
       .length(6)
       .pattern(/^\d{6}$/)
-      .required()
+      .when('skipOtpVerification', {
+        is: true,
+        then: Joi.optional(),
+        otherwise: Joi.required()
+      })
       .messages({
         'string.empty': 'OTP is required',
         'string.length': 'OTP must be exactly 6 digits',
@@ -560,6 +622,7 @@ const partnerSchemas = {
     // Flags for different verification modes
     verifyOnly: Joi.boolean().optional(),
     skipOtpVerification: Joi.boolean().optional(),
+    otpVerificationToken: Joi.string().optional(),
     
     // User details (optional when verifyOnly is true)
     firstName: Joi.string()
@@ -1099,6 +1162,437 @@ const partnerSchemas = {
     taxId: Joi.string()
       .trim()
       .optional()
+  }),
+
+  // Stage 3: Complete Partner Billing Information
+  completePartnerBilling: Joi.object({
+    // Verification fields
+    identifier: Joi.string()
+      .required()
+      .custom((value, helpers) => {
+        const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+        const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+        
+        if (!emailRegex.test(value) && !phoneRegex.test(value)) {
+          return helpers.error('identifier.invalid');
+        }
+        return value;
+      })
+      .messages({
+        'string.empty': 'Email or phone number is required',
+        'any.required': 'Email or phone number is required',
+        'identifier.invalid': 'Please provide a valid email address or phone number'
+      }),
+
+    otpVerificationToken: Joi.string()
+      .required()
+      .messages({
+        'string.empty': 'Verification token is required',
+        'any.required': 'Verification token is required'
+      }),
+
+    // Business billing info
+    businessName: Joi.string()
+      .min(2)
+      .max(100)
+      .trim()
+      .required()
+      .messages({
+        'string.empty': 'Business name is required',
+        'string.min': 'Business name must be at least 2 characters',
+        'string.max': 'Business name cannot exceed 100 characters',
+        'any.required': 'Business name is required'
+      }),
+
+    billingEmail: Joi.string()
+      .email()
+      .required()
+      .messages({
+        'string.empty': 'Billing email is required',
+        'string.email': 'Please provide a valid billing email address',
+        'any.required': 'Billing email is required'
+      }),
+
+    billingPhone: Joi.string()
+      .pattern(/^\+?[\d\s\-\(\)]+$/)
+      .required()
+      .messages({
+        'string.empty': 'Billing phone is required',
+        'string.pattern.base': 'Please provide a valid billing phone number',
+        'any.required': 'Billing phone is required'
+      }),
+
+    contactPerson: Joi.string()
+      .max(100)
+      .trim()
+      .optional(),
+
+    // Billing address
+    billingStreet: Joi.string()
+      .min(5)
+      .max(100)
+      .trim()
+      .required()
+      .messages({
+        'string.empty': 'Billing street address is required',
+        'string.min': 'Street address must be at least 5 characters',
+        'string.max': 'Street address cannot exceed 100 characters',
+        'any.required': 'Billing street address is required'
+      }),
+
+    billingCity: Joi.string()
+      .min(2)
+      .max(50)
+      .trim()
+      .required()
+      .messages({
+        'string.empty': 'Billing city is required',
+        'string.min': 'City must be at least 2 characters',
+        'string.max': 'City cannot exceed 50 characters',
+        'any.required': 'Billing city is required'
+      }),
+
+    billingProvince: Joi.string()
+      .min(2)
+      .max(50)
+      .trim()
+      .required()
+      .messages({
+        'string.empty': 'Billing province is required',
+        'string.min': 'Province must be at least 2 characters',
+        'string.max': 'Province cannot exceed 50 characters',
+        'any.required': 'Billing province is required'
+      }),
+
+    billingPostalCode: Joi.string()
+      .pattern(/^[A-Z]\d[A-Z] \d[A-Z]\d$/)
+      .required()
+      .messages({
+        'string.empty': 'Billing postal code is required',
+        'string.pattern.base': 'Please provide a valid Canadian postal code (e.g., H3A 1B2)',
+        'any.required': 'Billing postal code is required'
+      }),
+
+    billingCountry: Joi.string()
+      .max(50)
+      .trim()
+      .default('Canada')
+      .optional(),
+
+    // Bank account info
+    bankName: Joi.string()
+      .min(2)
+      .max(100)
+      .trim()
+      .required()
+      .messages({
+        'string.empty': 'Bank name is required',
+        'string.min': 'Bank name must be at least 2 characters',
+        'string.max': 'Bank name cannot exceed 100 characters',
+        'any.required': 'Bank name is required'
+      }),
+
+    accountType: Joi.string()
+      .valid('checking', 'savings', 'business')
+      .required()
+      .messages({
+        'string.empty': 'Account type is required',
+        'any.only': 'Account type must be checking, savings, or business',
+        'any.required': 'Account type is required'
+      }),
+
+    routingNumber: Joi.string()
+      .pattern(/^\d{9}$/)
+      .required()
+      .messages({
+        'string.empty': 'Routing number is required',
+        'string.pattern.base': 'Routing number must be exactly 9 digits',
+        'any.required': 'Routing number is required'
+      }),
+
+    accountNumber: Joi.string()
+      .pattern(/^\d{8,17}$/)
+      .required()
+      .messages({
+        'string.empty': 'Account number is required',
+        'string.pattern.base': 'Account number must be 8-17 digits',
+        'any.required': 'Account number is required'
+      }),
+
+    // Tax info (optional)
+    businessNumber: Joi.string()
+      .pattern(/^\d{9}RP\d{4}$/)
+      .optional()
+      .messages({
+        'string.pattern.base': 'Please enter a valid Canadian business number (e.g., 123456789RP0001)'
+      }),
+
+    gstHstNumber: Joi.string()
+      .pattern(/^\d{9}RT\d{4}$/)
+      .optional()
+      .messages({
+        'string.pattern.base': 'Please enter a valid GST/HST number (e.g., 123456789RT0001)'
+      }),
+
+    // Payment method
+    paymentMethod: Joi.string()
+      .valid('bank_transfer', 'direct_deposit', 'check')
+      .default('bank_transfer')
+      .optional()
+  })
+};
+
+// Subscription Meal Plan validation schemas
+const subscriptionMealPlanSchemas = {
+  // Create subscription meal plan
+  createPlan: Joi.object({
+    subscriptionId: Joi.string()
+      .required()
+      .messages({
+        'string.empty': 'Subscription ID is required',
+        'any.required': 'Subscription ID is required'
+      }),
+    
+    restaurantId: Joi.string()
+      .required()
+      .messages({
+        'string.empty': 'Restaurant ID is required',
+        'any.required': 'Restaurant ID is required'
+      }),
+    
+    planType: Joi.string()
+      .valid('bi-weekly', 'monthly', 'quarterly')
+      .default('bi-weekly')
+      .messages({
+        'any.only': 'Plan type must be bi-weekly, monthly, or quarterly'
+      }),
+    
+    deliveryAddress: Joi.object({
+      street: Joi.string()
+        .min(5)
+        .max(200)
+        .trim()
+        .required()
+        .messages({
+          'string.empty': 'Street address is required',
+          'string.min': 'Street address must be at least 5 characters',
+          'string.max': 'Street address cannot exceed 200 characters',
+          'any.required': 'Street address is required'
+        }),
+      
+      city: Joi.string()
+        .min(2)
+        .max(100)
+        .trim()
+        .required()
+        .messages({
+          'string.empty': 'City is required',
+          'string.min': 'City must be at least 2 characters',
+          'string.max': 'City cannot exceed 100 characters',
+          'any.required': 'City is required'
+        }),
+      
+      province: Joi.string()
+        .min(2)
+        .max(50)
+        .trim()
+        .required()
+        .messages({
+          'string.empty': 'Province is required',
+          'string.min': 'Province must be at least 2 characters',
+          'string.max': 'Province cannot exceed 50 characters',
+          'any.required': 'Province is required'
+        }),
+      
+      postalCode: Joi.string()
+        .pattern(/^[A-Z]\d[A-Z] \d[A-Z]\d$/)
+        .required()
+        .messages({
+          'string.empty': 'Postal code is required',
+          'string.pattern.base': 'Please provide a valid Canadian postal code (e.g., H3A 1B2)',
+          'any.required': 'Postal code is required'
+        }),
+      
+      instructions: Joi.string()
+        .max(200)
+        .trim()
+        .optional()
+        .messages({
+          'string.max': 'Delivery instructions cannot exceed 200 characters'
+        })
+    }).optional(),
+    
+    specialInstructions: Joi.string()
+      .max(500)
+      .trim()
+      .optional()
+      .messages({
+        'string.max': 'Special instructions cannot exceed 500 characters'
+      })
+  }),
+  
+  // Update meal plan
+  updatePlan: Joi.object({
+    action: Joi.string()
+      .valid('add', 'remove', 'clearWeek')
+      .required()
+      .messages({
+        'string.empty': 'Action is required',
+        'any.only': 'Action must be add, remove, or clearWeek',
+        'any.required': 'Action is required'
+      }),
+    
+    weekIndex: Joi.number()
+      .integer()
+      .min(0)
+      .when('action', {
+        is: Joi.valid('add', 'remove', 'clearWeek'),
+        then: Joi.required(),
+        otherwise: Joi.optional()
+      })
+      .messages({
+        'number.base': 'Week index must be a number',
+        'number.integer': 'Week index must be an integer',
+        'number.min': 'Week index must be 0 or greater',
+        'any.required': 'Week index is required for this action'
+      }),
+    
+    day: Joi.string()
+      .valid('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')
+      .when('action', {
+        is: Joi.valid('add', 'remove'),
+        then: Joi.required(),
+        otherwise: Joi.optional()
+      })
+      .messages({
+        'string.empty': 'Day is required',
+        'any.only': 'Day must be a valid day of the week',
+        'any.required': 'Day is required for add/remove actions'
+      }),
+    
+    mealType: Joi.string()
+      .valid('lunch', 'dinner')
+      .when('action', {
+        is: Joi.valid('add', 'remove'),
+        then: Joi.required(),
+        otherwise: Joi.optional()
+      })
+      .messages({
+        'string.empty': 'Meal type is required',
+        'any.only': 'Meal type must be lunch or dinner',
+        'any.required': 'Meal type is required for add/remove actions'
+      }),
+    
+    menuItemId: Joi.string()
+      .when('action', {
+        is: 'add',
+        then: Joi.required(),
+        otherwise: Joi.optional()
+      })
+      .messages({
+        'string.empty': 'Menu item ID is required',
+        'any.required': 'Menu item ID is required for add action'
+      }),
+    
+    deliveryTime: Joi.string()
+      .pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
+      .when('action', {
+        is: 'add',
+        then: Joi.required(),
+        otherwise: Joi.optional()
+      })
+      .messages({
+        'string.empty': 'Delivery time is required',
+        'string.pattern.base': 'Please enter time in HH:MM format',
+        'any.required': 'Delivery time is required for add action'
+      }),
+    
+    planItemId: Joi.string()
+      .when('action', {
+        is: 'remove',
+        then: Joi.required(),
+        otherwise: Joi.optional()
+      })
+      .messages({
+        'string.empty': 'Plan item ID is required',
+        'any.required': 'Plan item ID is required for remove action'
+      })
+  }),
+  
+  // Update meal plan status
+  updateStatus: Joi.object({
+    status: Joi.string()
+      .valid('active', 'paused', 'completed', 'cancelled')
+      .required()
+      .messages({
+        'string.empty': 'Status is required',
+        'any.only': 'Status must be active, paused, completed, or cancelled',
+        'any.required': 'Status is required'
+      }),
+    
+    reason: Joi.string()
+      .max(200)
+      .trim()
+      .optional()
+      .messages({
+        'string.max': 'Reason cannot exceed 200 characters'
+      })
+  }),
+  
+  // Update delivery address
+  updateAddress: Joi.object({
+    street: Joi.string()
+      .min(5)
+      .max(200)
+      .trim()
+      .required()
+      .messages({
+        'string.empty': 'Street address is required',
+        'string.min': 'Street address must be at least 5 characters',
+        'string.max': 'Street address cannot exceed 200 characters',
+        'any.required': 'Street address is required'
+      }),
+    
+    city: Joi.string()
+      .min(2)
+      .max(100)
+      .trim()
+      .required()
+      .messages({
+        'string.empty': 'City is required',
+        'string.min': 'City must be at least 2 characters',
+        'string.max': 'City cannot exceed 100 characters',
+        'any.required': 'City is required'
+      }),
+    
+    province: Joi.string()
+      .min(2)
+      .max(50)
+      .trim()
+      .required()
+      .messages({
+        'string.empty': 'Province is required',
+        'string.min': 'Province must be at least 2 characters',
+        'string.max': 'Province cannot exceed 50 characters',
+        'any.required': 'Province is required'
+      }),
+    
+    postalCode: Joi.string()
+      .pattern(/^[A-Z]\d[A-Z] \d[A-Z]\d$/)
+      .required()
+      .messages({
+        'string.empty': 'Postal code is required',
+        'string.pattern.base': 'Please provide a valid Canadian postal code (e.g., H3A 1B2)',
+        'any.required': 'Postal code is required'
+      }),
+    
+    instructions: Joi.string()
+      .max(200)
+      .trim()
+      .optional()
+      .messages({
+        'string.max': 'Delivery instructions cannot exceed 200 characters'
+      })
   })
 };
 
@@ -1106,5 +1600,6 @@ module.exports = {
   validateRequest,
   userSchemas,
   restaurantSchemas,
-  partnerSchemas
+  partnerSchemas,
+  subscriptionMealPlanSchemas
 };

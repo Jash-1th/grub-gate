@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -14,60 +14,132 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@grub-gate/ui';
 import { mockAnalytics, mockOrders, mockMenuItems } from '../../lib/mock-data.js';
+import analyticsService from '../../services/analyticsService.js';
+import { useRestaurant } from '../../contexts/RestaurantContext.jsx';
 
 const DashboardHome = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { restaurantInfo, getRestaurantName } = useRestaurant();
+  
+  // SSR-safe state management
+  const [isClient, setIsClient] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [recentOrders, setRecentOrders] = useState([]);
+
+  // SSR safety
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      if (!isClient) return;
+      
+      try {
+        setLoading(true);
+        
+        // Fetch dashboard analytics and recent orders in parallel
+        const [analytics, orders] = await Promise.all([
+          analyticsService.getDashboardOverview(7), // Last 7 days for dashboard
+          analyticsService.getRecentOrders(5)
+        ]);
+        
+        setDashboardData(analytics);
+        setRecentOrders(orders);
+      } catch (error) {
+        console.error('Dashboard data fetch error:', error);
+        // Fallback to mock data on error
+        setDashboardData({
+          overview: {
+            totalRevenue: { current: 0, growth: 0 },
+            totalOrders: { current: 0, growth: 0 },
+            activeCustomers: { current: 0, growth: 0 },
+            avgOrderValue: { current: 0, growth: 0 }
+          },
+          topItems: []
+        });
+        setRecentOrders(mockOrders.slice(0, 5));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [isClient]);
+
+  // Process real data with SSR-safe fallbacks
+  const overview = dashboardData?.overview || {};
+  const topItems = dashboardData?.topItems || [];
 
   const stats = [
     {
       title: t('dashboard.stats.totalOrders'),
-      value: mockAnalytics.orders.current,
-      change: mockAnalytics.orders.growth,
+      value: overview.totalOrders?.current || 0,
+      change: overview.totalOrders?.growth || 0,
       icon: ShoppingBag,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100'
     },
     {
       title: t('dashboard.stats.totalRevenue'),
-      value: `$${mockAnalytics.revenue.current.toLocaleString()}`,
-      change: mockAnalytics.revenue.growth,
+      value: `$${(overview.totalRevenue?.current || 0).toLocaleString()}`,
+      change: overview.totalRevenue?.growth || 0,
       icon: DollarSign,
       color: 'text-green-600',
       bgColor: 'bg-green-100'
     },
     {
       title: t('dashboard.stats.activeSubscribers'),
-      value: mockAnalytics.customers.current,
-      change: mockAnalytics.customers.growth,
+      value: overview.activeCustomers?.current || 0,
+      change: overview.activeCustomers?.growth || 0,
       icon: Users,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100'
     },
     {
       title: t('dashboard.stats.avgOrderValue'),
-      value: `$${mockAnalytics.avgOrderValue.current}`,
-      change: mockAnalytics.avgOrderValue.growth,
+      value: `$${(overview.avgOrderValue?.current || 0).toFixed(2)}`,
+      change: overview.avgOrderValue?.growth || 0,
       icon: TrendingUp,
       color: 'text-orange-600',
       bgColor: 'bg-orange-100'
     }
   ];
 
-  const recentOrders = mockOrders.slice(0, 5);
-  const topMenuItems = mockMenuItems
-    .sort((a, b) => b.totalOrders - a.totalOrders)
-    .slice(0, 3);
+  // Process top menu items from real data with fallback
+  const topMenuItems = topItems.length > 0 
+    ? topItems.slice(0, 3).map(item => ({
+        id: item._id,
+        name: item.name,
+        totalOrders: item.totalQuantity || item.orders,
+        price: (item.totalRevenue / (item.totalQuantity || 1)).toFixed(2),
+        rating: 4.5 // Default rating since we don't have this in our data yet
+      }))
+    : mockMenuItems.sort((a, b) => b.totalOrders - a.totalOrders).slice(0, 3);
+
+  // SSR Loading State
+  if (!isClient) {
+    return (
+      <div className="space-y-4 lg:space-y-6">
+        <div className="bg-gradient-to-r from-grub-red to-grub-red-light rounded-lg p-4 lg:p-6 text-white">
+          <h1 className="text-xl lg:text-2xl font-bold mb-2">Loading Dashboard...</h1>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 lg:space-y-6">
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-grub-red to-grub-red-light rounded-lg p-4 lg:p-6 text-white">
         <h1 className="text-xl lg:text-2xl font-bold mb-2">
-          {t('dashboard.welcome', { name: 'Bistro Montreal' })}
+          {t('dashboard.welcome', { name: getRestaurantName() })}
         </h1>
         <p className="text-red-100 text-sm lg:text-base">
-          {t('dashboard.overview')}
+          {restaurantInfo?.description || t('dashboard.overview')}
         </p>
       </div>
 
@@ -122,38 +194,66 @@ const DashboardHome = () => {
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-3 lg:space-y-4">
-              {recentOrders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between p-3 lg:p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-2 lg:space-x-3 min-w-0">
-                    <div className="h-8 w-8 lg:h-10 lg:w-10 bg-grub-red rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-white text-xs lg:text-sm font-medium">
-                        {order.customer.name.charAt(0)}
+              {loading ? (
+                // Loading state
+                Array.from({ length: 3 }).map((_, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 lg:p-4 bg-gray-50 rounded-lg animate-pulse">
+                    <div className="flex items-center space-x-2 lg:space-x-3">
+                      <div className="h-8 w-8 lg:h-10 lg:w-10 bg-gray-300 rounded-full"></div>
+                      <div>
+                        <div className="h-4 bg-gray-300 rounded w-24 mb-1"></div>
+                        <div className="h-3 bg-gray-300 rounded w-16"></div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="h-4 bg-gray-300 rounded w-16 mb-1"></div>
+                      <div className="h-3 bg-gray-300 rounded w-12"></div>
+                    </div>
+                  </div>
+                ))
+              ) : recentOrders.length > 0 ? (
+                recentOrders.map((order) => (
+                  <div key={order._id || order.id} className="flex items-center justify-between p-3 lg:p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-2 lg:space-x-3 min-w-0">
+                      <div className="h-8 w-8 lg:h-10 lg:w-10 bg-grub-red rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-white text-xs lg:text-sm font-medium">
+                          {order.customer.name.charAt(0)}
+                        </span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900 text-sm lg:text-base truncate">
+                          {order.customer.name}
+                        </p>
+                        <p className="text-xs lg:text-sm text-gray-500">
+                          {order.items.length} {order.items.length === 1 ? 'item' : 'items'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="font-medium text-gray-900 text-sm lg:text-base">
+                        ${order.total.toFixed(2)}
+                      </p>
+                      <span className={`inline-flex items-center px-2 lg:px-2.5 py-0.5 rounded-full text-[10px] lg:text-xs font-medium ${
+                        order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                        order.status === 'preparing' ? 'bg-yellow-100 text-yellow-800' :
+                        order.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
+                        order.status === 'scheduled' ? 'bg-purple-100 text-purple-800' :
+                        order.status === 'pending' ? 'bg-orange-100 text-orange-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                       </span>
                     </div>
-                    <div className="min-w-0">
-                      <p className="font-medium text-gray-900 text-sm lg:text-base truncate">
-                        {order.customer.name}
-                      </p>
-                      <p className="text-xs lg:text-sm text-gray-500">
-                        {order.items.length} {order.items.length === 1 ? 'item' : 'items'}
-                      </p>
-                    </div>
                   </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="font-medium text-gray-900 text-sm lg:text-base">
-                      ${order.total}
-                    </p>
-                    <span className={`inline-flex items-center px-2 lg:px-2.5 py-0.5 rounded-full text-[10px] lg:text-xs font-medium ${
-                      order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                      order.status === 'preparing' ? 'bg-yellow-100 text-yellow-800' :
-                      order.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {t(`orders.statuses.${order.status}`)}
-                    </span>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <ShoppingBag className="h-6 w-6 text-gray-400" />
                   </div>
+                  <p className="text-gray-500 text-sm">No recent orders</p>
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>

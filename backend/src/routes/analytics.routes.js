@@ -9,6 +9,9 @@ const Restaurant = require('../models/Restaurant');
 const User = require('../models/User');
 const Review = require('../models/Review');
 
+// Import new analytics controller
+const analyticsController = require('../controllers/analytics.controller');
+
 const router = express.Router();
 
 // Apply auth middleware to all routes
@@ -344,6 +347,27 @@ const getRevenueAnalytics = asyncHandler(async (req, res) => {
 });
 
 // Routes
+
+// New analytics routes for partner dashboard
+router.get('/overview', roleMiddleware('partner'), analyticsController.getOverviewAnalytics);
+router.get('/revenue-trend', roleMiddleware('partner'), analyticsController.getRevenueTrend);
+router.get('/top-items', roleMiddleware('partner'), analyticsController.getTopItems);
+router.get('/order-status', roleMiddleware('partner'), analyticsController.getOrderStatusDistribution);
+
+// Customer analytics routes
+router.get('/customer-overview', roleMiddleware('partner'), analyticsController.getCustomerOverview);
+router.get('/top-customers', roleMiddleware('partner'), analyticsController.getTopCustomers);
+router.get('/customer-segments', roleMiddleware('partner'), analyticsController.getCustomerSegments);
+
+// Performance analytics routes
+router.get('/performance-overview', roleMiddleware('partner'), analyticsController.getPerformanceOverview);
+router.get('/delivery-performance-trend', roleMiddleware('partner'), analyticsController.getDeliveryPerformanceTrend);
+
+// Dashboard specific routes
+router.get('/recent-orders', roleMiddleware('partner'), analyticsController.getRecentOrders);
+router.get('/restaurant-info', roleMiddleware('partner'), analyticsController.getRestaurantInfo);
+
+// Existing routes
 router.get('/restaurant/:restaurantId', 
   commonValidations.mongoId, 
   roleMiddleware('partner', 'admin'), 

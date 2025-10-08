@@ -217,14 +217,16 @@ const BusinessDetailsStep = ({
       // Debug: Log the data being sent
       console.log('🔍 Form submission data:', {
         identifier: data.identifier,
-        otp: data.otp,
+        otpVerified: data.otpVerified,
+        otpVerificationToken: data.otpVerificationToken,
         channel: data.channel,
         formData: formData
       });
       
-      // Append OTP verification fields
+      // Append verification fields (OTP already verified in Stage 1)
       submitData.append('identifier', data.identifier);
-      submitData.append('otp', data.otp);
+      submitData.append('skipOtpVerification', 'true');
+      submitData.append('otpVerificationToken', data.otpVerificationToken || '');
       
       // Append user details
       submitData.append('firstName', formData.firstName.trim());
@@ -303,8 +305,13 @@ const BusinessDetailsStep = ({
       });
       
       if (response.ok && result.status === 'success') {
-        // Pass the complete user data to parent for authentication
-        onComplete(result.data);
+        // Pass the user data to parent to move to Stage 3 (billing details)
+        onComplete({
+          user: result.data.user,
+          restaurant: result.data.restaurant,
+          accessToken: result.data.accessToken,
+          refreshToken: result.data.refreshToken
+        });
       } else {
         console.error('❌ Registration failed:', result);
         if (result.errors && Array.isArray(result.errors)) {
@@ -730,7 +737,7 @@ const BusinessDetailsStep = ({
               Creating Account...
             </div>
           ) : (
-            'Complete Registration'
+            'Continue to Billing'
           )}
         </button>
       </div>

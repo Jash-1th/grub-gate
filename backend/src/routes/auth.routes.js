@@ -16,7 +16,8 @@ const {
   verifyLoginOTP,
   registerPartner,
   requestPartnerOTP,
-  verifyPartnerOTP
+  verifyPartnerOTP,
+  completePartnerBilling
 } = require('../controllers/auth.controller');
 const { authMiddleware } = require('../middlewares/auth');
 const { validateRequest, userSchemas, partnerSchemas } = require('../middlewares/joiValidation');
@@ -42,6 +43,7 @@ router.post('/reset-password', resetPassword);
 // OTP Authentication routes
 router.post('/otp/request', validateRequest(userSchemas.requestOTP), requestOTP);
 router.post('/otp/verify', validateRequest(userSchemas.verifyOTP), verifyOTP);
+router.post('/otp/check', validateRequest(userSchemas.verifyOTPOnly), verifyLoginOTP);
 
 // OTP Login routes (for existing users)
 router.post('/otp/login-request', validateRequest(userSchemas.requestOTP), requestLoginOTP);
@@ -53,6 +55,11 @@ router.post('/partner/otp/verify',
   partnerUpload, 
   validateRequest(partnerSchemas.verifyPartnerOTP), 
   verifyPartnerOTP
+);
+router.post('/partner/complete-billing', 
+  partnerUpload, 
+  validateRequest(partnerSchemas.completePartnerBilling), 
+  completePartnerBilling
 );
 
 // Protected routes

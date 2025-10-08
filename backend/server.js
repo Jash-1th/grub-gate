@@ -26,8 +26,11 @@ const contactRoutes = require('./src/routes/contact.routes');
 const uploadRoutes = require('./src/routes/upload.routes');
 const searchRoutes = require('./src/routes/search.routes');
 const mealPlanRoutes = require('./src/routes/mealPlan.routes');
+const subscriptionMealPlanRoutes = require('./src/routes/subscriptionMealPlan.routes');
 const partnerMenuItemRoutes = require('./src/routes/partner/menuItem.routes');
 const partnerSettingsRoutes = require('./src/routes/partner/restaurantSettings.routes');
+const orderGenerationRoutes = require('./src/routes/orderGeneration.routes');
+const adminRoutes = require('./src/routes/admin.routes');
 
 const app = express();
 
@@ -114,8 +117,11 @@ app.use('/api/v1/contact', contactRoutes);
 app.use('/api/v1/upload', uploadRoutes);
 app.use('/api/v1/search', searchRoutes);
 app.use('/api/v1/meal-plans', mealPlanRoutes);
+app.use('/api/v1/subscription-meal-plans', subscriptionMealPlanRoutes);
 app.use('/api/v1/partner', partnerMenuItemRoutes);
 app.use('/api/v1/partner', partnerSettingsRoutes);
+app.use('/api/v1/orders/generate', orderGenerationRoutes);
+app.use('/api/v1/admin', adminRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

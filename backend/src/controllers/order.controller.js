@@ -23,9 +23,11 @@ const getOrders = asyncHandler(async (req, res) => {
     limit = 20,
     status,
     type,
+    date,
     startDate,
     endDate,
-    sortBy = 'createdAt',
+    includeScheduled = 'true',
+    sortBy = 'scheduledDate',
     sortOrder = 'desc'
   } = req.query;
 
@@ -45,13 +47,30 @@ const getOrders = asyncHandler(async (req, res) => {
   // Apply filters
   if (status) {
     query.status = status;
+  } else if (includeScheduled === 'true') {
+    // Include all statuses by default (scheduled, pending, completed, etc.)
+    query.status = { $in: ['scheduled', 'pending', 'confirmed', 'preparing', 'ready', 'out-for-delivery', 'delivered', 'completed', 'cancelled'] };
   }
 
   if (type) {
     query.type = type;
   }
 
-  if (startDate || endDate) {
+  // Date filtering - use scheduledDate for better future/past order support
+  if (date) {
+    // Parse date as UTC to avoid timezone issues
+    const targetDate = new Date(date + 'T00:00:00.000Z');
+    const startOfDay = new Date(targetDate);
+    const endOfDay = new Date(targetDate);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+    
+    // Use scheduledDate for filtering (supports future orders)
+    query.scheduledDate = {
+      $gte: startOfDay,
+      $lte: endOfDay
+    };
+  } else if (startDate || endDate) {
+    // Date range filtering
     query.createdAt = {};
     if (startDate) query.createdAt.$gte = new Date(startDate);
     if (endDate) query.createdAt.$lte = new Date(endDate);

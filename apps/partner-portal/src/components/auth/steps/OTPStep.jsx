@@ -86,9 +86,10 @@ const OTPStep = ({
       const result = await response.json();
       
       if (response.ok && result.status === 'success') {
-        // OTP is valid, pass any additional data and move to business details
+        // OTP is valid, pass verification token and move to business details
         onNext({
           otpVerified: true,
+          otpVerificationToken: result.data?.verificationToken || `verified_${Date.now()}`, // Temporary token for this session
           ...result.data
         });
       } else {

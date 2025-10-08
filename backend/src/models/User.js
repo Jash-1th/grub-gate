@@ -108,6 +108,74 @@ const userSchema = new mongoose.Schema({
     ref: 'Restaurant',
     sparse: true // Only partners will have this field
   },
+  // Delivery addresses for customers
+  addresses: [{
+    type: {
+      type: String,
+      enum: ['home', 'work', 'other'],
+      default: 'home'
+    },
+    street: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    city: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    province: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    postalCode: {
+      type: String,
+      required: true,
+      trim: true,
+      uppercase: true
+    },
+    instructions: {
+      type: String,
+      trim: true,
+      maxlength: [200, 'Delivery instructions cannot exceed 200 characters']
+    },
+    isDefault: {
+      type: Boolean,
+      default: false
+    }
+  }],
+  
+  // Subscription preferences for meal planning
+  subscriptionPreferences: {
+    defaultPlanType: {
+      type: String,
+      enum: ['bi-weekly', 'monthly', 'quarterly'],
+      default: 'bi-weekly'
+    },
+    preferredDeliveryTime: {
+      lunch: {
+        type: String,
+        default: '12:00',
+        match: [/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Please enter time in HH:MM format']
+      },
+      dinner: {
+        type: String,
+        default: '18:00',
+        match: [/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Please enter time in HH:MM format']
+      }
+    },
+    autoRenewSubscriptions: {
+      type: Boolean,
+      default: true
+    },
+    mealPlanReminders: {
+      type: Boolean,
+      default: true
+    }
+  },
+  
   notificationPreferences: {
     emailNotifications: {
       type: Boolean,
@@ -128,23 +196,14 @@ const userSchema = new mongoose.Schema({
     systemUpdates: {
       type: Boolean,
       default: true
-    }
-  },
-  billingInfo: {
-    paymentMethod: {
-      type: String,
-      trim: true,
-      default: ''
     },
-    taxId: {
-      type: String,
-      trim: true,
-      default: ''
+    mealPlanUpdates: {
+      type: Boolean,
+      default: true
     },
-    billingAddress: {
-      type: String,
-      trim: true,
-      default: ''
+    subscriptionReminders: {
+      type: Boolean,
+      default: true
     }
   }
 }, {

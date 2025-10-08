@@ -212,7 +212,17 @@ const restaurantSchema = new mongoose.Schema({
         type: String,
         trim: true,
         uppercase: true,
-        match: [/^[A-Z]\d[A-Z] \d[A-Z]\d$/, 'Please enter a valid Canadian postal code (e.g., H3A 1B2)']
+        validate: {
+          validator: function(value) {
+            // Allow null/undefined/empty values (for incomplete registrations)
+            if (value === null || value === undefined || value === '') {
+              return true;
+            }
+            // Otherwise, validate Canadian postal code format
+            return /^[A-Z]\d[A-Z] \d[A-Z]\d$/.test(value);
+          },
+          message: 'Please enter a valid Canadian postal code (e.g., H3A 1B2)'
+        }
       },
       country: {
         type: String,
@@ -234,39 +244,96 @@ const restaurantSchema = new mongoose.Schema({
       },
       accountType: {
         type: String,
-        enum: {
-          values: ['checking', 'savings', 'business'],
-          message: 'Account type must be checking, savings, or business'
-        },
         trim: true,
-        default: null
+        default: null,
+        validate: {
+          validator: function(value) {
+            // Allow null/undefined/empty values (for incomplete registrations)
+            if (value === null || value === undefined || value === '') {
+              return true;
+            }
+            // Otherwise, validate against allowed values
+            return ['checking', 'savings', 'business'].includes(value);
+          },
+          message: 'Account type must be checking, savings, or business'
+        }
       },
       routingNumber: {
         type: String,
         trim: true,
-        match: [/^\d{9}$/, 'Routing number must be 9 digits']
+        validate: {
+          validator: function(value) {
+            // Allow null/undefined/empty values (for incomplete registrations)
+            if (value === null || value === undefined || value === '') {
+              return true;
+            }
+            // Otherwise, validate format
+            return /^\d{9}$/.test(value);
+          },
+          message: 'Routing number must be 9 digits'
+        }
       },
       accountNumber: {
         type: String,
         trim: true,
-        match: [/^\d{8,17}$/, 'Account number must be 8-17 digits']
+        validate: {
+          validator: function(value) {
+            // Allow null/undefined/empty values (for incomplete registrations)
+            if (value === null || value === undefined || value === '') {
+              return true;
+            }
+            // Otherwise, validate format
+            return /^\d{8,17}$/.test(value);
+          },
+          message: 'Account number must be 8-17 digits'
+        }
       }
     },
     taxInfo: {
       businessNumber: {
         type: String,
         trim: true,
-        match: [/^\d{9}RP\d{4}$/, 'Please enter a valid Canadian business number (e.g., 123456789RP0001)']
+        validate: {
+          validator: function(value) {
+            // Allow null/undefined/empty values (for incomplete registrations)
+            if (value === null || value === undefined || value === '') {
+              return true;
+            }
+            // Otherwise, validate format
+            return /^\d{9}RP\d{4}$/.test(value);
+          },
+          message: 'Please enter a valid Canadian business number (e.g., 123456789RP0001)'
+        }
       },
       gstHstNumber: {
         type: String,
         trim: true,
-        match: [/^\d{9}RT\d{4}$/, 'Please enter a valid GST/HST number (e.g., 123456789RT0001)']
+        validate: {
+          validator: function(value) {
+            // Allow null/undefined/empty values (for incomplete registrations)
+            if (value === null || value === undefined || value === '') {
+              return true;
+            }
+            // Otherwise, validate format
+            return /^\d{9}RT\d{4}$/.test(value);
+          },
+          message: 'Please enter a valid GST/HST number (e.g., 123456789RT0001)'
+        }
       },
       qstNumber: {
         type: String,
         trim: true,
-        match: [/^\d{10}TQ\d{4}$/, 'Please enter a valid QST number (e.g., 1234567890TQ0001)']
+        validate: {
+          validator: function(value) {
+            // Allow null/undefined/empty values (for incomplete registrations)
+            if (value === null || value === undefined || value === '') {
+              return true;
+            }
+            // Otherwise, validate format
+            return /^\d{10}TQ\d{4}$/.test(value);
+          },
+          message: 'Please enter a valid QST number (e.g., 1234567890TQ0001)'
+        }
       }
     },
     contactInfo: {
@@ -274,15 +341,32 @@ const restaurantSchema = new mongoose.Schema({
         type: String,
         lowercase: true,
         trim: true,
-        match: [
-          /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
-          'Please enter a valid billing email'
-        ]
+        validate: {
+          validator: function(value) {
+            // Allow null/undefined/empty values (for incomplete registrations)
+            if (value === null || value === undefined || value === '') {
+              return true;
+            }
+            // Otherwise, validate email format
+            return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(value);
+          },
+          message: 'Please enter a valid billing email'
+        }
       },
       billingPhone: {
         type: String,
         trim: true,
-        match: [/^\+?[\d\s\-\(\)]+$/, 'Please enter a valid billing phone number']
+        validate: {
+          validator: function(value) {
+            // Allow null/undefined/empty values (for incomplete registrations)
+            if (value === null || value === undefined || value === '') {
+              return true;
+            }
+            // Otherwise, validate phone format
+            return /^\+?[\d\s\-\(\)]+$/.test(value);
+          },
+          message: 'Please enter a valid billing phone number'
+        }
       },
       contactPerson: {
         type: String,
@@ -290,6 +374,16 @@ const restaurantSchema = new mongoose.Schema({
         maxlength: [100, 'Contact person name cannot be more than 100 characters']
       }
     }
+  },
+  registrationComplete: {
+    type: Boolean,
+    default: false
+  },
+  registrationStage: {
+    type: Number,
+    default: 2, // Stage 2 completed (basic info), Stage 3 pending (billing info)
+    min: 1,
+    max: 3
   },
   status: {
     type: String,

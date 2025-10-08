@@ -9,6 +9,7 @@ import useClientLanguageDetection from './hooks/useClientLanguageDetection.js';
 import { AuthProvider, useAuth } from './contexts/AuthContext.jsx';
 import { ModalProvider } from './contexts/ModalContext.jsx';
 import { ToastProvider } from './contexts/ToastContext.jsx';
+import { RestaurantProvider } from './contexts/RestaurantContext.jsx';
 
 // Modals
 import PartnerOTPAuthModal from './components/auth/PartnerOTPAuthModal.jsx';
@@ -119,11 +120,13 @@ function App() {
 
   return (
     <AuthProvider>
-      <ModalProvider>
-        <ToastProvider>
-          <AppContent />
-        </ToastProvider>
-      </ModalProvider>
+      <RestaurantProvider>
+        <ModalProvider>
+          <ToastProvider>
+            <AppContent />
+          </ToastProvider>
+        </ModalProvider>
+      </RestaurantProvider>
     </AuthProvider>
   );
 }

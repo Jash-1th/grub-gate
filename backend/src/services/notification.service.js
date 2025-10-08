@@ -60,23 +60,23 @@ class NotificationService {
   }
 
   /**
-   * Send weekly plan reminders
+   * Send subscription meal plan reminders
    */
-  async sendWeeklyPlanReminder(weeklyPlan) {
+  async sendWeeklyPlanReminder(subscriptionMealPlan) {
     try {
-      await weeklyPlan.populate([
+      await subscriptionMealPlan.populate([
         { path: 'customerId', select: 'firstName lastName email preferences' },
         { path: 'restaurantId', select: 'name' }
       ]);
 
-      if (weeklyPlan.customerId.preferences.notifications.email) {
+      if (subscriptionMealPlan.customerId.preferences.notifications.email) {
         await emailService.sendWeeklyPlanReminder(
-          weeklyPlan.customerId.email,
-          weeklyPlan
+          subscriptionMealPlan.customerId.email,
+          subscriptionMealPlan
         );
       }
 
-      console.log(`Weekly plan reminder sent for plan ${weeklyPlan._id}`);
+      console.log(`Weekly plan reminder sent for plan ${subscriptionMealPlan._id}`);
     } catch (error) {
       console.error('Error sending weekly plan reminder:', error);
     }

@@ -52,6 +52,9 @@ const OTPAuthModal = () => {
   
   // Auth mode (login or signup)
   const [authMode, setAuthMode] = useState('signup');
+  
+  // OTP verification status
+  const [otpVerified, setOtpVerified] = useState(false);
 
   // Handle input changes
   const handleInputChange = (e) => {
@@ -249,13 +252,13 @@ const OTPAuthModal = () => {
     }
   };
 
-  // Handle OTP verification
+  // Handle OTP verification - verify immediately and check if user exists
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
     
     if (isLocalLoading || isLoading) return;
     
-    // Validate OTP
+    // Validate OTP format
     const errors = {};
     if (!formData.otp || formData.otp.length !== 6) {
       errors.otp = 'Please enter a valid 6-digit code';
@@ -266,15 +269,58 @@ const OTPAuthModal = () => {
       return;
     }
     
-    // For new users, show signup form after OTP verification
-    // We'll verify the OTP and collect user details in the next step
-    setIsNewUser(true);
-    setCurrentStep('userInfo');
+    setIsLocalLoading(true);
     setFormErrors({});
     clearError();
+    
+    try {
+      // Try to verify OTP with minimal data - this will tell us if user exists
+      const response = await fetch('/api/v1/auth/otp/check', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          identifier: formData.identifier,
+          otp: formData.otp,
+          userType: 'customer'
+        }),
+      });
+      
+      const result = await response.json();
+      console.log('🔍 OTP Verification Response:', { status: response.status, result });
+      
+      if (response.ok && result.status === 'success') {
+        // User exists and OTP verified - complete login immediately
+        localStorage.setItem('accessToken', result.data.accessToken);
+        if (result.data.refreshToken) {
+          localStorage.setItem('refreshToken', result.data.refreshToken);
+        }
+        localStorage.setItem('user', JSON.stringify(result.data.user));
+        
+        closeOTPAuthModal();
+        showSuccess(
+          'Welcome Back!',
+          `Great to see you again, ${result.data.user.firstName}!`
+        );
+      } else if (response.status === 404 && result.message && result.message.includes('User not found')) {
+        // User doesn't exist but OTP is valid - collect user info for signup
+        setOtpVerified(true);
+        setIsNewUser(true);
+        setCurrentStep('userInfo');
+      } else {
+        // Invalid OTP or other error
+        setFormErrors({ general: result.message || 'Invalid verification code. Please try again.' });
+      }
+    } catch (error) {
+      console.error('OTP Verification Error:', error);
+      setFormErrors({ general: 'Failed to verify code. Please try again.' });
+    } finally {
+      setIsLocalLoading(false);
+    }
   };
   
-  // Handle complete signup (OTP + user details)
+  // Handle complete signup (user details only - OTP already verified)
   const handleCompleteSignup = async (e) => {
     e.preventDefault();
     
@@ -324,42 +370,53 @@ const OTPAuthModal = () => {
     setFormErrors({});
     clearError();
     
-    // Log the data being sent for debugging
-    console.log('📤 Sending signup data:', {
-      identifier: formData.identifier,
-      otp: formData.otp,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      username: formData.username,
-      phoneNumber: formData.phoneNumber,
-      email: formData.email,
-      password: '***hidden***'
-    });
-    
     try {
-      // Prepare payload, filtering out empty optional fields
+      // OTP already verified in previous step, now just create the user account
       const payload = {
-        identifier: formData.identifier,
-        otp: formData.otp,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        password: formData.password
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        password: formData.password,
+        role: 'customer'
       };
       
-      // Only add optional fields if they have values
+      // Always send both email and phone for customer accounts (required by backend)
+      if (isEmail) {
+        // Identifier is email
+        payload.email = formData.identifier;
+        // Phone number is required for customer accounts
+        payload.phoneNumber = formData.phoneNumber ? formData.phoneNumber.trim() : '';
+      } else {
+        // Identifier is phone
+        payload.phoneNumber = formData.identifier;
+        // Email is required for customer accounts  
+        payload.email = formData.email ? formData.email.trim() : '';
+      }
+      
+      // Ensure both fields are present (backend requires both for customer accounts)
+      if (!payload.email || !payload.phoneNumber) {
+        throw new Error('Both email and phone number are required for customer registration');
+      }
+      
+      // Add optional username if provided
       if (formData.username && formData.username.trim()) {
         payload.username = formData.username.trim();
       }
-      if (formData.email && formData.email.trim()) {
-        payload.email = formData.email.trim();
-      }
-      if (formData.phoneNumber && formData.phoneNumber.trim()) {
-        payload.phoneNumber = formData.phoneNumber.trim();
-      }
       
-      console.log('📤 Final payload being sent:', payload);
+      console.log('📤 Sending user registration data (OTP already verified):', payload);
+      console.log('🔍 Form data state:', { 
+        identifier: formData.identifier, 
+        email: formData.email, 
+        phoneNumber: formData.phoneNumber,
+        isEmail: isEmail
+      });
+      console.log('🔍 Payload validation:', {
+        hasEmail: !!payload.email,
+        hasPhoneNumber: !!payload.phoneNumber,
+        emailValue: payload.email,
+        phoneNumberValue: payload.phoneNumber
+      });
       
-      const response = await fetch('/api/v1/auth/otp/verify', {
+      const response = await fetch('/api/v1/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -369,7 +426,7 @@ const OTPAuthModal = () => {
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ API Error Response:', errorText);
+        console.error('❌ Registration Error Response:', errorText);
         let errorData;
         try {
           errorData = JSON.parse(errorText);
@@ -380,7 +437,7 @@ const OTPAuthModal = () => {
       }
       
       const result = await response.json();
-      console.log('✅ API Success Response:', result);
+      console.log('✅ Registration Success Response:', result);
       
       if (result.status === 'success') {
         // Store auth data
@@ -393,37 +450,17 @@ const OTPAuthModal = () => {
         // Close modal
         closeOTPAuthModal();
         
-        // Show appropriate success message
-        const isRoleAddition = result.data.message && result.data.message.includes('role added');
-        if (isRoleAddition) {
-          showSuccess(
-            'Role Added Successfully!',
-            result.data.message
-          );
-        } else {
-          showSuccess(
-            'Welcome to GrubGate!',
-            'Your account has been created successfully. Start planning your meals!'
-          );
-        }
-        // Show welcome modal or success message
-        const pendingRedirect = localStorage.getItem('pendingRedirect');
-        if (!pendingRedirect) {
-          setShowWelcomeBackModal(true);
-          setTimeout(() => {
-            showSuccess(
-              'Welcome to GrubGate! 🎉',
-              `Great to see you, ${firstName}! Ready to start your meal planning journey?`,
-              { duration: 5000 }
-            );
-          }, 800);
-        }
+        // Show success message
+        showSuccess(
+          'Welcome to GrubGate!',
+          'Your account has been created successfully. Start planning your meals!'
+        );
       } else {
-        setFormErrors({ general: result.message || 'Signup failed. Please try again.' });
+        setFormErrors({ general: result.message || 'Registration failed. Please try again.' });
       }
     } catch (error) {
       console.error('Complete Signup Error:', error);
-      setFormErrors({ general: 'Failed to complete signup. Please try again.' });
+      setFormErrors({ general: 'Failed to complete registration. Please try again.' });
     } finally {
       setIsLocalLoading(false);
     }
@@ -472,12 +509,15 @@ const OTPAuthModal = () => {
       setFormData(prev => ({ ...prev, otp: '' }));
       setOtpTimer(0);
       setCanResend(true);
+      setOtpVerified(false);
     } else if (currentStep === 'userInfo') {
       setCurrentStep('verification');
       setIsNewUser(false);
+      setOtpVerified(false);
     } else if (currentStep === 'signupDetails') {
       setCurrentStep('verification');
       setIsNewUser(false);
+      setOtpVerified(false);
     }
     setFormErrors({});
     clearError();
@@ -504,6 +544,7 @@ const OTPAuthModal = () => {
     setCanResend(true);
     setIsNewUser(false);
     setAuthMode('signup');
+    setOtpVerified(false);
     clearError();
     closeOTPAuthModal();
   };

@@ -5,6 +5,7 @@ import { useToast } from '../../contexts/ToastContext.jsx';
 import PhoneNumberStep from './steps/PhoneNumberStep.jsx';
 import OTPStep from './steps/OTPStep.jsx';
 import BusinessDetailsStep from './steps/BusinessDetailsStep.jsx';
+import BillingDetailsStep from './steps/BillingDetailsStep.jsx';
 
 /**
  * Refactored PartnerOTPAuthModal - Parent Container Component
@@ -16,7 +17,7 @@ const PartnerOTPAuthModal = ({ isOpen, onClose }) => {
   const { setAuthenticatedUser } = useAuth();
   const { showSuccess, showError } = useToast();
   
-  // Step management: 'identifier' -> 'verification' -> 'business-details'
+  // Step management: 'identifier' -> 'verification' -> 'business-details' -> 'billing-details'
   const [currentStep, setCurrentStep] = useState('identifier');
   
   // Shared state across all steps
@@ -45,6 +46,8 @@ const PartnerOTPAuthModal = ({ isOpen, onClose }) => {
       setCurrentStep('identifier');
     } else if (currentStep === 'business-details') {
       setCurrentStep('verification');
+    } else if (currentStep === 'billing-details') {
+      setCurrentStep('business-details');
     }
   };
 
@@ -57,7 +60,16 @@ const PartnerOTPAuthModal = ({ isOpen, onClose }) => {
     setCurrentStep('business-details');
   };
 
-  // Handle successful signup completion
+  // Handle business details completion (Stage 2 -> Stage 3)
+  const handleBusinessDetailsComplete = (userData) => {
+    setSharedData(prev => ({
+      ...prev,
+      ...userData
+    }));
+    setCurrentStep('billing-details');
+  };
+
+  // Handle final signup completion (Stage 3)
   const handleSignupComplete = async (userData) => {
     try {
       // Store auth data and set authenticated user
@@ -122,12 +134,14 @@ const PartnerOTPAuthModal = ({ isOpen, onClose }) => {
             {currentStep === 'identifier' && 'Join as Partner'}
             {currentStep === 'verification' && 'Enter Verification Code'}
             {currentStep === 'business-details' && 'Business Details'}
+            {currentStep === 'billing-details' && 'Billing & Final Setup'}
           </h1>
           
           <p className="text-base text-gray-600 mb-4">
             {currentStep === 'identifier' && 'Create your partner account to manage your restaurant'}
             {currentStep === 'verification' && `We sent a code to your ${sharedData.channel === 'email' ? 'email' : 'phone number'}`}
-            {currentStep === 'business-details' && 'Complete your restaurant information to finish registration'}
+            {currentStep === 'business-details' && 'Complete your restaurant information'}
+            {currentStep === 'billing-details' && 'Upload logo, images and complete billing information'}
           </p>
 
           {/* Progress Indicator */}
@@ -138,10 +152,14 @@ const PartnerOTPAuthModal = ({ isOpen, onClose }) => {
               }`} />
               <div className={`w-3 h-3 rounded-full ${
                 currentStep === 'verification' ? 'bg-red-800' : 
-                currentStep === 'business-details' ? 'bg-green-500' : 'bg-gray-300'
+                (currentStep === 'business-details' || currentStep === 'billing-details') ? 'bg-green-500' : 'bg-gray-300'
               }`} />
               <div className={`w-3 h-3 rounded-full ${
-                currentStep === 'business-details' ? 'bg-red-800' : 'bg-gray-300'
+                currentStep === 'business-details' ? 'bg-red-800' : 
+                currentStep === 'billing-details' ? 'bg-green-500' : 'bg-gray-300'
+              }`} />
+              <div className={`w-3 h-3 rounded-full ${
+                currentStep === 'billing-details' ? 'bg-red-800' : 'bg-gray-300'
               }`} />
             </div>
           </div>
@@ -184,6 +202,18 @@ const PartnerOTPAuthModal = ({ isOpen, onClose }) => {
 
           {currentStep === 'business-details' && (
             <BusinessDetailsStep
+              data={sharedData}
+              onComplete={handleBusinessDetailsComplete}
+              onBack={goBack}
+              isLoading={isLoading}
+              setIsLoading={setIsLoading}
+              errors={errors}
+              setErrors={setErrors}
+            />
+          )}
+
+          {currentStep === 'billing-details' && (
+            <BillingDetailsStep
               data={sharedData}
               onComplete={handleSignupComplete}
               onBack={goBack}

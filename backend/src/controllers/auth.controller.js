@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Restaurant = require('../models/Restaurant');
 const OTP = require('../models/OTP');
-const { generateTokenPair, verifyRefreshToken } = require('../utils/jwt');
+const { generateTokenPair, generateToken, generateRefreshToken, verifyRefreshToken } = require('../utils/jwt');
 const smsService = require('../services/smsService');
 const emailService = require('../services/emailService');
 const { getFileUrls } = require('../middlewares/upload');
@@ -26,7 +26,10 @@ const { asyncHandler } = require('../middlewares/errorHandler');
  * @access  Public
  */
 const register = asyncHandler(async (req, res) => {
-  const { firstName, lastName, email, password, phone, role = 'customer' } = req.body;
+  const { firstName, lastName, email, password, phone, phoneNumber, role = 'customer' } = req.body;
+
+  console.log('🔍 Register endpoint received:', { firstName, lastName, email, phone, phoneNumber, role });
+  console.log('🔍 Final phoneNumber value:', phoneNumber || phone);
 
   // Check if user already exists
   const existingUser = await User.findOne({ email });
@@ -35,14 +38,18 @@ const register = asyncHandler(async (req, res) => {
   }
 
   // Create user
-  const user = await User.create({
+  const userData = {
     firstName,
     lastName,
     email,
     passwordHash: password, // Will be hashed by pre-save middleware
-    phone,
-    role
-  });
+    phoneNumber: phoneNumber || phone, // Support both field names
+    roles: [role] // Convert single role to roles array as expected by User model
+  };
+  
+  console.log('🔍 User data being created:', userData);
+  
+  const user = await User.create(userData);
 
   // Generate email verification token
   const verificationToken = user.getEmailVerificationToken();
@@ -1014,6 +1021,7 @@ const verifyPartnerOTP = asyncHandler(async (req, res) => {
     otp,
     verifyOnly,
     skipOtpVerification,
+    otpVerificationToken,
     
     // User details
     firstName,
@@ -1055,8 +1063,18 @@ const verifyPartnerOTP = asyncHandler(async (req, res) => {
   } = req.body;
 
   // Validate required fields
-  if (!identifier || !otp) {
-    return errorResponse(res, 'Identifier and OTP are required', 400);
+  if (!identifier) {
+    return errorResponse(res, 'Identifier is required', 400);
+  }
+  
+  // If not skipping OTP verification, OTP is required
+  if (!skipOtpVerification && !otp) {
+    return errorResponse(res, 'OTP is required', 400);
+  }
+  
+  // If skipping OTP verification, verification token is required
+  if (skipOtpVerification && !otpVerificationToken) {
+    return errorResponse(res, 'Verification token is required when skipping OTP verification', 400);
   }
 
   // If verifyOnly flag is true, skip other validations
@@ -1094,10 +1112,32 @@ const verifyPartnerOTP = asyncHandler(async (req, res) => {
 
       // If verifyOnly flag is true, return success without completing signup
       if (verifyOnly) {
-        return successResponse(res, null, 'OTP verified successfully');
+        return successResponse(res, {
+          verificationToken: `verified_${formattedIdentifier}_${Date.now()}`,
+          identifier: formattedIdentifier
+        }, 'OTP verified successfully');
       }
     } else {
       console.log('⏭️ Skipping OTP verification (already verified in previous step)');
+      
+      // Basic validation of verification token format
+      if (!otpVerificationToken.startsWith('verified_')) {
+        return errorResponse(res, 'Invalid verification token format', 400);
+      }
+      
+      // Extract identifier from token and validate it matches
+      const tokenParts = otpVerificationToken.split('_');
+      if (tokenParts.length < 3) {
+        return errorResponse(res, 'Invalid verification token format', 400);
+      }
+      
+      // Token should contain the identifier
+      const tokenIdentifier = tokenParts.slice(1, -1).join('_'); // Everything between 'verified_' and timestamp
+      if (tokenIdentifier !== formattedIdentifier) {
+        return errorResponse(res, 'Verification token does not match identifier', 400);
+      }
+      
+      console.log('✅ Verification token validated successfully');
     }
 
     // Check if restaurant name already exists
@@ -1340,6 +1380,257 @@ const verifyPartnerOTP = asyncHandler(async (req, res) => {
   }
 });
 
+/**
+ * Complete Partner Billing Information - Stage 3
+ * @desc    Complete partner registration with billing info, logo, and images
+ * @route   POST /api/v1/auth/partner/complete-billing
+ * @access  Public (with verification token)
+ */
+const completePartnerBilling = asyncHandler(async (req, res) => {
+  const {
+    identifier,
+    otpVerificationToken,
+    
+    // Business billing info
+    businessName,
+    billingEmail,
+    billingPhone,
+    contactPerson,
+    
+    // Billing address
+    billingStreet,
+    billingCity,
+    billingProvince,
+    billingPostalCode,
+    billingCountry = 'Canada',
+    
+    // Bank account info
+    bankName,
+    accountType,
+    routingNumber,
+    accountNumber,
+    
+    // Tax info
+    businessNumber,
+    gstHstNumber,
+    
+    // Payment method
+    paymentMethod = 'bank_transfer'
+  } = req.body;
+
+  // Validate required fields
+  if (!identifier || !otpVerificationToken) {
+    return errorResponse(res, 'Identifier and verification token are required', 400);
+  }
+
+  if (!businessName || !billingEmail || !billingPhone) {
+    return errorResponse(res, 'Business name, billing email, and billing phone are required', 400);
+  }
+
+  if (!billingStreet || !billingCity || !billingProvince || !billingPostalCode) {
+    return errorResponse(res, 'Complete billing address is required', 400);
+  }
+
+  if (!bankName || !accountType || !routingNumber || !accountNumber) {
+    return errorResponse(res, 'Complete bank account information is required', 400);
+  }
+
+  // Format identifier
+  let formattedIdentifier = identifier.toLowerCase().trim();
+  const isPhone = smsService.validatePhoneNumber(identifier);
+  if (isPhone) {
+    formattedIdentifier = smsService.formatPhoneNumber(identifier);
+  }
+
+  try {
+    // Validate verification token
+    if (!otpVerificationToken.startsWith('verified_')) {
+      return errorResponse(res, 'Invalid verification token format', 400);
+    }
+
+    const tokenParts = otpVerificationToken.split('_');
+    if (tokenParts.length < 3) {
+      return errorResponse(res, 'Invalid verification token format', 400);
+    }
+
+    const tokenIdentifier = tokenParts.slice(1, -1).join('_');
+    if (tokenIdentifier !== formattedIdentifier) {
+      return errorResponse(res, 'Verification token does not match identifier', 400);
+    }
+
+    console.log('✅ Verification token validated for billing completion');
+
+    // Find the user and restaurant
+    const isEmail = emailService.validateEmail(formattedIdentifier);
+    const searchQuery = isEmail 
+      ? { email: formattedIdentifier }
+      : { phoneNumber: formattedIdentifier };
+    
+    const user = await User.findOne(searchQuery);
+    if (!user) {
+      return errorResponse(res, 'User not found. Please complete basic registration first.', 404);
+    }
+
+    if (!user.restaurantId) {
+      return errorResponse(res, 'Restaurant not found. Please complete basic registration first.', 404);
+    }
+
+    const restaurant = await Restaurant.findById(user.restaurantId);
+    if (!restaurant) {
+      return errorResponse(res, 'Restaurant not found. Please complete basic registration first.', 404);
+    }
+
+    // Handle file uploads to Cloudinary
+    let fileUrls = {};
+    if (req.files) {
+      console.log('📁 Processing file uploads for billing completion...');
+      
+      try {
+        // Upload logo if provided
+        if (req.files.logo && req.files.logo[0]) {
+          console.log('🖼️ Uploading logo...');
+          const logoFile = req.files.logo[0];
+          
+          const allowedLogoTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+          if (!allowedLogoTypes.includes(logoFile.mimetype)) {
+            return errorResponse(res, `Invalid logo file type. Please upload an image file (JPEG, PNG, or WebP).`, 400);
+          }
+          
+          const logoResult = await uploadToCloudinary(logoFile.buffer, {
+            folder: 'grubgate/restaurants/logos',
+            transformation: [{ width: 400, height: 400, crop: 'fill', quality: 'auto' }],
+            public_id: `logo_${restaurant.name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}_${Date.now()}`
+          });
+          fileUrls.logo = logoResult.secure_url;
+          console.log('✅ Logo uploaded:', logoResult.secure_url);
+        }
+
+        // Upload restaurant images if provided
+        if (req.files.images && req.files.images.length > 0) {
+          console.log(`🖼️ Uploading ${req.files.images.length} restaurant images...`);
+          fileUrls.images = [];
+          
+          const allowedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+          
+          for (let i = 0; i < req.files.images.length; i++) {
+            const imageFile = req.files.images[i];
+            
+            if (!allowedImageTypes.includes(imageFile.mimetype)) {
+              return errorResponse(res, `Invalid image file type. Please upload image files (JPEG, PNG, or WebP).`, 400);
+            }
+            
+            const imageResult = await uploadToCloudinary(imageFile.buffer, {
+              folder: 'grubgate/restaurants/images',
+              transformation: [{ width: 800, height: 600, crop: 'fill', quality: 'auto' }],
+              public_id: `image_${restaurant.name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}_${Date.now()}_${i}`
+            });
+            fileUrls.images.push(imageResult.secure_url);
+          }
+          console.log('✅ Restaurant images uploaded:', fileUrls.images.length);
+        }
+
+        // Upload business license if provided
+        if (req.files.businessLicenseFile && req.files.businessLicenseFile[0]) {
+          console.log('📄 Uploading business license...');
+          const licenseFile = req.files.businessLicenseFile[0];
+          
+          const allowedLicenseTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'];
+          if (!allowedLicenseTypes.includes(licenseFile.mimetype)) {
+            return errorResponse(res, `Invalid business license file type. Please upload an image or PDF file.`, 400);
+          }
+          
+          const licenseResult = await uploadToCloudinary(licenseFile.buffer, {
+            folder: 'grubgate/restaurants/documents',
+            resource_type: 'auto',
+            public_id: `license_${restaurant.name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}_${Date.now()}`
+          });
+          fileUrls.businessLicense = licenseResult.secure_url;
+          console.log('✅ Business license uploaded:', licenseResult.secure_url);
+        }
+      } catch (uploadError) {
+        console.error('❌ File upload error:', uploadError);
+        return errorResponse(res, 'Failed to upload files. Please try again.', 500);
+      }
+    }
+
+    // Update restaurant with complete billing information
+    const updateData = {
+      // Update logo and images if provided
+      ...(fileUrls.logo && { logo: fileUrls.logo }),
+      ...(fileUrls.images && fileUrls.images.length > 0 && { images: fileUrls.images }),
+      ...(fileUrls.businessLicense && { businessLicense: fileUrls.businessLicense }),
+      
+      // Complete billing information
+      billingInfo: {
+        businessName,
+        billingAddress: {
+          street: billingStreet,
+          city: billingCity,
+          province: billingProvince,
+          postalCode: billingPostalCode,
+          country: billingCountry
+        },
+        paymentMethod,
+        bankAccountInfo: {
+          bankName,
+          accountType,
+          routingNumber,
+          accountNumber
+        },
+        ...(businessNumber && {
+          taxInfo: {
+            businessNumber,
+            ...(gstHstNumber && { gstHstNumber })
+          }
+        }),
+        contactInfo: {
+          email: billingEmail,
+          phone: billingPhone,
+          ...(contactPerson && { contactPerson })
+        }
+      },
+      
+      // Mark registration as complete
+      registrationComplete: true,
+      registrationStage: 3
+    };
+
+    const updatedRestaurant = await Restaurant.findByIdAndUpdate(
+      restaurant._id,
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    console.log('✅ Restaurant billing information completed:', updatedRestaurant._id);
+
+    // Generate fresh JWT tokens
+    const accessToken = generateToken(user._id, user.roles);
+    const refreshToken = generateRefreshToken(user._id);
+
+    // Return success response
+    return successResponse(res, {
+      user: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        roles: user.roles,
+        emailVerified: user.emailVerified,
+        phoneVerified: user.phoneVerified,
+        restaurantId: user.restaurantId
+      },
+      restaurant: updatedRestaurant,
+      accessToken,
+      refreshToken
+    }, 'Partner registration completed successfully! Your restaurant is ready for review.');
+
+  } catch (error) {
+    console.error('Complete Partner Billing Error:', error);
+    return errorResponse(res, 'Failed to complete billing information. Please try again.', 500);
+  }
+});
+
 module.exports = {
   register,
   login,
@@ -1356,5 +1647,6 @@ module.exports = {
   verifyLoginOTP,
   registerPartner,
   requestPartnerOTP,
-  verifyPartnerOTP
+  verifyPartnerOTP,
+  completePartnerBilling
 };
