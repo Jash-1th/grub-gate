@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { CheckCircle, Coffee, Heart } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCheckCircle, faCoffee, faHeart } from '@fortawesome/free-solid-svg-icons';
 
 const WelcomeBackModal = ({ isOpen, onClose, userName }) => {
   // Auto-close after 3 seconds (shorter than registration welcome)
@@ -48,19 +49,19 @@ const WelcomeBackModal = ({ isOpen, onClose, userName }) => {
         <div className="bg-gradient-to-r from-grub-red to-red-600 px-6 py-6 text-center relative overflow-hidden">
           {/* Decorative elements */}
           <div className="absolute top-2 left-4 text-white opacity-20">
-            <Coffee size={20} />
+            <FontAwesomeIcon icon={faCoffee} className="w-5 h-5" />
           </div>
           <div className="absolute top-3 right-6 text-white opacity-20">
-            <Heart size={18} />
+            <FontAwesomeIcon icon={faHeart} className="w-4 h-4" />
           </div>
           <div className="absolute bottom-2 right-4 text-white opacity-20">
-            <Coffee size={16} />
+            <FontAwesomeIcon icon={faCoffee} className="w-4 h-4" />
           </div>
           
           {/* Success Icon */}
           <div className="mb-3 flex justify-center">
             <div className="bg-white bg-opacity-20 rounded-full p-2 animate-pulse">
-              <CheckCircle size={40} className="text-white" />
+              <FontAwesomeIcon icon={faCheckCircle} className="w-10 h-10 text-white" />
             </div>
           </div>
           

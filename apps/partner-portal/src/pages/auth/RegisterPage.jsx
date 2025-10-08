@@ -1,117 +1,309 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff, Building, User, Mail, Phone, Lock, CheckCircle, Star, Award, Clock } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faEye, 
+  faEyeSlash, 
+  faBuilding, 
+  faUser, 
+  faEnvelope, 
+  faPhone, 
+  faLock, 
+  faCheckCircle, 
+  faStar, 
+  faAward, 
+  faClock,
+  faKey,
+  faPaperPlane,
+  faMapMarkerAlt,
+  faUtensils,
+  faGlobe,
+  faUpload,
+  faImage,
+  faFileAlt,
+  faDollarSign,
+  faRoute,
+  faBusinessTime
+} from '@fortawesome/free-solid-svg-icons';
 import { Button, Logo } from '@grub-gate/ui';
+import { useModal } from '../../contexts/ModalContext.jsx';
+import { useToast } from '../../contexts/ToastContext.jsx';
+import PartnerOTPAuthModal from '../../components/auth/PartnerOTPAuthModal.jsx';
 
 const RegisterPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { showToast } = useToast();
+  const { isOTPAuthModalOpen, openOTPAuthModal, closeOTPAuthModal } = useModal();
+  
+  // Auto-open OTP modal when page loads
+  useEffect(() => {
+    openOTPAuthModal();
+  }, [openOTPAuthModal]);
+  
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    restaurantName: '',
-    ownerName: '',
-    email: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
-    agreeTerms: false
-  });
+  const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [currentStep, setCurrentStep] = useState(1);
+  const [files, setFiles] = useState({
+    logo: null,
+    images: [],
+    businessLicense: null
+  });
+  
+  const [formData, setFormData] = useState({
+    // User details
+    firstName: '',
+    lastName: '',
+    email: '',
+    phoneNumber: '',
+    password: '',
+    confirmPassword: '',
+    
+    // Restaurant details
+    restaurantName: '',
+    description: '',
+    cuisine: '',
+    businessType: 'restaurant',
+    cuisineType: [],
+    
+    // Address
+    street: '',
+    city: '',
+    province: '',
+    postalCode: '',
+    
+    // Contact details
+    businessPhone: '',
+    businessEmail: '',
+    website: '',
+    
+    // Operating hours
+    operatingHours: {
+      monday: { open: '09:00', close: '22:00', closed: false },
+      tuesday: { open: '09:00', close: '22:00', closed: false },
+      wednesday: { open: '09:00', close: '22:00', closed: false },
+      thursday: { open: '09:00', close: '22:00', closed: false },
+      friday: { open: '09:00', close: '22:00', closed: false },
+      saturday: { open: '09:00', close: '22:00', closed: false },
+      sunday: { open: '09:00', close: '22:00', closed: false }
+    },
+    
+    // Delivery settings
+    deliveryRadius: 5,
+    deliveryFee: 0,
+    minOrderAmount: 0,
+    avgDeliveryTime: 30,
+    
+    // Business info
+    businessLicense: '',
+    taxId: '',
+    
+    agreeTerms: false
+  });
+
+  const businessTypes = [
+    { value: 'restaurant', label: 'Restaurant' },
+    { value: 'cafe', label: 'Cafe' },
+    { value: 'bakery', label: 'Bakery' },
+    { value: 'food_truck', label: 'Food Truck' },
+    { value: 'catering', label: 'Catering' },
+    { value: 'other', label: 'Other' }
+  ];
+
+  const cuisineOptions = [
+    'Italian', 'Chinese', 'Mexican', 'Indian', 'French', 'Japanese', 
+    'Thai', 'Mediterranean', 'American', 'Greek', 'Lebanese', 'Vietnamese',
+    'Korean', 'Spanish', 'Turkish', 'Moroccan', 'Ethiopian', 'Other'
+  ];
+
+  const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    
+    // Handle nested objects (like operatingHours)
+    if (name.includes('.')) {
+      const [parent, child, subChild] = name.split('.');
+      setFormData(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: subChild ? {
+            ...prev[parent][child],
+            [subChild]: type === 'checkbox' ? checked : value
+          } : (type === 'checkbox' ? checked : value)
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      }));
+    }
+    
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
-  const validateForm = () => {
+  const handleCuisineTypeChange = (cuisine) => {
+    setFormData(prev => ({
+      ...prev,
+      cuisineType: prev.cuisineType.includes(cuisine)
+        ? prev.cuisineType.filter(c => c !== cuisine)
+        : [...prev.cuisineType, cuisine]
+    }));
+  };
+
+  const handleFileChange = (e, fileType) => {
+    const selectedFiles = Array.from(e.target.files);
+    
+    if (fileType === 'images') {
+      // Multiple images allowed (max 5)
+      if (selectedFiles.length > 5) {
+        showToast('Maximum 5 images allowed', 'error');
+        return;
+      }
+      setFiles(prev => ({ ...prev, images: selectedFiles }));
+    } else {
+      // Single file for logo and business license
+      setFiles(prev => ({ ...prev, [fileType]: selectedFiles[0] }));
+    }
+  };
+
+  const validateCurrentStep = () => {
     const newErrors = {};
     
-    if (!formData.restaurantName.trim()) {
-      newErrors.restaurantName = 'Restaurant name is required';
-    }
-    
-    if (!formData.ownerName.trim()) {
-      newErrors.ownerName = 'Owner name is required';
-    }
-    
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-    
-    if (!formData.phone) {
-      newErrors.phone = 'Phone number is required';
-    }
-    
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
-    }
-    
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-    
-    if (!formData.agreeTerms) {
-      newErrors.agreeTerms = 'You must agree to the terms and conditions';
+    if (currentStep === 1) {
+      // Personal Information
+      if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
+      if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+      if (!formData.email) {
+        newErrors.email = 'Email is required';
+      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        newErrors.email = 'Please enter a valid email address';
+      }
+      if (!formData.phoneNumber) newErrors.phoneNumber = 'Phone number is required';
+      if (!formData.password) {
+        newErrors.password = 'Password is required';
+      } else if (formData.password.length < 8) {
+        newErrors.password = 'Password must be at least 8 characters';
+      }
+      if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
+      }
+    } else if (currentStep === 2) {
+      // Restaurant Information
+      if (!formData.restaurantName.trim()) newErrors.restaurantName = 'Restaurant name is required';
+      if (!formData.cuisine.trim()) newErrors.cuisine = 'Cuisine type is required';
+      if (!formData.businessType) newErrors.businessType = 'Business type is required';
+      if (formData.cuisineType.length === 0) newErrors.cuisineType = 'Select at least one cuisine type';
+    } else if (currentStep === 3) {
+      // Address & Contact
+      if (!formData.street.trim()) newErrors.street = 'Street address is required';
+      if (!formData.city.trim()) newErrors.city = 'City is required';
+      if (!formData.province.trim()) newErrors.province = 'Province is required';
+      if (!formData.postalCode.trim()) newErrors.postalCode = 'Postal code is required';
+      if (!formData.businessPhone.trim()) newErrors.businessPhone = 'Business phone is required';
+    } else if (currentStep === 4) {
+      // Terms agreement
+      if (!formData.agreeTerms) newErrors.agreeTerms = 'You must agree to the terms and conditions';
     }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleNext = () => {
+    if (validateCurrentStep()) {
+      setCurrentStep(prev => Math.min(prev + 1, 4));
+    }
+  };
+
+  const handlePrev = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    if (!validateCurrentStep()) return;
     
     setLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Create FormData for file uploads
+      const submitData = new FormData();
+      
+      // Append all form fields
+      Object.keys(formData).forEach(key => {
+        if (key === 'operatingHours') {
+          submitData.append(key, JSON.stringify(formData[key]));
+        } else if (key === 'cuisineType') {
+          submitData.append(key, JSON.stringify(formData[key]));
+        } else if (key !== 'confirmPassword') {
+          submitData.append(key, formData[key]);
+        }
+      });
+      
+      // Append files
+      if (files.logo) submitData.append('logo', files.logo);
+      if (files.businessLicense) submitData.append('businessLicense', files.businessLicense);
+      files.images.forEach((image, index) => {
+        submitData.append('images', image);
+      });
+      
+      // Make API call to register partner
+      const response = await fetch('/api/v1/auth/register-partner', {
+        method: 'POST',
+        body: submitData
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok) {
+        showToast('Registration successful! Your restaurant is pending approval.', 'success');
+        navigate('/login');
+      } else {
+        showToast(result.message || 'Registration failed. Please try again.', 'error');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      showToast('Registration failed. Please try again.', 'error');
+    } finally {
       setLoading(false);
-      // In a real app, you would handle registration here
-      navigate('/login');
-    }, 2000);
+    }
   };
 
   const benefits = [
     {
-      icon: Star,
+      icon: faStar,
       title: 'Premium Features',
       description: 'Access advanced analytics and customer insights'
     },
     {
-      icon: Award,
+      icon: faAward,
       title: 'Verified Partner',
       description: 'Get verified badge and priority listing'
     },
     {
-      icon: Clock,
+      icon: faClock,
       title: 'Quick Setup',
       description: 'Get started in less than 5 minutes'
     },
     {
-      icon: CheckCircle,
+      icon: faCheckCircle,
       title: 'No Setup Fees',
       description: 'Join for free with no hidden costs'
     }
   ];
 
   return (
+    <>
     <div className="min-h-screen bg-gradient-to-br from-grub-gray-50 via-white to-red-50 flex">
       {/* Left Side - Benefits (Hidden on Mobile) */}
       <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-12 xl:px-16">
@@ -130,7 +322,7 @@ const RegisterPage = () => {
             {benefits.map((benefit, index) => (
               <div key={index} className="flex items-start space-x-4 group">
                 <div className="flex-shrink-0 w-12 h-12 bg-grub-red/10 rounded-xl flex items-center justify-center group-hover:bg-grub-red/20 transition-colors">
-                  <benefit.icon className="w-6 h-6 text-grub-red" />
+                  <FontAwesomeIcon icon={benefit.icon} className="w-6 h-6 text-grub-red" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">{benefit.title}</h3>
@@ -144,31 +336,16 @@ const RegisterPage = () => {
 
       {/* Right Side - Registration Form */}
       <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-8 lg:max-w-2xl xl:max-w-3xl">
-        <div className="w-full max-w-md mx-auto lg:max-w-2xl xl:max-w-3xl">
-          {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-8">
-            <Logo size="lg" className="mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              Join as Partner
-            </h1>
-            <p className="text-gray-600">
-              Create your restaurant account
-            </p>
-          </div>
+        <div className="w-full max-w-md">
+          {!isOTPAuthModalOpen && (
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+              <div className="text-center mb-8">
+                <Logo className="mx-auto mb-4" size="lg" />
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Join as Partner</h1>
+                <p className="text-gray-600">Create your partner account to manage your restaurant</p>
+              </div>
 
-          {/* Desktop Header */}
-          <div className="hidden lg:block mb-10 xl:mb-12">
-            <h2 className="text-4xl xl:text-5xl font-bold text-gray-900 mb-4">
-              Create your account
-            </h2>
-            <p className="text-xl text-gray-600 leading-relaxed">
-              Join thousands of successful restaurant partners and start growing your business today.
-            </p>
-          </div>
-
-          {/* Registration Form */}
-          <div className="bg-white rounded-2xl shadow-soft border border-gray-100 p-6 sm:p-8 lg:p-10 xl:p-12">
-            <form onSubmit={handleSubmit} className="space-y-6 lg:space-y-7">
+              <form onSubmit={handleSubmit} className="space-y-6">
               {/* Form Header - Desktop Only */}
               <div className="hidden lg:block pb-6 border-b border-gray-100">
                 <h3 className="text-2xl font-semibold text-gray-900 mb-2">
@@ -186,7 +363,7 @@ const RegisterPage = () => {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Building className="h-5 w-5 text-gray-400" />
+                    <FontAwesomeIcon icon={faBuilding} className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
                     id="restaurantName"
@@ -214,7 +391,7 @@ const RegisterPage = () => {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className="h-5 w-5 text-gray-400" />
+                    <FontAwesomeIcon icon={faUser} className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
                     id="ownerName"
@@ -243,7 +420,7 @@ const RegisterPage = () => {
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-gray-400" />
+                      <FontAwesomeIcon icon={faEnvelope} className="h-5 w-5 text-gray-400" />
                     </div>
                     <input
                       id="email"
@@ -270,7 +447,7 @@ const RegisterPage = () => {
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Phone className="h-5 w-5 text-gray-400" />
+                      <FontAwesomeIcon icon={faPhone} className="h-5 w-5 text-gray-400" />
                     </div>
                     <input
                       id="phone"
@@ -300,7 +477,7 @@ const RegisterPage = () => {
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
+                      <FontAwesomeIcon icon={faLock} className="h-5 w-5 text-gray-400" />
                     </div>
                     <input
                       id="password"
@@ -321,9 +498,9 @@ const RegisterPage = () => {
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? (
-                        <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                        <FontAwesomeIcon icon={faEyeSlash} className="h-5 w-5 text-gray-400 hover:text-gray-600" />
                       ) : (
-                        <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                        <FontAwesomeIcon icon={faEye} className="h-5 w-5 text-gray-400 hover:text-gray-600" />
                       )}
                     </button>
                   </div>
@@ -338,7 +515,7 @@ const RegisterPage = () => {
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
+                      <FontAwesomeIcon icon={faLock} className="h-5 w-5 text-gray-400" />
                     </div>
                     <input
                       id="confirmPassword"
@@ -359,9 +536,9 @@ const RegisterPage = () => {
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     >
                       {showConfirmPassword ? (
-                        <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                        <FontAwesomeIcon icon={faEyeSlash} className="h-5 w-5 text-gray-400 hover:text-gray-600" />
                       ) : (
-                        <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                        <FontAwesomeIcon icon={faEye} className="h-5 w-5 text-gray-400 hover:text-gray-600" />
                       )}
                     </button>
                   </div>
@@ -421,6 +598,7 @@ const RegisterPage = () => {
               </div>
             </form>
           </div>
+          )}
 
           {/* Mobile Benefits */}
           <div className="lg:hidden mt-8 space-y-4">
@@ -430,7 +608,7 @@ const RegisterPage = () => {
             <div className="grid grid-cols-2 gap-4">
               {benefits.map((benefit, index) => (
                 <div key={index} className="text-center p-4 bg-white rounded-xl shadow-soft border border-gray-100">
-                  <benefit.icon className="w-6 h-6 text-grub-red mx-auto mb-2" />
+                  <FontAwesomeIcon icon={benefit.icon} className="w-6 h-6 text-grub-red mx-auto mb-2" />
                   <h4 className="font-medium text-gray-900 text-sm mb-1">{benefit.title}</h4>
                   <p className="text-xs text-gray-600 leading-relaxed">{benefit.description}</p>
                 </div>
@@ -440,12 +618,17 @@ const RegisterPage = () => {
         </div>
       </div>
     </div>
+    
+    {/* OTP Authentication Modal */}
+    <PartnerOTPAuthModal 
+      isOpen={isOTPAuthModalOpen} 
+      onClose={() => {
+        closeOTPAuthModal();
+        navigate('/'); // Navigate back to landing page if modal is closed
+      }} 
+    />
+    </>
   );
 };
 
 export default RegisterPage;
-
-
-
-
-

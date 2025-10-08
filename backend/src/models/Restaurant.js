@@ -31,9 +31,19 @@ const restaurantSchema = new mongoose.Schema({
     maxlength: [500, 'Description cannot be more than 500 characters']
   },
   cuisine: {
-    type: String,
+    type: [String],
     required: [true, 'Cuisine type is required'],
-    trim: true
+    validate: {
+      validator: function(cuisines) {
+        return cuisines && cuisines.length > 0;
+      },
+      message: 'At least one cuisine type is required'
+    }
+  },
+  businessType: {
+    type: String,
+    enum: ['restaurant', 'cafe', 'bakery', 'food_truck', 'catering', 'other'],
+    required: [true, 'Business type is required']
   },
   ownerId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -168,6 +178,213 @@ const restaurantSchema = new mongoose.Schema({
     min: [0, 'Commission rate cannot be negative'],
     max: [50, 'Commission rate cannot exceed 50%']
   },
+  businessLicense: {
+    type: String,
+    trim: true
+  },
+  taxId: {
+    type: String,
+    trim: true
+  },
+  billingInfo: {
+    businessName: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'Business name cannot be more than 100 characters']
+    },
+    billingAddress: {
+      street: {
+        type: String,
+        trim: true,
+        maxlength: [100, 'Street address cannot be more than 100 characters']
+      },
+      city: {
+        type: String,
+        trim: true,
+        maxlength: [50, 'City name cannot be more than 50 characters']
+      },
+      province: {
+        type: String,
+        trim: true,
+        maxlength: [50, 'Province name cannot be more than 50 characters']
+      },
+      postalCode: {
+        type: String,
+        trim: true,
+        uppercase: true,
+        validate: {
+          validator: function(value) {
+            // Allow null/undefined/empty values (for incomplete registrations)
+            if (value === null || value === undefined || value === '') {
+              return true;
+            }
+            // Otherwise, validate Canadian postal code format
+            return /^[A-Z]\d[A-Z] \d[A-Z]\d$/.test(value);
+          },
+          message: 'Please enter a valid Canadian postal code (e.g., H3A 1B2)'
+        }
+      },
+      country: {
+        type: String,
+        trim: true,
+        default: 'Canada',
+        maxlength: [50, 'Country name cannot be more than 50 characters']
+      }
+    },
+    paymentMethod: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'Payment method cannot be more than 100 characters']
+    },
+    bankAccountInfo: {
+      bankName: {
+        type: String,
+        trim: true,
+        maxlength: [100, 'Bank name cannot be more than 100 characters']
+      },
+      accountType: {
+        type: String,
+        trim: true,
+        default: null,
+        validate: {
+          validator: function(value) {
+            // Allow null/undefined/empty values (for incomplete registrations)
+            if (value === null || value === undefined || value === '') {
+              return true;
+            }
+            // Otherwise, validate against allowed values
+            return ['checking', 'savings', 'business'].includes(value);
+          },
+          message: 'Account type must be checking, savings, or business'
+        }
+      },
+      routingNumber: {
+        type: String,
+        trim: true,
+        validate: {
+          validator: function(value) {
+            // Allow null/undefined/empty values (for incomplete registrations)
+            if (value === null || value === undefined || value === '') {
+              return true;
+            }
+            // Otherwise, validate format
+            return /^\d{9}$/.test(value);
+          },
+          message: 'Routing number must be 9 digits'
+        }
+      },
+      accountNumber: {
+        type: String,
+        trim: true,
+        validate: {
+          validator: function(value) {
+            // Allow null/undefined/empty values (for incomplete registrations)
+            if (value === null || value === undefined || value === '') {
+              return true;
+            }
+            // Otherwise, validate format
+            return /^\d{8,17}$/.test(value);
+          },
+          message: 'Account number must be 8-17 digits'
+        }
+      }
+    },
+    taxInfo: {
+      businessNumber: {
+        type: String,
+        trim: true,
+        validate: {
+          validator: function(value) {
+            // Allow null/undefined/empty values (for incomplete registrations)
+            if (value === null || value === undefined || value === '') {
+              return true;
+            }
+            // Otherwise, validate format
+            return /^\d{9}RP\d{4}$/.test(value);
+          },
+          message: 'Please enter a valid Canadian business number (e.g., 123456789RP0001)'
+        }
+      },
+      gstHstNumber: {
+        type: String,
+        trim: true,
+        validate: {
+          validator: function(value) {
+            // Allow null/undefined/empty values (for incomplete registrations)
+            if (value === null || value === undefined || value === '') {
+              return true;
+            }
+            // Otherwise, validate format
+            return /^\d{9}RT\d{4}$/.test(value);
+          },
+          message: 'Please enter a valid GST/HST number (e.g., 123456789RT0001)'
+        }
+      },
+      qstNumber: {
+        type: String,
+        trim: true,
+        validate: {
+          validator: function(value) {
+            // Allow null/undefined/empty values (for incomplete registrations)
+            if (value === null || value === undefined || value === '') {
+              return true;
+            }
+            // Otherwise, validate format
+            return /^\d{10}TQ\d{4}$/.test(value);
+          },
+          message: 'Please enter a valid QST number (e.g., 1234567890TQ0001)'
+        }
+      }
+    },
+    contactInfo: {
+      billingEmail: {
+        type: String,
+        lowercase: true,
+        trim: true,
+        validate: {
+          validator: function(value) {
+            // Allow null/undefined/empty values (for incomplete registrations)
+            if (value === null || value === undefined || value === '') {
+              return true;
+            }
+            // Otherwise, validate email format
+            return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(value);
+          },
+          message: 'Please enter a valid billing email'
+        }
+      },
+      billingPhone: {
+        type: String,
+        trim: true,
+        validate: {
+          validator: function(value) {
+            // Allow null/undefined/empty values (for incomplete registrations)
+            if (value === null || value === undefined || value === '') {
+              return true;
+            }
+            // Otherwise, validate phone format
+            return /^\+?[\d\s\-\(\)]+$/.test(value);
+          },
+          message: 'Please enter a valid billing phone number'
+        }
+      },
+      contactPerson: {
+        type: String,
+        trim: true,
+        maxlength: [100, 'Contact person name cannot be more than 100 characters']
+      }
+    }
+  },
+  registrationComplete: {
+    type: Boolean,
+    default: false
+  },
+  registrationStage: {
+    type: Number,
+    default: 2, // Stage 2 completed (basic info), Stage 3 pending (billing info)
+    min: 1,
+    max: 3
+  },
   status: {
     type: String,
     enum: ['active', 'inactive', 'pending', 'suspended'],
@@ -293,6 +510,99 @@ restaurantSchema.statics.findByLocation = function(coordinates, radius = 10) {
       }
     }
   });
+};
+
+// Static method to find restaurants by postal code with coordinate fallback
+restaurantSchema.statics.findNearbyByPostalCode = async function(postalCode, radius = 10) {
+  try {
+    // First try to find restaurants with the exact postal code
+    const exactMatches = await this.find({
+      status: 'active',
+      'address.postalCode': postalCode.toUpperCase()
+    }).sort({ rating: -1, reviewCount: -1 });
+    
+    if (exactMatches.length > 0) {
+      return exactMatches;
+    }
+    
+    // Step 2: Try postal code range matching (for Indian postal codes)
+    if (postalCode.length === 6 && /^\d{6}$/.test(postalCode)) {
+      // Indian postal code format: XXXXXX
+      const baseCode = parseInt(postalCode);
+      const rangeMatches = [];
+      
+      // Search within ±10 range (e.g., 515670-515680 for 515671)
+      for (let i = -10; i <= 10; i++) {
+        const testCode = (baseCode + i).toString();
+        if (testCode.length === 6) {
+          const matches = await this.find({
+            status: 'active',
+            'address.postalCode': testCode
+          });
+          rangeMatches.push(...matches);
+        }
+      }
+      
+      if (rangeMatches.length > 0) {
+        console.log('✅ Found postal code range matches');
+        return rangeMatches.sort((a, b) => b.rating - a.rating);
+      }
+    }
+    
+    // Step 3: Try coordinate-based search with proper context
+    const { geocodeAddress } = require('../services/geocodingService');
+    
+    try {
+      // For Indian postal codes, provide better context based on area
+      let coordinates;
+      if (postalCode.startsWith('515')) {
+        // Dharmavaram/Anantapur area
+        coordinates = await geocodeAddress(postalCode, 'Dharmavaram', 'Andhra Pradesh', 'India');
+      } else if (postalCode.startsWith('500')) {
+        // Hyderabad area
+        coordinates = await geocodeAddress(postalCode, 'Hyderabad', 'Telangana', 'India');
+      } else if (postalCode.startsWith('560')) {
+        // Bangalore area
+        coordinates = await geocodeAddress(postalCode, 'Bangalore', 'Karnataka', 'India');
+      } else if (postalCode.startsWith('H')) {
+        // Canadian postal codes
+        coordinates = await geocodeAddress(postalCode, '', '', 'Canada');
+      } else {
+        // Generic search with India as default
+        coordinates = await geocodeAddress(postalCode, '', '', 'India');
+      }
+      
+      console.log('✅ Using coordinate-based search with context');
+      
+      // Use MongoDB geospatial query to find nearby restaurants
+      return await this.find({
+        status: 'active',
+        'address.coordinates': {
+          $near: {
+            $geometry: {
+              type: 'Point',
+              coordinates: [coordinates.lng, coordinates.lat]
+            },
+            $maxDistance: radius * 1000 // Convert km to meters
+          }
+        }
+      }).sort({ 'address.coordinates': 1 });
+      
+    } catch (geocodingError) {
+      console.warn('Geocoding failed for postal code search:', geocodingError.message);
+      
+      // Step 4: Fallback to partial postal code matching
+      const partialPostal = postalCode.toUpperCase().substring(0, Math.min(4, postalCode.length));
+      return await this.find({
+        status: 'active',
+        'address.postalCode': { $regex: `^${partialPostal}`, $options: 'i' }
+      }).sort({ rating: -1, reviewCount: -1 });
+    }
+    
+  } catch (error) {
+    console.error('Error in findNearbyByPostalCode:', error);
+    return [];
+  }
 };
 
 // Static method to get popular restaurants

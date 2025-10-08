@@ -274,8 +274,10 @@ const RestaurantDetailPage = () => {
     // Check authentication first
     if (!isAuthenticated) {
       // Store current page URL for redirect after login
-      const currentUrl = window.location.pathname + window.location.search;
-      localStorage.setItem('redirectAfterLogin', currentUrl);
+      if (typeof window !== 'undefined') {
+        const currentUrl = window.location.pathname + window.location.search;
+        localStorage.setItem('redirectAfterLogin', currentUrl);
+      }
       
       // Show login modal
       openLoginModal();
@@ -379,8 +381,10 @@ const RestaurantDetailPage = () => {
         setShowRestaurantSwitchModal(true);
       } else if (result.error === 'AUTHENTICATION_REQUIRED') {
         // Store current page URL for redirect after login
-        const currentUrl = window.location.pathname + window.location.search;
-        localStorage.setItem('redirectAfterLogin', currentUrl);
+        if (typeof window !== 'undefined') {
+          const currentUrl = window.location.pathname + window.location.search;
+          localStorage.setItem('redirectAfterLogin', currentUrl);
+        }
         
         // Show login modal
         openLoginModal();

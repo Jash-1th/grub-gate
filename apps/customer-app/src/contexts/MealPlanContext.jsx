@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useReducer, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useRef, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
 import apiClient from '../api/apiClient';
+import { getStorageItem, setStorageItem, removeStorageItem } from '../utils/ssrSafeStorage';
 
 // Initial week plan structure
 const initialWeekPlan = {
@@ -99,15 +100,11 @@ const mealPlanReducer = (state, action) => {
         }
       };
 
-      const newState = {
+      return {
         ...state,
         weeklyPlan: newWeeklyPlan,
         totalItems: state.totalItems + 1
       };
-
-      // Save to localStorage
-      localStorage.setItem('mealPlan', JSON.stringify(newState));
-      return newState;
     }
 
     case MEAL_PLAN_ACTIONS.REMOVE_ITEM: {
@@ -121,15 +118,11 @@ const mealPlanReducer = (state, action) => {
         }
       };
 
-      const newState = {
+      return {
         ...state,
         weeklyPlan: newWeeklyPlan,
         totalItems: state.totalItems - 1
       };
-
-      // Save to localStorage
-      localStorage.setItem('mealPlan', JSON.stringify(newState));
-      return newState;
     }
 
     case MEAL_PLAN_ACTIONS.CLEAR_DAY: {
@@ -141,24 +134,15 @@ const mealPlanReducer = (state, action) => {
         [day]: { lunch: [], dinner: [] }
       };
 
-      const newState = {
+      return {
         ...state,
         weeklyPlan: newWeeklyPlan,
         totalItems: state.totalItems - dayItemsCount
       };
-
-      // Save to localStorage
-      localStorage.setItem('mealPlan', JSON.stringify(newState));
-      return newState;
     }
 
     case MEAL_PLAN_ACTIONS.CLEAR_ALL: {
-      const newState = { ...initialState };
-      
-      // Clear localStorage (both legacy and new structure)
-      localStorage.removeItem('mealPlan');
-      localStorage.removeItem('weeklyPlans');
-      return newState;
+      return { ...initialState };
     }
 
     case MEAL_PLAN_ACTIONS.LOAD_FROM_STORAGE: {
@@ -241,8 +225,6 @@ const mealPlanReducer = (state, action) => {
         }, 0);
       }, 0);
 
-      // Save to localStorage
-      localStorage.setItem('mealPlan', JSON.stringify(newState));
       return newState;
     }
 
@@ -271,8 +253,6 @@ const mealPlanReducer = (state, action) => {
         }, 0);
       }, 0);
 
-      // Save to localStorage
-      localStorage.setItem('mealPlan', JSON.stringify(newState));
       return newState;
     }
 
@@ -303,8 +283,6 @@ const mealPlanReducer = (state, action) => {
         }, 0);
       }, 0);
 
-      // Save to localStorage
-      localStorage.setItem('mealPlan', JSON.stringify(newState));
       return newState;
     }
 
@@ -389,6 +367,8 @@ const MealPlanContext = createContext();
 // Provider component
 export const MealPlanProvider = ({ children }) => {
   const [state, dispatch] = useReducer(mealPlanReducer, initialState);
+  const [isClient, setIsClient] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { isAuthenticated, user } = useAuth();
   const { showError, showInfo } = useToast();
   const saveTimeoutRef = useRef(null);
@@ -401,13 +381,16 @@ export const MealPlanProvider = ({ children }) => {
     if (!isAuthenticated || !user) return;
     
     const payload = {
-      userId: user.id,
+      userId: user._id || user.id,
       weeklyPlans: mealPlanData.weeklyPlans,
       totalItems: mealPlanData.totalItems,
       selectedRestaurantId: mealPlanData.selectedRestaurantId,
       selectedRestaurantName: mealPlanData.selectedRestaurantName,
       selectedRestaurantData: mealPlanData.selectedRestaurantData
     };
+    
+    console.log('👤 User object:', user);
+    console.log('🆔 User ID being sent:', payload.userId);
     
     console.log('📤 Sending to API /meal-plans:', payload);
     console.log('📤 Payload selectedRestaurantId:', payload.selectedRestaurantId);
@@ -484,11 +467,14 @@ export const MealPlanProvider = ({ children }) => {
     }, 1000); // 1 second delay
   };
 
-  // Load meal plan from database first, then localStorage as fallback
+  // SSR Safety - only run on client side
   useEffect(() => {
+    setIsClient(true);
+    
     const loadMealPlanFromDatabase = async () => {
       if (!isAuthenticated || !user) {
         console.log('⚠️ Not authenticated or no user, skipping database load');
+        setIsLoading(false); // Set loading to false for unauthenticated users
         return;
       }
       
@@ -496,8 +482,8 @@ export const MealPlanProvider = ({ children }) => {
       dispatch({ type: MEAL_PLAN_ACTIONS.SET_LOADING_FROM_DATABASE });
       
       try {
-        console.log('🔄 Loading meal plan from database for user:', user.id);
-        const response = await apiClient.get(`/meal-plans/${user.id}`);
+        console.log('🔄 Loading meal plan from database for user:', user._id || user.id);
+        const response = await apiClient.get(`/meal-plans/${user._id || user.id}`);
         
         console.log('🔍 Raw API response:', response.data);
         console.log('🔍 Response status:', response.data.status);
@@ -542,6 +528,7 @@ export const MealPlanProvider = ({ children }) => {
           
           // Mark as loaded from database
           dispatch({ type: MEAL_PLAN_ACTIONS.SET_LOADED_FROM_DATABASE });
+          setIsLoading(false); // Set loading to false after successful database load
           return; // Successfully loaded from database, skip localStorage
         } else {
           console.log('⚠️ API response structure unexpected:', {
@@ -563,9 +550,9 @@ export const MealPlanProvider = ({ children }) => {
     const loadFromLocalStorage = () => {
       try {
         // Load weekly plans (new structure)
-        const savedWeeklyPlans = localStorage.getItem('weeklyPlans');
+        const savedWeeklyPlans = getStorageItem('weeklyPlans');
         if (savedWeeklyPlans) {
-          const parsedWeeklyPlans = JSON.parse(savedWeeklyPlans);
+          const parsedWeeklyPlans = savedWeeklyPlans;
           
           // PROACTIVE VALIDATION: Check for multiple restaurants in normal user data
           if (userType === 'normal') {
@@ -605,9 +592,9 @@ export const MealPlanProvider = ({ children }) => {
         }
 
         // Load legacy meal plan for backward compatibility with validation
-        const savedMealPlan = localStorage.getItem('mealPlan');
+        const savedMealPlan = getStorageItem('mealPlan');
         if (savedMealPlan) {
-          const parsedMealPlan = JSON.parse(savedMealPlan);
+          const parsedMealPlan = savedMealPlan;
           
           // PROACTIVE VALIDATION: Check for multiple restaurants in legacy data
           if (userType === 'normal' && Array.isArray(parsedMealPlan)) {
@@ -645,6 +632,7 @@ export const MealPlanProvider = ({ children }) => {
       
       // Mark as loaded (from localStorage fallback)
       dispatch({ type: MEAL_PLAN_ACTIONS.SET_LOADED_FROM_DATABASE });
+      setIsLoading(false);
     };
 
     // Start the loading process
@@ -664,9 +652,9 @@ export const MealPlanProvider = ({ children }) => {
     };
   }, []);
 
-  // Auto-save to database when state changes
+  // Auto-save to database when state changes (client-side only)
   useEffect(() => {
-    if (!isAuthenticated || !user) return;
+    if (!isClient || isLoading || !isAuthenticated || !user) return;
     
     // Don't auto-save until initial database load is complete to prevent overwriting database with initial state
     if (!state.hasLoadedFromDatabase) {
@@ -706,7 +694,7 @@ export const MealPlanProvider = ({ children }) => {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [JSON.stringify(state.weeklyPlans), state.totalItems, state.selectedRestaurantId, state.selectedRestaurantName, state.hasLoadedFromDatabase, isAuthenticated, user]);
+  }, [JSON.stringify(state.weeklyPlans), state.totalItems, state.selectedRestaurantId, state.selectedRestaurantName, state.hasLoadedFromDatabase, isAuthenticated, user, isClient, isLoading]);
 
   // PROACTIVE CONTINUOUS VALIDATION: Monitor state for mixed restaurants and auto-clear
   useEffect(() => {
@@ -729,8 +717,8 @@ export const MealPlanProvider = ({ children }) => {
       
       // Clear everything immediately
       dispatch({ type: MEAL_PLAN_ACTIONS.CLEAR_ALL });
-      localStorage.removeItem('weeklyPlans');
-      localStorage.removeItem('mealPlan');
+      removeStorageItem('weeklyPlans');
+      removeStorageItem('mealPlan');
     }
   }, [state.weeklyPlans, userType]); // Monitor state changes
 
@@ -767,8 +755,10 @@ export const MealPlanProvider = ({ children }) => {
     // Check authentication first
     if (!isAuthenticated) {
       // Store current page URL for redirect after login
-      const currentUrl = window.location.pathname + window.location.search;
-      localStorage.setItem('redirectAfterLogin', currentUrl);
+      if (typeof window !== 'undefined') {
+        const currentUrl = window.location.pathname + window.location.search;
+        setStorageItem('redirectAfterLogin', currentUrl);
+      }
       
       return {
         success: false,
@@ -810,8 +800,10 @@ export const MealPlanProvider = ({ children }) => {
     // Check authentication first
     if (!isAuthenticated) {
       // Store current page URL for redirect after login
-      const currentUrl = window.location.pathname + window.location.search;
-      localStorage.setItem('redirectAfterLogin', currentUrl);
+      if (typeof window !== 'undefined') {
+        const currentUrl = window.location.pathname + window.location.search;
+        setStorageItem('redirectAfterLogin', currentUrl);
+      }
       
       return {
         success: false,
@@ -1248,14 +1240,12 @@ export const MealPlanProvider = ({ children }) => {
       dispatch({ type: MEAL_PLAN_ACTIONS.CLEAR_SELECTED_RESTAURANT });
       
       // Clear all localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('grubgate_selected_restaurant');
-        localStorage.removeItem('grubgate_postal_code');
-        localStorage.removeItem('grubgate_preferences');
-        localStorage.removeItem('weeklyPlans');
-        localStorage.removeItem('mealPlan');
-        console.log('🧹 All localStorage cleared');
-      }
+      removeStorageItem('grubgate_selected_restaurant');
+      removeStorageItem('grubgate_postal_code');
+      removeStorageItem('grubgate_preferences');
+      removeStorageItem('weeklyPlans');
+      removeStorageItem('mealPlan');
+      console.log('🧹 All localStorage cleared');
       
       // Force save empty data to database
       saveMealPlanToDatabase({
@@ -1291,8 +1281,21 @@ export const MealPlanProvider = ({ children }) => {
     getRestaurantsInWeekPlan,
     getRestaurantsInAllWeeks,
     getRestaurantIdsInWeekPlan,
-    getRestaurantIdsInAllWeeks
+    getRestaurantIdsInAllWeeks,
+    isClient
   };
+
+  // Show loading state during SSR and initial client hydration
+  if (!isClient || isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-grub-red mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading meal plan...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <MealPlanContext.Provider value={value}>

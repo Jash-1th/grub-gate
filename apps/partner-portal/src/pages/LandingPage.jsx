@@ -1,16 +1,17 @@
 import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  TrendingUp, 
-  Users, 
-  Headphones, 
-  BarChart3,
-  CheckCircle,
-  Star,
-  ArrowRight,
-  Play
-} from 'lucide-react';
+  faArrowTrendUp, 
+  faUsers, 
+  faHeadphones, 
+  faChartBar,
+  faCheckCircle,
+  faStar,
+  faArrowRight,
+  faPlay
+} from '@fortawesome/free-solid-svg-icons';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@grub-gate/ui';
 import { mockTestimonials } from '../lib/mock-data.js';
 import PartnerTestimonialsSection from '../components/PartnerTestimonialsSection';
@@ -37,22 +38,22 @@ const LandingPage = () => {
 
   const benefits = [
     {
-      icon: TrendingUp,
+      icon: faArrowTrendUp,
       title: t('landingPage.benefits.items.revenue.title'),
       description: t('landingPage.benefits.items.revenue.description')
     },
     {
-      icon: Users,
+      icon: faUsers,
       title: t('landingPage.benefits.items.growth.title'),
       description: t('landingPage.benefits.items.growth.description')
     },
     {
-      icon: Headphones,
+      icon: faHeadphones,
       title: t('landingPage.benefits.items.support.title'),
       description: t('landingPage.benefits.items.support.description')
     },
     {
-      icon: BarChart3,
+      icon: faChartBar,
       title: t('landingPage.benefits.items.analytics.title'),
       description: t('landingPage.benefits.items.analytics.description')
     }
@@ -106,17 +107,25 @@ const LandingPage = () => {
                   size="lg"
                   variant="secondary"
                   onClick={() => navigate('/register')}
-                  className="text-grub-red hover:bg-white"
+                  className="bg-white text-grub-red px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
                 >
                   {t('landingPage.hero.cta')}
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <FontAwesomeIcon icon={faArrowRight} className="ml-2 h-5 w-5" />
+                </Button>
+                <Button
+                  size="lg"
+                  variant="ghost"
+                  onClick={() => navigate('/login')}
+                  className="text-white border-white hover:bg-white hover:text-grub-red px-8 py-4 rounded-lg font-semibold transition-all duration-200"
+                >
+                  Sign In
                 </Button>
                 <Button
                   size="lg"
                   variant="ghost"
                   className="text-white border-white hover:bg-white hover:text-grub-red"
                 >
-                  <Play className="mr-2 h-5 w-5" />
+                  <FontAwesomeIcon icon={faPlay} className="mr-2 h-5 w-5" />
                   {t('landingPage.hero.learnMore')}
                 </Button>
                 <PWAInstallButton 
@@ -159,12 +168,12 @@ const LandingPage = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {benefits.map((benefit, index) => {
-              const Icon = benefit.icon;
+              const iconDef = benefit.icon;
               return (
                 <Card key={index} className="text-center hover:shadow-lg transition-shadow">
                   <CardContent className="p-8">
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-grub-red/10 rounded-full mb-6">
-                      <Icon className="h-8 w-8 text-grub-red" />
+                      <FontAwesomeIcon icon={iconDef} className="h-8 w-8 text-grub-red" />
                     </div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-4">
                       {benefit.title}
@@ -212,7 +221,7 @@ const LandingPage = () => {
                 {/* Arrow connector for desktop */}
                 {index < steps.length - 1 && (
                   <div className="hidden lg:block absolute top-1/2 -right-4 transform -translate-y-1/2">
-                    <ArrowRight className="h-6 w-6 text-gray-400" />
+                    <FontAwesomeIcon icon={faArrowRight} className="h-6 w-6 text-gray-400" />
                   </div>
                 )}
               </div>
@@ -231,7 +240,7 @@ const LandingPage = () => {
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
               {t('landingPage.cta.title')}
             </h2>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 mb-8">
               {t('landingPage.cta.subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -245,8 +254,16 @@ const LandingPage = () => {
               </Button>
               <Button
                 size="lg"
-                variant="ghost"
+                variant="outline"
+                onClick={() => navigate('/login')}
                 className="border-2 border-grub-red text-grub-red px-8 py-4 rounded-lg font-semibold hover:bg-grub-red hover:text-white transition-all duration-200"
+              >
+                Sign In
+              </Button>
+              <Button
+                size="lg"
+                variant="ghost"
+                className="border-2 border-gray-300 text-gray-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-all duration-200"
               >
                 {t('landingPage.cta.contact')}
               </Button>

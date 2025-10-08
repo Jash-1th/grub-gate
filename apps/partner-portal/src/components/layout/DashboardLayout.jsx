@@ -14,11 +14,13 @@ import {
 } from 'lucide-react';
 import { Logo, Button } from '@grub-gate/ui';
 import MobileBottomNav from './MobileBottomNav';
+import { useRestaurant } from '../../contexts/RestaurantContext';
 
 const DashboardLayout = ({ onLanguageChange }) => {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
+  const { getRestaurantName, getRestaurantInitial } = useRestaurant();
 
   const handleLanguageToggle = () => {
     const newLang = i18n.language === 'en' ? 'fr' : 'en';
@@ -86,11 +88,11 @@ const DashboardLayout = ({ onLanguageChange }) => {
           <div className="border-t border-gray-200 p-4">
             <div className="flex items-center space-x-3 mb-4">
               <div className="h-8 w-8 bg-grub-red rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">B</span>
+                <span className="text-white text-sm font-medium">{getRestaurantInitial()}</span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">
-                  Bistro Montreal
+                  {getRestaurantName()}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
                   Partner Account

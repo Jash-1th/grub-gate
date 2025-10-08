@@ -80,6 +80,11 @@ const orderSchema = new mongoose.Schema({
     required: true,
     default: 'single'
   },
+  isSubscriptionOrder: {
+    type: Boolean,
+    default: false,
+    index: true // Index for efficient querying
+  },
   items: [orderItemSchema],
   subtotal: {
     type: Number,
@@ -103,13 +108,27 @@ const orderSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'confirmed', 'preparing', 'ready', 'out-for-delivery', 'delivered', 'cancelled'],
-    default: 'pending'
+    enum: ['scheduled', 'pending', 'confirmed', 'preparing', 'ready', 'out-for-delivery', 'delivered', 'cancelled', 'completed'],
+    default: 'scheduled'
   },
   paymentStatus: {
     type: String,
     enum: ['pending', 'paid', 'failed', 'refunded'],
-    default: 'pending'
+    default: 'paid'
+  },
+  scheduledDate: {
+    type: Date,
+    required: true,
+    index: true
+  },
+  activationDate: {
+    type: Date,
+    required: true,
+    index: true
+  },
+  isScheduledOrder: {
+    type: Boolean,
+    default: false
   },
   paymentMethod: {
     type: String,
@@ -145,7 +164,7 @@ const orderSchema = new mongoose.Schema({
   },
   weeklyPlanId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'WeeklyPlan',
+    ref: 'SubscriptionMealPlan',
     required: function() {
       return this.type === 'weekly-plan';
     }
@@ -338,7 +357,7 @@ orderSchema.statics.getOrdersByDateRange = function(startDate, endDate, restaura
 // Static method to get revenue stats
 orderSchema.statics.getRevenueStats = function(restaurantId, startDate, endDate) {
   const matchQuery = {
-    restaurantId: mongoose.Types.ObjectId(restaurantId),
+    restaurantId: new mongoose.Types.ObjectId(restaurantId),
     paymentStatus: 'paid',
     createdAt: {
       $gte: startDate,
@@ -364,7 +383,7 @@ orderSchema.statics.getPopularItems = function(restaurantId, limit = 10) {
   return this.aggregate([
     {
       $match: {
-        restaurantId: mongoose.Types.ObjectId(restaurantId),
+        restaurantId: new mongoose.Types.ObjectId(restaurantId),
         status: { $ne: 'cancelled' }
       }
     },

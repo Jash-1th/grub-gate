@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useModal } from '../../context/ModalContext';
+import { getStorageItem, setStorageItem } from '../../utils/ssrSafeStorage';
 
 const AuthGuard = ({ children, redirectTo = '/login', showModal = true, requireAuth = true }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -12,12 +13,12 @@ const AuthGuard = ({ children, redirectTo = '/login', showModal = true, requireA
   useEffect(() => {
     if (!loading && requireAuth && !isAuthenticated) {
       // Check if there's a pending redirect or login in progress to avoid opening modal again
-      const pendingRedirect = localStorage.getItem('pendingRedirect');
-      const loginInProgress = localStorage.getItem('loginInProgress');
+      const pendingRedirect = getStorageItem('pendingRedirect');
+      const loginInProgress = getStorageItem('loginInProgress');
       
       // Also check if user has valid token in localStorage (might be a temporary state issue)
-      const storedToken = localStorage.getItem('authToken');
-      const storedUser = localStorage.getItem('user');
+      const storedToken = getStorageItem('authToken');
+      const storedUser = getStorageItem('user');
       
       if (pendingRedirect || loginInProgress || (storedToken && storedUser)) {
         console.log('🔐 AuthGuard: Pending redirect, login in progress, or valid token found - not opening login modal');
@@ -30,7 +31,7 @@ const AuthGuard = ({ children, redirectTo = '/login', showModal = true, requireA
       
       // Only store meaningful URLs (not just root path)
       if (currentUrl && currentUrl !== '/' && currentUrl !== '/login') {
-        localStorage.setItem('redirectAfterLogin', currentUrl);
+        setStorageItem('redirectAfterLogin', currentUrl);
         console.log('🔐 AuthGuard: Stored redirect URL:', currentUrl);
       } else {
         console.log('🔐 AuthGuard: Not storing redirect URL (root or login page)');
@@ -52,10 +53,10 @@ const AuthGuard = ({ children, redirectTo = '/login', showModal = true, requireA
   }, [isAuthenticated, loading, requireAuth, navigate, redirectTo, showModal, openLoginModal, location]);
 
   // Show loading spinner while checking authentication or handling redirect
-  const pendingRedirect = localStorage.getItem('pendingRedirect');
-  const loginInProgress = localStorage.getItem('loginInProgress');
-  const storedToken = localStorage.getItem('authToken');
-  const storedUser = localStorage.getItem('user');
+  const pendingRedirect = getStorageItem('pendingRedirect');
+  const loginInProgress = getStorageItem('loginInProgress');
+  const storedToken = getStorageItem('authToken');
+  const storedUser = getStorageItem('user');
   
   // Show loading if we're still loading, have pending operations, or have stored auth but not yet authenticated
   if (loading || pendingRedirect || loginInProgress || (!isAuthenticated && storedToken && storedUser)) {

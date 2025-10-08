@@ -26,6 +26,11 @@ const contactRoutes = require('./src/routes/contact.routes');
 const uploadRoutes = require('./src/routes/upload.routes');
 const searchRoutes = require('./src/routes/search.routes');
 const mealPlanRoutes = require('./src/routes/mealPlan.routes');
+const subscriptionMealPlanRoutes = require('./src/routes/subscriptionMealPlan.routes');
+const partnerMenuItemRoutes = require('./src/routes/partner/menuItem.routes');
+const partnerSettingsRoutes = require('./src/routes/partner/restaurantSettings.routes');
+const orderGenerationRoutes = require('./src/routes/orderGeneration.routes');
+const adminRoutes = require('./src/routes/admin.routes');
 
 const app = express();
 
@@ -46,17 +51,29 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
-// CORS configuration
-const corsOptions = {
-  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000'],
+// CORS configuration - Temporarily allow all origins for debugging
+console.log('🔧 CORS: Allowing all origins for debugging');
+app.use(cors({
+  origin: true, // Allow all origins
   credentials: true,
-  optionsSuccessStatus: 200
-};
-app.use(cors(corsOptions));
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar']
+}));
+
+// Request logging middleware for debugging
+app.use((req, res, next) => {
+  console.log(`🔍 ${req.method} ${req.path} - Origin: ${req.headers.origin || 'none'}`);
+  next();
+});
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
 
 // Logging middleware
 if (process.env.NODE_ENV === 'development') {
@@ -75,6 +92,16 @@ app.get('/health', (req, res) => {
   });
 });
 
+// CORS test endpoint
+app.get('/cors-test', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'CORS is working!',
+    origin: req.headers.origin,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // API Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
@@ -90,6 +117,11 @@ app.use('/api/v1/contact', contactRoutes);
 app.use('/api/v1/upload', uploadRoutes);
 app.use('/api/v1/search', searchRoutes);
 app.use('/api/v1/meal-plans', mealPlanRoutes);
+app.use('/api/v1/subscription-meal-plans', subscriptionMealPlanRoutes);
+app.use('/api/v1/partner', partnerMenuItemRoutes);
+app.use('/api/v1/partner', partnerSettingsRoutes);
+app.use('/api/v1/orders/generate', orderGenerationRoutes);
+app.use('/api/v1/admin', adminRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

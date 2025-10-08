@@ -16,8 +16,10 @@ export const useModal = () => {
 export const ModalProvider = ({ children }) => {
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isOTPAuthModalOpen, setIsOTPAuthModalOpen] = useState(false);
 
   const openSignupModal = () => {
+    console.log('📝 Opening signup modal');
     setIsSignupModalOpen(true);
     // Prevent body scrolling when modal is open
     if (typeof document !== 'undefined') {
@@ -26,6 +28,7 @@ export const ModalProvider = ({ children }) => {
   };
 
   const closeSignupModal = () => {
+    console.log('❌ Closing signup modal');
     setIsSignupModalOpen(false);
     // Restore body scrolling when modal is closed
     if (typeof document !== 'undefined') {
@@ -42,6 +45,7 @@ export const ModalProvider = ({ children }) => {
   };
 
   const openLoginModal = () => {
+    console.log('🔑 Opening login modal');
     setIsLoginModalOpen(true);
     // Prevent body scrolling when modal is open
     if (typeof document !== 'undefined') {
@@ -50,6 +54,7 @@ export const ModalProvider = ({ children }) => {
   };
 
   const closeLoginModal = () => {
+    console.log('❌ Closing login modal');
     setIsLoginModalOpen(false);
     // Restore body scrolling when modal is closed
     if (typeof document !== 'undefined') {
@@ -67,14 +72,68 @@ export const ModalProvider = ({ children }) => {
 
   // Function to switch from signup modal to login modal
   const switchToLogin = () => {
+    console.log('🔄 Switching from signup to login modal');
     closeSignupModal();
-    openLoginModal();
+    setTimeout(() => {
+      openLoginModal();
+    }, 100); // Small delay to ensure cleanup
   };
 
   // Function to switch from login modal to signup modal
   const switchToSignup = () => {
+    console.log('🔄 Switching from login to signup modal');
     closeLoginModal();
-    openSignupModal();
+    setTimeout(() => {
+      openSignupModal();
+    }, 100); // Small delay to ensure cleanup
+  };
+
+  // OTP Auth Modal functions
+  const openOTPAuthModal = (mode = 'signup') => {
+    console.log(`📱 Opening OTP auth modal in ${mode} mode`);
+    setIsOTPAuthModalOpen(true);
+    // Store the auth mode for the modal to use
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('otpAuthMode', mode);
+    }
+    // Close other modals
+    setIsLoginModalOpen(false);
+    setIsSignupModalOpen(false);
+    // Prevent body scrolling when modal is open
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = 'hidden';
+    }
+  };
+
+  const closeOTPAuthModal = () => {
+    console.log('❌ Closing OTP auth modal');
+    setIsOTPAuthModalOpen(false);
+    // Clear the auth mode
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('otpAuthMode');
+    }
+    // Restore body scrolling when modal is closed
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = 'unset';
+    }
+  };
+
+  const toggleOTPAuthModal = (isOpen) => {
+    if (typeof isOpen === 'boolean') {
+      isOpen ? openOTPAuthModal() : closeOTPAuthModal();
+    } else {
+      isOTPAuthModalOpen ? closeOTPAuthModal() : openOTPAuthModal();
+    }
+  };
+
+  // Function to switch to OTP auth from other modals
+  const switchToOTPAuth = () => {
+    console.log('🔄 Switching to OTP auth modal');
+    closeLoginModal();
+    closeSignupModal();
+    setTimeout(() => {
+      openOTPAuthModal();
+    }, 100); // Small delay to ensure cleanup
   };
 
   const value = {
@@ -88,6 +147,11 @@ export const ModalProvider = ({ children }) => {
     toggleLoginModal,
     switchToLogin,
     switchToSignup,
+    isOTPAuthModalOpen,
+    openOTPAuthModal,
+    closeOTPAuthModal,
+    toggleOTPAuthModal,
+    switchToOTPAuth,
   };
 
   return (

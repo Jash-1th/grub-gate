@@ -284,33 +284,97 @@ const WeeklyMenuPage = () => {
     }
   })();
 
-  // Helper functions for date ranges (SSR-safe)
+  // Helper function to get next Sunday (immediate upcoming Sunday) - SSR-safe
+  const getNextSunday = () => {
+    if (!isClient) return new Date(); // Return current date during SSR to prevent hydration mismatch
+    
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const daysUntilSunday = dayOfWeek === 0 ? 7 : 7 - dayOfWeek; // If today is Sunday, get next Sunday
+    
+    const nextSunday = new Date(today);
+    nextSunday.setDate(today.getDate() + daysUntilSunday);
+    nextSunday.setHours(0, 0, 0, 0); // Reset to start of day
+    
+    return nextSunday;
+  };
+
+  // Helper functions for date ranges (SSR-safe) - Starting from next Sunday
   const getWeekDateRange = (weekOffset = 0) => {
     if (!isClient) return ''; // Prevent SSR hydration mismatch
     
-    const today = new Date();
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay() + (weekOffset * 7)); // Sunday + week offset
+    const nextSunday = getNextSunday();
+    const startOfWeek = new Date(nextSunday);
+    startOfWeek.setDate(nextSunday.getDate() + (weekOffset * 7)); // Next Sunday + week offset
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6); // Saturday
     
     return `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
   };
 
-  const getCurrentWeekDateRange = () => getWeekDateRange(0);
-  const getNextWeekDateRange = () => getWeekDateRange(1);
+  const getFirstWeekDateRange = () => getWeekDateRange(0); // First week starting from next Sunday
+  const getSecondWeekDateRange = () => getWeekDateRange(1); // Second week
 
-  // Get specific day date for a week (SSR-safe)
-  const getDayDateForWeek = (dayIndex, weekOffset = 0) => {
+  // Get specific day date for a week (SSR-safe) - Starting from next Sunday
+  const getDayDateForWeek = (dayName, weekOffset = 0) => {
     if (!isClient) return ''; // Prevent SSR hydration mismatch
     
-    const today = new Date();
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay() + (weekOffset * 7)); // Sunday + week offset
+    // Map day names to Sunday-based index (Sunday = 0, Monday = 1, etc.)
+    const dayNameToIndex = {
+      'sunday': 0,
+      'monday': 1,
+      'tuesday': 2,
+      'wednesday': 3,
+      'thursday': 4,
+      'friday': 5,
+      'saturday': 6
+    };
+    
+    const dayIndex = dayNameToIndex[dayName.toLowerCase()];
+    if (dayIndex === undefined) return '';
+    
+    const nextSunday = getNextSunday();
+    const startOfWeek = new Date(nextSunday);
+    startOfWeek.setDate(nextSunday.getDate() + (weekOffset * 7)); // Next Sunday + week offset
     const targetDay = new Date(startOfWeek);
     targetDay.setDate(startOfWeek.getDate() + dayIndex); // Add day index (0=Sunday, 1=Monday, etc.)
     
     return targetDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  // Helper function to check if a date is in the future (for validation) - SSR-safe
+  const isDateInFuture = (dayName, weekOffset = 0) => {
+    if (!isClient) return true; // Assume valid during SSR to prevent hydration mismatch
+    
+    try {
+      // Map day names to Sunday-based index (Sunday = 0, Monday = 1, etc.)
+      const dayNameToIndex = {
+        'sunday': 0,
+        'monday': 1,
+        'tuesday': 2,
+        'wednesday': 3,
+        'thursday': 4,
+        'friday': 5,
+        'saturday': 6
+      };
+      
+      const dayIndex = dayNameToIndex[dayName.toLowerCase()];
+      if (dayIndex === undefined) return true;
+      
+      const nextSunday = getNextSunday();
+      const startOfWeek = new Date(nextSunday);
+      startOfWeek.setDate(nextSunday.getDate() + (weekOffset * 7));
+      const targetDay = new Date(startOfWeek);
+      targetDay.setDate(startOfWeek.getDate() + dayIndex);
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      return targetDay >= today;
+    } catch (error) {
+      console.error('Error checking date validity:', error);
+      return true; // Default to valid if error occurs
+    }
   };
 
   useEffect(() => {
@@ -323,7 +387,7 @@ const WeeklyMenuPage = () => {
   };
 
   const handleClearAll = () => {
-    if (window.confirm(`Are you sure you want to clear your entire ${selectedWeek === 0 ? 'current week' : 'next week'} meal plan?`)) {
+    if (window.confirm(`Are you sure you want to clear your entire ${selectedWeek === 0 ? 'Week 1' : 'Week 2'} meal plan?`)) {
       clearAllPlan();
       showSuccess('Meal Plan Cleared', 'Meal plan cleared successfully');
     }
@@ -487,7 +551,7 @@ const WeeklyMenuPage = () => {
           <div className="flex items-center justify-center">
             <div className="bg-gray-100 rounded-xl p-1 shadow-inner">
               <div className="flex">
-                {/* Current Week Button */}
+                {/* First Week Button */}
                 <button
                   onClick={() => setSelectedWeek(0)}
                   className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm font-semibold transition-all duration-300 ${
@@ -498,11 +562,11 @@ const WeeklyMenuPage = () => {
                 >
                   <div className="flex items-center space-x-2">
                     <span className="text-lg">📅</span>
-                    <span>This Week</span>
+                    <span>Week 1</span>
                   </div>
                 </button>
 
-                {/* Next Week Button */}
+                {/* Second Week Button */}
                 <button
                   onClick={() => setSelectedWeek(1)}
                   className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm font-semibold transition-all duration-300 ${
@@ -513,7 +577,7 @@ const WeeklyMenuPage = () => {
                 >
                   <div className="flex items-center space-x-2">
                     <span className="text-lg">📆</span>
-                    <span>Next Week</span>
+                    <span>Week 2</span>
                   </div>
                 </button>
               </div>
@@ -525,13 +589,9 @@ const WeeklyMenuPage = () => {
             <p className="text-sm text-gray-600">
               {isClient && (
                 selectedWeek === 0 ? (
-                  <>
-                    <span className="font-medium">Current Week:</span> {getCurrentWeekDateRange()}
-                  </>
+                  <>First Week: {getFirstWeekDateRange()}</>
                 ) : (
-                  <>
-                    <span className="font-medium">Next Week:</span> {getNextWeekDateRange()}
-                  </>
+                  <>Second Week: {getSecondWeekDateRange()}</>
                 )
               )}
             </p>
@@ -661,7 +721,7 @@ const WeeklyMenuPage = () => {
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-200 p-3 sm:p-6 mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-2">
             <h2 className="text-lg sm:text-2xl font-bold text-gray-900">
-              {selectedWeek === 0 ? "This Week's Menu" : "Next Week's Menu"}
+              {selectedWeek === 0 ? "Week 1 Menu" : "Week 2 Menu"}
             </h2>
             <div className="flex items-center justify-center sm:justify-end space-x-2">
               <span className="text-xs sm:text-sm text-gray-500">Week of</span>
@@ -673,7 +733,7 @@ const WeeklyMenuPage = () => {
 
           {/* Mobile Layout - Day Cards */}
           <div className="block sm:hidden space-y-4">
-            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, index) => {
+            {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day, index) => {
               const dayKey = day.toLowerCase();
               const lunchItems = getWeekMealItems(dayKey, 'lunch', selectedWeek);
               const dinnerItems = getWeekMealItems(dayKey, 'dinner', selectedWeek);
@@ -685,7 +745,7 @@ const WeeklyMenuPage = () => {
                     <div>
                       <h3 className="font-bold text-gray-900">{day}</h3>
                       <p className="text-xs text-gray-600">
-                        {isClient ? getDayDateForWeek(index + 1, selectedWeek) : ''}
+                        {isClient ? getDayDateForWeek(day, selectedWeek) : ''}
                       </p>
                     </div>
                     <div className="text-right">
@@ -747,7 +807,7 @@ const WeeklyMenuPage = () => {
               <div className="grid grid-cols-8 gap-3 mb-4">
                 {/* Header row */}
                 <div className="p-3"></div>
-                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, index) => {
+                {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day, index) => {
                   const dayKey = day.toLowerCase();
                   const dayTotalItems = getWeekMealItems(dayKey, 'lunch', selectedWeek).length + getWeekMealItems(dayKey, 'dinner', selectedWeek).length;
                   
@@ -756,7 +816,7 @@ const WeeklyMenuPage = () => {
                       <div className="bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg px-4 py-3 shadow-sm">
                         <div className="text-sm font-bold text-gray-900">{day}</div>
                         <div className="text-xs text-gray-600 font-medium">
-                          {isClient ? getDayDateForWeek(index + 1, selectedWeek) : ''}
+                          {isClient ? getDayDateForWeek(day, selectedWeek) : ''}
                         </div>
                         <div className="text-xs text-grub-red font-semibold mt-1">
                           {dayTotalItems} items

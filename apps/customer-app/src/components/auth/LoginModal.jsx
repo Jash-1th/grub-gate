@@ -16,12 +16,15 @@ const LoginModal = () => {
   
   // Form state management
   const [formData, setFormData] = useState({
-    email: '',
+    identifier: '', // Can be email or phone
     password: ''
   });
   
   // Local error state for form validation
   const [formErrors, setFormErrors] = useState({});
+  
+  // Local loading state to prevent multiple clicks
+  const [isLocalLoading, setIsLocalLoading] = useState(false);
   
   // Welcome back modal state
   const [showWelcomeBackModal, setShowWelcomeBackModal] = useState(false);
@@ -53,10 +56,16 @@ const LoginModal = () => {
   const validateForm = () => {
     const errors = {};
     
-    if (!formData.email) {
-      errors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = 'Email is invalid';
+    if (!formData.identifier) {
+      errors.identifier = 'Email or phone number is required';
+    } else {
+      // Check if it's a valid email or phone
+      const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.identifier);
+      const isPhone = /^[+]?[1-9]\d{1,14}$/.test(formData.identifier.replace(/[\s()-]/g, ''));
+      
+      if (!isEmail && !isPhone) {
+        errors.identifier = 'Please enter a valid email address or phone number';
+      }
     }
     
     if (!formData.password) {
@@ -73,6 +82,11 @@ const LoginModal = () => {
     e.preventDefault();
     e.stopPropagation();
     
+    // Prevent multiple submissions
+    if (isLocalLoading || isLoading) {
+      return false;
+    }
+    
     // Validate form
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
@@ -84,6 +98,9 @@ const LoginModal = () => {
     setFormErrors({});
     clearError();
     
+    // Set local loading state immediately
+    setIsLocalLoading(true);
+    
     // Call login function
     performLogin();
     return false;
@@ -92,7 +109,7 @@ const LoginModal = () => {
   // Separate async login function
   const performLogin = async () => {
     try {
-      const result = await login(formData.email, formData.password);
+      const result = await login(formData.identifier, formData.password);
       
       if (result && result.success) {
         // Success - immediately close modal to prevent any timing issues
@@ -121,13 +138,16 @@ const LoginModal = () => {
         if (result && result.fieldErrors && Object.keys(result.fieldErrors).length > 0) {
           setFormErrors(result.fieldErrors);
         } else {
-          const errorMsg = result?.error || 'Invalid email or password. Please try again.';
+          const errorMsg = result?.error || 'Invalid credentials. Please try again.';
           setFormErrors({ general: errorMsg });
         }
       }
     } catch (error) {
       console.error('Login error:', error);
       setFormErrors({ general: 'Login failed. Please try again.' });
+    } finally {
+      // Always clear local loading state
+      setIsLocalLoading(false);
     }
   };
 
@@ -148,6 +168,7 @@ const LoginModal = () => {
       password: ''
     });
     setFormErrors({});
+    setIsLocalLoading(false); // Reset local loading state
     clearError();
     closeLoginModal();
   };
@@ -235,26 +256,26 @@ const LoginModal = () => {
             
             <form onSubmit={handleSubmit} className="space-y-3">
               
-              {/* Email Field */}
+              {/* Email or Phone Field */}
               <div>
-                <label htmlFor="login-email" className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('login.emailLabel')}
+                <label htmlFor="login-identifier" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Email or Phone Number
                 </label>
                 <input
-                  type="email"
-                  id="login-email"
-                  name="email"
-                  value={formData.email}
+                  type="text"
+                  id="login-identifier"
+                  name="identifier"
+                  value={formData.identifier}
                   onChange={handleInputChange}
-                  placeholder={t('login.emailPlaceholder')}
+                  placeholder="Enter your email or phone number"
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
-                    formErrors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    formErrors.identifier ? 'border-red-300 bg-red-50' : 'border-gray-300'
                   }`}
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || isLocalLoading}
                 />
-                {formErrors.email && (
-                  <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
+                {formErrors.identifier && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.identifier}</p>
                 )}
               </div>
 
@@ -274,7 +295,7 @@ const LoginModal = () => {
                     formErrors.password ? 'border-red-300 bg-red-50' : 'border-gray-300'
                   }`}
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || isLocalLoading}
                 />
                 {formErrors.password && (
                   <p className="mt-1 text-sm text-red-600">{formErrors.password}</p>
@@ -295,14 +316,14 @@ const LoginModal = () => {
               {/* Login Button */}
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || isLocalLoading}
                 className={`w-full py-2 px-4 rounded-lg font-semibold text-base transition-colors duration-200 shadow-lg ${
-                  isLoading
+                  (isLoading || isLocalLoading)
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-grub-red text-white hover:bg-red-700 hover:shadow-xl transform hover:-translate-y-0.5 transition-transform'
                 }`}
               >
-                {isLoading ? (
+                {(isLoading || isLocalLoading) ? (
                   <div className="flex items-center justify-center">
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
