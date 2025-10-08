@@ -4,14 +4,18 @@ const jwt = require('jsonwebtoken');
 /**
  * Generate JWT token
  * @param {string} userId - User ID
- * @param {string} role - User role
+ * @param {string|Array} roles - User role(s)
  * @returns {string} JWT token
  */
-const generateToken = (userId, role) => {
+const generateToken = (userId, roles) => {
+  // Ensure roles is always an array
+  const rolesArray = Array.isArray(roles) ? roles : [roles];
+  
   return jwt.sign(
     { 
       id: userId,
-      role: role
+      roles: rolesArray,
+      role: rolesArray[0] // Legacy field for backward compatibility
     },
     process.env.JWT_SECRET,
     {
@@ -89,12 +93,12 @@ const isTokenExpired = (token) => {
 /**
  * Generate token pair (access + refresh)
  * @param {string} userId - User ID
- * @param {string} role - User role
+ * @param {string|Array} roles - User role(s)
  * @returns {object} Token pair
  */
-const generateTokenPair = (userId, role) => {
+const generateTokenPair = (userId, roles) => {
   return {
-    accessToken: generateToken(userId, role),
+    accessToken: generateToken(userId, roles),
     refreshToken: generateRefreshToken(userId),
     expiresIn: process.env.JWT_EXPIRE || '7d'
   };

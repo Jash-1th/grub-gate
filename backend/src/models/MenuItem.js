@@ -45,6 +45,12 @@ const menuItemSchema = new mongoose.Schema({
       'always-available', 'special'
     ]
   },
+  cuisine: {
+    type: String,
+    required: [true, 'Cuisine is required'],
+    trim: true,
+    lowercase: true
+  },
   price: {
     type: Number,
     required: [true, 'Price is required'],
@@ -63,7 +69,7 @@ const menuItemSchema = new mongoose.Schema({
   },
   dietaryPreferences: [{
     type: String,
-    enum: ['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'spicy', 'keto', 'low-carb'],
+    enum: ['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'spicy', 'keto', 'low-carb', 'halal', 'kosher'],
     lowercase: true
   }],
   ingredients: [{

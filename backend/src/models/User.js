@@ -3,47 +3,12 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
-const addressSchema = new mongoose.Schema({
-  label: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  street: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  city: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  province: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  postalCode: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  instructions: {
-    type: String,
-    trim: true
-  },
-  isDefault: {
-    type: Boolean,
-    default: false
-  }
-});
 
 const userSchema = new mongoose.Schema({
   email: {
     type: String,
-    required: [true, 'Email is required'],
     unique: true,
+    sparse: true, // Allow null values while maintaining uniqueness
     lowercase: true,
     trim: true,
     match: [
@@ -51,10 +16,15 @@ const userSchema = new mongoose.Schema({
       'Please enter a valid email'
     ]
   },
+  phoneNumber: {
+    type: String,
+    unique: true,
+    sparse: true, // Allow null values while maintaining uniqueness
+    trim: true,
+    match: [/^\+?[1-9]\d{1,14}$/, 'Please enter a valid phone number in E.164 format']
+  },
   passwordHash: {
     type: String,
-    required: [true, 'Password is required'],
-    minlength: 6,
     select: false
   },
   firstName: {
@@ -69,15 +39,24 @@ const userSchema = new mongoose.Schema({
     trim: true,
     maxlength: [50, 'Last name cannot be more than 50 characters']
   },
+  username: {
+    type: String,
+    unique: true,
+    sparse: true, // Allow null values while maintaining uniqueness
+    trim: true,
+    minlength: [3, 'Username must be at least 3 characters'],
+    maxlength: [30, 'Username cannot be more than 30 characters'],
+    match: [/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores']
+  },
   phone: {
     type: String,
     trim: true,
     match: [/^\+?[\d\s\-\(\)]+$/, 'Please enter a valid phone number']
   },
-  role: {
-    type: String,
+  roles: {
+    type: [String],
     enum: ['customer', 'partner', 'admin'],
-    default: 'customer',
+    default: ['customer'],
     required: true
   },
   status: {
@@ -89,10 +68,13 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  phoneVerified: {
+    type: Boolean,
+    default: false
+  },
   emailVerificationToken: String,
   passwordResetToken: String,
   passwordResetExpires: Date,
-  addresses: [addressSchema],
   preferences: {
     dietary: [{
       type: String,
@@ -118,7 +100,53 @@ const userSchema = new mongoose.Schema({
       default: 'en'
     }
   },
-  lastLoginAt: Date
+  lastLoginAt: Date,
+  
+  // Restaurant reference for partner users (clean approach)
+  restaurantId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Restaurant',
+    sparse: true // Only partners will have this field
+  },
+  notificationPreferences: {
+    emailNotifications: {
+      type: Boolean,
+      default: true
+    },
+    smsNotifications: {
+      type: Boolean,
+      default: true
+    },
+    orderAlerts: {
+      type: Boolean,
+      default: true
+    },
+    customerMessages: {
+      type: Boolean,
+      default: true
+    },
+    systemUpdates: {
+      type: Boolean,
+      default: true
+    }
+  },
+  billingInfo: {
+    paymentMethod: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    taxId: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    billingAddress: {
+      type: String,
+      trim: true,
+      default: ''
+    }
+  }
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
@@ -130,14 +158,35 @@ userSchema.virtual('fullName').get(function() {
   return `${this.firstName} ${this.lastName}`;
 });
 
+// Custom validation to ensure both email and phone exist for customer accounts
+userSchema.pre('validate', function(next) {
+  // For customer accounts created via customer app, require both email and phone
+  if (this.roles && this.roles.includes('customer') && this.isNew) {
+    if (!this.email) {
+      this.invalidate('email', 'Email is required for customer accounts');
+    }
+    if (!this.phoneNumber) {
+      this.invalidate('phoneNumber', 'Phone number is required for customer accounts');
+    }
+  } else {
+    // For other cases, require at least one identifier
+    if (!this.email && !this.phoneNumber) {
+      this.invalidate('email', 'Either email or phone number is required');
+      this.invalidate('phoneNumber', 'Either email or phone number is required');
+    }
+  }
+  next();
+});
+
 // Index for performance
 userSchema.index({ email: 1 });
-userSchema.index({ role: 1, status: 1 });
+userSchema.index({ phoneNumber: 1 });
+userSchema.index({ roles: 1, status: 1 });
 
-// Pre-save middleware to hash password
+// Pre-save middleware to hash password (only if password exists)
 userSchema.pre('save', async function(next) {
-  // Only hash the password if it has been modified (or is new)
-  if (!this.isModified('passwordHash')) return next();
+  // Only hash the password if it has been modified (or is new) and exists
+  if (!this.isModified('passwordHash') || !this.passwordHash) return next();
 
   try {
     // Hash password with cost of 12
@@ -148,6 +197,7 @@ userSchema.pre('save', async function(next) {
     next(error);
   }
 });
+
 
 // Instance method to check password
 userSchema.methods.matchPassword = async function(enteredPassword) {

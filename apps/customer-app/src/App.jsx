@@ -24,6 +24,7 @@ import MenuSelectionStep from './components/planning/MenuSelectionStep';
 import LaunchScreen from './components/common/LaunchScreen';
 import ScrollToTop from './components/common/ScrollToTop';
 import ProtectedRoute from './components/guards/ProtectedRoute';
+import OTPAuthModal from './components/auth/OTPAuthModal';
 import { useScrollToTop } from './hooks/useScrollToTop';
 import './App.css';
 
@@ -131,6 +132,8 @@ function App({ initialized = true }) {
           <div className="app-content">
             <ScrollToTop />
               <Layout>
+                {/* Authentication Modals */}
+                <OTPAuthModal />
               <AnimatePresence mode="wait">
                 <Routes location={location} key={location.pathname}>
                   <Route path="/" element={<HomePage />} />

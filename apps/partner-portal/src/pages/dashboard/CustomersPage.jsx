@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Search from 'lucide-react/icons/search';
-import Mail from 'lucide-react/icons/mail';
-import Phone from 'lucide-react/icons/phone';
-import Calendar from 'lucide-react/icons/calendar';
-import DollarSign from 'lucide-react/icons/dollar-sign';
-import ShoppingBag from 'lucide-react/icons/shopping-bag';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faSearch, 
+  faEnvelope, 
+  faPhone, 
+  faCalendar, 
+  faDollarSign, 
+  faShoppingBag 
+} from '@fortawesome/free-solid-svg-icons';
 import { Input, Card, CardContent, CardHeader, CardTitle } from '@grub-gate/ui';
 import { mockCustomers } from '../../lib/mock-data.js';
 
@@ -55,7 +58,7 @@ const CustomersPage = () => {
       <Card>
         <CardContent className="p-4 sm:p-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               placeholder="Search customers by name or email..."
               value={searchTerm}
@@ -71,7 +74,7 @@ const CustomersPage = () => {
         {filteredCustomers.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
-              <ShoppingBag className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <FontAwesomeIcon icon={faShoppingBag} className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No customers found</h3>
               <p className="text-gray-500">Try adjusting your search criteria.</p>
             </CardContent>
@@ -116,18 +119,18 @@ const CustomersPage = () => {
                             <td className="py-4 px-6">
                               <div className="space-y-1">
                                 <div className="flex items-center text-sm text-gray-600">
-                                  <Mail className="h-4 w-4 mr-2" />
+                                  <FontAwesomeIcon icon={faEnvelope} className="h-4 w-4 mr-2" />
                                   {customer.email}
                                 </div>
                                 <div className="flex items-center text-sm text-gray-600">
-                                  <Phone className="h-4 w-4 mr-2" />
+                                  <FontAwesomeIcon icon={faPhone} className="h-4 w-4 mr-2" />
                                   {customer.phone}
                                 </div>
                               </div>
                             </td>
                             <td className="py-4 px-6">
                               <div className="flex items-center text-sm text-gray-900">
-                                <ShoppingBag className="h-4 w-4 mr-2" />
+                                <FontAwesomeIcon icon={faShoppingBag} className="h-4 w-4 mr-2" />
                                 {customer.totalOrders}
                               </div>
                             </td>
@@ -138,7 +141,7 @@ const CustomersPage = () => {
                             </td>
                             <td className="py-4 px-6">
                               <div className="flex items-center text-sm text-gray-600">
-                                <Calendar className="h-4 w-4 mr-2" />
+                                <FontAwesomeIcon icon={faCalendar} className="h-4 w-4 mr-2" />
                                 {formatDate(customer.lastOrder)}
                               </div>
                             </td>
@@ -183,11 +186,11 @@ const CustomersPage = () => {
                       {/* Contact Info */}
                       <div className="space-y-2">
                         <div className="flex items-center text-sm text-gray-600">
-                          <Mail className="h-4 w-4 mr-2 text-blue-500" />
+                          <FontAwesomeIcon icon={faEnvelope} className="h-4 w-4 mr-2 text-blue-500" />
                           <span className="break-all">{customer.email}</span>
                         </div>
                         <div className="flex items-center text-sm text-gray-600">
-                          <Phone className="h-4 w-4 mr-2 text-blue-500" />
+                          <FontAwesomeIcon icon={faPhone} className="h-4 w-4 mr-2 text-blue-500" />
                           <span>{customer.phone}</span>
                         </div>
                       </div>
@@ -196,21 +199,21 @@ const CustomersPage = () => {
                       <div className="grid grid-cols-3 gap-4 pt-3 border-t border-gray-100">
                         <div className="text-center">
                           <div className="flex items-center justify-center mb-1">
-                            <ShoppingBag className="h-4 w-4 text-gray-500" />
+                            <FontAwesomeIcon icon={faShoppingBag} className="h-4 w-4 text-gray-500" />
                           </div>
                           <div className="font-bold text-gray-900">{customer.totalOrders}</div>
                           <div className="text-xs text-gray-500">Orders</div>
                         </div>
                         <div className="text-center">
                           <div className="flex items-center justify-center mb-1">
-                            <DollarSign className="h-4 w-4 text-grub-red" />
+                            <FontAwesomeIcon icon={faDollarSign} className="h-4 w-4 text-grub-red" />
                           </div>
                           <div className="font-bold text-grub-red">${customer.totalSpent.toFixed(0)}</div>
                           <div className="text-xs text-gray-500">Spent</div>
                         </div>
                         <div className="text-center">
                           <div className="flex items-center justify-center mb-1">
-                            <Calendar className="h-4 w-4 text-gray-500" />
+                            <FontAwesomeIcon icon={faCalendar} className="h-4 w-4 text-gray-500" />
                           </div>
                           <div className="font-medium text-gray-900 text-xs">{formatDate(customer.lastOrder)}</div>
                           <div className="text-xs text-gray-500">Last Order</div>
@@ -231,7 +234,7 @@ const CustomersPage = () => {
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center">
               <div className="p-2 sm:p-3 bg-green-100 rounded-full">
-                <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+                <FontAwesomeIcon icon={faShoppingBag} className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
               </div>
               <div className="ml-3 sm:ml-4">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">
@@ -249,7 +252,7 @@ const CustomersPage = () => {
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center">
               <div className="p-2 sm:p-3 bg-grub-red/10 rounded-full">
-                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-grub-red" />
+                <FontAwesomeIcon icon={faDollarSign} className="h-5 w-5 sm:h-6 sm:w-6 text-grub-red" />
               </div>
               <div className="ml-3 sm:ml-4">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">
@@ -267,7 +270,7 @@ const CustomersPage = () => {
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center">
               <div className="p-2 sm:p-3 bg-blue-100 rounded-full">
-                <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+                <FontAwesomeIcon icon={faCalendar} className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
               </div>
               <div className="ml-3 sm:ml-4">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">

@@ -381,13 +381,16 @@ export const MealPlanProvider = ({ children }) => {
     if (!isAuthenticated || !user) return;
     
     const payload = {
-      userId: user.id,
+      userId: user._id || user.id,
       weeklyPlans: mealPlanData.weeklyPlans,
       totalItems: mealPlanData.totalItems,
       selectedRestaurantId: mealPlanData.selectedRestaurantId,
       selectedRestaurantName: mealPlanData.selectedRestaurantName,
       selectedRestaurantData: mealPlanData.selectedRestaurantData
     };
+    
+    console.log('👤 User object:', user);
+    console.log('🆔 User ID being sent:', payload.userId);
     
     console.log('📤 Sending to API /meal-plans:', payload);
     console.log('📤 Payload selectedRestaurantId:', payload.selectedRestaurantId);
@@ -479,8 +482,8 @@ export const MealPlanProvider = ({ children }) => {
       dispatch({ type: MEAL_PLAN_ACTIONS.SET_LOADING_FROM_DATABASE });
       
       try {
-        console.log('🔄 Loading meal plan from database for user:', user.id);
-        const response = await apiClient.get(`/meal-plans/${user.id}`);
+        console.log('🔄 Loading meal plan from database for user:', user._id || user.id);
+        const response = await apiClient.get(`/meal-plans/${user._id || user.id}`);
         
         console.log('🔍 Raw API response:', response.data);
         console.log('🔍 Response status:', response.data.status);

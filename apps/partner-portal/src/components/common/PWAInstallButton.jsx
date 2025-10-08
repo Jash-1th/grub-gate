@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import Download from 'lucide-react/icons/download';
-import Check from 'lucide-react/icons/check';
-import X from 'lucide-react/icons/x';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faDownload, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { promptInstallApp, isInstallPromptAvailable, isAppInstalled } from '../../pwa';
 
 /**
@@ -101,7 +100,7 @@ const PWAInstallButton = ({ className = '', variant = 'primary' }) => {
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0">
             <div className="w-10 h-10 bg-grub-red rounded-lg flex items-center justify-center">
-              <Download className="w-5 h-5 text-white" />
+              <FontAwesomeIcon icon={faDownload} className="w-5 h-5 text-white" />
             </div>
           </div>
           
@@ -143,7 +142,7 @@ const PWAInstallButton = ({ className = '', variant = 'primary' }) => {
             className="flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 transition-colors"
             aria-label="Close"
           >
-            <X className="w-4 h-4" />
+            <FontAwesomeIcon icon={faTimes} className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -165,7 +164,7 @@ const PWAInstallButton = ({ className = '', variant = 'primary' }) => {
         </>
       ) : (
         <>
-          <Download className="w-4 h-4" />
+          <FontAwesomeIcon icon={faDownload} className="w-4 h-4" />
           Install App
         </>
       )}
