@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Save, Upload, MapPin, Clock, Bell, CreditCard } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSave, faFileUpload, faMapMarkerAlt, faClock, faBell, faCreditCard } from '@fortawesome/free-solid-svg-icons';
 import { Button, Input, Card, CardContent, CardHeader, CardTitle } from '@grub-gate/ui';
 import { mockRestaurant } from '../../lib/mock-data.js';
 
@@ -10,10 +11,10 @@ const SettingsPage = () => {
   const [loading, setLoading] = useState(false);
 
   const tabs = [
-    { id: 'profile', label: t('settings.profile.title'), icon: Upload },
-    { id: 'delivery', label: t('settings.delivery.title'), icon: MapPin },
-    { id: 'notifications', label: t('settings.notifications.title'), icon: Bell },
-    { id: 'billing', label: t('settings.billing.title'), icon: CreditCard }
+    { id: 'profile', label: t('settings.profile.title'), icon: faFileUpload },
+    { id: 'delivery', label: t('settings.delivery.title'), icon: faMapMarkerAlt },
+    { id: 'notifications', label: t('settings.notifications.title'), icon: faBell },
+    { id: 'billing', label: t('settings.billing.title'), icon: faCreditCard }
   ];
 
   const handleSave = () => {
@@ -39,7 +40,6 @@ const SettingsPage = () => {
             <CardContent className="p-0">
               <nav className="space-y-1">
                 {tabs.map((tab) => {
-                  const Icon = tab.icon;
                   return (
                     <button
                       key={tab.id}
@@ -50,7 +50,7 @@ const SettingsPage = () => {
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      <Icon className="h-5 w-5 mr-3" />
+                      <FontAwesomeIcon icon={tab.icon} className="h-5 w-5 mr-3" />
                       {tab.label}
                     </button>
                   );
@@ -223,7 +223,7 @@ const SettingsPage = () => {
               loading={loading}
               className="min-w-[120px]"
             >
-              <Save className="h-4 w-4 mr-2" />
+              <FontAwesomeIcon icon={faSave} className="h-4 w-4 mr-2" />
               {t('common.save')}
             </Button>
           </div>
