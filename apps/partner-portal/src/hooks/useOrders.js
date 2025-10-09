@@ -61,6 +61,8 @@ export const useOrders = (initialFilters = {}) => {
         return acc;
       }, {});
 
+      console.log('🔍 useOrders: Making API call with filters:', cleanFilters);
+
       const response = await ordersApi.getOrders(cleanFilters);
       
       // Check if request was aborted
@@ -69,13 +71,15 @@ export const useOrders = (initialFilters = {}) => {
       }
 
       // Debug: Log the actual response structure
-      console.log('Orders API Response:', response);
+      console.log('📦 useOrders: API Response received:', response?.data?.data?.length, 'orders');
 
       if (response?.data?.status === 'success') {
-        setOrders(response.data.data || []);
+        const ordersData = response.data.data || [];
+        console.log('✅ useOrders: Setting orders:', ordersData.length, 'orders');
+        setOrders(ordersData);
         setPagination(response.data.pagination || pagination);
       } else {
-        console.error('Unexpected response format:', response);
+        console.error('❌ useOrders: Unexpected response format:', response);
         throw new Error('Invalid response format');
       }
     } catch (err) {

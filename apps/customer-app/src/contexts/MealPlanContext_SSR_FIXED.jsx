@@ -24,6 +24,9 @@ const initialState = {
   weeklyPlan: { ...initialWeekPlan },
   totalItems: 0,
   selectedRestaurant: null,
+  selectedRestaurantId: null,
+  selectedRestaurantName: null,
+  selectedRestaurantData: null,
   loadedFromDatabase: false
 };
 
@@ -39,7 +42,8 @@ const MEAL_PLAN_ACTIONS = {
   SET_LOADED_FROM_DATABASE: 'SET_LOADED_FROM_DATABASE',
   SET_SELECTED_RESTAURANT: 'SET_SELECTED_RESTAURANT',
   CLEAR_SELECTED_RESTAURANT: 'CLEAR_SELECTED_RESTAURANT',
-  LOAD_FROM_DATABASE: 'LOAD_FROM_DATABASE'
+  LOAD_FROM_DATABASE: 'LOAD_FROM_DATABASE',
+  SYNC_DATABASE_DATA: 'SYNC_DATABASE_DATA'
 };
 
 // SSR-Safe reducer (no localStorage operations)
@@ -183,6 +187,59 @@ const mealPlanReducer = (state, action) => {
       };
     }
 
+    case MEAL_PLAN_ACTIONS.SET_SELECTED_RESTAURANT: {
+      const { restaurantId, restaurantName, restaurantData } = action.payload;
+      console.log('🔄 SET_SELECTED_RESTAURANT:', { restaurantId, restaurantName });
+      
+      return {
+        ...state,
+        selectedRestaurantId: restaurantId,
+        selectedRestaurantName: restaurantName,
+        selectedRestaurantData: restaurantData
+      };
+    }
+
+    case MEAL_PLAN_ACTIONS.CLEAR_SELECTED_RESTAURANT: {
+      console.log('🔄 CLEAR_SELECTED_RESTAURANT');
+      
+      return {
+        ...state,
+        selectedRestaurantId: null,
+        selectedRestaurantName: null,
+        selectedRestaurantData: null
+      };
+    }
+
+    case MEAL_PLAN_ACTIONS.SYNC_DATABASE_DATA: {
+      const { databaseData } = action.payload;
+      console.log('🔄 Syncing database data:', databaseData);
+      
+      // Convert database structure to frontend structure
+      const syncedWeeklyPlans = {
+        week0: databaseData.weeklyPlans?.week0 || initialWeekPlan,
+        week1: databaseData.weeklyPlans?.week1 || initialWeekPlan
+      };
+      
+      // Calculate total items
+      const totalItems = Object.values(syncedWeeklyPlans).reduce((total, week) => {
+        return total + Object.values(week).reduce((weekTotal, day) => {
+          return weekTotal + (day.lunch?.length || 0) + (day.dinner?.length || 0);
+        }, 0);
+      }, 0);
+      
+      console.log('✅ Synced meal plan data:', { syncedWeeklyPlans, totalItems });
+      
+      return {
+        ...state,
+        weeklyPlans: syncedWeeklyPlans,
+        totalItems: totalItems,
+        selectedRestaurantId: databaseData.selectedRestaurantId || null,
+        selectedRestaurantName: databaseData.selectedRestaurantName || null,
+        selectedRestaurantData: databaseData.selectedRestaurantData || null,
+        loadedFromDatabase: true
+      };
+    }
+
     default:
       return state;
   }
@@ -216,17 +273,34 @@ export const MealPlanProvider = ({ children }) => {
         if (isAuthenticated && user) {
           // Try to load from database first
           try {
-            const response = await apiClient.get('/weekly-plans/me');
+            const response = await apiClient.get('/meal-plans/me');
             if (response.data?.status === 'success' && response.data?.data) {
-              const { weeklyPlans, totalItems } = response.data.data;
+              console.log('📋 Loading meal plan from database:', response.data.data);
               dispatch({
-                type: MEAL_PLAN_ACTIONS.LOAD_FROM_DATABASE,
-                payload: { weeklyPlans, totalItems }
+                type: MEAL_PLAN_ACTIONS.SYNC_DATABASE_DATA,
+                payload: { databaseData: response.data.data }
               });
               return; // Exit early on success
             }
           } catch (error) {
             console.log('Could not load from database, falling back to localStorage:', error.message);
+          }
+        }
+        
+        // Try to load from the 'mealplans' collection directly
+        if (isAuthenticated && user) {
+          try {
+            const response = await apiClient.get('/meal-plans/me');
+            if (response.data?.weeklyPlans) {
+              console.log('📋 Loading meal plan from database:', response.data);
+              dispatch({
+                type: MEAL_PLAN_ACTIONS.SYNC_DATABASE_DATA,
+                payload: { databaseData: response.data }
+              });
+              return;
+            }
+          } catch (error) {
+            console.log('Could not load meal plan from database:', error.message);
           }
         }
         
@@ -267,12 +341,12 @@ export const MealPlanProvider = ({ children }) => {
     const loadUserData = async () => {
       if (isAuthenticated && user) {
         try {
-          const response = await apiClient.get('/weekly-plans/me');
+          const response = await apiClient.get('/meal-plans/me');
           if (response.data?.status === 'success' && response.data?.data) {
-            const { weeklyPlans, totalItems } = response.data.data;
+            console.log('🔄 Syncing user data after login:', response.data.data);
             dispatch({
-              type: MEAL_PLAN_ACTIONS.LOAD_FROM_DATABASE,
-              payload: { weeklyPlans, totalItems }
+              type: MEAL_PLAN_ACTIONS.SYNC_DATABASE_DATA,
+              payload: { databaseData: response.data.data }
             });
           }
         } catch (error) {
@@ -331,7 +405,18 @@ export const MealPlanProvider = ({ children }) => {
     if (!isAuthenticated || !user) return;
 
     try {
-      await apiClient.post('/weekly-plans', mealPlanData);
+      // Ensure proper data structure for API
+      const apiData = {
+        userId: user._id,
+        weeklyPlans: mealPlanData.weeklyPlans || state.weeklyPlans,
+        totalItems: mealPlanData.totalItems || state.totalItems,
+        selectedRestaurantId: state.selectedRestaurantId,
+        selectedRestaurantName: state.selectedRestaurantName,
+        selectedRestaurantData: state.selectedRestaurantData
+      };
+      
+      console.log('💾 Saving meal plan to database:', apiData);
+      await apiClient.post('/meal-plans', apiData);
     } catch (error) {
       console.error('Error saving meal plan to database:', error);
     }
@@ -427,6 +512,16 @@ export const MealPlanProvider = ({ children }) => {
     }, 0);
   };
 
+  const getWeekTotalCost = (week = 0) => {
+    const weekPlan = getWeekPlan(week);
+    return Object.values(weekPlan).reduce((total, day) => {
+      const dayCost = [...day.lunch, ...day.dinner].reduce((dayTotal, item) => {
+        return dayTotal + (parseFloat(item.price) || 0);
+      }, 0);
+      return total + dayCost;
+    }, 0);
+  };
+
   const getRestaurantsInWeekPlan = (week = 0) => {
     const restaurants = new Set();
     const weekPlan = getWeekPlan(week);
@@ -454,6 +549,175 @@ export const MealPlanProvider = ({ children }) => {
     return Array.from(restaurants);
   };
 
+  // Get restaurant IDs in a specific week's plan
+  const getRestaurantIdsInWeekPlan = (week = 0) => {
+    const restaurantIds = new Set();
+    const weekPlan = getWeekPlan(week);
+    
+    // Check if weekPlan exists and is an object
+    if (!weekPlan || typeof weekPlan !== 'object') {
+      return [];
+    }
+    
+    Object.values(weekPlan).forEach(day => {
+      // Check if day exists and has the expected structure
+      if (!day || typeof day !== 'object') {
+        return;
+      }
+      
+      // Check if lunch and dinner exist and are arrays
+      const lunchItems = Array.isArray(day.lunch) ? day.lunch : [];
+      const dinnerItems = Array.isArray(day.dinner) ? day.dinner : [];
+      
+      [...lunchItems, ...dinnerItems].forEach(item => {
+        if (item && item.restaurantId) {
+          restaurantIds.add(item.restaurantId);
+        }
+      });
+    });
+    return Array.from(restaurantIds);
+  };
+
+  // Get restaurant IDs from ALL weeks
+  const getRestaurantIdsInAllWeeks = () => {
+    const restaurantIds = new Set();
+    
+    // Check if weeklyPlans exists and is an object
+    if (!state.weeklyPlans || typeof state.weeklyPlans !== 'object') {
+      return [];
+    }
+    
+    Object.values(state.weeklyPlans).forEach(weekPlan => {
+      // Check if weekPlan exists and is an object
+      if (!weekPlan || typeof weekPlan !== 'object') {
+        return;
+      }
+      
+      Object.values(weekPlan).forEach(day => {
+        // Check if day exists and has the expected structure
+        if (!day || typeof day !== 'object') {
+          return;
+        }
+        
+        // Check if lunch and dinner exist and are arrays
+        const lunchItems = Array.isArray(day.lunch) ? day.lunch : [];
+        const dinnerItems = Array.isArray(day.dinner) ? day.dinner : [];
+        
+        [...lunchItems, ...dinnerItems].forEach(item => {
+          if (item && item.restaurantId) {
+            restaurantIds.add(item.restaurantId);
+          }
+        });
+      });
+    });
+    return Array.from(restaurantIds);
+  };
+
+  // Alias for backward compatibility
+  const getRestaurantsInPlan = () => {
+    return getRestaurantsInAllWeeks();
+  };
+
+  const getWeeklyPlanSummary = () => {
+    const totalItems = Object.values(state.weeklyPlans).reduce((total, week) => {
+      return total + Object.values(week).reduce((weekTotal, day) => {
+        return weekTotal + (day.lunch?.length || 0) + (day.dinner?.length || 0);
+      }, 0);
+    }, 0);
+
+    const totalCost = Object.values(state.weeklyPlans).reduce((total, week) => {
+      return total + Object.values(week).reduce((weekTotal, day) => {
+        const dayCost = [...(day.lunch || []), ...(day.dinner || [])].reduce((dayTotal, item) => {
+          return dayTotal + (parseFloat(item.price) || 0);
+        }, 0);
+        return weekTotal + dayCost;
+      }, 0);
+    }, 0);
+
+    const restaurants = getRestaurantsInAllWeeks();
+
+    return {
+      totalItems,
+      totalCost: totalCost.toFixed(2),
+      restaurants,
+      restaurantCount: restaurants.length
+    };
+  };
+
+  const getItemQuantityInPlan = (itemId, day, mealType, week = 0) => {
+    const weekPlan = getWeekPlan(week);
+    const dayItems = weekPlan[day]?.[mealType] || [];
+    return dayItems.filter(item => item.id === itemId).length;
+  };
+
+  const isItemInPlan = (itemId, day, mealType, week = 0) => {
+    const weekPlan = getWeekPlan(week);
+    const dayItems = weekPlan[day]?.[mealType] || [];
+    return dayItems.some(item => item.id === itemId);
+  };
+
+  // Restaurant selection actions
+  const setSelectedRestaurant = (restaurantId, restaurantName, restaurantData = null) => {
+    console.log('🎯 setSelectedRestaurant called:', { restaurantId, restaurantName });
+    dispatch({
+      type: MEAL_PLAN_ACTIONS.SET_SELECTED_RESTAURANT,
+      payload: { restaurantId, restaurantName, restaurantData }
+    });
+  };
+
+  const clearSelectedRestaurant = () => {
+    console.log('🎯 clearSelectedRestaurant called');
+    dispatch({
+      type: MEAL_PLAN_ACTIONS.CLEAR_SELECTED_RESTAURANT
+    });
+  };
+
+  // Clear all meal plan data and restaurant selection (for restaurant switching)
+  const clearAllMealPlanData = () => {
+    console.log('🎯 clearAllMealPlanData called - clearing everything');
+    
+    // Clear both weeks
+    dispatch({
+      type: MEAL_PLAN_ACTIONS.CLEAR_WEEK,
+      payload: { week: 0 }
+    });
+    dispatch({
+      type: MEAL_PLAN_ACTIONS.CLEAR_WEEK,
+      payload: { week: 1 }
+    });
+    
+    // Clear selected restaurant
+    dispatch({
+      type: MEAL_PLAN_ACTIONS.CLEAR_SELECTED_RESTAURANT
+    });
+    
+    // Clear planning context localStorage data as well
+    console.log('🧹 Clearing planning context localStorage data');
+    if (typeof window !== 'undefined') {
+      removeStorageItem('grubgate_selected_restaurant');
+      removeStorageItem('weeklyPlans'); // Also clear old meal plan data
+      removeStorageItem('mealPlan'); // Clear legacy meal plan data
+    }
+  };
+
+  // Legacy compatibility functions
+  const getDayItems = (day) => {
+    return getWeekPlan(0)[day] || { lunch: [], dinner: [] };
+  };
+
+  const getDayItemsCount = (day) => {
+    const dayItems = getDayItems(day);
+    return dayItems.lunch.length + dayItems.dinner.length;
+  };
+
+  const getMealItems = (day, mealType) => {
+    return getWeekMealItems(day, mealType, 0);
+  };
+
+  const getTotalItemsCount = () => {
+    return state.totalItems;
+  };
+
   // Show loading state during SSR and initial client hydration
   if (!isClient || isLoading) {
     return (
@@ -470,6 +734,11 @@ export const MealPlanProvider = ({ children }) => {
     // State
     ...state,
     isClient,
+    isLoadingFromDatabase: isLoading,
+    hasLoadedFromDatabase: !isLoading,
+    // Legacy state compatibility
+    mealPlan: state.weeklyPlan,
+    weeklyPlan: state.weeklyPlan,
     
     // Actions
     addItemToPlan,
@@ -479,12 +748,29 @@ export const MealPlanProvider = ({ children }) => {
     clearWeek,
     clearAll,
     
+    // Restaurant selection actions
+    setSelectedRestaurant,
+    clearSelectedRestaurant,
+    clearAllMealPlanData,
+    
     // Helpers
     getWeekPlan,
     getWeekMealItems,
     getWeekTotalItems,
+    getWeekTotalCost,
     getRestaurantsInWeekPlan,
-    getRestaurantsInAllWeeks
+    getRestaurantsInAllWeeks,
+    getRestaurantsInPlan,
+    getRestaurantIdsInWeekPlan,
+    getRestaurantIdsInAllWeeks,
+    getWeeklyPlanSummary,
+    getItemQuantityInPlan,
+    isItemInPlan,
+    // Legacy compatibility
+    getDayItems,
+    getDayItemsCount,
+    getMealItems,
+    getTotalItemsCount
   };
 
   return (

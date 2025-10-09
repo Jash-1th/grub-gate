@@ -124,6 +124,17 @@ const subscriptionApi = {
       console.error('Error confirming payment and creating subscription:', error);
       throw error;
     }
+  },
+
+  // Create subscription from meal plan (after payment)
+  createSubscriptionFromMealPlan: async (subscriptionData) => {
+    try {
+      const response = await apiClient.post('/subscription-meal-plans/create-from-meal-plan', subscriptionData);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating subscription from meal plan:', error);
+      throw error;
+    }
   }
 };
 

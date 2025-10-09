@@ -21,10 +21,31 @@ export const ordersApi = {
    */
   getOrders: async (params = {}) => {
     try {
-      const response = await apiClient.get('/orders', { params });
+      // Transform single 'date' parameter to startDate/endDate range for backend compatibility
+      const transformedParams = { ...params };
+      
+      if (params.date && !params.startDate && !params.endDate) {
+        // Convert single date to date range (same day)
+        transformedParams.startDate = params.date;
+        transformedParams.endDate = params.date;
+        delete transformedParams.date;
+      }
+      
+      console.log('🌐 ordersApi: Making request to /orders with params:', transformedParams);
+      
+      const response = await apiClient.get('/orders', { params: transformedParams });
+      
+      console.log('🌐 ordersApi: Response received:', response.data?.data?.length, 'orders');
+      console.log('🌐 ordersApi: Full response data:', response.data);
+      
       return response;
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      console.error('❌ ordersApi: Error fetching orders:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        url: error.config?.url
+      });
       throw new Error(error.response?.data?.message || 'Failed to fetch orders');
     }
   },

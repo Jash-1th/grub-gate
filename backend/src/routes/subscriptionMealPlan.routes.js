@@ -35,7 +35,6 @@ router.get('/me/all', getUserMealPlans);
 // Create subscription meal plan from user's weekly meal plan (after payment)
 router.post('/create-from-meal-plan',
   [
-    body('subscriptionId').notEmpty().withMessage('Subscription ID is required'),
     body('restaurantId').isMongoId().withMessage('Valid restaurant ID is required'),
     body('planType').optional().isIn(['bi-weekly', 'monthly', 'quarterly']).withMessage('Invalid plan type'),
     body('deliveryAddress').optional().isObject().withMessage('Delivery address must be an object'),
@@ -44,7 +43,12 @@ router.post('/create-from-meal-plan',
     body('deliveryAddress.province').optional().notEmpty().withMessage('Province is required if delivery address is provided'),
     body('deliveryAddress.postalCode').optional().notEmpty().withMessage('Postal code is required if delivery address is provided'),
     body('specialInstructions').optional().isString().withMessage('Special instructions must be a string'),
-    body('customerPhone').optional().isMobilePhone().withMessage('Invalid phone number format')
+    body('customerPhone').optional().isMobilePhone().withMessage('Invalid phone number format'),
+    // Billing information validation
+    body('planName').notEmpty().withMessage('Plan name is required'),
+    body('monthlyPrice').isNumeric().withMessage('Monthly price must be a number'),
+    body('features').optional().isArray().withMessage('Features must be an array'),
+    body('paymentMethod').optional().isIn(['card', 'digital-wallet']).withMessage('Invalid payment method')
   ],
   createSubscriptionFromMealPlan
 );

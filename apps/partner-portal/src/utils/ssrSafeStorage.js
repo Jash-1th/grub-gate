@@ -14,14 +14,26 @@ const isClient = typeof window !== 'undefined';
  * Safely get an item from localStorage
  * @param {string} key - The localStorage key
  * @param {any} defaultValue - Default value if key doesn't exist or SSR
+ * @param {boolean} parseJson - Whether to parse as JSON (default: true)
  * @returns {any} The stored value or default value
  */
-export const getStorageItem = (key, defaultValue = null) => {
+export const getStorageItem = (key, defaultValue = null, parseJson = true) => {
   if (!isClient) return defaultValue;
   
   try {
     const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : defaultValue;
+    if (!item) return defaultValue;
+    
+    // For tokens and other plain strings, don't parse as JSON
+    if (!parseJson) return item;
+    
+    // Try to parse as JSON, fallback to string if it fails
+    try {
+      return JSON.parse(item);
+    } catch (parseError) {
+      // If JSON parsing fails, return the raw string (for tokens, etc.)
+      return item;
+    }
   } catch (error) {
     console.warn(`Error reading localStorage key "${key}":`, error);
     return defaultValue;
@@ -32,13 +44,19 @@ export const getStorageItem = (key, defaultValue = null) => {
  * Safely set an item in localStorage
  * @param {string} key - The localStorage key
  * @param {any} value - The value to store
+ * @param {boolean} stringifyJson - Whether to stringify as JSON (default: true)
  * @returns {boolean} Success status
  */
-export const setStorageItem = (key, value) => {
+export const setStorageItem = (key, value, stringifyJson = true) => {
   if (!isClient) return false;
   
   try {
-    localStorage.setItem(key, JSON.stringify(value));
+    // For tokens and other plain strings, store directly
+    if (!stringifyJson || typeof value === 'string') {
+      localStorage.setItem(key, value);
+    } else {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
     return true;
   } catch (error) {
     console.warn(`Error setting localStorage key "${key}":`, error);
@@ -88,4 +106,48 @@ export const useSSRSafeStorage = (key, defaultValue = null) => {
   }, [key, isClientSide]);
 
   return [value, setStorageValue, isClientSide];
+};
+
+/**
+ * Convenience functions for common storage operations
+ */
+
+/**
+ * Get a token from localStorage (no JSON parsing)
+ * @param {string} key - The localStorage key
+ * @param {string} defaultValue - Default value if key doesn't exist
+ * @returns {string|null} The token or default value
+ */
+export const getToken = (key, defaultValue = null) => {
+  return getStorageItem(key, defaultValue, false);
+};
+
+/**
+ * Set a token in localStorage (no JSON stringifying)
+ * @param {string} key - The localStorage key
+ * @param {string} token - The token to store
+ * @returns {boolean} Success status
+ */
+export const setToken = (key, token) => {
+  return setStorageItem(key, token, false);
+};
+
+/**
+ * Get user data from localStorage (with JSON parsing)
+ * @param {string} key - The localStorage key (default: 'user')
+ * @param {object} defaultValue - Default value if key doesn't exist
+ * @returns {object|null} The user data or default value
+ */
+export const getUserData = (key = 'user', defaultValue = null) => {
+  return getStorageItem(key, defaultValue, true);
+};
+
+/**
+ * Set user data in localStorage (with JSON stringifying)
+ * @param {string} key - The localStorage key (default: 'user')
+ * @param {object} userData - The user data to store
+ * @returns {boolean} Success status
+ */
+export const setUserData = (key = 'user', userData) => {
+  return setStorageItem(key, userData, true);
 };

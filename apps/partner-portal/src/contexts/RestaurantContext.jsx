@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import analyticsService from '../services/analyticsService';
+import { useAuth } from './AuthContext';
 
 const RestaurantContext = createContext();
 
@@ -12,8 +13,10 @@ export const useRestaurant = () => {
 };
 
 export const RestaurantProvider = ({ children }) => {
+  const { isAuthenticated } = useAuth();
   const [restaurantInfo, setRestaurantInfo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isClient, setIsClient] = useState(false);
 
   // SSR safety
@@ -21,48 +24,84 @@ export const RestaurantProvider = ({ children }) => {
     setIsClient(true);
   }, []);
 
-  // Fetch restaurant info when component mounts
-  useEffect(() => {
-    const fetchRestaurantInfo = async () => {
-      if (!isClient) return;
+  // Fetch restaurant info when authenticated
+  const fetchRestaurantInfo = useCallback(async () => {
+    if (!isClient || !isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('🔍 RestaurantContext - Fetching restaurant info...');
+      console.log('🔍 RestaurantContext - isAuthenticated:', isAuthenticated);
+      console.log('🔍 RestaurantContext - isClient:', isClient);
       
-      try {
-        setLoading(true);
-        const restaurant = await analyticsService.getRestaurantInfo();
-        setRestaurantInfo(restaurant);
-      } catch (error) {
-        console.error('Restaurant info fetch error:', error);
-        // Fallback to default restaurant info
-        setRestaurantInfo({
-          name: 'Bistro Montreal',
-          description: 'Authentic French cuisine in the heart of Montreal',
-          cuisine: 'French',
-          address: '123 Rue Saint-Catherine, Montreal, QC H2X 1Y4'
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+      const restaurant = await analyticsService.getRestaurantInfo();
+      console.log('✅ RestaurantContext - Restaurant info received:', restaurant);
+      setRestaurantInfo(restaurant);
+    } catch (error) {
+      console.error('❌ Restaurant info fetch error:', error);
+      console.error('❌ Error details:', error.message, error.status, error.originalError);
+      setError(error.message || 'Failed to load restaurant information');
+      setRestaurantInfo(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [isClient, isAuthenticated]);
 
-    fetchRestaurantInfo();
+  // Fetch restaurant info when authentication state changes
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchRestaurantInfo();
+    } else {
+      // Clear restaurant info when logging out
+      setRestaurantInfo(null);
+      setError(null);
+      setLoading(false);
+    }
+  }, [isAuthenticated, fetchRestaurantInfo]);
+
+  // Helper methods
+  const getRestaurantName = useCallback(() => {
+    if (loading) return 'Loading...';
+    return restaurantInfo?.name || 'Your Restaurant';
+  }, [loading, restaurantInfo]);
+
+  const getRestaurantInitial = useCallback(() => {
+    if (loading) return 'L';
+    return restaurantInfo?.name?.charAt(0) || 'R';
+  }, [loading, restaurantInfo]);
+
+  const refreshRestaurantInfo = useCallback(async () => {
+    if (!isClient) return;
+    try {
+      console.log('🔄 RestaurantContext - Refreshing restaurant info...');
+      setLoading(true);
+      setError(null);
+      const restaurant = await analyticsService.getRestaurantInfo();
+      console.log('✅ RestaurantContext - Restaurant info refreshed:', restaurant);
+      setRestaurantInfo(restaurant);
+      return restaurant;
+    } catch (error) {
+      console.error('❌ Restaurant refresh error:', error);
+      setError(error.message || 'Failed to refresh restaurant information');
+      setRestaurantInfo(null);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   }, [isClient]);
 
   const value = {
     restaurantInfo,
     loading,
+    error,
     isClient,
-    // Helper methods
-    getRestaurantName: () => restaurantInfo?.name || 'Your Restaurant',
-    getRestaurantInitial: () => restaurantInfo?.name?.charAt(0) || 'R',
-    refreshRestaurantInfo: async () => {
-      if (!isClient) return;
-      try {
-        const restaurant = await analyticsService.getRestaurantInfo();
-        setRestaurantInfo(restaurant);
-      } catch (error) {
-        console.error('Restaurant refresh error:', error);
-      }
-    }
+    getRestaurantName,
+    getRestaurantInitial,
+    refreshRestaurantInfo,
   };
 
   return (

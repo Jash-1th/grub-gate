@@ -1,0 +1,394 @@
+// This script will fix the syntax error in orders.controller.js
+const fs = require('fs');
+const path = require('path');
+
+const controllerPath = path.join(__dirname, 'src/controllers/partner/orders.controller.js');
+
+// Read the current file
+let content = fs.readFileSync(controllerPath, 'utf8');
+
+// The issue is likely a missing closing brace in the data response
+// Let's fix the getOrdersByDateRange function response
+
+const fixedContent = `// FILE: src/controllers/partner/orders.controller.js
+const Order = require('../../models/Order');
+const Restaurant = require('../../models/Restaurant');
+const User = require('../../models/User');
+const { validationResult } = require('express-validator');
+
+/**
+ * Get today's orders for a partner restaurant
+ */
+const getTodaysOrders = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const partnerId = req.user.id;
+    
+    // Get partner's restaurant (check both partnerId and ownerId)
+    const restaurant = await Restaurant.findOne({ 
+      $or: [
+        { partnerId: partnerId },
+        { ownerId: partnerId }
+      ]
+    });
+    if (!restaurant) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Restaurant not found for this partner'
+      });
+    }
+
+    // Get today's date range
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    // Find orders for today with status 'pending'
+    const todaysOrders = await Order.find({
+      restaurantId: restaurant._id,
+      scheduledDate: {
+        $gte: today,
+        $lt: tomorrow
+      },
+      status: 'pending'
+    })
+    .populate('customerId', 'firstName lastName email phone')
+    .sort({ 'deliveryTime.estimated': 1 });
+
+    // Group orders by meal type
+    const ordersByMealType = {
+      lunch: todaysOrders.filter(order => order.mealType === 'lunch'),
+      dinner: todaysOrders.filter(order => order.mealType === 'dinner')
+    };
+
+    res.json({
+      status: 'success',
+      data: {
+        restaurant: {
+          id: restaurant._id,
+          name: restaurant.name
+        },
+        date: today.toDateString(),
+        totalOrders: todaysOrders.length,
+        orders: todaysOrders,
+        ordersByMealType: ordersByMealType
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching today\\'s orders:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch today\\'s orders',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+/**
+ * Get orders for a specific date range
+ */
+const getOrdersByDateRange = async (req, res) => {
+  try {
+    console.log('🎯 getOrdersByDateRange: Called with query:', req.query);
+    console.log('🎯 getOrdersByDateRange: User ID:', req.user.id);
+    
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const partnerId = req.user.id;
+    const { startDate, endDate, status } = req.query;
+    
+    console.log('🎯 getOrdersByDateRange: Extracted params:', { startDate, endDate, status });
+    
+    // Get partner's restaurant (check both partnerId and ownerId)
+    const restaurant = await Restaurant.findOne({ 
+      $or: [
+        { partnerId: partnerId },
+        { ownerId: partnerId }
+      ]
+    });
+    
+    console.log('🎯 getOrdersByDateRange: Found restaurant:', restaurant ? restaurant._id : 'null');
+    
+    if (!restaurant) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Restaurant not found for this partner'
+      });
+    }
+
+    // Build query
+    const query = {
+      restaurantId: restaurant._id,
+      scheduledDate: {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      }
+    };
+
+    if (status) {
+      query.status = status;
+    }
+
+    console.log('🎯 getOrdersByDateRange: MongoDB query:', JSON.stringify(query, null, 2));
+    console.log('🎯 getOrdersByDateRange: Date range:', {
+      startDate: new Date(startDate).toISOString(),
+      endDate: new Date(endDate).toISOString()
+    });
+
+    const orders = await Order.find(query)
+      .populate('customerId', 'firstName lastName email phone')
+      .sort({ scheduledDate: -1, 'deliveryTime.estimated': 1 });
+
+    console.log('🎯 getOrdersByDateRange: Found', orders.length, 'orders');
+    orders.forEach((order, index) => {
+      console.log(\`🎯 Order \${index + 1}: \${order._id} - \${order.scheduledDate ? order.scheduledDate.toDateString() : 'NO DATE'} - \${order.status} - \${order.items[0]?.name}\`);
+    });
+
+    res.json({
+      status: 'success',
+      data: {
+        restaurant: {
+          id: restaurant._id,
+          name: restaurant.name
+        },
+        dateRange: { startDate, endDate },
+        totalOrders: orders.length,
+        orders: orders
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching orders by date range:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch orders',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+/**
+ * Update order status
+ */
+const updateOrderStatus = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const partnerId = req.user.id;
+    const { orderId } = req.params;
+    const { status, notes } = req.body;
+    
+    // Get partner's restaurant (check both partnerId and ownerId)
+    const restaurant = await Restaurant.findOne({ 
+      $or: [
+        { partnerId: partnerId },
+        { ownerId: partnerId }
+      ]
+    });
+    if (!restaurant) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Restaurant not found for this partner'
+      });
+    }
+
+    // Find and update order
+    const order = await Order.findOne({
+      _id: orderId,
+      restaurantId: restaurant._id
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Order not found'
+      });
+    }
+
+    // Update order status
+    order.status = status;
+    if (notes) {
+      order.notes = notes;
+    }
+    order.updatedAt = new Date();
+
+    // Add status history
+    if (!order.statusHistory) {
+      order.statusHistory = [];
+    }
+    order.statusHistory.push({
+      status: status,
+      timestamp: new Date(),
+      notes: notes
+    });
+
+    await order.save();
+
+    res.json({
+      status: 'success',
+      message: 'Order status updated successfully',
+      data: {
+        order: order
+      }
+    });
+
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to update order status',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+/**
+ * Get order analytics for partner dashboard
+ */
+const getOrderAnalytics = async (req, res) => {
+  try {
+    const partnerId = req.user.id;
+    
+    // Get partner's restaurant (check both partnerId and ownerId)
+    const restaurant = await Restaurant.findOne({ 
+      $or: [
+        { partnerId: partnerId },
+        { ownerId: partnerId }
+      ]
+    });
+    if (!restaurant) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Restaurant not found for this partner'
+      });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Get various date ranges
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - today.getDay());
+    
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    // Aggregate order statistics
+    const [todayStats, weekStats, monthStats] = await Promise.all([
+      // Today's orders
+      Order.aggregate([
+        {
+          $match: {
+            restaurantId: restaurant._id,
+            scheduledDate: { $gte: today, $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) }
+          }
+        },
+        {
+          $group: {
+            _id: '$status',
+            count: { $sum: 1 },
+            totalAmount: { $sum: '$total' }
+          }
+        }
+      ]),
+      
+      // This week's orders
+      Order.aggregate([
+        {
+          $match: {
+            restaurantId: restaurant._id,
+            scheduledDate: { $gte: weekStart, $lt: today }
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            totalOrders: { $sum: 1 },
+            totalRevenue: { $sum: '$total' }
+          }
+        }
+      ]),
+      
+      // This month's orders
+      Order.aggregate([
+        {
+          $match: {
+            restaurantId: restaurant._id,
+            scheduledDate: { $gte: monthStart, $lt: today }
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            totalOrders: { $sum: 1 },
+            totalRevenue: { $sum: '$total' }
+          }
+        }
+      ])
+    ]);
+
+    res.json({
+      status: 'success',
+      data: {
+        restaurant: {
+          id: restaurant._id,
+          name: restaurant.name
+        },
+        analytics: {
+          today: todayStats,
+          thisWeek: weekStats[0] || { totalOrders: 0, totalRevenue: 0 },
+          thisMonth: monthStats[0] || { totalOrders: 0, totalRevenue: 0 }
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching order analytics:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch order analytics',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+module.exports = {
+  getTodaysOrders,
+  getOrdersByDateRange,
+  updateOrderStatus,
+  getOrderAnalytics
+};
+`;
+
+// Write the fixed content
+fs.writeFileSync(controllerPath, fixedContent, 'utf8');
+
+console.log('✅ Fixed syntax error in orders.controller.js');
+console.log('🔧 The file has been completely rewritten with proper syntax');
+console.log('🚀 Server should now start without syntax errors');

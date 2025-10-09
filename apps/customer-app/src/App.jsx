@@ -4,7 +4,7 @@ import { I18nextProvider } from 'react-i18next';
 import { AnimatePresence } from 'framer-motion';
 import i18n from './i18n';
 import { ModalProvider } from './context/ModalContext';
-import { MealPlanProvider } from './contexts/MealPlanContext';
+import { MealPlanProvider } from './contexts/MealPlanContext_SSR_FIXED';
 import { ToastProvider } from './contexts/ToastContext';
 import { PlanningProvider } from './contexts/PlanningContext';
 import { AuthProvider } from './contexts/AuthContext';

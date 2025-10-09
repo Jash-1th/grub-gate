@@ -10,10 +10,10 @@ import {
   Star,
   ArrowUpRight,
   ArrowDownRight,
-  Plus
+  Plus,
+  RefreshCw
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@grub-gate/ui';
-import { mockAnalytics, mockOrders, mockMenuItems } from '../../lib/mock-data.js';
 import analyticsService from '../../services/analyticsService.js';
 import { useRestaurant } from '../../contexts/RestaurantContext.jsx';
 
@@ -27,6 +27,10 @@ const DashboardHome = () => {
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [recentOrders, setRecentOrders] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [notification, setNotification] = useState(null);
 
   // SSR safety
   useEffect(() => {
@@ -43,15 +47,22 @@ const DashboardHome = () => {
         
         // Fetch dashboard analytics and recent orders in parallel
         const [analytics, orders] = await Promise.all([
-          analyticsService.getDashboardOverview(7), // Last 7 days for dashboard
+          analyticsService.getDashboardOverview(30), // Last 30 days for dashboard (matches analytics page)
           analyticsService.getRecentOrders(5)
         ]);
         
+        // Debug logs (remove in production)
+        if (process.env.NODE_ENV === 'development') {
+          console.log('📊 Dashboard Analytics Data:', analytics);
+          console.log('📋 Recent Orders Data:', orders);
+        }
+        
         setDashboardData(analytics);
-        setRecentOrders(orders);
+        setRecentOrders(orders.data || orders);
+        setLastUpdated(new Date());
       } catch (error) {
         console.error('Dashboard data fetch error:', error);
-        // Fallback to mock data on error
+        // Fallback to empty data on error - no mock data
         setDashboardData({
           overview: {
             totalRevenue: { current: 0, growth: 0 },
@@ -61,7 +72,7 @@ const DashboardHome = () => {
           },
           topItems: []
         });
-        setRecentOrders(mockOrders.slice(0, 5));
+        setRecentOrders([]);
       } finally {
         setLoading(false);
       }
@@ -69,6 +80,44 @@ const DashboardHome = () => {
 
     fetchDashboardData();
   }, [isClient]);
+
+  // Manual refresh function
+  const handleRefresh = async () => {
+    if (refreshing) return;
+    
+    setRefreshing(true);
+    try {
+      const [analytics, orders] = await Promise.all([
+        analyticsService.getDashboardOverview(30), // Last 30 days (matches analytics page)
+        analyticsService.getRecentOrders(5)
+      ]);
+      
+      setDashboardData(analytics);
+      setRecentOrders(orders.data || orders);
+      setLastUpdated(new Date());
+      
+      // Show success notification
+      setNotification({ type: 'success', message: 'Dashboard updated successfully' });
+      setTimeout(() => setNotification(null), 3000);
+    } catch (error) {
+      console.error('Dashboard refresh error:', error);
+      setNotification({ type: 'error', message: 'Failed to refresh dashboard data' });
+      setTimeout(() => setNotification(null), 5000);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // Auto-refresh functionality
+  useEffect(() => {
+    if (!autoRefresh || !isClient || loading) return;
+
+    const interval = setInterval(() => {
+      handleRefresh();
+    }, 5 * 60 * 1000); // Refresh every 5 minutes
+
+    return () => clearInterval(interval);
+  }, [autoRefresh, isClient, loading]);
 
   // Process real data with SSR-safe fallbacks
   const overview = dashboardData?.overview || {};
@@ -118,7 +167,7 @@ const DashboardHome = () => {
         price: (item.totalRevenue / (item.totalQuantity || 1)).toFixed(2),
         rating: 4.5 // Default rating since we don't have this in our data yet
       }))
-    : mockMenuItems.sort((a, b) => b.totalOrders - a.totalOrders).slice(0, 3);
+    : []; // Show empty state when no data available
 
   // SSR Loading State
   if (!isClient) {
@@ -133,14 +182,61 @@ const DashboardHome = () => {
 
   return (
     <div className="space-y-4 lg:space-y-6">
+      {/* Notification */}
+      {notification && (
+        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ${
+          notification.type === 'success' 
+            ? 'bg-green-500 text-white' 
+            : 'bg-red-500 text-white'
+        }`}>
+          <p className="text-sm font-medium">{notification.message}</p>
+        </div>
+      )}
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-grub-red to-grub-red-light rounded-lg p-4 lg:p-6 text-white">
-        <h1 className="text-xl lg:text-2xl font-bold mb-2">
-          {t('dashboard.welcome', { name: getRestaurantName() })}
-        </h1>
+        <div className="flex justify-between items-start mb-2">
+          <h1 className="text-xl lg:text-2xl font-bold">
+            {loading ? (
+              'Loading Dashboard...'
+            ) : (
+              `Welcome back, ${getRestaurantName()}!`
+            )}
+          </h1>
+          {!loading && (
+            <div className="flex items-center space-x-3">
+              {lastUpdated && (
+                <div className="text-right">
+                  <p className="text-red-100 text-xs">Last updated</p>
+                  <p className="text-white text-xs font-medium">
+                    {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              )}
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all duration-200 disabled:opacity-50"
+                title="Refresh dashboard data"
+              >
+                <RefreshCw className={`h-4 w-4 text-white ${refreshing ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+          )}
+        </div>
         <p className="text-red-100 text-sm lg:text-base">
-          {restaurantInfo?.description || t('dashboard.overview')}
+          {loading ? (
+            'Setting up your restaurant dashboard...'
+          ) : (
+            restaurantInfo?.description || 'Manage your restaurant operations and track performance'
+          )}
         </p>
+        {restaurantInfo?.status === 'pending' && (
+          <div className="mt-3 bg-yellow-500 bg-opacity-20 border border-yellow-300 rounded-lg p-3">
+            <p className="text-yellow-100 text-sm">
+              📝 Your restaurant is pending approval. You'll be notified once it's approved.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Stats Grid */}
@@ -166,7 +262,7 @@ const DashboardHome = () => {
                         )}
                         {Math.abs(stat.change)}%
                       </span>
-                      <span className="text-xs text-gray-500">{t('dashboard.stats.thisWeek')}</span>
+                      <span className="text-xs text-gray-500">vs last month</span>
                     </div>
                   </div>
                   
@@ -190,7 +286,15 @@ const DashboardHome = () => {
         {/* Recent Orders */}
         <Card>
           <CardHeader className="pb-3 lg:pb-4">
-            <CardTitle className="text-lg lg:text-xl">{t('dashboard.recentOrders')}</CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-lg lg:text-xl">Recent Orders</CardTitle>
+              <button 
+                onClick={() => navigate('/dashboard/orders')}
+                className="text-sm text-grub-red hover:text-grub-red-light font-medium transition-colors"
+              >
+                View all →
+              </button>
+            </div>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-3 lg:space-y-4">
@@ -251,7 +355,14 @@ const DashboardHome = () => {
                   <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <ShoppingBag className="h-6 w-6 text-gray-400" />
                   </div>
-                  <p className="text-gray-500 text-sm">No recent orders</p>
+                  <p className="text-gray-500 text-sm mb-2">No recent orders yet</p>
+                  <p className="text-gray-400 text-xs mb-3">Orders will appear here once customers start placing them</p>
+                  <button 
+                    onClick={() => navigate('/dashboard/orders')}
+                    className="text-grub-red text-sm font-medium hover:text-grub-red-light transition-colors"
+                  >
+                    View all orders →
+                  </button>
                 </div>
               )}
             </div>
@@ -301,12 +412,13 @@ const DashboardHome = () => {
                   <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <ShoppingBag className="h-6 w-6 text-gray-400" />
                   </div>
-                  <p className="text-gray-500 text-sm">No menu items yet</p>
+                  <p className="text-gray-500 text-sm mb-2">No menu items yet</p>
+                  <p className="text-gray-400 text-xs mb-3">Add menu items to start receiving orders</p>
                   <button 
                     onClick={() => navigate('/dashboard/menu')}
-                    className="mt-2 text-grub-red text-sm font-medium hover:text-grub-red-light"
+                    className="text-grub-red text-sm font-medium hover:text-grub-red-light transition-colors"
                   >
-                    Add your first menu item
+                    Add your first menu item →
                   </button>
                 </div>
               )}

@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
+import { useMealPlan } from '../../contexts/MealPlanContext_SSR_FIXED';
+import { usePlanning } from '../../contexts/PlanningContext';
 import subscriptionApi from '../../api/subscriptionApi';
 
 const BillingFormModal = ({ isOpen, onClose, selectedPlan, onSuccess }) => {
   const { user } = useAuth();
   const { showSuccess, showError, showInfo } = useToast();
+  const { state: mealPlanState } = useMealPlan();
+  const { selectedRestaurant } = usePlanning();
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [formData, setFormData] = useState({
@@ -99,26 +103,38 @@ const BillingFormModal = ({ isOpen, onClose, selectedPlan, onSuccess }) => {
     setIsProcessing(true);
 
     try {
-      // Prepare subscription data - only send fields that backend expects
-      const subscriptionData = {
-        planId: selectedPlan.id,
+      // Create subscription meal plan with all billing info (no separate subscription needed)
+      const subscriptionMealPlanData = {
+        restaurantId: selectedRestaurant?.id || selectedRestaurant?._id,
+        planType: selectedPlan.id, // 'bi-weekly', 'monthly', etc.
+        deliveryAddress: {
+          street: formData.billingStreet,
+          city: formData.billingCity,
+          province: formData.billingProvince,
+          postalCode: formData.billingPostalCode,
+          instructions: ''
+        },
+        customerPhone: formData.billingPhone,
+        specialInstructions: '',
+        // Billing information integrated directly
         planName: selectedPlan.name,
-        duration: selectedPlan.period,
-        deliveryFrequency: selectedPlan.period,
         monthlyPrice: parseFloat(selectedPlan.price.replace('$', '')),
         features: selectedPlan.features,
         paymentMethod: 'card'
         // Note: In a real implementation, payment processing would be handled by Stripe
-        // and stripeSubscriptionId/stripeCustomerId would be provided after successful payment
       };
 
-      // Create subscription via API
-      console.log('Sending subscription data:', subscriptionData);
-      const response = await subscriptionApi.createSubscription(subscriptionData);
+      console.log('Creating subscription meal plan with billing info...');
+      console.log('Subscription meal plan data:', subscriptionMealPlanData);
+      console.log('Current meal plan state:', mealPlanState);
+      
+      const response = await subscriptionApi.createSubscriptionFromMealPlan(subscriptionMealPlanData);
       
       if (response.status === 'success') {
-        showSuccess('Success!', 'Subscription created successfully!');
-        onSuccess(response.data);
+        showSuccess('Success!', 'Subscription created successfully! Your meals have been scheduled for delivery.');
+        onSuccess({
+          subscriptionMealPlan: response.data.subscriptionMealPlan
+        });
         onClose();
       } else {
         throw new Error(response.message || 'Failed to create subscription');

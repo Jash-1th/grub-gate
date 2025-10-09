@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { apiClient } from '../api/client.js';
 
 const AuthContext = createContext();
 
@@ -169,28 +170,30 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.LOGIN_START });
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1'}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          identifier,
-          password,
-        }),
+      console.log('🔐 Attempting login with apiClient...');
+      console.log('🔗 API Base URL:', import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1');
+      
+      const response = await apiClient.post('/auth/login', {
+        identifier,
+        password,
       });
 
-      const result = await response.json();
+      console.log('✅ Login response received:', response);
+      const result = response.data;
 
-      if (response.ok && result.status === 'success') {
+      if (result.status === 'success') {
         const { accessToken, user } = result.data;
 
         // Verify user has partner role
         if (!user.roles || !user.roles.includes('partner')) {
-          throw new Error('Access denied. Partner account required.');
+          dispatch({
+            type: AUTH_ACTIONS.LOGIN_FAILURE,
+            payload: 'Access denied. Partner role required.'
+          });
+          return { success: false, error: 'Access denied. Partner role required.' };
         }
 
-        // Store in localStorage
+        // Store tokens and user data
         setStorageItem('accessToken', accessToken);
         setStorageItem('user', JSON.stringify(user));
 
@@ -199,22 +202,21 @@ export const AuthProvider = ({ children }) => {
           payload: { user }
         });
 
-        console.log('✅ Partner AuthContext: Login successful');
         return { success: true, user };
       } else {
-        const errorMessage = result.message || 'Invalid credentials. Please try again.';
+        const errorMessage = result.message || 'Login failed';
         dispatch({
           type: AUTH_ACTIONS.LOGIN_FAILURE,
-          payload: { error: errorMessage }
+          payload: errorMessage
         });
         return { success: false, error: errorMessage };
       }
     } catch (error) {
       console.error('Partner login error:', error);
-      const errorMessage = error.message || 'Login failed. Please try again.';
+      const errorMessage = error.message || 'Network error. Please check your connection.';
       dispatch({
         type: AUTH_ACTIONS.LOGIN_FAILURE,
-        payload: { error: errorMessage }
+        payload: errorMessage
       });
       return { success: false, error: errorMessage };
     }

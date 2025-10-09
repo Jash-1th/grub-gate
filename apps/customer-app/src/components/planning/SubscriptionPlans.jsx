@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { useMealPlan } from '../../contexts/MealPlanContext';
+import { useMealPlan } from '../../contexts/MealPlanContext_SSR_FIXED';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import BillingFormModal from '../modals/BillingFormModal';

@@ -29,6 +29,7 @@ const mealPlanRoutes = require('./src/routes/mealPlan.routes');
 const subscriptionMealPlanRoutes = require('./src/routes/subscriptionMealPlan.routes');
 const partnerMenuItemRoutes = require('./src/routes/partner/menuItem.routes');
 const partnerSettingsRoutes = require('./src/routes/partner/restaurantSettings.routes');
+const partnerOrderRoutes = require('./src/routes/partner/orders.routes');
 const orderGenerationRoutes = require('./src/routes/orderGeneration.routes');
 const adminRoutes = require('./src/routes/admin.routes');
 
@@ -37,13 +38,17 @@ const app = express();
 // Connect to MongoDB
 connectDB();
 
+// Start order activation service
+const { startOrderActivationCron } = require('./src/services/orderActivationService');
+startOrderActivationCron();
+
 // Security middleware
 app.use(helmet());
 
-// Rate limiting
+// Rate limiting - More generous for development
 const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limit each IP to 100 requests per windowMs
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 60 * 1000, // 1 minute (was 15 minutes)
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 10000, // 10000 requests per minute (was 100 per 15 min)
   message: {
     status: 'error',
     message: 'Too many requests from this IP, please try again later.'
@@ -51,10 +56,26 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
-// CORS configuration - Temporarily allow all origins for debugging
-console.log('🔧 CORS: Allowing all origins for debugging');
+// CORS configuration - Allow both Customer App and Partner Portal
+const allowedOrigins = [
+  'http://localhost:3000', // Customer App
+  'http://localhost:5173', // Partner Portal (Vite dev server)
+  'http://localhost:4173'  // Partner Portal (Vite preview)
+];
+
+console.log('🔧 CORS: Allowing origins:', allowedOrigins);
 app.use(cors({
-  origin: true, // Allow all origins
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('❌ CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
@@ -120,6 +141,7 @@ app.use('/api/v1/meal-plans', mealPlanRoutes);
 app.use('/api/v1/subscription-meal-plans', subscriptionMealPlanRoutes);
 app.use('/api/v1/partner', partnerMenuItemRoutes);
 app.use('/api/v1/partner', partnerSettingsRoutes);
+app.use('/api/v1/partner/orders', partnerOrderRoutes);
 app.use('/api/v1/orders/generate', orderGenerationRoutes);
 app.use('/api/v1/admin', adminRoutes);
 

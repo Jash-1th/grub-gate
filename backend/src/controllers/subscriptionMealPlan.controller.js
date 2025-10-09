@@ -413,12 +413,16 @@ const createSubscriptionFromMealPlan = async (req, res) => {
 
     const userId = req.user.id;
     const { 
-      subscriptionId, 
       restaurantId, 
       planType = 'bi-weekly',
       deliveryAddress,
       specialInstructions,
-      customerPhone 
+      customerPhone,
+      // Billing information (no separate subscription needed)
+      planName,
+      monthlyPrice,
+      features,
+      paymentMethod = 'card'
     } = req.body;
 
     // 1. Get user's current meal plan
@@ -450,7 +454,7 @@ const createSubscriptionFromMealPlan = async (req, res) => {
       const weekData = userMealPlan.weeklyPlans[weekKey];
       
       if (weekData && Object.keys(weekData).length > 0) {
-        // Use Sunday-based weeks (matches frontend logic)
+        // Use Sunday-based weeks starting from next Sunday (matches frontend logic)
         const { startDate: weekStartDate, endDate: weekEndDate } = getWeekDateRange(weekIndex, today);
 
         const weekMeals = {};
@@ -526,19 +530,58 @@ const createSubscriptionFromMealPlan = async (req, res) => {
       });
     }
 
-    // 4. Create SubscriptionMealPlan
-    const planStartDate = new Date(today);
-    planStartDate.setHours(0, 0, 0, 0);
-    const planEndDate = new Date(planStartDate);
-    planEndDate.setDate(planStartDate.getDate() + (planType === 'bi-weekly' ? 14 : 30));
+    // 4. Create SubscriptionMealPlan using UTC dates
+    const nextSunday = getNextSunday(today);  // Already returns UTC midnight
+    const planStartDate = nextSunday;  // Use the UTC date directly
+    
+    // Calculate plan end date using UTC
+    const planDurationDays = planType === 'bi-weekly' ? 14 : planType === 'quarterly' ? 90 : 30;
+    const planEndDate = new Date(Date.UTC(
+      planStartDate.getUTCFullYear(),
+      planStartDate.getUTCMonth(),
+      planStartDate.getUTCDate() + planDurationDays - 1,  // -1 because we want the last day, not the next day
+      23, 59, 59, 999
+    ));
+
+    // Calculate next billing date based on plan type
+    const nextBillingDate = new Date();
+    switch (planType) {
+      case 'bi-weekly':
+        nextBillingDate.setDate(nextBillingDate.getDate() + 14);
+        break;
+      case 'monthly':
+        nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+        break;
+      case 'quarterly':
+        nextBillingDate.setMonth(nextBillingDate.getMonth() + 3);
+        break;
+      default:
+        nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+    }
+
+    // Calculate weekStartDates using UTC for the entire subscription duration
+    const weekStartDates = [];
+    const totalDays = Math.ceil((planEndDate - planStartDate) / (1000 * 60 * 60 * 24));
+    const totalWeeks = Math.ceil(totalDays / 7);
+    
+    for (let i = 0; i < totalWeeks; i++) {
+      const weekStart = new Date(Date.UTC(
+        planStartDate.getUTCFullYear(),
+        planStartDate.getUTCMonth(),
+        planStartDate.getUTCDate() + (i * 7),
+        0, 0, 0, 0
+      ));
+      weekStartDates.push(weekStart);
+    }
 
     const subscriptionMealPlan = new SubscriptionMealPlan({
       customerId: userId,
       restaurantId: restaurantId,
-      subscriptionId: subscriptionId,
+      // No separate subscriptionId - this IS the subscription
       planType: planType,
       planStartDate: planStartDate,
       planEndDate: planEndDate,
+      weekStartDates: weekStartDates,
       weeks: weeks,
       deliveryAddress: deliveryAddress || {
         street: userMealPlan.userId.addresses?.[0]?.street || '',
@@ -548,11 +591,22 @@ const createSubscriptionFromMealPlan = async (req, res) => {
       },
       customerPhone: customerPhone || userMealPlan.userId.phone,
       specialInstructions: specialInstructions || '',
-      billingCycle: 'monthly',
-      nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      // Billing information integrated directly
+      billingCycle: planType,
+      nextBillingDate: nextBillingDate,
+      autoRenew: true,
       status: 'active',
       generatedOrders: [],
-      isOrdersGenerated: false
+      isOrdersGenerated: false,
+      // Store plan details for billing
+      selectedRestaurantName: restaurant.name,
+      selectedRestaurantData: {
+        name: restaurant.name,
+        planName: planName,
+        monthlyPrice: monthlyPrice,
+        features: features,
+        paymentMethod: paymentMethod
+      }
     });
 
     await subscriptionMealPlan.save();

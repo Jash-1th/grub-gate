@@ -1,50 +1,31 @@
 // FILE: src/services/analyticsService.js
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+import { apiClient } from '../api/client.js';
 
 class AnalyticsService {
   constructor() {
-    this.baseURL = `${API_BASE_URL}/analytics`;
+    this.baseURL = '/analytics'; // Relative to apiClient baseURL
   }
 
   /**
-   * Get authentication headers
+   * Handle API response - now using axios response format
    */
-  getAuthHeaders() {
-    // Get token directly from localStorage (AuthContext stores it as a plain string)
-    // We need to use direct localStorage access because AuthContext doesn't JSON stringify the token
-    let token = null;
-    
-    if (typeof window !== 'undefined') {
-      try {
-        token = localStorage.getItem('accessToken');
-      } catch (error) {
-        console.error('🔍 Analytics Service - Error accessing localStorage:', error);
-      }
-    }
-    
-    if (!token) {
-      console.error('🔍 Analytics Service - No access token found in localStorage');
-      return {
-        'Content-Type': 'application/json',
-      };
-    }
-    
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    };
+  handleResponse(response) {
+    return response.data;
   }
 
   /**
-   * Handle API response
+   * Handle API errors - improved error handling
    */
-  async handleResponse(response) {
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+  handleError(error, context = '') {
+    console.error(`Analytics Service - ${context} Error:`, error);
+    
+    // If it's a 401 error, the apiClient interceptor will handle logout
+    if (error.status === 401) {
+      throw new Error('Authentication required. Please log in again.');
     }
-    return response.json();
+    
+    // For other errors, throw with a user-friendly message
+    throw new Error(error.message || 'Failed to fetch analytics data');
   }
 
   /**
@@ -54,16 +35,10 @@ class AnalyticsService {
    */
   async getOverviewAnalytics(period = 30) {
     try {
-      const response = await fetch(`${this.baseURL}/overview?period=${period}`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-
-      const result = await this.handleResponse(response);
-      return result.data;
+      const response = await apiClient.get(`${this.baseURL}/overview?period=${period}`);
+      return this.handleResponse(response);
     } catch (error) {
-      console.error('Analytics Service - Overview Error:', error);
-      throw error;
+      this.handleError(error, 'Overview');
     }
   }
 
@@ -74,16 +49,10 @@ class AnalyticsService {
    */
   async getRevenueTrend(period = 30) {
     try {
-      const response = await fetch(`${this.baseURL}/revenue-trend?period=${period}`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-
-      const result = await this.handleResponse(response);
-      return result.data;
+      const response = await apiClient.get(`${this.baseURL}/revenue-trend?period=${period}`);
+      return this.handleResponse(response);
     } catch (error) {
-      console.error('Analytics Service - Revenue Trend Error:', error);
-      throw error;
+      this.handleError(error, 'Revenue Trend');
     }
   }
 
@@ -94,16 +63,10 @@ class AnalyticsService {
    */
   async getTopItems(limit = 5) {
     try {
-      const response = await fetch(`${this.baseURL}/top-items?limit=${limit}`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-
-      const result = await this.handleResponse(response);
-      return result.data;
+      const response = await apiClient.get(`${this.baseURL}/top-items?limit=${limit}`);
+      return this.handleResponse(response);
     } catch (error) {
-      console.error('Analytics Service - Top Items Error:', error);
-      throw error;
+      this.handleError(error, 'Top Items');
     }
   }
 
@@ -114,16 +77,10 @@ class AnalyticsService {
    */
   async getOrderStatusDistribution(period = 30) {
     try {
-      const response = await fetch(`${this.baseURL}/order-status?period=${period}`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-
-      const result = await this.handleResponse(response);
-      return result.data;
+      const response = await apiClient.get(`${this.baseURL}/order-status?period=${period}`);
+      return this.handleResponse(response);
     } catch (error) {
-      console.error('Analytics Service - Order Status Error:', error);
-      throw error;
+      this.handleError(error, 'Order Status');
     }
   }
 
@@ -155,16 +112,10 @@ class AnalyticsService {
    */
   async getCustomerOverview(period = 30) {
     try {
-      const response = await fetch(`${this.baseURL}/customer-overview?period=${period}`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-
-      const result = await this.handleResponse(response);
-      return result.data;
+      const response = await apiClient.get(`${this.baseURL}/customer-overview?period=${period}`);
+      return this.handleResponse(response);
     } catch (error) {
-      console.error('Analytics Service - Customer Overview Error:', error);
-      throw error;
+      this.handleError(error, 'Customer Overview');
     }
   }
 
@@ -176,16 +127,10 @@ class AnalyticsService {
    */
   async getTopCustomers(limit = 5, period = 30) {
     try {
-      const response = await fetch(`${this.baseURL}/top-customers?limit=${limit}&period=${period}`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-
-      const result = await this.handleResponse(response);
-      return result.data;
+      const response = await apiClient.get(`${this.baseURL}/top-customers?limit=${limit}&period=${period}`);
+      return this.handleResponse(response);
     } catch (error) {
-      console.error('Analytics Service - Top Customers Error:', error);
-      throw error;
+      this.handleError(error, 'Top Customers');
     }
   }
 
@@ -196,16 +141,10 @@ class AnalyticsService {
    */
   async getCustomerSegments(period = 30) {
     try {
-      const response = await fetch(`${this.baseURL}/customer-segments?period=${period}`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-
-      const result = await this.handleResponse(response);
-      return result.data;
+      const response = await apiClient.get(`${this.baseURL}/customer-segments?period=${period}`);
+      return this.handleResponse(response);
     } catch (error) {
-      console.error('Analytics Service - Customer Segments Error:', error);
-      throw error;
+      this.handleError(error, 'Customer Segments');
     }
   }
 
@@ -216,16 +155,10 @@ class AnalyticsService {
    */
   async getPerformanceOverview(period = 30) {
     try {
-      const response = await fetch(`${this.baseURL}/performance-overview?period=${period}`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-
-      const result = await this.handleResponse(response);
-      return result.data;
+      const response = await apiClient.get(`${this.baseURL}/performance-overview?period=${period}`);
+      return this.handleResponse(response);
     } catch (error) {
-      console.error('Analytics Service - Performance Overview Error:', error);
-      throw error;
+      this.handleError(error, 'Performance Overview');
     }
   }
 
@@ -236,16 +169,10 @@ class AnalyticsService {
    */
   async getDeliveryPerformanceTrend(period = 30) {
     try {
-      const response = await fetch(`${this.baseURL}/delivery-performance-trend?period=${period}`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-
-      const result = await this.handleResponse(response);
-      return result.data;
+      const response = await apiClient.get(`${this.baseURL}/delivery-performance-trend?period=${period}`);
+      return this.handleResponse(response);
     } catch (error) {
-      console.error('Analytics Service - Delivery Performance Trend Error:', error);
-      throw error;
+      this.handleError(error, 'Delivery Performance Trend');
     }
   }
 
@@ -264,9 +191,9 @@ class AnalyticsService {
       ]);
 
       return {
-        overview,
-        topItems,
-        orderStatus,
+        overview: overview.data || overview,
+        topItems: topItems.data || topItems,
+        orderStatus: orderStatus.data || orderStatus,
         period: `${period}d`
       };
     } catch (error) {
@@ -282,16 +209,10 @@ class AnalyticsService {
    */
   async getRecentOrders(limit = 5) {
     try {
-      const response = await fetch(`${this.baseURL}/recent-orders?limit=${limit}`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-
-      const result = await this.handleResponse(response);
-      return result.data;
+      const response = await apiClient.get(`${this.baseURL}/recent-orders?limit=${limit}`);
+      return this.handleResponse(response);
     } catch (error) {
-      console.error('Analytics Service - Recent Orders Error:', error);
-      throw error;
+      this.handleError(error, 'Recent Orders');
     }
   }
 
@@ -301,16 +222,49 @@ class AnalyticsService {
    */
   async getRestaurantInfo() {
     try {
-      const response = await fetch(`${this.baseURL}/restaurant-info`, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-      });
-
-      const result = await this.handleResponse(response);
-      return result.data;
+      console.log('🔍 Analytics Service - Fetching restaurant info...');
+      console.log('🔍 Analytics Service - API URL:', `${this.baseURL}/restaurant-info`);
+      
+      const response = await apiClient.get(`${this.baseURL}/restaurant-info`);
+      console.log('✅ Analytics Service - Restaurant info response:', response);
+      console.log('✅ Analytics Service - Restaurant info data:', response.data);
+      
+      // Extract the actual restaurant data from the wrapped response
+      const result = this.handleResponse(response);
+      console.log('✅ Analytics Service - Processed restaurant data:', result.data);
+      
+      return result.data; // Return the actual restaurant object, not the wrapped response
     } catch (error) {
-      console.error('Analytics Service - Restaurant Info Error:', error);
-      throw error;
+      console.error('❌ Analytics Service - Restaurant Info Error Details:', error);
+      this.handleError(error, 'Restaurant Info');
+    }
+  }
+
+  /**
+   * Get subscription analytics overview
+   * @param {number} period - Number of days (default: 30)
+   * @returns {Promise<Object>} Subscription analytics data
+   */
+  async getSubscriptionOverview(period = 30) {
+    try {
+      const response = await apiClient.get(`${this.baseURL}/subscription-overview?period=${period}`);
+      return this.handleResponse(response);
+    } catch (error) {
+      this.handleError(error, 'Subscription Overview');
+    }
+  }
+
+  /**
+   * Get revenue breakdown (subscription vs one-time)
+   * @param {number} period - Number of days (default: 30)
+   * @returns {Promise<Object>} Revenue breakdown data
+   */
+  async getRevenueBreakdown(period = 30) {
+    try {
+      const response = await apiClient.get(`${this.baseURL}/revenue-breakdown?period=${period}`);
+      return this.handleResponse(response);
+    } catch (error) {
+      this.handleError(error, 'Revenue Breakdown');
     }
   }
 
@@ -329,8 +283,8 @@ class AnalyticsService {
       };
       const period = periodMap[timeRange] || 30;
 
-      // Fetch all data in parallel
-      const [overview, revenueTrend, topItems, orderStatus, customerOverview, topCustomers, customerSegments, performanceOverview, deliveryPerformanceTrend] = await Promise.all([
+      // Fetch all data in parallel including new subscription analytics
+      const [overview, revenueTrend, topItems, orderStatus, customerOverview, topCustomers, customerSegments, performanceOverview, deliveryPerformanceTrend, subscriptionOverview, revenueBreakdown] = await Promise.all([
         this.getOverviewAnalytics(period),
         this.getRevenueTrend(period),
         this.getTopItems(5),
@@ -339,7 +293,9 @@ class AnalyticsService {
         this.getTopCustomers(5, period),
         this.getCustomerSegments(period),
         this.getPerformanceOverview(period),
-        this.getDeliveryPerformanceTrend(period)
+        this.getDeliveryPerformanceTrend(period),
+        this.getSubscriptionOverview(period),
+        this.getRevenueBreakdown(period)
       ]);
 
       return {
@@ -352,6 +308,8 @@ class AnalyticsService {
         customerSegments,
         performanceOverview,
         deliveryPerformanceTrend,
+        subscriptionOverview,
+        revenueBreakdown,
         period: timeRange
       };
     } catch (error) {

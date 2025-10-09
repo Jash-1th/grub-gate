@@ -367,6 +367,10 @@ router.get('/delivery-performance-trend', roleMiddleware('partner'), analyticsCo
 router.get('/recent-orders', roleMiddleware('partner'), analyticsController.getRecentOrders);
 router.get('/restaurant-info', roleMiddleware('partner'), analyticsController.getRestaurantInfo);
 
+// Subscription analytics routes
+router.get('/subscription-overview', roleMiddleware('partner'), analyticsController.getSubscriptionOverview);
+router.get('/revenue-breakdown', roleMiddleware('partner'), analyticsController.getRevenueBreakdown);
+
 // Existing routes
 router.get('/restaurant/:restaurantId', 
   commonValidations.mongoId, 

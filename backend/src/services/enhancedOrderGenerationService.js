@@ -1,6 +1,14 @@
 // FILE: src/services/enhancedOrderGenerationService.js
+const mongoose = require('mongoose');
 const SubscriptionMealPlan = require('../models/SubscriptionMealPlan');
 const Order = require('../models/Order');
+const { v4: uuidv4 } = require('uuid');
+const { 
+  calculateDeliveryDate, 
+  determineOrderStatus, 
+  calculateDeliveryTime,
+  formatDateForLog 
+} = require('../utils/smartDateCalculator');
 const MenuItem = require('../models/MenuItem');
 const { getWeekDateRange } = require('../utils/dateHelpers');
 
@@ -85,13 +93,21 @@ const generateRepeatingMealPlan = (originalWeeks, subscriptionDays, startDate) =
   let weekIndex = 0;
   
   while (currentDay < subscriptionDays) {
-    // Get the pattern week (cycles through Week 0, Week 1, Week 0, Week 1...)
+    // Get the pattern week (cycles through the original week pattern)
     const patternWeekIndex = weekIndex % cycleLength;
     const patternWeek = originalWeeks[patternWeekIndex];
+    
+    // Use the originalWeekIndex from the pattern week for consistency
+    const originalWeekIndex = patternWeek.originalWeekIndex;
     
     // Calculate week dates
     const weekStartDate = new Date(startDate);
     weekStartDate.setDate(startDate.getDate() + currentDay);
+    
+    // VALIDATION: Ensure week start is always Sunday (day 0)
+    if (weekStartDate.getDay() !== 0) {
+      console.warn(`⚠️ WARNING: Week start date ${weekStartDate.toDateString()} is not a Sunday! Day: ${weekStartDate.getDay()}`);
+    }
     
     const weekEndDate = new Date(weekStartDate);
     weekEndDate.setDate(weekStartDate.getDate() + 6);
@@ -110,7 +126,7 @@ const generateRepeatingMealPlan = (originalWeeks, subscriptionDays, startDate) =
       weekStartDate: weekStartDate,
       weekEndDate: weekEndDate,
       meals: JSON.parse(JSON.stringify(patternWeek.meals)), // Deep copy
-      originalWeekIndex: patternWeekIndex, // Track which original week this repeats
+      originalWeekIndex: originalWeekIndex, // Use the actual originalWeekIndex from pattern
       isRepeated: weekIndex >= cycleLength // Mark if this is a repeated week
     };
     
@@ -170,14 +186,25 @@ const generateOrdersForWeek = async (week, subscriptionPlan) => {
   const orders = [];
   const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   
+  console.log(`🍽️ Generating orders for Week ${week.weekNumber} (${week.weekStartDate.toDateString()} - ${week.weekEndDate.toDateString()})`);
+  
   for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
     const dayName = daysOfWeek[dayIndex];
     const dayMeals = week.meals[dayName];
     
-    // Calculate the actual calendar date for this day (UTC to avoid timezone issues)
-    const orderDate = new Date(week.weekStartDate);
-    orderDate.setUTCDate(week.weekStartDate.getUTCDate() + dayIndex);
-    orderDate.setUTCHours(0, 0, 0, 0); // Set to start of day in UTC
+    const lunchCount = dayMeals?.lunch?.length || 0;
+    const dinnerCount = dayMeals?.dinner?.length || 0;
+    
+    if (lunchCount > 0 || dinnerCount > 0) {
+      console.log(`   ${dayName}: ${lunchCount} lunch, ${dinnerCount} dinner`);
+    }
+    
+    // Use smart date calculator for precise delivery date calculation
+    const orderDate = calculateDeliveryDate(week, dayName);
+    
+    // Debug log to verify correct date calculation
+    console.log(`   📅 ${dayName} smart calculated date: ${formatDateForLog(orderDate)}`);
+    console.log(`   📅 Week start was: ${week.weekStartDate.toDateString()}`);
     
     // Skip if date is beyond week end (for partial weeks)
     if (orderDate > week.weekEndDate) {
@@ -219,25 +246,14 @@ const generateOrdersForWeek = async (week, subscriptionPlan) => {
  */
 const createScheduledOrder = async (subscriptionPlan, orderDate, mealType, meals, week) => {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const status = determineOrderStatus(orderDate);
     
-    const orderDateOnly = new Date(orderDate);
-    orderDateOnly.setHours(0, 0, 0, 0);
-    
-    // Determine initial status based on date
-    let status = 'scheduled';
-    if (orderDateOnly.getTime() === today.getTime()) {
-      status = 'pending'; // Today's orders are active
-    } else if (orderDateOnly < today) {
-      status = 'completed'; // Past orders are completed (for historical data)
-    }
+    console.log(`   🎯 Order status determined: ${status} for ${formatDateForLog(orderDate)}`);
     
     // Generate unique order number with more entropy
     const timestamp = Date.now();
     const random = Math.random().toString(36).substr(2, 4);
     const orderNumber = `GG${orderDate.getFullYear()}${String(orderDate.getMonth() + 1).padStart(2, '0')}${String(orderDate.getDate()).padStart(2, '0')}${timestamp.toString().slice(-4)}${random}`;
-    
     // Calculate totals and create enhanced order items
     let subtotal = 0;
     const orderItems = [];
@@ -300,13 +316,8 @@ const createScheduledOrder = async (subscriptionPlan, orderDate, mealType, meals
     const tax = Math.round((subtotal + deliveryFee) * taxRate * 100) / 100;
     const total = Math.round((subtotal + deliveryFee + tax) * 100) / 100;
     
-    // Set delivery time based on meal type
-    const deliveryTime = new Date(orderDate);
-    if (mealType === 'lunch') {
-      deliveryTime.setHours(12, 30, 0, 0);
-    } else {
-      deliveryTime.setHours(19, 30, 0, 0);
-    }
+    // Use smart calculator for delivery time
+    const deliveryTime = calculateDeliveryTime(orderDate, mealType);
     
     return {
       orderNumber: orderNumber,

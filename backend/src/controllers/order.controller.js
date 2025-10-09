@@ -70,10 +70,17 @@ const getOrders = asyncHandler(async (req, res) => {
       $lte: endOfDay
     };
   } else if (startDate || endDate) {
-    // Date range filtering
-    query.createdAt = {};
-    if (startDate) query.createdAt.$gte = new Date(startDate);
-    if (endDate) query.createdAt.$lte = new Date(endDate);
+    // Date range filtering - use scheduledDate for consistency
+    query.scheduledDate = {};
+    if (startDate) {
+      const startOfDay = new Date(startDate + 'T00:00:00.000Z');
+      query.scheduledDate.$gte = startOfDay;
+    }
+    if (endDate) {
+      const endOfDay = new Date(endDate + 'T00:00:00.000Z');
+      endOfDay.setUTCHours(23, 59, 59, 999);
+      query.scheduledDate.$lte = endOfDay;
+    }
   }
 
   // Build sort object

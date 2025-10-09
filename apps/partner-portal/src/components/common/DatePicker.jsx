@@ -51,13 +51,10 @@ const DatePicker = ({
     if (!isClient) return;
     
     const dateValue = event.target.value;
-    console.log('DatePicker: Date selected:', dateValue);
+    // console.log('📅 DatePicker: Date selected from input:', dateValue);
     
     if (dateValue) {
       const newDate = new Date(dateValue + 'T00:00:00');
-      console.log('DatePicker: New date object:', newDate);
-      console.log('DatePicker: Is future date:', newDate > new Date());
-      
       setDisplayDate(formatDateForDisplay(newDate));
       onDateChange(newDate);
     }
@@ -140,7 +137,7 @@ const DatePicker = ({
                   key={index}
                   type="button"
                   onClick={() => {
-                    console.log('DatePicker: Quick filter clicked:', option.label, option.date);
+                    // console.log('📅 DatePicker: Quick filter clicked:', option.label, option.date);
                     setDisplayDate(formatDateForDisplay(option.date));
                     onDateChange(option.date);
                     setIsOpen(false);

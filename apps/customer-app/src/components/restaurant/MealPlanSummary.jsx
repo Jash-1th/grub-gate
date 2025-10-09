@@ -1,5 +1,5 @@
 import React from 'react';
-import { useMealPlan } from '../../contexts/MealPlanContext';
+import { useMealPlan } from '../../contexts/MealPlanContext_SSR_FIXED';
 import { useToast } from '../../contexts/ToastContext';
 import { DAYS_OF_WEEK } from '../../utils/filteringAlgorithms';
 

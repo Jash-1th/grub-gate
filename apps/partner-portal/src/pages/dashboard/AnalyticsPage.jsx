@@ -19,7 +19,11 @@ import {
   Eye,
   Package,
   Percent,
-  Loader2
+  Loader2,
+  Repeat,
+  PieChart,
+  CreditCard,
+  UserCheck
 } from 'lucide-react';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@grub-gate/ui';
 import { useIsClient } from '../../hooks/useIsClient.js';
@@ -151,6 +155,9 @@ const AnalyticsPage = () => {
   const { t } = useTranslation();
   const [timeRange, setTimeRange] = useState('30d');
   const [activeTab, setActiveTab] = useState('overview');
+  const [topCustomersData, setTopCustomersData] = useState([]);
+  const [loadingCustomers, setLoadingCustomers] = useState(true);
+  const [customersError, setCustomersError] = useState(null);
   const [analyticsData, setAnalyticsData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -176,6 +183,8 @@ const AnalyticsPage = () => {
         setError(null);
         
         const data = await analyticsService.getAllOverviewData(timeRange);
+        console.log('📊 Analytics data received:', data);
+        console.log('📊 Order status type:', typeof data?.orderStatus, 'Is array:', Array.isArray(data?.orderStatus));
         setAnalyticsData(data);
       } catch (err) {
         console.error('Failed to fetch analytics data:', err);
@@ -205,57 +214,80 @@ const AnalyticsPage = () => {
     fetchAnalyticsData();
   }, [timeRange]);
 
-  // SSR-safe customer data processing (must be before metrics)
-  const customerOverviewData = analyticsData?.customerOverview || {
+  // Fetch top customers data when component mounts or time range changes
+  useEffect(() => {
+    const fetchTopCustomers = async () => {
+      try {
+        setLoadingCustomers(true);
+        setCustomersError(null);
+        
+        // Convert time range to days for the API
+        const days = timeRange === '7d' ? 7 : timeRange === '90d' ? 90 : 30;
+        const response = await analyticsService.getTopCustomers(5, days);
+        setTopCustomersData(response.data || []);
+      } catch (error) {
+        console.error('Failed to fetch top customers:', error);
+        setCustomersError('Failed to load customer data');
+      } finally {
+        setLoadingCustomers(false);
+      }
+    };
+
+    fetchTopCustomers();
+  }, [timeRange]);
+
+  // SSR-safe customer data processing (must be before metrics) - fix data access
+  const customerOverviewData = analyticsData?.customerOverview?.data || {
     activeCustomers: { current: 0, growth: 0 },
     newCustomers: { current: 0, growth: 0 },
     loyalCustomers: { current: 0, growth: 0 }
   };
 
-  const topCustomersData = analyticsData?.topCustomers?.length > 0 
-    ? analyticsData.topCustomers 
+  const topCustomersDataFallback = analyticsData?.topCustomers?.data?.length > 0 
+    ? analyticsData.topCustomers.data 
     : mockCustomers.slice(0, 5); // Fallback to mock data
 
-  const customerSegmentsData = analyticsData?.customerSegments || {
+  const customerSegmentsData = analyticsData?.customerSegments?.data || {
     active: mockCustomers.filter(c => c.status === 'active').length,
     new: 0,
     loyal: mockCustomers.filter(c => c.totalOrders > 5).length
   };
 
-  // SSR-safe performance data processing
-  const performanceOverviewData = analyticsData?.performanceOverview || {
+  // SSR-safe performance data processing with proper fallback structure - fix data access
+  const performanceOverviewData = analyticsData?.performanceOverview?.data || {
     deliveryPerformance: {
       onTimeDeliveryRate: { current: 0, growth: 0 },
       avgDeliveryTime: { current: 0, growth: 0 },
-      prepTimeAccuracy: { current: 0, growth: 0 }
     },
     orderPerformance: {
       completionRate: { current: 0, growth: 0 },
-      cancelationRate: { current: 0, growth: 0 },
-      avgProcessingTime: { current: 0, growth: 0 }
+      avgPrepTime: { current: 0, growth: 0 }
     }
   };
 
-  const deliveryPerformanceTrendData = analyticsData?.deliveryPerformanceTrend?.length > 0 
-    ? analyticsData.deliveryPerformanceTrend 
-    : Array.from({ length: 7 }, (_, i) => ({
-        date: new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        onTimeRate: 85,
-        avgDeliveryTime: 35,
-        completionRate: 94
-      })); // Fallback mock data
+  // Ensure nested objects exist to prevent undefined errors
+  const safePerformanceData = {
+    deliveryPerformance: {
+      onTimeDeliveryRate: performanceOverviewData?.deliveryPerformance?.onTimeDeliveryRate || { current: 0, growth: 0 },
+      avgDeliveryTime: performanceOverviewData?.deliveryPerformance?.avgDeliveryTime || { current: 0, growth: 0 },
+    },
+    orderPerformance: {
+      completionRate: performanceOverviewData?.orderPerformance?.completionRate || { current: 0, growth: 0 },
+      avgPrepTime: performanceOverviewData?.orderPerformance?.avgPrepTime || { current: 0, growth: 0 }
+    }
+  };
 
-  // Calculate metrics from real data
-  const overview = analyticsData?.overview || {};
+  // Calculate metrics from real data - fix data access
+  const overview = analyticsData?.overview?.data || {};
   const totalRevenue = overview.totalRevenue?.current || 0;
   const totalOrders = overview.totalOrders?.current || 0;
   const totalCustomers = customerOverviewData.activeCustomers?.current || 0;
   const avgOrderValue = overview.avgOrderValue?.current || 0;
   const avgPrepTime = overview.avgPrepTime?.current || 0;
   
-  // Calculate order status distribution from real data
-  const orderStatusData = analyticsData?.orderStatus ? 
-    analyticsData.orderStatus.map(item => ({
+  // Calculate order status distribution from real data with proper array validation - fix data access
+  const orderStatusData = (analyticsData?.orderStatus?.data && Array.isArray(analyticsData.orderStatus.data)) ? 
+    analyticsData.orderStatus.data.map(item => ({
       name: item.status.charAt(0).toUpperCase() + item.status.slice(1),
       value: item.count,
       color: {
@@ -271,6 +303,26 @@ const AnalyticsPage = () => {
       { name: 'Ready', value: 0, color: '#3B82F6' }
     ];
 
+  // SSR-safe subscription analytics data processing (moved before metrics) - fix data access
+  const subscriptionOverviewData = analyticsData?.subscriptionOverview?.data || {
+    monthlyRecurringRevenue: { current: 0, growth: 0 },
+    subscriptionRevenue: { current: 0, growth: 0 },
+    oneTimeRevenue: { current: 0, growth: 0 },
+    subscriptionConversionRate: { current: 0, growth: 0 },
+    averageRevenuePerUser: { current: 0, growth: 0 },
+    customerLifetimeValue: { current: 0, growth: 0 },
+    churnRate: { current: 0, growth: 0 }
+  };
+
+  // SSR-safe revenue breakdown data processing (moved before metrics) - fix data access
+  const revenueBreakdownData = analyticsData?.revenueBreakdown?.data || {
+    subscriptionRevenue: 0,
+    oneTimeRevenue: 0,
+    subscriptionPercentage: 0,
+    oneTimePercentage: 0,
+    totalRevenue: 0
+  };
+
   const metrics = [
     {
       title: 'Total Revenue',
@@ -280,6 +332,15 @@ const AnalyticsPage = () => {
       color: 'text-green-600',
       bgColor: 'bg-green-50',
       borderColor: 'border-green-200'
+    },
+    {
+      title: 'Monthly Recurring Revenue',
+      value: `$${(subscriptionOverviewData.monthlyRecurringRevenue?.current || 0).toLocaleString()}`,
+      change: subscriptionOverviewData.monthlyRecurringRevenue?.growth || 0,
+      icon: Repeat,
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-50',
+      borderColor: 'border-emerald-200'
     },
     {
       title: 'Total Orders',
@@ -300,24 +361,32 @@ const AnalyticsPage = () => {
       borderColor: 'border-purple-200'
     },
     {
-      title: 'Avg Order Value',
-      value: `$${avgOrderValue.toFixed(2)}`,
-      change: overview.avgOrderValue?.growth || 0,
+      title: 'Subscription Conversion',
+      value: `${(subscriptionOverviewData.subscriptionConversionRate?.current || 0).toFixed(1)}%`,
+      change: subscriptionOverviewData.subscriptionConversionRate?.growth || 0,
+      icon: UserCheck,
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
+      borderColor: 'border-indigo-200'
+    },
+    {
+      title: 'Avg Revenue Per User',
+      value: `$${(subscriptionOverviewData.averageRevenuePerUser?.current || 0).toFixed(2)}`,
+      change: subscriptionOverviewData.averageRevenuePerUser?.growth || 0,
       icon: BarChart3,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
       borderColor: 'border-orange-200'
     },
-    // Comment out conversion rate for now - will implement later with analytics tracking
-    // {
-    //   title: 'Conversion Rate',
-    //   value: '3.2%',
-    //   change: 5.4,
-    //   icon: Percent,
-    //   color: 'text-indigo-600',
-    //   bgColor: 'bg-indigo-50',
-    //   borderColor: 'border-indigo-200'
-    // },
+    {
+      title: 'Customer Lifetime Value',
+      value: `$${(subscriptionOverviewData.customerLifetimeValue?.current || 0).toFixed(0)}`,
+      change: subscriptionOverviewData.customerLifetimeValue?.growth || 0,
+      icon: CreditCard,
+      color: 'text-rose-600',
+      bgColor: 'bg-rose-50',
+      borderColor: 'border-rose-200'
+    },
     {
       title: 'Avg Prep Time',
       value: `${avgPrepTime} min`,
@@ -329,38 +398,51 @@ const AnalyticsPage = () => {
     },
     {
       title: 'On-Time Delivery',
-      value: `${performanceOverviewData.deliveryPerformance.onTimeDeliveryRate?.current?.toFixed(1) || 0}%`,
-      change: performanceOverviewData.deliveryPerformance.onTimeDeliveryRate?.growth || 0,
+      value: `${safePerformanceData.deliveryPerformance.onTimeDeliveryRate?.current?.toFixed(1) || 0}%`,
+      change: safePerformanceData.deliveryPerformance.onTimeDeliveryRate?.growth || 0,
       icon: Target,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
       borderColor: 'border-green-200'
     },
     {
-      title: 'Order Completion Rate',
-      value: `${performanceOverviewData.orderPerformance.completionRate?.current?.toFixed(1) || 0}%`,
-      change: performanceOverviewData.orderPerformance.completionRate?.growth || 0,
-      icon: Package,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-200'
+      title: 'Churn Rate',
+      value: `${(subscriptionOverviewData.churnRate?.current || 0).toFixed(1)}%`,
+      change: subscriptionOverviewData.churnRate?.growth || 0,
+      icon: TrendingDown,
+      color: 'text-red-600',
+      bgColor: 'bg-red-50',
+      borderColor: 'border-red-200'
     }
   ];
 
-  const topItemsData = analyticsData?.topItems ? 
-    analyticsData.topItems.map(item => ({
+  const topItemsData = (analyticsData?.topItems?.data && Array.isArray(analyticsData.topItems.data)) ? 
+    analyticsData.topItems.data.map(item => ({
       name: item.name,
       orders: item.totalQuantity || item.orders,
       revenue: item.totalRevenue || item.revenue
     })) : [];
 
-  // SSR-safe revenue trend data processing
-  const revenueTrendData = analyticsData?.revenueTrend ? 
-    analyticsData.revenueTrend.map(item => ({
+  // SSR-safe revenue trend data processing - fix data access
+  const revenueTrendData = (analyticsData?.revenueTrend?.data && Array.isArray(analyticsData.revenueTrend.data)) ? 
+    analyticsData.revenueTrend.data.map(item => ({
       date: item.date,
       value: item.value || item.revenue || 0  // Handle multiple formats
     })) : 
     mockAnalytics.chartData.revenue; // Fallback to mock data
+
+  // SSR-safe delivery performance trend data processing - fix data access
+  const deliveryPerformanceTrendData = (analyticsData?.deliveryPerformanceTrend?.data && Array.isArray(analyticsData.deliveryPerformanceTrend.data)) ? 
+    analyticsData.deliveryPerformanceTrend.data : 
+    [
+      { date: '2024-01-01', onTimeRate: 85 },
+      { date: '2024-01-02', onTimeRate: 88 },
+      { date: '2024-01-03', onTimeRate: 92 },
+      { date: '2024-01-04', onTimeRate: 87 },
+      { date: '2024-01-05', onTimeRate: 90 },
+      { date: '2024-01-06', onTimeRate: 94 },
+      { date: '2024-01-07', onTimeRate: 91 }
+    ]; // Fallback to mock data
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -368,7 +450,7 @@ const AnalyticsPage = () => {
         return (
           <div className="space-y-6">
             {/* Metrics Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
               {metrics.map((metric, index) => {
                 const Icon = metric.icon;
                 const isPositive = metric.change > 0;
@@ -404,6 +486,68 @@ const AnalyticsPage = () => {
                 );
               })}
             </div>
+
+            {/* Revenue Breakdown Chart */}
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold flex items-center">
+                  <PieChart className="h-5 w-5 mr-2 text-grub-red" />
+                  Revenue Breakdown
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Revenue Pie Chart */}
+                  <div className="h-64">
+                    <ChartComponent 
+                      data={[
+                        { 
+                          name: 'Subscription Revenue', 
+                          orders: revenueBreakdownData.subscriptionRevenue,
+                          color: '#10B981'
+                        },
+                        { 
+                          name: 'One-time Orders', 
+                          orders: revenueBreakdownData.oneTimeRevenue,
+                          color: '#3B82F6'
+                        }
+                      ]} 
+                      type="pie" 
+                    />
+                  </div>
+                  
+                  {/* Revenue Stats */}
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center p-4 bg-green-50 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">
+                          ${revenueBreakdownData.subscriptionRevenue?.toLocaleString() || 0}
+                        </div>
+                        <div className="text-sm text-gray-600">Subscription Revenue</div>
+                        <div className="text-xs text-green-600 font-medium">
+                          {revenueBreakdownData.subscriptionPercentage?.toFixed(1) || 0}% of total
+                        </div>
+                      </div>
+                      <div className="text-center p-4 bg-blue-50 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">
+                          ${revenueBreakdownData.oneTimeRevenue?.toLocaleString() || 0}
+                        </div>
+                        <div className="text-sm text-gray-600">One-time Orders</div>
+                        <div className="text-xs text-blue-600 font-medium">
+                          {revenueBreakdownData.oneTimePercentage?.toFixed(1) || 0}% of total
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className="text-3xl font-bold text-gray-900">
+                        ${revenueBreakdownData.totalRevenue?.toLocaleString() || 0}
+                      </div>
+                      <div className="text-sm text-gray-600">Total Revenue</div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         );
 
@@ -536,23 +680,63 @@ const AnalyticsPage = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {topCustomersData.slice(0, 5).map((customer, index) => (
-                        <div key={customer.name || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    {loadingCustomers ? (
+                      <div className="space-y-3">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <div key={i} className="animate-pulse flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                              <div className="space-y-2">
+                                <div className="h-4 bg-gray-200 rounded w-24"></div>
+                                <div className="h-3 bg-gray-100 rounded w-16"></div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="h-4 bg-gray-200 rounded w-16 mb-1"></div>
+                              <div className="h-3 bg-gray-100 rounded w-12"></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : customersError ? (
+                      <div className="text-center py-6 text-red-500">
+                        <p>{customersError}</p>
+                        <button 
+                          onClick={() => window.location.reload()}
+                          className="mt-2 text-sm text-grub-red hover:underline"
+                        >
+                          Try again
+                        </button>
+                      </div>
+                    ) : topCustomersData.length > 0 ? (
+                      topCustomersData.map((customer, index) => (
+                        <div key={customer._id || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                           <div className="flex items-center space-x-3">
                             <div className="w-10 h-10 bg-grub-red text-white rounded-full flex items-center justify-center text-sm font-bold">
-                              {customer.name.charAt(0)}
+                              {customer.name ? customer.name.charAt(0).toUpperCase() : 'C'}
                             </div>
                             <div>
-                              <div className="font-medium text-gray-900">{customer.name}</div>
-                              <div className="text-sm text-gray-500">{customer.totalOrders} orders</div>
+                              <div className="font-medium text-gray-900">
+                                {customer.name || 'Customer'}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {customer.totalOrders} {customer.totalOrders === 1 ? 'order' : 'orders'}
+                              </div>
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="font-bold text-grub-red">${customer.totalSpent.toFixed(0)}</div>
-                            <div className="text-sm text-gray-500">total spent</div>
+                            <div className="font-bold text-grub-red">
+                              ${(customer.totalSpent || 0).toFixed(2)}
+                            </div>
+                            <div className="text-xs text-gray-500">total spent</div>
                           </div>
                         </div>
-                      ))}
+                      ))
+                    ) : (
+                      <div className="text-center py-6 text-gray-500">
+                        No customer data available
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

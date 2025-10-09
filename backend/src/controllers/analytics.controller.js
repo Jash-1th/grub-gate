@@ -13,33 +13,60 @@ exports.getOverviewAnalytics = async (req, res) => {
     const { period = 30 } = req.query;
     const restaurantId = req.user?.restaurantId;
 
-    // For development: provide mock data if no restaurantId
-    if (!restaurantId) {
-      return res.json({
-        success: true,
-        data: {
-          totalRevenue: { current: 15420.50, previous: 12350.25, growth: 24.8 },
-          totalOrders: { current: 156, previous: 142, growth: 9.9 },
-          activeCustomers: { current: 89, previous: 76, growth: 17.1 },
-          averageOrderValue: { current: 98.85, previous: 86.97, growth: 13.7 }
-        }
+    // Check if user has partner role and restaurant
+    if (!req.user?.roles?.includes('partner')) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Partner role required.'
       });
     }
 
-    // Calculate date ranges
+    // If no restaurantId, try to find by ownerId
+    let actualRestaurantId = restaurantId;
+    if (!actualRestaurantId) {
+      const Restaurant = require('../models/Restaurant');
+      const restaurant = await Restaurant.findOne({ ownerId: req.user._id }).select('_id');
+      if (restaurant) {
+        actualRestaurantId = restaurant._id;
+        // Update user's restaurantId for future requests
+        const User = require('../models/User');
+        await User.findByIdAndUpdate(req.user._id, { restaurantId: actualRestaurantId });
+      }
+    }
+
+    // If still no restaurant found, return empty analytics for new partners
+    if (!actualRestaurantId) {
+      return res.json({
+        success: true,
+        data: {
+          totalRevenue: { current: 0, previous: 0, growth: 0 },
+          totalOrders: { current: 0, previous: 0, growth: 0 },
+          activeCustomers: { current: 0, previous: 0, growth: 0 },
+          avgOrderValue: { current: 0, previous: 0, growth: 0 }
+        },
+        message: 'No analytics data available yet. Start receiving orders to see your performance metrics.'
+      });
+    }
+
+    // Calculate date ranges - make sure to include full days
     const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999); // End of today
+    
     const startDate = new Date();
     startDate.setDate(endDate.getDate() - parseInt(period));
+    startDate.setHours(0, 0, 0, 0); // Start of the day
     
     const previousEndDate = new Date(startDate);
+    previousEndDate.setHours(23, 59, 59, 999);
     const previousStartDate = new Date(startDate);
     previousStartDate.setDate(previousEndDate.getDate() - parseInt(period));
+    previousStartDate.setHours(0, 0, 0, 0);
 
     // Get current period data
-    const currentData = await getAnalyticsData(restaurantId, startDate, endDate);
+    const currentData = await getAnalyticsData(actualRestaurantId, startDate, endDate);
     
     // Get previous period data for growth calculation
-    const previousData = await getAnalyticsData(restaurantId, previousStartDate, previousEndDate);
+    const previousData = await getAnalyticsData(actualRestaurantId, previousStartDate, previousEndDate);
 
     // Calculate growth percentages
     const analytics = {
@@ -998,8 +1025,29 @@ exports.getRecentOrders = async (req, res) => {
     const { limit = 5 } = req.query;
     const restaurantId = req.user?.restaurantId;
 
+    // Check if user has partner role
+    if (!req.user?.roles?.includes('partner')) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Partner role required.'
+      });
+    }
+
+    // If no restaurantId, try to find by ownerId
+    let actualRestaurantId = restaurantId;
+    if (!actualRestaurantId) {
+      const Restaurant = require('../models/Restaurant');
+      const restaurant = await Restaurant.findOne({ ownerId: req.user._id }).select('_id');
+      if (restaurant) {
+        actualRestaurantId = restaurant._id;
+        // Update user's restaurantId for future requests
+        const User = require('../models/User');
+        await User.findByIdAndUpdate(req.user._id, { restaurantId: actualRestaurantId });
+      }
+    }
+
     // For development: provide mock data if no restaurantId
-    if (!restaurantId) {
+    if (!actualRestaurantId) {
       const mockRecentOrders = [
         {
           id: 'order_001',
@@ -1040,7 +1088,7 @@ exports.getRecentOrders = async (req, res) => {
     const recentOrders = await Order.aggregate([
       {
         $match: {
-          restaurantId: new mongoose.Types.ObjectId(restaurantId)
+          restaurantId: new mongoose.Types.ObjectId(actualRestaurantId)
         }
       },
       {
@@ -1099,46 +1147,458 @@ exports.getRecentOrders = async (req, res) => {
 exports.getRestaurantInfo = async (req, res) => {
   try {
     const restaurantId = req.user?.restaurantId;
+    console.log('🔍 Analytics - getRestaurantInfo called for user:', req.user?._id, 'restaurantId:', restaurantId);
 
-    // For development: provide mock data if no restaurantId
-    if (!restaurantId) {
-      return res.json({
-        success: true,
-        data: {
-          name: 'Bistro Montreal',
-          description: 'Authentic French cuisine in the heart of Montreal',
-          cuisine: 'French',
-          address: '123 Rue Saint-Catherine, Montreal, QC H2X 1Y4'
-        }
+    // Check if user has partner role
+    if (!req.user?.roles?.includes('partner')) {
+      console.log('❌ User is not a partner:', req.user?.roles);
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Partner role required.'
       });
     }
 
-    // Get restaurant information from database
-    const Restaurant = require('../models/Restaurant');
-    const restaurant = await Restaurant.findById(restaurantId).select('name description cuisine address');
+    // If no restaurantId, try to find restaurant by ownerId
+    let restaurant;
+    if (restaurantId) {
+      console.log('🔍 Finding restaurant by restaurantId:', restaurantId);
+      const Restaurant = require('../models/Restaurant');
+      restaurant = await Restaurant.findById(restaurantId).select('name description cuisine address businessType phone email website status');
+    } else {
+      console.log('🔍 No restaurantId found, searching by ownerId:', req.user._id);
+      const Restaurant = require('../models/Restaurant');
+      restaurant = await Restaurant.findOne({ ownerId: req.user._id }).select('name description cuisine address businessType phone email website status');
+      
+      // If found, update user's restaurantId for future requests
+      if (restaurant) {
+        console.log('✅ Found restaurant by ownerId, updating user restaurantId:', restaurant._id);
+        const User = require('../models/User');
+        await User.findByIdAndUpdate(req.user._id, { restaurantId: restaurant._id });
+      }
+    }
 
     if (!restaurant) {
+      console.log('❌ No restaurant found for user:', req.user._id);
       return res.status(404).json({
         success: false,
-        message: 'Restaurant not found'
+        message: 'Restaurant not found. Please complete your restaurant setup.'
       });
     }
+
+    console.log('✅ Restaurant found:', restaurant.name);
+    
+    // Format address for display
+    const formattedAddress = restaurant.address ? 
+      `${restaurant.address.street || ''}, ${restaurant.address.city || ''}, ${restaurant.address.province || ''} ${restaurant.address.postalCode || ''}`.trim().replace(/^,\s*|,\s*$/g, '') 
+      : '';
 
     res.json({
       success: true,
       data: {
+        _id: restaurant._id,
         name: restaurant.name,
-        description: restaurant.description,
-        cuisine: restaurant.cuisine,
-        address: restaurant.address
+        description: restaurant.description || '',
+        cuisine: Array.isArray(restaurant.cuisine) ? restaurant.cuisine.join(', ') : restaurant.cuisine || '',
+        businessType: restaurant.businessType || '',
+        address: formattedAddress,
+        phone: restaurant.phone || '',
+        email: restaurant.email || '',
+        website: restaurant.website || '',
+        status: restaurant.status || 'pending'
       }
     });
 
   } catch (error) {
-    console.error('Restaurant info error:', error);
+    console.error('❌ Restaurant info error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch restaurant information'
+      message: 'Failed to fetch restaurant information',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+/**
+ * Get subscription analytics overview
+ * GET /api/v1/analytics/subscription-overview
+ */
+exports.getSubscriptionOverview = async (req, res) => {
+  try {
+    const { period = 30 } = req.query;
+    const restaurantId = req.user?.restaurantId;
+
+    // Check if user has partner role and restaurant
+    if (!req.user?.roles?.includes('partner')) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Partner role required.'
+      });
+    }
+
+    // If no restaurantId, try to find by ownerId
+    let actualRestaurantId = restaurantId;
+    if (!actualRestaurantId) {
+      const Restaurant = require('../models/Restaurant');
+      const restaurant = await Restaurant.findOne({ ownerId: req.user._id }).select('_id');
+      if (restaurant) {
+        actualRestaurantId = restaurant._id;
+      }
+    }
+
+    // If still no restaurant found, return empty analytics
+    if (!actualRestaurantId) {
+      return res.json({
+        success: true,
+        data: {
+          monthlyRecurringRevenue: { current: 0, previous: 0, growth: 0 },
+          subscriptionRevenue: { current: 0, previous: 0, growth: 0 },
+          oneTimeRevenue: { current: 0, previous: 0, growth: 0 },
+          subscriptionConversionRate: { current: 0, previous: 0, growth: 0 },
+          averageRevenuePerUser: { current: 0, previous: 0, growth: 0 },
+          customerLifetimeValue: { current: 0, previous: 0, growth: 0 },
+          churnRate: { current: 0, previous: 0, growth: 0 }
+        }
+      });
+    }
+
+    // Calculate date ranges - make sure to include full days
+    const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999); // End of today
+    
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - parseInt(period));
+    startDate.setHours(0, 0, 0, 0); // Start of the day
+    
+    const previousEndDate = new Date(startDate);
+    previousEndDate.setHours(23, 59, 59, 999);
+    const previousStartDate = new Date(startDate);
+    previousStartDate.setDate(previousEndDate.getDate() - parseInt(period));
+    previousStartDate.setHours(0, 0, 0, 0);
+
+    // Get current and previous period subscription data
+    const currentData = await getSubscriptionAnalytics(actualRestaurantId, startDate, endDate);
+    const previousData = await getSubscriptionAnalytics(actualRestaurantId, previousStartDate, previousEndDate);
+
+    // Calculate growth percentages
+    const analytics = {
+      monthlyRecurringRevenue: {
+        current: currentData.monthlyRecurringRevenue,
+        previous: previousData.monthlyRecurringRevenue,
+        growth: calculateGrowth(currentData.monthlyRecurringRevenue, previousData.monthlyRecurringRevenue)
+      },
+      subscriptionRevenue: {
+        current: currentData.subscriptionRevenue,
+        previous: previousData.subscriptionRevenue,
+        growth: calculateGrowth(currentData.subscriptionRevenue, previousData.subscriptionRevenue)
+      },
+      oneTimeRevenue: {
+        current: currentData.oneTimeRevenue,
+        previous: previousData.oneTimeRevenue,
+        growth: calculateGrowth(currentData.oneTimeRevenue, previousData.oneTimeRevenue)
+      },
+      subscriptionConversionRate: {
+        current: currentData.subscriptionConversionRate,
+        previous: previousData.subscriptionConversionRate,
+        growth: calculateGrowth(currentData.subscriptionConversionRate, previousData.subscriptionConversionRate)
+      },
+      averageRevenuePerUser: {
+        current: currentData.averageRevenuePerUser,
+        previous: previousData.averageRevenuePerUser,
+        growth: calculateGrowth(currentData.averageRevenuePerUser, previousData.averageRevenuePerUser)
+      },
+      customerLifetimeValue: {
+        current: currentData.customerLifetimeValue,
+        previous: previousData.customerLifetimeValue,
+        growth: calculateGrowth(currentData.customerLifetimeValue, previousData.customerLifetimeValue)
+      },
+      churnRate: {
+        current: currentData.churnRate,
+        previous: previousData.churnRate,
+        growth: calculateGrowth(currentData.churnRate, previousData.churnRate, true) // Inverse - lower is better
+      }
+    };
+
+    res.json({
+      success: true,
+      data: analytics,
+      period: {
+        days: parseInt(period),
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString()
+      }
+    });
+
+  } catch (error) {
+    console.error('Subscription analytics overview error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch subscription analytics data',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+/**
+ * Get subscription analytics data for a specific time period
+ */
+async function getSubscriptionAnalytics(restaurantId, startDate, endDate) {
+  try {
+    const Subscription = require('../models/Subscription');
+    const SubscriptionMealPlan = require('../models/SubscriptionMealPlan');
+
+    // 1. Get subscription revenue from orders
+    const subscriptionOrderStats = await Order.aggregate([
+      {
+        $match: {
+          restaurantId: new mongoose.Types.ObjectId(restaurantId),
+          isSubscriptionOrder: true,
+          paymentStatus: 'paid',
+          createdAt: { $gte: startDate, $lte: endDate }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          subscriptionRevenue: { $sum: '$total' },
+          subscriptionOrders: { $sum: 1 },
+          uniqueSubscriptionCustomers: { $addToSet: '$customerId' }
+        }
+      }
+    ]);
+
+    // 2. Get one-time order revenue
+    const oneTimeOrderStats = await Order.aggregate([
+      {
+        $match: {
+          restaurantId: new mongoose.Types.ObjectId(restaurantId),
+          isSubscriptionOrder: { $ne: true },
+          paymentStatus: 'paid',
+          createdAt: { $gte: startDate, $lte: endDate }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          oneTimeRevenue: { $sum: '$total' },
+          oneTimeOrders: { $sum: 1 },
+          uniqueOneTimeCustomers: { $addToSet: '$customerId' }
+        }
+      }
+    ]);
+
+    // 3. Get active subscriptions and MRR from meal plans
+    const subscriptionMealPlans = await SubscriptionMealPlan.aggregate([
+      {
+        $match: {
+          restaurantId: new mongoose.Types.ObjectId(restaurantId),
+          status: 'active',
+          planStartDate: { $lte: endDate },
+          planEndDate: { $gte: startDate }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalPlanValue: { $sum: '$totalPlanValue' },
+          activePlans: { $sum: 1 },
+          uniqueCustomers: { $addToSet: '$customerId' }
+        }
+      }
+    ]);
+
+    // 4. Get subscription billing data for MRR calculation
+    const subscriptionBilling = await Subscription.aggregate([
+      {
+        $lookup: {
+          from: 'subscriptionmealplans',
+          localField: '_id',
+          foreignField: 'subscriptionId',
+          as: 'mealPlans'
+        }
+      },
+      {
+        $match: {
+          'mealPlans.restaurantId': new mongoose.Types.ObjectId(restaurantId),
+          status: 'active'
+        }
+      },
+      {
+        $unwind: '$billingHistory'
+      },
+      {
+        $match: {
+          'billingHistory.status': 'paid',
+          'billingHistory.date': { $gte: startDate, $lte: endDate }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          monthlyRecurringRevenue: { $sum: '$billingHistory.amount' },
+          paidBillings: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // 5. Calculate churn rate (cancelled subscriptions)
+    const churnData = await Subscription.aggregate([
+      {
+        $lookup: {
+          from: 'subscriptionmealplans',
+          localField: '_id',
+          foreignField: 'subscriptionId',
+          as: 'mealPlans'
+        }
+      },
+      {
+        $match: {
+          'mealPlans.restaurantId': new mongoose.Types.ObjectId(restaurantId)
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalSubscriptions: { $sum: 1 },
+          cancelledSubscriptions: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $eq: ['$status', 'cancelled'] },
+                    { $gte: ['$cancelledAt', startDate] },
+                    { $lte: ['$cancelledAt', endDate] }
+                  ]
+                },
+                1, 0
+              ]
+            }
+          },
+          activeSubscriptions: {
+            $sum: {
+              $cond: [{ $eq: ['$status', 'active'] }, 1, 0]
+            }
+          }
+        }
+      }
+    ]);
+
+    // Extract results with fallbacks
+    const subOrderData = subscriptionOrderStats[0] || { subscriptionRevenue: 0, subscriptionOrders: 0, uniqueSubscriptionCustomers: [] };
+    const oneTimeData = oneTimeOrderStats[0] || { oneTimeRevenue: 0, oneTimeOrders: 0, uniqueOneTimeCustomers: [] };
+    const mealPlanData = subscriptionMealPlans[0] || { totalPlanValue: 0, activePlans: 0, uniqueCustomers: [] };
+    const billingData = subscriptionBilling[0] || { monthlyRecurringRevenue: 0, paidBillings: 0 };
+    const churnInfo = churnData[0] || { totalSubscriptions: 0, cancelledSubscriptions: 0, activeSubscriptions: 0 };
+
+    // Calculate metrics
+    const totalCustomers = new Set([
+      ...subOrderData.uniqueSubscriptionCustomers.map(id => id.toString()),
+      ...oneTimeData.uniqueOneTimeCustomers.map(id => id.toString())
+    ]).size;
+
+    const subscriptionCustomers = subOrderData.uniqueSubscriptionCustomers.length;
+    const subscriptionConversionRate = totalCustomers > 0 ? (subscriptionCustomers / totalCustomers) * 100 : 0;
+    
+    const totalRevenue = subOrderData.subscriptionRevenue + oneTimeData.oneTimeRevenue;
+    const averageRevenuePerUser = totalCustomers > 0 ? totalRevenue / totalCustomers : 0;
+    
+    // Estimate CLV: Average monthly subscription value * average subscription duration (6 months)
+    const avgSubscriptionValue = mealPlanData.activePlans > 0 ? mealPlanData.totalPlanValue / mealPlanData.activePlans : 0;
+    const customerLifetimeValue = avgSubscriptionValue * 6; // 6 month average
+    
+    const churnRate = churnInfo.activeSubscriptions > 0 ? 
+      (churnInfo.cancelledSubscriptions / (churnInfo.activeSubscriptions + churnInfo.cancelledSubscriptions)) * 100 : 0;
+
+    return {
+      monthlyRecurringRevenue: billingData.monthlyRecurringRevenue || 0,
+      subscriptionRevenue: subOrderData.subscriptionRevenue || 0,
+      oneTimeRevenue: oneTimeData.oneTimeRevenue || 0,
+      subscriptionConversionRate: Math.round(subscriptionConversionRate * 10) / 10,
+      averageRevenuePerUser: Math.round(averageRevenuePerUser * 100) / 100,
+      customerLifetimeValue: Math.round(customerLifetimeValue * 100) / 100,
+      churnRate: Math.round(churnRate * 10) / 10
+    };
+
+  } catch (error) {
+    console.error('Error fetching subscription analytics data:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get revenue breakdown (subscription vs one-time)
+ * GET /api/v1/analytics/revenue-breakdown
+ */
+exports.getRevenueBreakdown = async (req, res) => {
+  try {
+    const { period = 30 } = req.query;
+    const restaurantId = req.user?.restaurantId;
+
+    if (!restaurantId) {
+      // Mock data for development
+      return res.json({
+        success: true,
+        data: {
+          subscriptionRevenue: 4250.00,
+          oneTimeRevenue: 1890.50,
+          subscriptionPercentage: 69.2,
+          oneTimePercentage: 30.8,
+          totalRevenue: 6140.50
+        }
+      });
+    }
+
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - parseInt(period));
+
+    // Get subscription and one-time revenue
+    const revenueBreakdown = await Order.aggregate([
+      {
+        $match: {
+          restaurantId: new mongoose.Types.ObjectId(restaurantId),
+          paymentStatus: 'paid',
+          createdAt: { $gte: startDate, $lte: endDate }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          subscriptionRevenue: {
+            $sum: {
+              $cond: [{ $eq: ['$isSubscriptionOrder', true] }, '$total', 0]
+            }
+          },
+          oneTimeRevenue: {
+            $sum: {
+              $cond: [{ $ne: ['$isSubscriptionOrder', true] }, '$total', 0]
+            }
+          },
+          totalRevenue: { $sum: '$total' }
+        }
+      }
+    ]);
+
+    const data = revenueBreakdown[0] || { subscriptionRevenue: 0, oneTimeRevenue: 0, totalRevenue: 0 };
+    
+    const subscriptionPercentage = data.totalRevenue > 0 ? (data.subscriptionRevenue / data.totalRevenue) * 100 : 0;
+    const oneTimePercentage = data.totalRevenue > 0 ? (data.oneTimeRevenue / data.totalRevenue) * 100 : 0;
+
+    res.json({
+      success: true,
+      data: {
+        subscriptionRevenue: data.subscriptionRevenue,
+        oneTimeRevenue: data.oneTimeRevenue,
+        subscriptionPercentage: Math.round(subscriptionPercentage * 10) / 10,
+        oneTimePercentage: Math.round(oneTimePercentage * 10) / 10,
+        totalRevenue: data.totalRevenue
+      }
+    });
+
+  } catch (error) {
+    console.error('Revenue breakdown error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch revenue breakdown data'
     });
   }
 };

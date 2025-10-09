@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -14,7 +14,7 @@ import {
   faChartLine
 } from '@fortawesome/free-solid-svg-icons';
 import { Input, Card, CardContent, CardHeader, CardTitle } from '@grub-gate/ui';
-import { getStorageItem, setStorageItem } from '../../utils/ssrSafeStorage';
+import { getToken, getUserData, setStorageItem } from '../../utils/ssrSafeStorage';
 
 const CustomersPage = () => {
   const { t } = useTranslation();
@@ -27,53 +27,51 @@ const CustomersPage = () => {
   const [isClient, setIsClient] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   // SSR Safety
   useEffect(() => {
     setIsClient(true);
   }, []);
 
+  // Debounce timer ref
+  const debounceTimerRef = useRef(null);
+
+  // Debounced fetch function to prevent rapid API calls
+  const debouncedFetchCustomers = useCallback(() => {
+    // Clear existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Set new timer
+    debounceTimerRef.current = setTimeout(() => {
+      fetchCustomers();
+    }, 500); // 500ms delay
+  }, []);
+
   // Fetch customers when component mounts or search changes
   useEffect(() => {
     if (isClient) {
-      fetchCustomers();
+      debouncedFetchCustomers();
     }
-  }, [isClient, searchTerm, currentPage]);
+
+    // Cleanup timer on unmount
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [isClient, searchTerm, currentPage, debouncedFetchCustomers]);
 
   const fetchCustomers = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Handle both storage methods - AuthContext stores as string, SSR-safe expects JSON
-      let authToken = getStorageItem('accessToken');
-      let userData = getStorageItem('user');
-      
-      // Fallback: if SSR-safe storage fails, try direct localStorage access
-      if (!authToken && typeof window !== 'undefined') {
-        authToken = localStorage.getItem('accessToken');
-      }
-      
-      if (!userData && typeof window !== 'undefined') {
-        const userStr = localStorage.getItem('user');
-        try {
-          userData = userStr ? JSON.parse(userStr) : null;
-        } catch (e) {
-          userData = userStr; // If it's not JSON, use as-is
-        }
-      }
-      
-      // Deep debugging - check all possible token keys
-      console.log('🔍 Debug - accessToken exists:', !!authToken);
-      console.log('🔍 Debug - accessToken value:', authToken);
-      console.log('🔍 Debug - user data:', userData);
-      
-      // Check if localStorage is working at all
-      if (typeof window !== 'undefined') {
-        console.log('🔍 Debug - All localStorage keys:', Object.keys(localStorage));
-        console.log('🔍 Debug - Raw accessToken from localStorage:', localStorage.getItem('accessToken'));
-        console.log('🔍 Debug - Raw user from localStorage:', localStorage.getItem('user'));
-      }
+      // Use the correct storage methods for tokens and user data
+      let authToken = getToken('accessToken');
+      let userData = getUserData('user');
       
       if (!authToken) {
         throw new Error('Authentication token not found. Please log in again.');
@@ -91,6 +89,11 @@ const CustomersPage = () => {
       );
 
       if (!response.ok) {
+        // Handle rate limiting specifically
+        if (response.status === 429) {
+          throw new Error('Too many requests. Please wait a moment before trying again.');
+        }
+        
         const errorData = await response.json();
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
@@ -102,14 +105,30 @@ const CustomersPage = () => {
         setRestaurant(data.data.restaurant);
         setSummary(data.data.summary);
         setPagination(data.data.pagination);
+        setRetryCount(0); // Reset retry count on success
       } else {
         throw new Error(data.message || 'Failed to fetch customers');
       }
     } catch (err) {
       console.error('Error fetching customers:', err);
+      
+      // Handle rate limiting with exponential backoff
+      if (err.message.includes('Too many requests') && retryCount < 3) {
+        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+        console.log(`Rate limited. Retrying in ${delay}ms (attempt ${retryCount + 1}/3)`);
+        
+        setTimeout(() => {
+          setRetryCount(prev => prev + 1);
+          fetchCustomers();
+        }, delay);
+        
+        return; // Don't set error state yet, we're retrying
+      }
+      
       setError(err.message);
       setCustomers([]);
       setSummary(null);
+      setRetryCount(0); // Reset retry count on other errors
     } finally {
       setLoading(false);
     }

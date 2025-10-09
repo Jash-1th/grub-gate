@@ -35,12 +35,19 @@ const OrdersPage = () => {
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [updateStatusLoading, setUpdateStatusLoading] = useState(null);
 
-  // Initialize orders hook with basic filters
-  const initialFilters = useMemo(() => ({
-    limit: 50,
-    sortBy: 'createdAt',
-    sortOrder: 'desc'
-  }), []);
+  // Initialize orders hook with date filter to prevent showing all orders initially
+  const initialFilters = useMemo(() => {
+    const today = new Date();
+    const todayFormatted = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    
+    return {
+      limit: 50,
+      sortBy: 'createdAt',
+      sortOrder: 'desc',
+      date: todayFormatted,
+      includeScheduled: 'true'
+    };
+  }, []);
 
   const {
     orders,
@@ -59,30 +66,40 @@ const OrdersPage = () => {
   // SSR-safe date formatting (memoized to prevent re-renders)
   const formatDateForAPI = useCallback((date) => {
     if (!isClient || !date) return '';
-    return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+    // Use local date to avoid timezone issues
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`; // YYYY-MM-DD format
   }, [isClient]);
 
   // Handle date change
   const handleDateChange = useCallback((newDate) => {
+    console.log('🗓️ OrdersPage: handleDateChange called with:', newDate);
     setSelectedDate(newDate);
     
     // Update filters to fetch orders for selected date
     if (isClient && updateFilters) {
+      const formattedDate = formatDateForAPI(newDate);
+      console.log('🗓️ OrdersPage: Formatted date for API:', formattedDate);
       updateFilters({
-        date: formatDateForAPI(newDate),
+        date: formattedDate,
         includeScheduled: 'true'
       });
     }
   }, [isClient, updateFilters, formatDateForAPI]);
 
-  // Initialize date filter on mount (only once)
+  // Debug authentication on mount (only once)
   useEffect(() => {
-    if (isClient && updateFilters) {
-      // Set initial date filter to today
-      updateFilters({
-        date: formatDateForAPI(selectedDate),
-        includeScheduled: 'true'
-      });
+    if (isClient) {
+      // Debug user authentication
+      const token = localStorage.getItem('accessToken');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      console.log('🔐 OrdersPage: Current user:', user);
+      console.log('🔐 OrdersPage: User roles:', user.roles);
+      console.log('🔐 OrdersPage: Has token:', !!token);
+      
+      // Note: Initial date filter is now set in initialFilters, no need to call updateFilters here
     }
   }, [isClient]); // Only run once when client is ready
 

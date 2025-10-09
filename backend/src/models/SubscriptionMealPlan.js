@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { findSubscriptionDayForDate } = require('../utils/dateHelpers');
+const { findSubscriptionDayForDate, getNextSunday, getWeekDateRange } = require('../utils/dateHelpers');
 
 // Individual meal item schema
 const mealItemSchema = new mongoose.Schema({
@@ -82,6 +82,15 @@ const weekSchema = new mongoose.Schema({
     saturday: dayMealsSchema,
     sunday: dayMealsSchema
   },
+  originalWeekIndex: {
+    type: Number,
+    required: false,
+    min: 0
+  },
+  isRepeated: {
+    type: Boolean,
+    default: false
+  },
   weekTotalValue: {
     type: Number,
     default: 0,
@@ -142,7 +151,7 @@ const subscriptionMealPlanSchema = new mongoose.Schema({
   subscriptionId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Subscription',
-    required: [true, 'Subscription ID is required'],
+    required: false, // Optional - SubscriptionMealPlan can be standalone
     index: true
   },
   
@@ -492,35 +501,36 @@ subscriptionMealPlanSchema.statics.findOrCreateForUser = async function(userId, 
   });
   
   if (!mealPlan) {
-    // Calculate plan dates based on type
-    const startDate = new Date();
+    // Calculate plan dates based on type - FIXED: Use proper Sunday-based calculation
+    const startDate = getNextSunday(); // Start on next Sunday, not current date
     const endDate = new Date(startDate);
     let weekCount = 1;
     
     switch (planType) {
       case 'bi-weekly':
-        endDate.setDate(startDate.getDate() + 14);
+        endDate.setDate(startDate.getDate() + 13); // 14 days = 2 weeks, but end on Saturday (13 days from Sunday)
         weekCount = 2;
         break;
       case 'monthly':
-        endDate.setDate(startDate.getDate() + 30);
+        endDate.setDate(startDate.getDate() + 27); // 4 weeks = 28 days, but end on Saturday (27 days from Sunday)
         weekCount = 4;
         break;
       case 'quarterly':
-        endDate.setDate(startDate.getDate() + 90);
+        endDate.setDate(startDate.getDate() + 83); // 12 weeks = 84 days, but end on Saturday (83 days from Sunday)
         weekCount = 12;
         break;
     }
     
-    // Generate week start dates
+    // Generate week start dates using proper Sunday-based calculation
     const weekStartDates = [];
     const weeks = [];
     
     for (let i = 0; i < weekCount; i++) {
       const weekStart = new Date(startDate);
-      weekStart.setDate(startDate.getDate() + (i * 7));
+      weekStart.setDate(startDate.getDate() + (i * 7)); // Each week starts on Sunday
       const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekStart.getDate() + 6);
+      weekEnd.setDate(weekStart.getDate() + 6); // Each week ends on Saturday
+      weekEnd.setHours(23, 59, 59, 999); // End of Saturday
       
       weekStartDates.push(weekStart);
       

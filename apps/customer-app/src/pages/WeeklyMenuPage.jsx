@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useMealPlan } from '../contexts/MealPlanContext';
+import { useMealPlan } from '../contexts/MealPlanContext_SSR_FIXED';
 import { useToast } from '../contexts/ToastContext';
 import { usePlanning } from '../contexts/PlanningContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -837,7 +837,7 @@ const WeeklyMenuPage = () => {
                     </div>
                   </div>
                 </div>
-                {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
+                {['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].map((day) => (
                   <EnhancedMealSlot 
                     key={`lunch-${day}`}
                     day={day}
@@ -864,7 +864,7 @@ const WeeklyMenuPage = () => {
                     </div>
                   </div>
                 </div>
-                {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
+                {['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].map((day) => (
                   <EnhancedMealSlot 
                     key={`dinner-${day}`}
                     day={day}
