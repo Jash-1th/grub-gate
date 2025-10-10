@@ -2,7 +2,7 @@
 
 [build]
   # Install dependencies from root (monorepo) and build the partner portal
-  command = "cd ../.. && npm install && cd apps/partner-portal && npm run build"
+  command = "cd ../.. && rm -rf node_modules package-lock.json && npm install && cd apps/partner-portal && npm run build"
   
   # The directory with the static assets from the client build (relative to base directory)
   publish = "dist/client"
@@ -15,9 +15,9 @@
 
 [build.environment]
   # Specify Node.js version for compatibility
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"
   # Set npm version to ensure compatibility
-  NPM_VERSION = "9"
+  NPM_VERSION = "10"
 
 # Static asset redirects (serve directly from publish directory)
 # These must come BEFORE the catch-all SSR redirect and should NOT go to functions
