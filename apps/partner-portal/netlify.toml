@@ -2,10 +2,11 @@
 
 [build]
   # Install dependencies from root but exclude problematic packages
-  command = "cd ../.. && rm -rf node_modules package-lock.json && npm install --ignore-scripts && cd apps/partner-portal && npm run build"
+  command = "cd ../.. && npm install --ignore-scripts && cd apps/partner-portal && npm run build && cp -r dist/client/* dist/"
   
   # The directory with the static assets from the client build (relative to base directory)
-  publish = "dist/client"
+  # Changed to match Netlify dashboard setting
+  publish = "dist"
   
   # The directory where your REGULAR Netlify Functions are located (relative to base directory)
   functions = "netlify/functions"
