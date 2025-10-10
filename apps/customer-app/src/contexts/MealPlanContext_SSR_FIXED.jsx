@@ -371,7 +371,10 @@ export const MealPlanProvider = ({ children }) => {
     let calculatedTotalItems = 0;
     Object.values(state.weeklyPlans).forEach(weekPlan => {
       Object.values(weekPlan).forEach(dayMeals => {
-        calculatedTotalItems += dayMeals.lunch.length + dayMeals.dinner.length;
+        // Add null checks to prevent undefined errors
+        const lunchCount = dayMeals?.lunch?.length || 0;
+        const dinnerCount = dayMeals?.dinner?.length || 0;
+        calculatedTotalItems += lunchCount + dinnerCount;
       });
     });
 
