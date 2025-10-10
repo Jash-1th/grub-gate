@@ -1,27 +1,28 @@
-# Netlify configuration for Partner Portal (Monorepo)
+# Netlify configuration for Partner Portal (SSR Monorepo Setup)
 
 [build]
-  # Install dependencies with explicit Rollup binary installation
-  command = "cd ../.. && npm install --ignore-scripts && cd apps/partner-portal && npm run build && cp -r dist/client/* dist/""
+  # Build command modified to explicitly install the missing Rollup package as a workaround.
+  command = "cd ../.. && npm install --ignore-scripts && npm install @rollup/rollup-linux-x64-gnu --save-optional && cd apps/partner-portal && npm run build && cp -r dist/client/* dist/"
   
-  # The directory with the static assets from the client build (relative to base directory)
-  # Changed to match Netlify dashboard setting
+  # The publish directory is "dist", relative to the 
+  # "Base directory" ("apps/partner-portal") set in the Netlify UI.
   publish = "dist"
   
-  # The directory where your REGULAR Netlify Functions are located (relative to base directory)
+  # The directory for your regular Netlify Functions.
   functions = "netlify/functions"
   
-  # Include the built HTML template and manifests in the functions bundle
+  # Include necessary files for the SSR function to render the page.
   included_files = ["dist/client/index.html", "dist/client/.vite/manifest.json"]
 
 [build.environment]
-  # Specify Node.js version for compatibility
+  # Specify Node.js and npm versions for build consistency.
   NODE_VERSION = "20"
-  # Set npm version to ensure compatibility
   NPM_VERSION = "10"
 
-# Static asset redirects (serve directly from publish directory)
-# These must come BEFORE the catch-all SSR redirect and should NOT go to functions
+# --- REDIRECTS ---
+# The order is critical: static assets first, then API, then the SSR catch-all.
+
+# Serve static assets directly from the publish directory.
 [[redirects]]
   from = "/assets/*"
   to = "/assets/:splat"
@@ -52,42 +53,21 @@
   status = 200
   force = true
 
-# Serve JavaScript modules and other static files directly with proper MIME types
-# Note: Assets are in /assets/ directory, so these rules handle both patterns
-[[redirects]]
-  from = "/*.js"
-  to = "/:splat.js"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/*.css"
-  to = "/:splat.css"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/*.map"
-  to = "/:splat.map"
-  status = 200
-  force = true
-
-# API and function routes
+# Proxy API requests to your serverless functions.
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
 
-# Main SPA redirect - this handles all page routes
-# This redirect rule is the key to making SSR work.
-# It tells Netlify to send all page requests to your ssr function.
+# SSR Fallback: Send all other page requests to the ssr function.
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/ssr"
   status = 200
-  force = false
 
-# Define caching policies for different asset types to improve performance.
+# --- HEADERS ---
+# Define caching, security, and content type policies.
+
 [[headers]]
   for = "/assets/*"
   [headers.values]
@@ -104,49 +84,17 @@
     Cache-Control = "public, max-age=86400"
 
 [[headers]]
-  for = "/locales/*"
-  [headers.values]
-    Cache-Control = "public, max-age=3600"
-
-# JavaScript and CSS files with proper MIME types
-[[headers]]
-  for = "/assets/*.js"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-    Content-Type = "application/javascript; charset=utf-8"
-
-[[headers]]
-  for = "/*.js"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-    Content-Type = "application/javascript; charset=utf-8"
-
-[[headers]]
-  for = "/assets/*.css"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-    Content-Type = "text/css; charset=utf-8"
-
-[[headers]]
-  for = "/*.css"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-    Content-Type = "text/css; charset=utf-8"
-
-# PWA specific headers
-[[headers]]
   for = "/manifest.json"
   [headers.values]
-    Cache-Control = "public, max-age=86400"
     Content-Type = "application/manifest+json"
+    Cache-Control = "public, max-age=86400"
 
 [[headers]]
   for = "/service-worker.js"
   [headers.values]
-    Cache-Control = "public, max-age=0, must-revalidate"
     Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "public, max-age=0, must-revalidate"
 
-# Prevent caching of HTML pages to avoid stale SSR content
 [[headers]]
   for = "/*.html"
   [headers.values]
@@ -154,15 +102,6 @@
     Pragma = "no-cache"
     Expires = "0"
 
-# Prevent caching of the main entry point
-[[headers]]
-  for = "/"
-  [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
-    Pragma = "no-cache"
-    Expires = "0"
-
-# Security headers
 [[headers]]
   for = "/*"
   [headers.values]
@@ -171,11 +110,9 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
 
-# CORS headers for API requests
 [[headers]]
   for = "/api/*"
   [headers.values]
     Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
     Access-Control-Allow-Headers = "Content-Type, Authorization"
-
