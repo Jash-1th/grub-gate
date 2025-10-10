@@ -1,8 +1,12 @@
 # Netlify configuration for Customer App (Monorepo)
 
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_VERSION = "10"
+
 [build]
   # Build from root directory to install all workspace dependencies
-  command = "cd ../.. && npm ci && cd apps/customer-app && npm run build"
+  command = "cd ../.. && rm -rf node_modules package-lock.json && npm install && cd apps/customer-app && npm run build"
   
   # The directory with the static assets from the client build (relative to repo root)
   publish = "dist/client"
