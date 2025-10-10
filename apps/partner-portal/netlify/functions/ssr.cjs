@@ -201,7 +201,7 @@ exports.handler = async (event, context) => {
         console.log('⚠️ Could not extract assets from index.html, using hardcoded fallback:', err.message);
         // Last resort hardcoded fallback (will be updated by build process)
         cssFile = cssFile || '/assets/index-DKLhbucu.css';
-        jsFile = jsFile || '/assets/index-DHQ066yb.js';
+        jsFile = jsFile || '/assets/index-DRdxD5vn.js';
       }
     }
     
@@ -269,7 +269,7 @@ exports.handler = async (event, context) => {
     // Try to get assets even in error state
     let { cssFile, jsFile } = getAssetPaths();
     cssFile = cssFile || '/assets/index-DKLhbucu.css';
-    jsFile = jsFile || '/assets/index-DHQ066yb.js';
+    jsFile = jsFile || '/assets/index-DRdxD5vn.js';
     
     // Ultra-minimal fallback with dynamic asset names
     return {
