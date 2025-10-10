@@ -1,8 +1,8 @@
 # Netlify configuration for Partner Portal (Monorepo)
 
 [build]
-  # Install dependencies from root but exclude problematic packages
-  command = "cd ../.. && npm install && cd apps/partner-portal && npm run build && node -e \"const fs=require('fs'),path=require('path');['assets','icons','images'].forEach(d=>fs.mkdirSync(path.join('dist',d),{recursive:true}));const copy=(s,d)=>{try{fs.cpSync(s,d,{recursive:true,force:true})}catch(e){}};copy('dist/client/assets','dist/assets');copy('dist/client/icons','dist/icons');copy('dist/client/images','dist/images');['index.html','manifest.json','service-worker.js'].forEach(f=>{try{fs.copyFileSync(path.join('dist/client',f),path.join('dist',f))}catch(e){}});\""
+  # Install dependencies from root with clean install to fix rollup issue
+  command = "cd ../.. && rm -rf node_modules && npm install --force && cd apps/partner-portal && npm run build && node -e \"const fs=require('fs'),path=require('path');['assets','icons','images'].forEach(d=>fs.mkdirSync(path.join('dist',d),{recursive:true}));const copy=(s,d)=>{try{fs.cpSync(s,d,{recursive:true,force:true})}catch(e){}};copy('dist/client/assets','dist/assets');copy('dist/client/icons','dist/icons');copy('dist/client/images','dist/images');['index.html','manifest.json','service-worker.js'].forEach(f=>{try{fs.copyFileSync(path.join('dist/client',f),path.join('dist',f))}catch(e){}});\""
   
   # The directory with the static assets from the client build (relative to base directory)
   # Changed to match Netlify dashboard setting
