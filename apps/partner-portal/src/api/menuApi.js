@@ -156,17 +156,47 @@ export const createMenuItemFormData = (itemData, imageFile = null) => {
     if (itemData[key] !== null && itemData[key] !== undefined) {
       if (Array.isArray(itemData[key])) {
         // Handle arrays (dietaryPreferences, ingredients, allergens)
+        console.log(`📤 Processing array field ${key}:`, itemData[key]);
         itemData[key].forEach(item => {
-          formData.append(`${key}[]`, item);
+          if (item && item.trim && item.trim() !== '') {
+            formData.append(`${key}[]`, item.trim());
+          }
         });
       } else if (typeof itemData[key] === 'object' && key === 'availability') {
-        // Handle availability object
-        formData.append(key, JSON.stringify(itemData[key]));
+        // Handle availability object - ensure boolean types are preserved
+        console.log('📤 Processing availability for FormData:', itemData[key]);
+        
+        // Ensure all values are proper booleans
+        const cleanedAvailability = {};
+        Object.keys(itemData[key]).forEach(day => {
+          cleanedAvailability[day] = {
+            lunch: Boolean(itemData[key][day]?.lunch),
+            dinner: Boolean(itemData[key][day]?.dinner)
+          };
+        });
+        
+        console.log('📤 Cleaned availability:', cleanedAvailability);
+        const availabilityString = JSON.stringify(cleanedAvailability);
+        console.log('📤 Availability JSON string:', availabilityString);
+        
+        formData.append(key, availabilityString);
       } else if (typeof itemData[key] === 'object' && key === 'nutritionInfo') {
         // Handle nutrition info object
         formData.append(key, JSON.stringify(itemData[key]));
       } else {
-        formData.append(key, itemData[key]);
+        // Handle other fields with proper type conversion
+        let value = itemData[key];
+        
+        // Ensure numeric fields are properly formatted
+        if (key === 'price' && value !== '') {
+          value = parseFloat(value).toString();
+          console.log(`📤 Converted ${key} to:`, value);
+        } else if (['prepTime', 'servings', 'spiceLevel'].includes(key) && value !== '') {
+          value = parseInt(value).toString();
+          console.log(`📤 Converted ${key} to:`, value);
+        }
+        
+        formData.append(key, value);
       }
     }
   });

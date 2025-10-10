@@ -1,30 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  TrendingUp, 
-  TrendingDown, 
-  Download,
-  Calendar,
-  DollarSign,
-  ShoppingBag,
-  Users,
-  BarChart3,
-  Target,
-  Clock,
-  Star,
-  ArrowUpRight,
-  ArrowDownRight,
-  Filter,
-  RefreshCw,
-  Eye,
-  Package,
-  Percent,
-  Loader2,
-  Repeat,
-  PieChart,
-  CreditCard,
-  UserCheck
-} from 'lucide-react';
+  faArrowTrendUp, 
+  faArrowTrendDown, 
+  faDownload,
+  faCalendar,
+  faDollarSign,
+  faShoppingBag,
+  faUsers,
+  faChartBar,
+  faBullseye,
+  faClock,
+  faStar,
+  faArrowUp,
+  faArrowDown,
+  faFilter,
+  faSync,
+  faEye,
+  faBox,
+  faPercent,
+  faSpinner,
+  faRedo,
+  faChartPie,
+  faCreditCard,
+  faUserCheck
+} from '@fortawesome/free-solid-svg-icons';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@grub-gate/ui';
 import { useIsClient } from '../../hooks/useIsClient.js';
 import analyticsService from '../../services/analyticsService.js';
@@ -169,10 +170,10 @@ const AnalyticsPage = () => {
   ];
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: BarChart3 },
-    { id: 'revenue', label: 'Revenue', icon: DollarSign },
-    { id: 'customers', label: 'Customers', icon: Users },
-    { id: 'performance', label: 'Performance', icon: Target }
+    { id: 'overview', label: 'Overview', icon: faChartBar },
+    { id: 'revenue', label: 'Revenue', icon: faDollarSign },
+    { id: 'customers', label: 'Customers', icon: faUsers },
+    { id: 'performance', label: 'Performance', icon: faBullseye }
   ];
 
   // Fetch analytics data
@@ -328,7 +329,7 @@ const AnalyticsPage = () => {
       title: 'Total Revenue',
       value: `$${totalRevenue.toLocaleString()}`,
       change: overview.totalRevenue?.growth || 0,
-      icon: DollarSign,
+      icon: faDollarSign,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
       borderColor: 'border-green-200'
@@ -337,7 +338,7 @@ const AnalyticsPage = () => {
       title: 'Monthly Recurring Revenue',
       value: `$${(subscriptionOverviewData.monthlyRecurringRevenue?.current || 0).toLocaleString()}`,
       change: subscriptionOverviewData.monthlyRecurringRevenue?.growth || 0,
-      icon: Repeat,
+      icon: faRedo,
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-50',
       borderColor: 'border-emerald-200'
@@ -346,7 +347,7 @@ const AnalyticsPage = () => {
       title: 'Total Orders',
       value: totalOrders.toLocaleString(),
       change: overview.totalOrders?.growth || 0,
-      icon: ShoppingBag,
+      icon: faShoppingBag,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
       borderColor: 'border-blue-200'
@@ -355,7 +356,7 @@ const AnalyticsPage = () => {
       title: 'Active Customers',
       value: totalCustomers.toLocaleString(),
       change: customerOverviewData.activeCustomers?.growth || 0,
-      icon: Users,
+      icon: faUsers,
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
       borderColor: 'border-purple-200'
@@ -364,7 +365,7 @@ const AnalyticsPage = () => {
       title: 'Subscription Conversion',
       value: `${(subscriptionOverviewData.subscriptionConversionRate?.current || 0).toFixed(1)}%`,
       change: subscriptionOverviewData.subscriptionConversionRate?.growth || 0,
-      icon: UserCheck,
+      icon: faUserCheck,
       color: 'text-indigo-600',
       bgColor: 'bg-indigo-50',
       borderColor: 'border-indigo-200'
@@ -373,7 +374,7 @@ const AnalyticsPage = () => {
       title: 'Avg Revenue Per User',
       value: `$${(subscriptionOverviewData.averageRevenuePerUser?.current || 0).toFixed(2)}`,
       change: subscriptionOverviewData.averageRevenuePerUser?.growth || 0,
-      icon: BarChart3,
+      icon: faChartBar,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
       borderColor: 'border-orange-200'
@@ -382,7 +383,7 @@ const AnalyticsPage = () => {
       title: 'Customer Lifetime Value',
       value: `$${(subscriptionOverviewData.customerLifetimeValue?.current || 0).toFixed(0)}`,
       change: subscriptionOverviewData.customerLifetimeValue?.growth || 0,
-      icon: CreditCard,
+      icon: faCreditCard,
       color: 'text-rose-600',
       bgColor: 'bg-rose-50',
       borderColor: 'border-rose-200'
@@ -391,7 +392,7 @@ const AnalyticsPage = () => {
       title: 'Avg Prep Time',
       value: `${avgPrepTime} min`,
       change: overview.avgPrepTime?.growth || 0,
-      icon: Clock,
+      icon: faClock,
       color: 'text-teal-600',
       bgColor: 'bg-teal-50',
       borderColor: 'border-teal-200'
@@ -400,7 +401,7 @@ const AnalyticsPage = () => {
       title: 'On-Time Delivery',
       value: `${safePerformanceData.deliveryPerformance.onTimeDeliveryRate?.current?.toFixed(1) || 0}%`,
       change: safePerformanceData.deliveryPerformance.onTimeDeliveryRate?.growth || 0,
-      icon: Target,
+      icon: faBullseye,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
       borderColor: 'border-green-200'
@@ -409,7 +410,7 @@ const AnalyticsPage = () => {
       title: 'Churn Rate',
       value: `${(subscriptionOverviewData.churnRate?.current || 0).toFixed(1)}%`,
       change: subscriptionOverviewData.churnRate?.growth || 0,
-      icon: TrendingDown,
+      icon: faArrowTrendDown,
       color: 'text-red-600',
       bgColor: 'bg-red-50',
       borderColor: 'border-red-200'
@@ -460,7 +461,7 @@ const AnalyticsPage = () => {
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
                           <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${metric.bgColor} mb-3`}>
-                            <Icon className={`h-5 w-5 ${metric.color}`} />
+                            <FontAwesomeIcon icon={Icon} className={`h-5 w-5 ${metric.color}`} />
                           </div>
                           <p className="text-sm font-medium text-gray-600 mb-1 truncate">
                             {metric.title}
@@ -472,9 +473,9 @@ const AnalyticsPage = () => {
                             isPositive ? 'text-green-600' : 'text-red-600'
                           }`}>
                             {isPositive ? (
-                              <ArrowUpRight className="h-4 w-4 mr-1" />
+                              <FontAwesomeIcon icon={faArrowUp} className="h-4 w-4 mr-1" />
                             ) : (
-                              <ArrowDownRight className="h-4 w-4 mr-1" />
+                              <FontAwesomeIcon icon={faArrowDown} className="h-4 w-4 mr-1" />
                             )}
                             <span className="font-medium">{Math.abs(metric.change)}%</span>
                             <span className="text-gray-500 ml-1 text-xs">vs last period</span>
@@ -491,7 +492,7 @@ const AnalyticsPage = () => {
             <Card>
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg font-semibold flex items-center">
-                  <PieChart className="h-5 w-5 mr-2 text-grub-red" />
+                  <FontAwesomeIcon icon={faChartPie} className="h-5 w-5 mr-2 text-grub-red" />
                   Revenue Breakdown
                 </CardTitle>
               </CardHeader>
@@ -565,7 +566,7 @@ const AnalyticsPage = () => {
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
                           <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${metric.bgColor} mb-3`}>
-                            <Icon className={`h-5 w-5 ${metric.color}`} />
+                            <FontAwesomeIcon icon={Icon} className={`h-5 w-5 ${metric.color}`} />
                           </div>
                           <p className="text-sm font-medium text-gray-600 mb-1 truncate">
                             {metric.title}
@@ -577,9 +578,9 @@ const AnalyticsPage = () => {
                             isPositive ? 'text-green-600' : 'text-red-600'
                           }`}>
                             {isPositive ? (
-                              <ArrowUpRight className="h-4 w-4 mr-1" />
+                              <FontAwesomeIcon icon={faArrowUp} className="h-4 w-4 mr-1" />
                             ) : (
-                              <ArrowDownRight className="h-4 w-4 mr-1" />
+                              <FontAwesomeIcon icon={faArrowDown} className="h-4 w-4 mr-1" />
                             )}
                             <span className="font-medium">{Math.abs(metric.change)}%</span>
                             <span className="text-gray-500 ml-1 text-xs">vs last period</span>
@@ -621,7 +622,7 @@ const AnalyticsPage = () => {
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
                           <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${metric.bgColor} mb-3`}>
-                            <Icon className={`h-5 w-5 ${metric.color}`} />
+                            <FontAwesomeIcon icon={Icon} className={`h-5 w-5 ${metric.color}`} />
                           </div>
                           <p className="text-sm font-medium text-gray-600 mb-1 truncate">
                             {metric.title}
@@ -633,9 +634,9 @@ const AnalyticsPage = () => {
                             isPositive ? 'text-green-600' : 'text-red-600'
                           }`}>
                             {isPositive ? (
-                              <ArrowUpRight className="h-4 w-4 mr-1" />
+                              <FontAwesomeIcon icon={faArrowUp} className="h-4 w-4 mr-1" />
                             ) : (
-                              <ArrowDownRight className="h-4 w-4 mr-1" />
+                              <FontAwesomeIcon icon={faArrowDown} className="h-4 w-4 mr-1" />
                             )}
                             <span className="font-medium">{Math.abs(metric.change)}%</span>
                             <span className="text-gray-500 ml-1 text-xs">vs last period</span>
@@ -758,7 +759,7 @@ const AnalyticsPage = () => {
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
                           <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${metric.bgColor} mb-3`}>
-                            <Icon className={`h-5 w-5 ${metric.color}`} />
+                            <FontAwesomeIcon icon={Icon} className={`h-5 w-5 ${metric.color}`} />
                           </div>
                           <p className="text-sm font-medium text-gray-600 mb-1 truncate">
                             {metric.title}
@@ -770,9 +771,9 @@ const AnalyticsPage = () => {
                             isPositive ? 'text-green-600' : 'text-red-600'
                           }`}>
                             {isPositive ? (
-                              <ArrowUpRight className="h-4 w-4 mr-1" />
+                              <FontAwesomeIcon icon={faArrowUp} className="h-4 w-4 mr-1" />
                             ) : (
-                              <ArrowDownRight className="h-4 w-4 mr-1" />
+                              <FontAwesomeIcon icon={faArrowDown} className="h-4 w-4 mr-1" />
                             )}
                             <span className="font-medium">{Math.abs(metric.change)}%</span>
                             <span className="text-gray-500 ml-1 text-xs">vs last period</span>
@@ -958,11 +959,11 @@ const AnalyticsPage = () => {
                   disabled={loading}
                   className="bg-white/20 hover:bg-white/30 text-white border-white/30 disabled:opacity-50"
                 >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                  <FontAwesomeIcon icon={faSync} className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                   Refresh
                 </Button>
                 <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30">
-                  <Download className="h-4 w-4 mr-2" />
+                  <FontAwesomeIcon icon={faDownload} className="h-4 w-4 mr-2" />
                   Export
                 </Button>
               </div>
@@ -985,7 +986,7 @@ const AnalyticsPage = () => {
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
-                  <Icon className="h-4 w-4" />
+                  <FontAwesomeIcon icon={Icon} className="h-4 w-4" />
                   <span>{tab.label}</span>
                 </button>
               );
@@ -997,7 +998,7 @@ const AnalyticsPage = () => {
         {loading ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
             <div className="flex flex-col items-center justify-center space-y-4">
-              <Loader2 className="h-8 w-8 animate-spin text-grub-red" />
+              <FontAwesomeIcon icon={faSpinner} className="h-8 w-8 animate-spin text-grub-red" />
               <p className="text-gray-600">Loading analytics data...</p>
             </div>
           </div>
@@ -1005,7 +1006,7 @@ const AnalyticsPage = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
             <div className="flex flex-col items-center justify-center space-y-4">
               <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                <RefreshCw className="h-6 w-6 text-red-600" />
+                <FontAwesomeIcon icon={faSync} className="h-6 w-6 text-red-600" />
               </div>
               <div className="text-center">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Failed to Load Analytics</h3>
@@ -1014,7 +1015,7 @@ const AnalyticsPage = () => {
                   onClick={() => window.location.reload()}
                   className="bg-grub-red hover:bg-red-700 text-white"
                 >
-                  <RefreshCw className="h-4 w-4 mr-2" />
+                  <FontAwesomeIcon icon={faSync} className="h-4 w-4 mr-2" />
                   Retry
                 </Button>
               </div>

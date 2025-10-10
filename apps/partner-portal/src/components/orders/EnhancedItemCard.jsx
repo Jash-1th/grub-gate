@@ -1,6 +1,7 @@
 // FILE: src/components/orders/EnhancedItemCard.jsx
 import React from 'react';
-import { Clock, ChefHat, AlertTriangle, Leaf, Flame } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faClock, faUtensils, faExclamationTriangle, faLeaf, faFire } from '@fortawesome/free-solid-svg-icons';
 
 /**
  * Enhanced item card component for partner portal
@@ -16,7 +17,7 @@ const EnhancedItemCard = ({ item, index }) => {
     
     return (
       <div className="flex items-center">
-        <Flame className="h-3 w-3 text-red-500 mr-1" />
+        <FontAwesomeIcon icon={faFire} className="h-3 w-3 text-red-500 mr-1" />
         <span className="text-xs text-gray-600">{spiceIcons} {spiceText}</span>
       </div>
     );
@@ -33,7 +34,7 @@ const EnhancedItemCard = ({ item, index }) => {
             key={tag} 
             className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-medium flex items-center"
           >
-            <Leaf className="h-2.5 w-2.5 mr-1" />
+            <FontAwesomeIcon icon={faLeaf} className="h-2.5 w-2.5 mr-1" />
             {tag}
           </span>
         ))}
@@ -48,7 +49,7 @@ const EnhancedItemCard = ({ item, index }) => {
     return (
       <div className="mt-2 pt-2 border-t border-gray-100">
         <div className="flex items-center mb-1">
-          <AlertTriangle className="h-3 w-3 text-red-500 mr-1" />
+          <FontAwesomeIcon icon={faExclamationTriangle} className="h-3 w-3 text-red-500 mr-1" />
           <span className="font-medium text-red-700 text-xs">Allergen Warning</span>
         </div>
         <div className="flex flex-wrap gap-1">
@@ -88,7 +89,7 @@ const EnhancedItemCard = ({ item, index }) => {
       <div className="grid grid-cols-2 gap-3 mb-3">
         {/* Preparation Time */}
         <div className="flex items-center">
-          <Clock className="h-3 w-3 text-blue-500 mr-1" />
+          <FontAwesomeIcon icon={faClock} className="h-3 w-3 text-blue-500 mr-1" />
           <span className="text-xs text-gray-600">
             {item.prepTime || 15} min prep
           </span>
@@ -96,7 +97,7 @@ const EnhancedItemCard = ({ item, index }) => {
         
         {/* Category */}
         <div className="flex items-center">
-          <ChefHat className="h-3 w-3 text-purple-500 mr-1" />
+          <FontAwesomeIcon icon={faUtensils} className="h-3 w-3 text-purple-500 mr-1" />
           <span className="text-xs text-gray-600">
             {item.category || 'Main Course'}
           </span>

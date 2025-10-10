@@ -64,6 +64,7 @@ const MenuPage = () => {
     spiceLevel: 0,
     dietaryPreferences: [],
     ingredients: [],
+    ingredientsText: '', // For display purposes to allow comma input
     allergens: [],
     availability: {
       monday: { lunch: true, dinner: true },
@@ -142,16 +143,9 @@ const MenuPage = () => {
       spiceLevel: 0,
       dietaryPreferences: [],
       ingredients: [],
+      ingredientsText: '', // For display purposes
       allergens: [],
-      availability: {
-        monday: { lunch: true, dinner: true },
-        tuesday: { lunch: true, dinner: true },
-        wednesday: { lunch: true, dinner: true },
-        thursday: { lunch: true, dinner: true },
-        friday: { lunch: true, dinner: true },
-        saturday: { lunch: true, dinner: true },
-        sunday: { lunch: true, dinner: true }
-      }
+      availability: ensureAvailabilityStructure(null) // Use helper for consistency
     });
     setImageFile(null);
     setImagePreview(null);
@@ -185,8 +179,30 @@ const MenuPage = () => {
     try {
       setSubmitting(true);
       
+      // Debug: Log form data before submission
+      console.log('🚀 Submitting form data:', formData);
+      console.log('🚀 Availability structure:', JSON.stringify(formData.availability, null, 2));
+      
+      // Create clean form data without display-only fields
+      const cleanFormData = { ...formData };
+      delete cleanFormData.ingredientsText; // Remove display-only field
+      
       // Create FormData
-      const submitData = createMenuItemFormData(formData, imageFile);
+      const submitData = createMenuItemFormData(cleanFormData, imageFile);
+      
+      // Debug: Log what's being sent to backend
+      console.log('🚀 FormData created, checking availability...');
+      for (let [key, value] of submitData.entries()) {
+        if (key === 'availability') {
+          console.log('🚀 FormData availability:', value);
+          try {
+            const parsed = JSON.parse(value);
+            console.log('🚀 Parsed availability:', parsed);
+          } catch (e) {
+            console.error('🚀 Error parsing availability:', e);
+          }
+        }
+      }
       
       if (editingItem) {
         // Update existing item
@@ -223,7 +239,41 @@ const MenuPage = () => {
     }
   };
 
+  // Helper function to ensure availability structure is correct
+  const ensureAvailabilityStructure = (availability) => {
+    const defaultAvailability = {
+      monday: { lunch: true, dinner: true },
+      tuesday: { lunch: true, dinner: true },
+      wednesday: { lunch: true, dinner: true },
+      thursday: { lunch: true, dinner: true },
+      friday: { lunch: true, dinner: true },
+      saturday: { lunch: true, dinner: true },
+      sunday: { lunch: true, dinner: true }
+    };
+
+    if (!availability || typeof availability !== 'object') {
+      console.log('⚠️ No availability data, using defaults');
+      return defaultAvailability;
+    }
+
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const correctedAvailability = {};
+
+    days.forEach(day => {
+      correctedAvailability[day] = {
+        lunch: Boolean(availability[day]?.lunch ?? true),
+        dinner: Boolean(availability[day]?.dinner ?? true)
+      };
+    });
+
+    console.log('✅ Corrected availability structure:', correctedAvailability);
+    return correctedAvailability;
+  };
+
   const handleEditItem = (item) => {
+    console.log('📝 Editing item:', item.name);
+    console.log('📝 Original availability:', item.availability);
+    
     setEditingItem(item);
     setFormData({
       name: item.name || '',
@@ -237,16 +287,9 @@ const MenuPage = () => {
       spiceLevel: item.spiceLevel || 0,
       dietaryPreferences: item.dietaryPreferences || [],
       ingredients: item.ingredients || [],
+      ingredientsText: (item.ingredients || []).join(', '), // Initialize display text
       allergens: item.allergens || [],
-      availability: item.availability || {
-        monday: { lunch: true, dinner: true },
-        tuesday: { lunch: true, dinner: true },
-        wednesday: { lunch: true, dinner: true },
-        thursday: { lunch: true, dinner: true },
-        friday: { lunch: true, dinner: true },
-        saturday: { lunch: true, dinner: true },
-        sunday: { lunch: true, dinner: true }
-      }
+      availability: ensureAvailabilityStructure(item.availability)
     });
     setImagePreview(item.image || null);
     setShowAddModal(true);
@@ -519,8 +562,16 @@ const MenuPage = () => {
                     <input 
                       type="number" 
                       step="0.01" 
+                      min="0"
                       value={formData.price}
-                      onChange={(e) => handleInputChange('price', e.target.value)}
+                      onChange={(e) => {
+                        console.log('💰 Price changed to:', e.target.value);
+                        const value = e.target.value;
+                        // Allow empty string for clearing, otherwise ensure it's a valid number
+                        if (value === '' || (!isNaN(value) && parseFloat(value) >= 0)) {
+                          handleInputChange('price', value);
+                        }
+                      }}
                       placeholder="0.00" 
                       className="w-full pl-6 sm:pl-7 pr-2 sm:pr-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm" 
                       required
@@ -559,9 +610,18 @@ const MenuPage = () => {
                   <div className="relative">
                     <input 
                       type="number" 
+                      min="1"
+                      max="300"
                       placeholder="30" 
                       value={formData.prepTime}
-                      onChange={(e) => handleInputChange('prepTime', e.target.value)}
+                      onChange={(e) => {
+                        console.log('⏱️ Prep time changed to:', e.target.value);
+                        const value = e.target.value;
+                        // Allow empty string for clearing, otherwise ensure it's a valid number
+                        if (value === '' || (!isNaN(value) && parseInt(value) >= 1 && parseInt(value) <= 300)) {
+                          handleInputChange('prepTime', value);
+                        }
+                      }}
                       className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm"
                       required
                     />
@@ -572,9 +632,23 @@ const MenuPage = () => {
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">Servings</label>
                   <input 
                     type="number" 
+                    min="1"
+                    max="20"
                     placeholder="1" 
                     value={formData.servings}
-                    onChange={(e) => handleInputChange('servings', parseInt(e.target.value) || 1)}
+                    onChange={(e) => {
+                      console.log('🍽️ Servings changed to:', e.target.value);
+                      const value = e.target.value;
+                      // Allow empty string for clearing, otherwise ensure it's a valid number
+                      if (value === '') {
+                        handleInputChange('servings', 1); // Default to 1 if empty
+                      } else {
+                        const numValue = parseInt(value);
+                        if (!isNaN(numValue) && numValue >= 1 && numValue <= 20) {
+                          handleInputChange('servings', numValue);
+                        }
+                      }
+                    }}
                     className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm"
                   />
                 </div>
@@ -665,13 +739,18 @@ const MenuPage = () => {
                           <input 
                             type="checkbox" 
                             checked={formData.availability[d]?.lunch ?? true}
-                            onChange={(e) => handleInputChange('availability', {
-                              ...formData.availability,
-                              [d]: {
-                                ...formData.availability[d],
-                                lunch: e.target.checked
-                              }
-                            })}
+                            onChange={(e) => {
+                              console.log(`🔄 Updating ${d}.lunch to:`, e.target.checked);
+                              const newAvailability = {
+                                ...formData.availability,
+                                [d]: {
+                                  ...formData.availability[d],
+                                  lunch: Boolean(e.target.checked) // Ensure boolean type
+                                }
+                              };
+                              console.log('🔄 New availability state:', newAvailability);
+                              handleInputChange('availability', newAvailability);
+                            }}
                             className="h-4 w-4 text-grub-red" 
                           />
                         </td>
@@ -679,13 +758,18 @@ const MenuPage = () => {
                           <input 
                             type="checkbox" 
                             checked={formData.availability[d]?.dinner ?? true}
-                            onChange={(e) => handleInputChange('availability', {
-                              ...formData.availability,
-                              [d]: {
-                                ...formData.availability[d],
-                                dinner: e.target.checked
-                              }
-                            })}
+                            onChange={(e) => {
+                              console.log(`🔄 Updating ${d}.dinner to:`, e.target.checked);
+                              const newAvailability = {
+                                ...formData.availability,
+                                [d]: {
+                                  ...formData.availability[d],
+                                  dinner: Boolean(e.target.checked) // Ensure boolean type
+                                }
+                              };
+                              console.log('🔄 New availability state:', newAvailability);
+                              handleInputChange('availability', newAvailability);
+                            }}
                             className="h-4 w-4 text-grub-red" 
                           />
                         </td>
@@ -750,12 +834,34 @@ const MenuPage = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Ingredients</label>
                 <textarea
                   placeholder="Enter ingredients separated by commas (e.g., chicken breast, mushrooms, olive oil, garlic)"
-                  value={formData.ingredients.join(', ')}
+                  value={formData.ingredientsText || formData.ingredients.join(', ')}
                   onChange={(e) => {
                     const value = e.target.value;
-                    // Allow commas in the input and split properly
-                    const ingredients = value.split(',').map(item => item.trim()).filter(item => item);
-                    handleInputChange('ingredients', ingredients);
+                    console.log('🥬 Ingredients input changed to:', value);
+                    
+                    // Store the raw text for display purposes
+                    handleInputChange('ingredientsText', value);
+                    
+                    // Process ingredients for backend storage
+                    if (value === '') {
+                      handleInputChange('ingredients', []);
+                    } else {
+                      // Split by comma, trim each item, and filter out empty strings
+                      const ingredients = value
+                        .split(',')
+                        .map(item => item.trim())
+                        .filter(item => item.length > 0);
+                      
+                      console.log('🥬 Processed ingredients:', ingredients);
+                      handleInputChange('ingredients', ingredients);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    // On blur, clean up the display text to match the processed ingredients
+                    const cleanText = formData.ingredients.join(', ');
+                    if (e.target.value !== cleanText) {
+                      handleInputChange('ingredientsText', cleanText);
+                    }
                   }}
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm resize-vertical"

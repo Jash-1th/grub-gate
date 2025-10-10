@@ -1,24 +1,25 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  Search, 
-  Filter, 
-  Eye, 
-  CheckCircle, 
-  Clock, 
-  X,
-  MapPin,
-  Phone,
-  Mail,
-  Package,
-  User,
-  Calendar,
-  DollarSign,
-  ChevronRight,
-  MoreVertical,
-  AlertCircle,
-  RefreshCw
-} from 'lucide-react';
+  faSearch, 
+  faFilter, 
+  faEye, 
+  faCheckCircle, 
+  faClock, 
+  faTimes,
+  faMapMarkerAlt,
+  faPhone,
+  faEnvelope,
+  faBox,
+  faUser,
+  faCalendar,
+  faDollarSign,
+  faChevronRight,
+  faEllipsisV,
+  faExclamationCircle,
+  faSync
+} from '@fortawesome/free-solid-svg-icons';
 import { Button, Input, Card, CardContent, CardHeader, CardTitle, Modal } from '@grub-gate/ui';
 import { useOrders } from '../../hooks/useOrders';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
@@ -178,12 +179,12 @@ const OrdersPage = () => {
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'confirmed': return <CheckCircle className="h-4 w-4" />;
-      case 'preparing': return <Clock className="h-4 w-4" />;
-      case 'ready': return <CheckCircle className="h-4 w-4" />;
-      case 'delivered': return <CheckCircle className="h-4 w-4" />;
-      case 'cancelled': return <X className="h-4 w-4" />;
-      default: return <Clock className="h-4 w-4" />;
+      case 'confirmed': return <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4" />;
+      case 'preparing': return <FontAwesomeIcon icon={faClock} className="h-4 w-4" />;
+      case 'ready': return <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4" />;
+      case 'delivered': return <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4" />;
+      case 'cancelled': return <FontAwesomeIcon icon={faTimes} className="h-4 w-4" />;
+      default: return <FontAwesomeIcon icon={faClock} className="h-4 w-4" />;
     }
   };
 
@@ -277,28 +278,28 @@ const OrdersPage = () => {
               count: filteredOrders.filter(o => o.status === 'pending').length, 
               color: 'bg-yellow-500', 
               bgColor: 'bg-yellow-50',
-              icon: Clock 
+              icon: faClock 
             },
             { 
               label: 'Preparing', 
               count: filteredOrders.filter(o => o.status === 'preparing').length, 
               color: 'bg-orange-500', 
               bgColor: 'bg-orange-50',
-              icon: Package 
+              icon: faBox 
             },
             { 
               label: 'Ready', 
               count: filteredOrders.filter(o => o.status === 'ready').length, 
               color: 'bg-green-500', 
               bgColor: 'bg-green-50',
-              icon: CheckCircle 
+              icon: faCheckCircle 
             },
             { 
               label: 'Delivered', 
               count: filteredOrders.filter(o => o.status === 'delivered').length, 
               color: 'bg-blue-500', 
               bgColor: 'bg-blue-50',
-              icon: CheckCircle 
+              icon: faCheckCircle 
             }
           ].map((stat, index) => {
             const Icon = stat.icon;
@@ -311,7 +312,7 @@ const OrdersPage = () => {
                       <p className="text-2xl sm:text-3xl font-bold text-gray-900">{stat.count}</p>
                     </div>
                     <div className={`h-12 w-12 rounded-full flex items-center justify-center ${stat.bgColor}`}>
-                      <Icon className={`h-6 w-6 ${stat.color.replace('bg-', 'text-')}`} />
+                      <FontAwesomeIcon icon={Icon} className={`h-6 w-6 ${stat.color.replace('bg-', 'text-')}`} />
                     </div>
                   </div>
                 </CardContent>
@@ -326,7 +327,7 @@ const OrdersPage = () => {
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder="Search weekly plan orders by customer name..."
                     value={searchTerm}
@@ -371,7 +372,7 @@ const OrdersPage = () => {
             {filteredOrders.length === 0 ? (
             <Card>
               <CardContent className="p-8 text-center">
-                <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <FontAwesomeIcon icon={faBox} className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No weekly plan orders for today</h3>
                 <p className="text-gray-500">No lunch or dinner orders from weekly meal plans scheduled for {getCurrentDayName()}.</p>
               </CardContent>
@@ -452,7 +453,7 @@ const OrdersPage = () => {
                                     onClick={() => handleViewOrder(order)}
                                     className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                                   >
-                                    <Eye className="h-4 w-4" />
+                                    <FontAwesomeIcon icon={faEye} className="h-4 w-4" />
                                   </button>
                                   {order.status === 'pending' && (
                                     <Button
@@ -463,7 +464,7 @@ const OrdersPage = () => {
                                     >
                                       {updateStatusLoading === order._id ? (
                                         <>
-                                          <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                                          <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
                                           Confirming...
                                         </>
                                       ) : (
@@ -480,7 +481,7 @@ const OrdersPage = () => {
                                     >
                                       {updateStatusLoading === order._id ? (
                                         <>
-                                          <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                                          <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
                                           Starting...
                                         </>
                                       ) : (
@@ -497,7 +498,7 @@ const OrdersPage = () => {
                                     >
                                       {updateStatusLoading === order._id ? (
                                         <>
-                                          <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                                          <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
                                           Updating...
                                         </>
                                       ) : (
@@ -552,7 +553,7 @@ const OrdersPage = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2 flex-1 min-w-0">
                             <div className="bg-blue-100 rounded-full p-1.5">
-                              <User className="h-3 w-3 text-blue-600" />
+                              <FontAwesomeIcon icon={faUser} className="h-3 w-3 text-blue-600" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="font-medium text-gray-900 text-sm truncate">
@@ -576,7 +577,7 @@ const OrdersPage = () => {
                               onClick={() => handleViewOrder(order)}
                               className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
                             >
-                              <Eye className="h-4 w-4" />
+                              <FontAwesomeIcon icon={faEye} className="h-4 w-4" />
                             </button>
                             {order.status === 'pending' && (
                               <Button
@@ -586,9 +587,9 @@ const OrdersPage = () => {
                                 className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1 disabled:opacity-50"
                               >
                                 {updateStatusLoading === order._id ? (
-                                  <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                                  <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
                                 ) : (
-                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  <FontAwesomeIcon icon={faCheckCircle} className="h-3 w-3 mr-1" />
                                 )}
                                 {updateStatusLoading === order._id ? 'Confirming...' : 'Confirm'}
                               </Button>
@@ -601,9 +602,9 @@ const OrdersPage = () => {
                                 className="bg-orange-600 hover:bg-orange-700 text-white text-xs px-2 py-1 disabled:opacity-50"
                               >
                                 {updateStatusLoading === order._id ? (
-                                  <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                                  <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
                                 ) : (
-                                  <Clock className="h-3 w-3 mr-1" />
+                                  <FontAwesomeIcon icon={faClock} className="h-3 w-3 mr-1" />
                                 )}
                                 {updateStatusLoading === order._id ? 'Starting...' : 'Prep'}
                               </Button>
@@ -616,9 +617,9 @@ const OrdersPage = () => {
                                 className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 disabled:opacity-50"
                               >
                                 {updateStatusLoading === order._id ? (
-                                  <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                                  <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
                                 ) : (
-                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  <FontAwesomeIcon icon={faCheckCircle} className="h-3 w-3 mr-1" />
                                 )}
                                 {updateStatusLoading === order._id ? 'Updating...' : 'Ready'}
                               </Button>
@@ -713,9 +714,9 @@ const OrdersPage = () => {
                       className="bg-green-600 hover:bg-green-700 text-white text-xs disabled:opacity-50"
                     >
                       {updateStatusLoading === selectedOrder._id ? (
-                        <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                        <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
                       ) : (
-                        <CheckCircle className="h-3 w-3 mr-1" />
+                        <FontAwesomeIcon icon={faCheckCircle} className="h-3 w-3 mr-1" />
                       )}
                       {updateStatusLoading === selectedOrder._id ? 'Confirming...' : 'Confirm'}
                     </Button>
@@ -732,9 +733,9 @@ const OrdersPage = () => {
                       className="bg-orange-600 hover:bg-orange-700 text-white text-xs disabled:opacity-50"
                     >
                       {updateStatusLoading === selectedOrder._id ? (
-                        <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                        <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
                       ) : (
-                        <Clock className="h-3 w-3 mr-1" />
+                        <FontAwesomeIcon icon={faClock} className="h-3 w-3 mr-1" />
                       )}
                       {updateStatusLoading === selectedOrder._id ? 'Starting...' : 'Start Prep'}
                     </Button>
@@ -751,9 +752,9 @@ const OrdersPage = () => {
                       className="bg-blue-600 hover:bg-blue-700 text-white text-xs disabled:opacity-50"
                     >
                       {updateStatusLoading === selectedOrder._id ? (
-                        <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                        <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
                       ) : (
-                        <CheckCircle className="h-3 w-3 mr-1" />
+                        <FontAwesomeIcon icon={faCheckCircle} className="h-3 w-3 mr-1" />
                       )}
                       Ready
                     </Button>

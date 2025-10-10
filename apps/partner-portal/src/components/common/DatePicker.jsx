@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, ChevronDown } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCalendar, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 
 /**
  * SSR-Safe DatePicker Component for Partner Portal
@@ -90,7 +91,7 @@ const DatePicker = ({
     return (
       <div className={`relative ${className}`}>
         <div className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-md bg-white">
-          <Calendar className="h-4 w-4 text-gray-400" />
+          <FontAwesomeIcon icon={faCalendar} className="h-4 w-4 text-gray-400" />
           <span className="text-gray-500">{placeholder}</span>
         </div>
       </div>
@@ -113,12 +114,13 @@ const DatePicker = ({
         `}
       >
         <div className="flex items-center space-x-2">
-          <Calendar className="h-4 w-4 text-gray-400" />
+          <FontAwesomeIcon icon={faCalendar} className="h-4 w-4 text-gray-400" />
           <span className={displayDate ? 'text-gray-900' : 'text-gray-500'}>
             {displayDate || placeholder}
           </span>
         </div>
-        <ChevronDown 
+        <FontAwesomeIcon 
+          icon={faChevronDown}
           className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${
             isOpen ? 'transform rotate-180' : ''
           }`} 

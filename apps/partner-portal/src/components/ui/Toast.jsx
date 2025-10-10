@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCheckCircle, faTimesCircle, faExclamationCircle, faInfoCircle, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useToast } from '../../contexts/ToastContext';
 
 const Toast = ({ toast }) => {
@@ -44,14 +45,14 @@ const Toast = ({ toast }) => {
     
     switch (toast.type) {
       case 'success':
-        return <CheckCircle className={`${iconClass} text-green-600`} />;
+        return <FontAwesomeIcon icon={faCheckCircle} className={`${iconClass} text-green-600`} />;
       case 'error':
-        return <XCircle className={`${iconClass} text-red-600`} />;
+        return <FontAwesomeIcon icon={faTimesCircle} className={`${iconClass} text-red-600`} />;
       case 'warning':
-        return <AlertCircle className={`${iconClass} text-yellow-600`} />;
+        return <FontAwesomeIcon icon={faExclamationCircle} className={`${iconClass} text-yellow-600`} />;
       case 'info':
       default:
-        return <Info className={`${iconClass} text-blue-600`} />;
+        return <FontAwesomeIcon icon={faInfoCircle} className={`${iconClass} text-blue-600`} />;
     }
   };
 
@@ -65,7 +66,7 @@ const Toast = ({ toast }) => {
         onClick={handleClose}
         className="ml-3 flex-shrink-0 rounded-md p-1.5 hover:bg-black/10 transition-colors"
       >
-        <X className="h-4 w-4" />
+        <FontAwesomeIcon icon={faTimes} className="h-4 w-4" />
       </button>
     </div>
   );

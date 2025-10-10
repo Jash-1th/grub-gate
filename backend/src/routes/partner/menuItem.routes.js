@@ -160,9 +160,46 @@ const statusValidation = [
 ];
 
 const availabilityValidation = [
-  body('availability').isObject().withMessage('Availability must be an object'),
-  body('availability.*.lunch').optional().isBoolean().withMessage('Lunch availability must be boolean'),
-  body('availability.*.dinner').optional().isBoolean().withMessage('Dinner availability must be boolean')
+  body('availability')
+    .custom((value) => {
+      // Handle both object and JSON string formats
+      let availability = value;
+      
+      if (typeof value === 'string') {
+        try {
+          availability = JSON.parse(value);
+        } catch (error) {
+          throw new Error('Availability must be a valid JSON string or object');
+        }
+      }
+      
+      if (typeof availability !== 'object' || availability === null) {
+        throw new Error('Availability must be an object');
+      }
+      
+      const requiredDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      
+      for (const day of requiredDays) {
+        if (!availability[day]) {
+          throw new Error(`Missing availability for ${day}`);
+        }
+        
+        if (typeof availability[day] !== 'object') {
+          throw new Error(`Availability for ${day} must be an object`);
+        }
+        
+        if (typeof availability[day].lunch !== 'boolean') {
+          throw new Error(`Lunch availability for ${day} must be a boolean`);
+        }
+        
+        if (typeof availability[day].dinner !== 'boolean') {
+          throw new Error(`Dinner availability for ${day} must be a boolean`);
+        }
+      }
+      
+      return true;
+    })
+    .withMessage('Invalid availability structure')
 ];
 
 // Routes

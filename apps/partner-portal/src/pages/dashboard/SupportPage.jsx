@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  HelpCircle, 
-  MessageCircle, 
-  Book, 
-  Play, 
-  CheckCircle,
-  Search,
-  Mail,
-  Phone,
-  Clock
-} from 'lucide-react';
+  faQuestionCircle, 
+  faCommentDots, 
+  faBook, 
+  faPlay, 
+  faCheckCircle,
+  faSearch,
+  faEnvelope,
+  faPhone,
+  faClock
+} from '@fortawesome/free-solid-svg-icons';
 import { Button, Input, Card, CardContent, CardHeader, CardTitle } from '@grub-gate/ui';
 
 const SupportPage = () => {
@@ -71,25 +72,25 @@ const SupportPage = () => {
     {
       title: 'Contact Support',
       description: 'Get help from our support team',
-      icon: MessageCircle,
+      icon: faCommentDots,
       action: 'contact'
     },
     {
       title: 'Documentation',
       description: 'Browse our comprehensive guides',
-      icon: Book,
+      icon: faBook,
       action: 'docs'
     },
     {
       title: 'Video Tutorials',
       description: 'Watch step-by-step tutorials',
-      icon: Play,
+      icon: faPlay,
       action: 'tutorials'
     },
     {
       title: 'System Status',
       description: 'Check platform status and updates',
-      icon: CheckCircle,
+      icon: faCheckCircle,
       action: 'status'
     }
   ];
@@ -114,7 +115,7 @@ const SupportPage = () => {
             <Card key={index} className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardContent className="p-6 text-center">
                 <div className="inline-flex items-center justify-center w-12 h-12 bg-grub-red/10 rounded-full mb-4">
-                  <Icon className="h-6 w-6 text-grub-red" />
+                  <FontAwesomeIcon icon={Icon} className="h-6 w-6 text-grub-red" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   {option.title}
@@ -137,7 +138,7 @@ const SupportPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="flex items-center space-x-3">
               <div className="p-3 bg-blue-100 rounded-full">
-                <Mail className="h-6 w-6 text-blue-600" />
+                <FontAwesomeIcon icon={faEnvelope} className="h-6 w-6 text-blue-600" />
               </div>
               <div>
                 <p className="font-medium text-gray-900">Email Support</p>
@@ -148,7 +149,7 @@ const SupportPage = () => {
             
             <div className="flex items-center space-x-3">
               <div className="p-3 bg-green-100 rounded-full">
-                <Phone className="h-6 w-6 text-green-600" />
+                <FontAwesomeIcon icon={faPhone} className="h-6 w-6 text-green-600" />
               </div>
               <div>
                 <p className="font-medium text-gray-900">Phone Support</p>
@@ -159,7 +160,7 @@ const SupportPage = () => {
             
             <div className="flex items-center space-x-3">
               <div className="p-3 bg-purple-100 rounded-full">
-                <Clock className="h-6 w-6 text-purple-600" />
+                <FontAwesomeIcon icon={faClock} className="h-6 w-6 text-purple-600" />
               </div>
               <div>
                 <p className="font-medium text-gray-900">Live Chat</p>
@@ -181,7 +182,7 @@ const SupportPage = () => {
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder="Search FAQ..."
                     value={searchTerm}

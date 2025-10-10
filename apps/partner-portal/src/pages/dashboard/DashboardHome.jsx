@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  TrendingUp, 
-  ShoppingBag, 
-  Users, 
-  DollarSign,
-  Clock,
-  Star,
-  ArrowUpRight,
-  ArrowDownRight,
-  Plus,
-  RefreshCw
-} from 'lucide-react';
+  faArrowTrendUp, 
+  faShoppingBag, 
+  faUsers, 
+  faDollarSign,
+  faClock,
+  faStar,
+  faArrowUp,
+  faArrowDown,
+  faPlus,
+  faSync
+} from '@fortawesome/free-solid-svg-icons';
 import { Card, CardContent, CardHeader, CardTitle } from '@grub-gate/ui';
 import analyticsService from '../../services/analyticsService.js';
 import { useRestaurant } from '../../contexts/RestaurantContext.jsx';
@@ -128,7 +129,7 @@ const DashboardHome = () => {
       title: t('dashboard.stats.totalOrders'),
       value: overview.totalOrders?.current || 0,
       change: overview.totalOrders?.growth || 0,
-      icon: ShoppingBag,
+      icon: faShoppingBag,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100'
     },
@@ -136,7 +137,7 @@ const DashboardHome = () => {
       title: t('dashboard.stats.totalRevenue'),
       value: `$${(overview.totalRevenue?.current || 0).toLocaleString()}`,
       change: overview.totalRevenue?.growth || 0,
-      icon: DollarSign,
+      icon: faDollarSign,
       color: 'text-green-600',
       bgColor: 'bg-green-100'
     },
@@ -144,7 +145,7 @@ const DashboardHome = () => {
       title: t('dashboard.stats.activeSubscribers'),
       value: overview.activeCustomers?.current || 0,
       change: overview.activeCustomers?.growth || 0,
-      icon: Users,
+      icon: faUsers,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100'
     },
@@ -152,7 +153,7 @@ const DashboardHome = () => {
       title: t('dashboard.stats.avgOrderValue'),
       value: `$${(overview.avgOrderValue?.current || 0).toFixed(2)}`,
       change: overview.avgOrderValue?.growth || 0,
-      icon: TrendingUp,
+      icon: faArrowTrendUp,
       color: 'text-orange-600',
       bgColor: 'bg-orange-100'
     }
@@ -218,7 +219,7 @@ const DashboardHome = () => {
                 className="p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all duration-200 disabled:opacity-50"
                 title="Refresh dashboard data"
               >
-                <RefreshCw className={`h-4 w-4 text-white ${refreshing ? 'animate-spin' : ''}`} />
+                <FontAwesomeIcon icon={faSync} className={`h-4 w-4 text-white ${refreshing ? 'animate-spin' : ''}`} />
               </button>
             </div>
           )}
@@ -256,9 +257,9 @@ const DashboardHome = () => {
                     <div className="flex items-center space-x-2 flex-shrink-0">
                       <span className={`inline-flex items-center text-xs font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
                         {isPositive ? (
-                          <ArrowUpRight className="h-4 w-4 mr-0.5" />
+                          <FontAwesomeIcon icon={faArrowUp} className="h-4 w-4 mr-0.5" />
                         ) : (
-                          <ArrowDownRight className="h-4 w-4 mr-0.5" />
+                          <FontAwesomeIcon icon={faArrowDown} className="h-4 w-4 mr-0.5" />
                         )}
                         {Math.abs(stat.change)}%
                       </span>
@@ -272,7 +273,7 @@ const DashboardHome = () => {
                       {stat.value}
                     </p>
                     <div className={`h-10 w-10 rounded-full flex items-center justify-center ${stat.bgColor}`}>
-                      <Icon className={`h-5 w-5 ${stat.color}`} />
+                      <FontAwesomeIcon icon={Icon} className={`h-5 w-5 ${stat.color}`} />
                     </div>
                   </div>
                 </div>
@@ -353,7 +354,7 @@ const DashboardHome = () => {
               ) : (
                 <div className="text-center py-8">
                   <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <ShoppingBag className="h-6 w-6 text-gray-400" />
+                    <FontAwesomeIcon icon={faShoppingBag} className="h-6 w-6 text-gray-400" />
                   </div>
                   <p className="text-gray-500 text-sm mb-2">No recent orders yet</p>
                   <p className="text-gray-400 text-xs mb-3">Orders will appear here once customers start placing them</p>
@@ -390,7 +391,7 @@ const DashboardHome = () => {
                           {item.name}
                         </p>
                         <div className="flex items-center">
-                          <Star className="h-3 w-3 lg:h-4 lg:w-4 text-yellow-400 fill-current" />
+                          <FontAwesomeIcon icon={faStar} className="h-3 w-3 lg:h-4 lg:w-4 text-yellow-400" />
                           <span className="text-xs lg:text-sm text-gray-500 ml-1">
                             {item.rating} • ${item.price}
                           </span>
@@ -410,7 +411,7 @@ const DashboardHome = () => {
               ) : (
                 <div className="text-center py-8">
                   <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <ShoppingBag className="h-6 w-6 text-gray-400" />
+                    <FontAwesomeIcon icon={faShoppingBag} className="h-6 w-6 text-gray-400" />
                   </div>
                   <p className="text-gray-500 text-sm mb-2">No menu items yet</p>
                   <p className="text-gray-400 text-xs mb-3">Add menu items to start receiving orders</p>
@@ -440,7 +441,7 @@ const DashboardHome = () => {
             >
               <div className="flex items-center space-x-2 lg:space-x-3">
                 <div className="h-8 w-8 lg:h-10 lg:w-10 bg-blue-100 group-hover:bg-blue-200 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
-                  <Plus className="h-4 w-4 lg:h-5 lg:w-5 text-blue-600" />
+                  <FontAwesomeIcon icon={faPlus} className="h-4 w-4 lg:h-5 lg:w-5 text-blue-600" />
                 </div>
                 <div className="min-w-0">
                   <p className="font-medium text-gray-900 text-sm lg:text-base group-hover:text-grub-red transition-colors">Add Menu Item</p>
@@ -455,7 +456,7 @@ const DashboardHome = () => {
             >
               <div className="flex items-center space-x-2 lg:space-x-3">
                 <div className="h-8 w-8 lg:h-10 lg:w-10 bg-green-100 group-hover:bg-green-200 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
-                  <TrendingUp className="h-4 w-4 lg:h-5 lg:w-5 text-green-600" />
+                  <FontAwesomeIcon icon={faArrowTrendUp} className="h-4 w-4 lg:h-5 lg:w-5 text-green-600" />
                 </div>
                 <div className="min-w-0">
                   <p className="font-medium text-gray-900 text-sm lg:text-base group-hover:text-grub-red transition-colors">View Analytics</p>
@@ -470,7 +471,7 @@ const DashboardHome = () => {
             >
               <div className="flex items-center space-x-2 lg:space-x-3">
                 <div className="h-8 w-8 lg:h-10 lg:w-10 bg-purple-100 group-hover:bg-purple-200 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
-                  <Users className="h-4 w-4 lg:h-5 lg:w-5 text-purple-600" />
+                  <FontAwesomeIcon icon={faUsers} className="h-4 w-4 lg:h-5 lg:w-5 text-purple-600" />
                 </div>
                 <div className="min-w-0">
                   <p className="font-medium text-gray-900 text-sm lg:text-base group-hover:text-grub-red transition-colors">Manage Customers</p>

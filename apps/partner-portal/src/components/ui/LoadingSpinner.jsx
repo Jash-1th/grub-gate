@@ -1,6 +1,7 @@
 // FILE: src/components/ui/LoadingSpinner.jsx
 import React from 'react';
-import { Loader2 } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 /**
  * SSR-safe loading spinner component
@@ -21,7 +22,7 @@ const LoadingSpinner = ({
 
   const spinnerContent = (
     <div className={`flex flex-col items-center justify-center space-y-3 ${className}`}>
-      <Loader2 className={`animate-spin text-grub-red ${sizeClasses[size]}`} />
+      <FontAwesomeIcon icon={faSpinner} className={`animate-spin text-grub-red ${sizeClasses[size]}`} />
       {showText && (
         <p className="text-sm text-gray-600 font-medium">{text}</p>
       )}

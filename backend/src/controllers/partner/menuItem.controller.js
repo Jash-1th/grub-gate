@@ -166,12 +166,60 @@ const createPartnerMenuItem = asyncHandler(async (req, res) => {
   // Add restaurant ID to request body - use actual ObjectId
   req.body.restaurantId = restaurant._id;
 
+  // Debug: Log received data
+  console.log('📥 Backend received menu item data:', req.body);
+  
+  // Handle availability parsing if it's a string (from FormData)
+  if (req.body.availability && typeof req.body.availability === 'string') {
+    try {
+      console.log('📥 Parsing availability string:', req.body.availability);
+      req.body.availability = JSON.parse(req.body.availability);
+      console.log('📥 Parsed availability:', req.body.availability);
+      
+      // Ensure all values are proper booleans
+      Object.keys(req.body.availability).forEach(day => {
+        if (req.body.availability[day]) {
+          req.body.availability[day].lunch = Boolean(req.body.availability[day].lunch);
+          req.body.availability[day].dinner = Boolean(req.body.availability[day].dinner);
+        }
+      });
+      
+      console.log('📥 Cleaned availability:', req.body.availability);
+    } catch (error) {
+      console.error('📥 Error parsing availability:', error);
+      return errorResponse(res, 'Invalid availability format', 400);
+    }
+  }
+
   // Handle image upload if provided
   if (req.file) {
     req.body.image = req.file.path; // Cloudinary URL
   }
 
+  // Ensure numeric fields are properly converted
+  if (req.body.price) {
+    req.body.price = parseFloat(req.body.price);
+    console.log('📥 Converted price to number:', req.body.price);
+  }
+  
+  if (req.body.prepTime) {
+    req.body.prepTime = parseInt(req.body.prepTime);
+    console.log('📥 Converted prepTime to number:', req.body.prepTime);
+  }
+  
+  if (req.body.servings) {
+    req.body.servings = parseInt(req.body.servings);
+    console.log('📥 Converted servings to number:', req.body.servings);
+  }
+  
+  if (req.body.spiceLevel) {
+    req.body.spiceLevel = parseInt(req.body.spiceLevel);
+    console.log('📥 Converted spiceLevel to number:', req.body.spiceLevel);
+  }
+
+  console.log('📥 Final data before creating menu item:', req.body);
   const menuItem = await MenuItem.create(req.body);
+  console.log('📥 Created menu item with availability:', menuItem.availability);
 
   createdResponse(res, { menuItem }, 'Menu item created successfully');
 });
@@ -197,6 +245,31 @@ const updatePartnerMenuItem = asyncHandler(async (req, res) => {
     return notFoundResponse(res, 'Menu item not found');
   }
 
+  // Debug: Log received update data
+  console.log('📥 Backend received menu item update data:', req.body);
+  
+  // Handle availability parsing if it's a string (from FormData)
+  if (req.body.availability && typeof req.body.availability === 'string') {
+    try {
+      console.log('📥 Parsing availability string for update:', req.body.availability);
+      req.body.availability = JSON.parse(req.body.availability);
+      console.log('📥 Parsed availability for update:', req.body.availability);
+      
+      // Ensure all values are proper booleans
+      Object.keys(req.body.availability).forEach(day => {
+        if (req.body.availability[day]) {
+          req.body.availability[day].lunch = Boolean(req.body.availability[day].lunch);
+          req.body.availability[day].dinner = Boolean(req.body.availability[day].dinner);
+        }
+      });
+      
+      console.log('📥 Cleaned availability for update:', req.body.availability);
+    } catch (error) {
+      console.error('📥 Error parsing availability for update:', error);
+      return errorResponse(res, 'Invalid availability format', 400);
+    }
+  }
+
   // Handle image upload if provided
   if (req.file) {
     // Delete old image from Cloudinary if exists
@@ -209,6 +282,27 @@ const updatePartnerMenuItem = asyncHandler(async (req, res) => {
       }
     }
     req.body.image = req.file.path; // New Cloudinary URL
+  }
+
+  // Ensure numeric fields are properly converted for updates
+  if (req.body.price !== undefined) {
+    req.body.price = parseFloat(req.body.price);
+    console.log('📥 Converted price to number for update:', req.body.price);
+  }
+  
+  if (req.body.prepTime !== undefined) {
+    req.body.prepTime = parseInt(req.body.prepTime);
+    console.log('📥 Converted prepTime to number for update:', req.body.prepTime);
+  }
+  
+  if (req.body.servings !== undefined) {
+    req.body.servings = parseInt(req.body.servings);
+    console.log('📥 Converted servings to number for update:', req.body.servings);
+  }
+  
+  if (req.body.spiceLevel !== undefined) {
+    req.body.spiceLevel = parseInt(req.body.spiceLevel);
+    console.log('📥 Converted spiceLevel to number for update:', req.body.spiceLevel);
   }
 
   const menuItem = await MenuItem.findOneAndUpdate(
