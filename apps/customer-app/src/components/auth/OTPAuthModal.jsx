@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useModal } from '../../context/ModalContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
+import apiClient from '../../api/apiClient';
 import WelcomeBackModal from './WelcomeBackModal';
 import './modal-responsive.css';
 
@@ -211,20 +212,14 @@ const OTPAuthModal = () => {
     setIsLocalLoading(true);
     
     try {
-      const response = await fetch('/api/v1/auth/otp/request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          identifier: formData.identifier,
-          channel: formData.channel
-        }),
+      const response = await apiClient.post('/auth/otp/request', {
+        identifier: formData.identifier,
+        channel: formData.channel
       });
       
-      const result = await response.json();
+      const result = response.data;
       
-      if (response.ok && result.status === 'success') {
+      if (result.status === 'success') {
         // User doesn't exist - proceed with signup flow
         setCurrentStep('verification');
         setOtpTimer(300); // 5 minutes
@@ -233,12 +228,6 @@ const OTPAuthModal = () => {
           'Verification Code Sent!',
           `We've sent a 6-digit code to your ${formData.channel === 'email' ? 'email' : 'phone number'}.`
         );
-      } else if (response.status === 409) {
-        // User already exists - show helpful message with login guidance
-        const errorMessage = result.message || 'Account already exists';
-        setFormErrors({ 
-          general: `${errorMessage} Please close this modal and use the "Login" option in the top menu to sign in with your existing password.`
-        });
       } else {
         // Other errors
         const errorMessage = result.message || 'Failed to send verification code';
@@ -246,7 +235,10 @@ const OTPAuthModal = () => {
       }
     } catch (error) {
       console.error('Request OTP Error:', error);
-      setFormErrors({ general: 'Failed to send verification code. Please try again.' });
+      
+      // Handle axios error responses
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to send verification code. Please try again.';
+      setFormErrors({ general: errorMessage });
     } finally {
       setIsLocalLoading(false);
     }
@@ -275,22 +267,16 @@ const OTPAuthModal = () => {
     
     try {
       // Try to verify OTP with minimal data - this will tell us if user exists
-      const response = await fetch('/api/v1/auth/otp/check', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          identifier: formData.identifier,
-          otp: formData.otp,
-          userType: 'customer'
-        }),
+      const response = await apiClient.post('/auth/otp/check', {
+        identifier: formData.identifier,
+        otp: formData.otp,
+        userType: 'customer'
       });
       
-      const result = await response.json();
+      const result = response.data;
       console.log('🔍 OTP Verification Response:', { status: response.status, result });
       
-      if (response.ok && result.status === 'success') {
+      if (result.status === 'success') {
         // User exists and OTP verified - complete login immediately
         localStorage.setItem('accessToken', result.data.accessToken);
         if (result.data.refreshToken) {
@@ -303,18 +289,23 @@ const OTPAuthModal = () => {
           'Welcome Back!',
           `Great to see you again, ${result.data.user.firstName}!`
         );
-      } else if (response.status === 404 && result.message && result.message.includes('User not found')) {
-        // User doesn't exist but OTP is valid - collect user info for signup
-        setOtpVerified(true);
-        setIsNewUser(true);
-        setCurrentStep('userInfo');
       } else {
         // Invalid OTP or other error
         setFormErrors({ general: result.message || 'Invalid verification code. Please try again.' });
       }
     } catch (error) {
       console.error('OTP Verification Error:', error);
-      setFormErrors({ general: 'Failed to verify code. Please try again.' });
+      
+      // Handle axios error responses
+      if (error.response?.status === 404 && error.response?.data?.message?.includes('User not found')) {
+        // User doesn't exist but OTP is valid - collect user info for signup
+        setOtpVerified(true);
+        setIsNewUser(true);
+        setCurrentStep('userInfo');
+      } else {
+        const errorMessage = error.response?.data?.message || error.message || 'Failed to verify code. Please try again.';
+        setFormErrors({ general: errorMessage });
+      }
     } finally {
       setIsLocalLoading(false);
     }
@@ -473,20 +464,14 @@ const OTPAuthModal = () => {
     setIsLocalLoading(true);
     
     try {
-      const response = await fetch('/api/v1/auth/otp/request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          identifier: formData.identifier,
-          channel: formData.channel
-        }),
+      const response = await apiClient.post('/auth/otp/request', {
+        identifier: formData.identifier,
+        channel: formData.channel
       });
       
-      const result = await response.json();
+      const result = response.data;
       
-      if (result.success) {
+      if (result.status === 'success') {
         setOtpTimer(300); // 5 minutes
         setCanResend(false);
         setFormData(prev => ({ ...prev, otp: '' })); // Clear OTP field
