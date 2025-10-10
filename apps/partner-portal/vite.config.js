@@ -52,6 +52,7 @@ export default ({ mode }) => {
     
     build: {
       outDir: 'dist/client',
+      manifest: true, // Generate manifest.json for SSR
       rollupOptions: {
         input: path.resolve(__dirname, 'index.html'),
         output: {

@@ -216,6 +216,8 @@ exports.handler = async (event, context) => {
         // Last resort hardcoded fallback (will be updated by build process)
         cssFile = cssFile || '/assets/index-DKLhbucu.css';
         jsFile = jsFile || '/assets/index-DRdxD5vn.js';
+        
+        console.log('🎯 Using hardcoded fallback assets:', { cssFile, jsFile });
       }
     }
     
@@ -284,6 +286,8 @@ exports.handler = async (event, context) => {
     let { cssFile, jsFile } = getAssetPaths();
     cssFile = cssFile || '/assets/index-DKLhbucu.css';
     jsFile = jsFile || '/assets/index-DRdxD5vn.js';
+    
+    console.log('🚨 Error state - using fallback assets:', { cssFile, jsFile });
     
     // Ultra-minimal fallback with dynamic asset names
     return {

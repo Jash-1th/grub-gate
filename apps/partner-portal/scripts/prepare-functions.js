@@ -52,6 +52,37 @@ try {
     console.warn('⚠️  Functions will extract assets from HTML template');
   }
   
+  // Update SSR function with correct asset names from manifest
+  const ssrFunctionPath = path.join(__dirname, '../netlify/functions/ssr.cjs');
+  if (fs.existsSync(sourceManifest) && fs.existsSync(ssrFunctionPath)) {
+    try {
+      const manifest = JSON.parse(fs.readFileSync(sourceManifest, 'utf8'));
+      let ssrContent = fs.readFileSync(ssrFunctionPath, 'utf8');
+      
+      // Extract correct asset names from manifest
+      const mainEntry = manifest['index.html'];
+      if (mainEntry) {
+        const correctCssFile = mainEntry.css && mainEntry.css[0] ? `/assets/${path.basename(mainEntry.css[0])}` : '/assets/index-DKLhbucu.css';
+        const correctJsFile = mainEntry.file ? `/assets/${path.basename(mainEntry.file)}` : '/assets/index-DRdxD5vn.js';
+        
+        // Update hardcoded fallback asset names in SSR function
+        ssrContent = ssrContent.replace(
+          /cssFile = cssFile \|\| '\/assets\/[^']+';/g,
+          `cssFile = cssFile || '${correctCssFile}';`
+        );
+        ssrContent = ssrContent.replace(
+          /jsFile = jsFile \|\| '\/assets\/[^']+';/g,
+          `jsFile = jsFile || '${correctJsFile}';`
+        );
+        
+        fs.writeFileSync(ssrFunctionPath, ssrContent);
+        console.log('✅ Updated SSR function with correct asset names:', { correctCssFile, correctJsFile });
+      }
+    } catch (err) {
+      console.warn('⚠️ Could not update SSR function asset names:', err.message);
+    }
+  }
+  
   console.log('🎉 Functions preparation completed successfully');
 } catch (error) {
   console.error('❌ Error preparing functions:', error.message);
