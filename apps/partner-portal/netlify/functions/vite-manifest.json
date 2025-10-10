@@ -1,6 +1,6 @@
 {
   "../../node_modules/recharts/es6/index.js": {
-    "file": "assets/index-DHQ066yb.js",
+    "file": "assets/index-CoLVKqQh.js",
     "name": "index",
     "src": "../../node_modules/recharts/es6/index.js",
     "isDynamicEntry": true,
@@ -9,7 +9,7 @@
     ]
   },
   "index.html": {
-    "file": "assets/index-DRdxD5vn.js",
+    "file": "assets/index-BrOpJj1S.js",
     "name": "index",
     "src": "index.html",
     "isEntry": true,

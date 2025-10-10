@@ -768,7 +768,7 @@ const OrdersPage = () => {
                 <div className="bg-white border border-gray-200 rounded-lg p-2.5 sm:p-3">
                   <div className="flex items-center mb-2">
                     <div className="bg-blue-100 rounded-full p-1 mr-2">
-                      <User className="h-3 w-3 text-blue-600" />
+                      <FontAwesomeIcon icon={faUser} className="h-3 w-3 text-blue-600" />
                     </div>
                     <h3 className="text-xs sm:text-sm font-semibold text-gray-900">Customer & Delivery</h3>
                   </div>
