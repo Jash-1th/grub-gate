@@ -77,9 +77,7 @@ export default ({ mode }) => {
       target: 'esnext',
       assetsDir: 'assets',
       rollupOptions: {
-        input: {
-          main: path.resolve(__dirname, 'index.html')
-        },
+        input: path.resolve(__dirname, 'index.html'),
         output: {
           manualChunks: undefined,
           assetFileNames: 'assets/[name]-[hash][extname]',

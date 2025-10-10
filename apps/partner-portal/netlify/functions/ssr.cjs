@@ -122,8 +122,8 @@ exports.handler = async (event, context) => {
     }
 
     // Extract asset names from the built index.html file
-    let cssFile = '/assets/main-DKLhbucu.css';  // Updated to current build
-    let jsFile = '/assets/main-psHmYgF9.js';    // Updated to current build
+    let cssFile = '/assets/index-DKLhbucu.css';  // Updated to current build
+    let jsFile = '/assets/index-DRdxD5vn.js';    // Updated to current build
     
     try {
       // Try to extract asset names from the built index.html
@@ -211,9 +211,9 @@ exports.handler = async (event, context) => {
       statusCode: 200,
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
       body: `<!DOCTYPE html>
-<html><head><title>GrubGate</title><link rel="stylesheet" href="/assets/main-DKLhbucu.css" /></head>
+<html><head><title>GrubGate</title><link rel="stylesheet" href="/assets/index-DKLhbucu.css" /></head>
 <body><div id="root"></div>
-<script type="module" src="/assets/main-psHmYgF9.js"></script>
+<script type="module" src="/assets/index-DRdxD5vn.js"></script>
 </body></html>`
     };
   }
