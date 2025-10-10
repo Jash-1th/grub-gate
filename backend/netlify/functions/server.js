@@ -12,7 +12,7 @@ module.exports.handler = async (event, context) => {
     return {
       statusCode: 200,
       headers: {
-        'Access-Control-Allow-Origin': (process.env.CORS_ORIGIN || 'https://ggc01.netlify.app').replace(/\/$/, ''),
+        'Access-Control-Allow-Origin': (process.env.CORS_ORIGIN || 'https://gg0c1.netlify.app').replace(/\/$/, ''),
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Credentials': 'true',
@@ -25,7 +25,7 @@ module.exports.handler = async (event, context) => {
   
   // Add CORS headers to all responses
   if (result.headers) {
-    result.headers['Access-Control-Allow-Origin'] = (process.env.CORS_ORIGIN || 'https://ggc01.netlify.app').replace(/\/$/, '');
+    result.headers['Access-Control-Allow-Origin'] = (process.env.CORS_ORIGIN || 'https://gg0c1.netlify.app').replace(/\/$/, '');
     result.headers['Access-Control-Allow-Credentials'] = 'true';
   }
   
