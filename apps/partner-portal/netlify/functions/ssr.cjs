@@ -139,12 +139,16 @@ exports.handler = async (event, context) => {
     // Don't handle static assets - let Netlify serve them directly
     if (urlPath.match(/\.(js|jsx|ts|tsx|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json|xml|txt|map)$/) || 
         urlPath.startsWith('/assets/') || 
+        urlPath.startsWith('/icons/') || 
+        urlPath.startsWith('/images/') || 
+        urlPath.startsWith('/manifest.json') || 
+        urlPath.startsWith('/service-worker.js') || 
         urlPath.startsWith('/api/') || 
         urlPath.startsWith('/.netlify/')) {
       return {
         statusCode: 404,
         headers: { 'Content-Type': 'text/plain' },
-        body: 'Not found'
+        body: 'Static asset - should be handled by Netlify'
       };
     }
 
