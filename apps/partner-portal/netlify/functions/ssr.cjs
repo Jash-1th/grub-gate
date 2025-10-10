@@ -121,19 +121,28 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Try to read manifest for correct asset names
-    let cssFile = '/assets/main-CRYXJeK2.css';
-    let jsFile = '/assets/main-DePyc7YF.js';
+    // Extract asset names from the built index.html file
+    let cssFile = '/assets/main-DKLhbucu.css';  // Updated to current build
+    let jsFile = '/assets/main-psHmYgF9.js';    // Updated to current build
     
     try {
-      const manifestPath = path.join(__dirname, 'manifest.json');
-      if (fs.existsSync(manifestPath)) {
-        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-        if (manifest['main.css']) cssFile = manifest['main.css'];
-        if (manifest['main.js']) jsFile = manifest['main.js'];
+      // Try to extract asset names from the built index.html
+      const indexPath = path.join(__dirname, 'index.html');
+      if (fs.existsSync(indexPath)) {
+        const indexContent = fs.readFileSync(indexPath, 'utf8');
+        
+        // Extract CSS file from link tag
+        const cssMatch = indexContent.match(/href="([^"]*\.css)"/);
+        if (cssMatch) cssFile = cssMatch[1];
+        
+        // Extract JS file from script tag
+        const jsMatch = indexContent.match(/src="([^"]*\.js)"/);
+        if (jsMatch) jsFile = jsMatch[1];
+        
+        console.log('✅ Extracted assets from index.html:', { cssFile, jsFile });
       }
     } catch (err) {
-      // Use fallback assets if manifest reading fails
+      console.log('⚠️ Could not extract assets from index.html, using fallback:', err.message);
     }
     
     // Ultra-simple fallback HTML - no complex operations
@@ -197,14 +206,14 @@ exports.handler = async (event, context) => {
   } catch (error) {
     console.error('❌ SSR Error:', error);
     
-    // Ultra-minimal fallback
+    // Ultra-minimal fallback with current asset names
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
       body: `<!DOCTYPE html>
-<html><head><title>GrubGate</title><link rel="stylesheet" href="${cssFile}" /></head>
+<html><head><title>GrubGate</title><link rel="stylesheet" href="/assets/main-DKLhbucu.css" /></head>
 <body><div id="root"></div>
-<script type="module" src="${jsFile}"></script>
+<script type="module" src="/assets/main-psHmYgF9.js"></script>
 </body></html>`
     };
   }
