@@ -161,32 +161,36 @@ app.use('*', (req, res) => {
 // Global error handler (must be last)
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
+// Export the app for serverless functions
+module.exports = app;
 
-const server = app.listen(PORT, () => {
-  console.log(`🚀 GrubGate API Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
-});
+// Only start server if not in serverless environment
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000;
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err, promise) => {
-  console.log(`❌ Unhandled Rejection: ${err.message}`);
-  server.close(() => {
+  const server = app.listen(PORT, () => {
+    console.log(`🚀 GrubGate API Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
+  });
+
+  // Handle unhandled promise rejections
+  process.on('unhandledRejection', (err, promise) => {
+    console.log(`❌ Unhandled Rejection: ${err.message}`);
+    server.close(() => {
+      process.exit(1);
+    });
+  });
+
+  // Handle uncaught exceptions
+  process.on('uncaughtException', (err) => {
+    console.log(`❌ Uncaught Exception: ${err.message}`);
     process.exit(1);
   });
-});
 
-// Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  console.log(`❌ Uncaught Exception: ${err.message}`);
-  process.exit(1);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('👋 SIGTERM received. Shutting down gracefully...');
-  server.close(() => {
-    console.log('💤 Process terminated');
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    console.log('👋 SIGTERM received. Shutting down gracefully...');
+    server.close(() => {
+      console.log('💤 Process terminated');
+    });
   });
-});
-
-module.exports = app;
+}

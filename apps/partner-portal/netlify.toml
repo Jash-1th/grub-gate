@@ -2,7 +2,7 @@
 
 [build]
   # Install dependencies from root but exclude problematic packages
-  command = "cd ../.. && rm -rf node_modules package-lock.json && npm install && cd apps/partner-portal && npm run build && mkdir -p dist/assets && cp -r dist/client/assets/* dist/assets/ && cp dist/client/*.* dist/"
+  command = "cd ../.. && npm install && cd apps/partner-portal && npm run build && node -e \"const fs=require('fs'),path=require('path');['assets','icons','images'].forEach(d=>fs.mkdirSync(path.join('dist',d),{recursive:true}));const copy=(s,d)=>{try{fs.cpSync(s,d,{recursive:true,force:true})}catch(e){}};copy('dist/client/assets','dist/assets');copy('dist/client/icons','dist/icons');copy('dist/client/images','dist/images');['index.html','manifest.json','service-worker.js'].forEach(f=>{try{fs.copyFileSync(path.join('dist/client',f),path.join('dist',f))}catch(e){}});\""
   
   # The directory with the static assets from the client build (relative to base directory)
   # Changed to match Netlify dashboard setting
