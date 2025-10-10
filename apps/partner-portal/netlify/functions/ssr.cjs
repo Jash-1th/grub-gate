@@ -126,14 +126,37 @@ exports.handler = async (event, context) => {
     let jsFile = '/assets/main-DePyc7YF.js';
     
     try {
-      const manifestPath = path.join(__dirname, 'manifest.json');
-      if (fs.existsSync(manifestPath)) {
-        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-        if (manifest['main.css']) cssFile = manifest['main.css'];
-        if (manifest['main.js']) jsFile = manifest['main.js'];
+      // Try multiple manifest locations and structures
+      const manifestPaths = [
+        path.join(__dirname, '../../dist/client/manifest.json'),
+        path.join(__dirname, '../dist/client/manifest.json'),
+        path.join(__dirname, 'manifest.json'),
+        path.join(__dirname, '../../dist/client/.vite/manifest.json')
+      ];
+      
+      for (const manifestPath of manifestPaths) {
+        if (fs.existsSync(manifestPath)) {
+          const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+          
+          // Try different manifest structures
+          if (manifest['src/main.jsx']) {
+            const entry = manifest['src/main.jsx'];
+            if (entry.css && entry.css[0]) cssFile = '/' + entry.css[0];
+            if (entry.file) jsFile = '/' + entry.file;
+            break;
+          } else if (manifest['main.css']) {
+            cssFile = manifest['main.css'];
+            jsFile = manifest['main.js'];
+            break;
+          } else if (manifest.main) {
+            if (manifest.main.css) cssFile = manifest.main.css;
+            if (manifest.main.js) jsFile = manifest.main.js;
+            break;
+          }
+        }
       }
     } catch (err) {
-      // Use fallback assets if manifest reading fails
+      console.log('⚠️ Could not read manifest, using fallback assets:', err.message);
     }
     
     // Ultra-simple fallback HTML - no complex operations
