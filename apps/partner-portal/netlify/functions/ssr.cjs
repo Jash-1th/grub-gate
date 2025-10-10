@@ -120,6 +120,21 @@ exports.handler = async (event, context) => {
         body: cachedTemplate
       };
     }
+
+    // Try to read manifest for correct asset names
+    let cssFile = '/assets/main-CRYXJeK2.css';
+    let jsFile = '/assets/main-DePyc7YF.js';
+    
+    try {
+      const manifestPath = path.join(__dirname, 'manifest.json');
+      if (fs.existsSync(manifestPath)) {
+        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+        if (manifest['main.css']) cssFile = manifest['main.css'];
+        if (manifest['main.js']) jsFile = manifest['main.js'];
+      }
+    } catch (err) {
+      // Use fallback assets if manifest reading fails
+    }
     
     // Ultra-simple fallback HTML - no complex operations
     const html = `<!DOCTYPE html>
@@ -145,8 +160,8 @@ exports.handler = async (event, context) => {
     <p>Loading...</p>
   </div>
   <div id="root"></div>
-  <link rel="stylesheet" href="/assets/main-CRYXJeK2.css" />
-  <script type="module" src="/assets/main-DePyc7YF.js"></script>
+  <link rel="stylesheet" href="${cssFile}" />
+  <script type="module" src="${jsFile}"></script>
   <script>
     // Hide loading screen when React app mounts
     const observer = new MutationObserver(() => {
@@ -187,9 +202,9 @@ exports.handler = async (event, context) => {
       statusCode: 200,
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
       body: `<!DOCTYPE html>
-<html><head><title>GrubGate</title><link rel="stylesheet" href="/assets/main-CRYXJeK2.css" /></head>
+<html><head><title>GrubGate</title><link rel="stylesheet" href="${cssFile}" /></head>
 <body><div id="root"></div>
-<script type="module" src="/assets/main-DePyc7YF.js"></script>
+<script type="module" src="${jsFile}"></script>
 </body></html>`
     };
   }
