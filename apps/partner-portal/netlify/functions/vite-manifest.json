@@ -1,0 +1,23 @@
+{
+  "../../node_modules/recharts/es6/index.js": {
+    "file": "assets/index-DHQ066yb.js",
+    "name": "index",
+    "src": "../../node_modules/recharts/es6/index.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html"
+    ]
+  },
+  "index.html": {
+    "file": "assets/index-DRdxD5vn.js",
+    "name": "index",
+    "src": "index.html",
+    "isEntry": true,
+    "dynamicImports": [
+      "../../node_modules/recharts/es6/index.js"
+    ],
+    "css": [
+      "assets/index-DKLhbucu.css"
+    ]
+  }
+}

@@ -71,6 +71,7 @@ export default ({ mode }) => {
       }
     },
     build: {
+      manifest: true, // ✅ Generate manifest.json for dynamic asset loading
       outDir: 'dist/client',
       sourcemap: true,
       minify: 'terser',

@@ -2,8 +2,59 @@
 const fs = require('fs');
 const path = require('path');
 
-// Simple cached template - avoid complex operations that could timeout
+// Cached template and manifest - avoid complex operations that could timeout
 let cachedTemplate = null;
+let cachedManifest = null;
+
+// Load vite-manifest.json to get dynamic asset names
+const loadManifest = () => {
+  if (cachedManifest) return cachedManifest;
+  
+  try {
+    const manifestPath = path.join(__dirname, 'vite-manifest.json');
+    if (fs.existsSync(manifestPath)) {
+      const manifestContent = fs.readFileSync(manifestPath, 'utf8');
+      cachedManifest = JSON.parse(manifestContent);
+      console.log('✅ Loaded vite-manifest.json successfully');
+      return cachedManifest;
+    }
+  } catch (err) {
+    console.warn('⚠️ Could not load vite-manifest.json:', err.message);
+  }
+  
+  return null;
+};
+
+// Extract asset paths from Vite manifest
+const getAssetPaths = () => {
+  const manifest = loadManifest();
+  
+  if (!manifest) {
+    console.warn('⚠️ No Vite manifest found, using fallback asset detection');
+    return { cssFile: null, jsFile: null };
+  }
+  
+  // Find the main entry point (usually index.html or src/main.jsx)
+  let mainEntry = manifest['index.html'] || manifest['src/main.jsx'] || manifest['main.jsx'];
+  
+  // If no direct entry, find the first entry that has a file property
+  if (!mainEntry) {
+    const entries = Object.values(manifest);
+    mainEntry = entries.find(entry => entry.isEntry && entry.file);
+  }
+  
+  if (!mainEntry) {
+    console.warn('⚠️ No main entry found in Vite manifest');
+    return { cssFile: null, jsFile: null };
+  }
+  
+  // Extract CSS and JS files from the entry
+  const cssFile = mainEntry.css && mainEntry.css.length > 0 ? `/${mainEntry.css[0]}` : null;
+  const jsFile = mainEntry.file ? `/${mainEntry.file}` : null;
+  
+  console.log('✅ Extracted assets from Vite manifest:', { cssFile, jsFile });
+  return { cssFile, jsFile };
+};
 
 // Generate meta tags for SEO
 const generateMetaTags = (url, userAgent) => {
@@ -121,28 +172,37 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Extract asset names from the built index.html file
-    let cssFile = '/assets/index-DKLhbucu.css';  // Updated to current build
-    let jsFile = '/assets/index-DRdxD5vn.js';    // Updated to current build
+    // Get dynamic asset paths from manifest
+    let { cssFile, jsFile } = getAssetPaths();
     
-    try {
-      // Try to extract asset names from the built index.html
-      const indexPath = path.join(__dirname, 'index.html');
-      if (fs.existsSync(indexPath)) {
-        const indexContent = fs.readFileSync(indexPath, 'utf8');
-        
-        // Extract CSS file from link tag
-        const cssMatch = indexContent.match(/href="([^"]*\.css)"/);
-        if (cssMatch) cssFile = cssMatch[1];
-        
-        // Extract JS file from script tag
-        const jsMatch = indexContent.match(/src="([^"]*\.js)"/);
-        if (jsMatch) jsFile = jsMatch[1];
-        
-        console.log('✅ Extracted assets from index.html:', { cssFile, jsFile });
+    // Fallback: try to extract asset names from the built index.html file
+    if (!cssFile || !jsFile) {
+      console.log('⚠️ Manifest assets not found, trying HTML extraction fallback');
+      try {
+        const indexPath = path.join(__dirname, 'index.html');
+        if (fs.existsSync(indexPath)) {
+          const indexContent = fs.readFileSync(indexPath, 'utf8');
+          
+          // Extract CSS file from link tag
+          if (!cssFile) {
+            const cssMatch = indexContent.match(/href="([^"]*\.css)"/);
+            if (cssMatch) cssFile = cssMatch[1];
+          }
+          
+          // Extract JS file from script tag
+          if (!jsFile) {
+            const jsMatch = indexContent.match(/src="([^"]*\.js)"/);
+            if (jsMatch) jsFile = jsMatch[1];
+          }
+          
+          console.log('✅ Extracted assets from index.html fallback:', { cssFile, jsFile });
+        }
+      } catch (err) {
+        console.log('⚠️ Could not extract assets from index.html, using hardcoded fallback:', err.message);
+        // Last resort hardcoded fallback (will be updated by build process)
+        cssFile = cssFile || '/assets/index-DKLhbucu.css';
+        jsFile = jsFile || '/assets/index-DHQ066yb.js';
       }
-    } catch (err) {
-      console.log('⚠️ Could not extract assets from index.html, using fallback:', err.message);
     }
     
     // Ultra-simple fallback HTML - no complex operations
@@ -206,14 +266,19 @@ exports.handler = async (event, context) => {
   } catch (error) {
     console.error('❌ SSR Error:', error);
     
-    // Ultra-minimal fallback with current asset names
+    // Try to get assets even in error state
+    let { cssFile, jsFile } = getAssetPaths();
+    cssFile = cssFile || '/assets/index-DKLhbucu.css';
+    jsFile = jsFile || '/assets/index-DHQ066yb.js';
+    
+    // Ultra-minimal fallback with dynamic asset names
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'text/html; charset=utf-8' },
       body: `<!DOCTYPE html>
-<html><head><title>GrubGate</title><link rel="stylesheet" href="/assets/index-DKLhbucu.css" /></head>
+<html><head><title>GrubGate</title><link rel="stylesheet" href="${cssFile}" /></head>
 <body><div id="root"></div>
-<script type="module" src="/assets/index-DRdxD5vn.js"></script>
+<script type="module" src="${jsFile}"></script>
 </body></html>`
     };
   }

@@ -10,8 +10,8 @@ const __dirname = path.dirname(__filename);
 
 const sourceHtml = path.join(__dirname, '../dist/client/index.html');
 const targetHtml = path.join(__dirname, '../netlify/functions/index.html');
-const sourceManifest = path.join(__dirname, '../dist/client/manifest.json');
-const targetManifest = path.join(__dirname, '../netlify/functions/manifest.json');
+const sourceManifest = path.join(__dirname, '../dist/client/.vite/manifest.json');
+const targetManifest = path.join(__dirname, '../netlify/functions/vite-manifest.json');
 
 try {
   // Ensure the functions directory exists
