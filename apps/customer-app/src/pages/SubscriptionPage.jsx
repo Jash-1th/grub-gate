@@ -1,9 +1,33 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useMealPlan } from '../contexts/MealPlanContext_SSR_FIXED';
+import { useToast } from '../contexts/ToastContext';
 import SubscriptionPlans from '../components/planning/SubscriptionPlans';
 
 const SubscriptionPage = () => {
   const navigate = useNavigate();
+  const { getTotalItemsCount } = useMealPlan();
+  const { showError } = useToast();
+
+  // Check if user has selected at least one meal item
+  useEffect(() => {
+    const totalItems = getTotalItemsCount();
+    
+    if (totalItems === 0) {
+      showError(
+        'No Meals Selected',
+        'Please select at least one meal item before choosing a subscription plan.'
+      );
+      // Redirect to weekly menu page
+      navigate('/weekly-menu', { replace: true });
+    }
+  }, [getTotalItemsCount, navigate, showError]);
+
+  // Don't render the page if no items are selected
+  const totalItems = getTotalItemsCount();
+  if (totalItems === 0) {
+    return null; // Will redirect via useEffect
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">

@@ -60,10 +60,21 @@ const OTPAuthModal = () => {
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    // Enhanced phone number validation - only allow numbers, +, spaces, hyphens, parentheses
+    if (name === 'phoneNumber') {
+      // Remove any characters that aren't digits, +, spaces, hyphens, or parentheses
+      const cleanedValue = value.replace(/[^\d\+\s\-\(\)]/g, '');
+      setFormData(prev => ({
+        ...prev,
+        [name]: cleanedValue
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
     
     // Clear field-specific errors when user starts typing
     if (formErrors[name]) {
@@ -174,8 +185,12 @@ const OTPAuthModal = () => {
     
     if (!formData.phoneNumber) {
       errors.phoneNumber = 'Phone number is required';
-    } else if (!/^\+?[1-9]\d{1,14}$/.test(formData.phoneNumber)) {
-      errors.phoneNumber = 'Please enter a valid phone number';
+    } else {
+      // Clean phone number for validation (remove spaces, hyphens, parentheses)
+      const cleanPhone = formData.phoneNumber.replace(/[\s\-\(\)]/g, '');
+      if (!/^\+?[1-9]\d{7,14}$/.test(cleanPhone)) {
+        errors.phoneNumber = 'Please enter a valid phone number (e.g., +1234567890 or 1234567890)';
+      }
     }
     
     if (!formData.password) {
@@ -284,6 +299,15 @@ const OTPAuthModal = () => {
         }
         localStorage.setItem('user', JSON.stringify(result.data.user));
         
+        // Update AuthContext to automatically log in the user
+        if (otpLogin) {
+          try {
+            await otpLogin(result.data.user, result.data.accessToken, result.data.refreshToken);
+          } catch (authError) {
+            console.warn('Auth context update failed, but user is still logged in:', authError);
+          }
+        }
+        
         closeOTPAuthModal();
         showSuccess(
           'Welcome Back!',
@@ -339,8 +363,12 @@ const OTPAuthModal = () => {
     // If identifier is email, require phone
     if (isEmail && !formData.phoneNumber.trim()) {
       errors.phoneNumber = 'Phone number is required';
-    } else if (isEmail && formData.phoneNumber.trim() && !/^[+]?[1-9]\d{1,14}$/.test(formData.phoneNumber.replace(/[\s()-]/g, ''))) {
-      errors.phoneNumber = 'Please enter a valid phone number';
+    } else if (isEmail && formData.phoneNumber.trim()) {
+      // Clean phone number for validation (remove spaces, hyphens, parentheses)
+      const cleanPhone = formData.phoneNumber.replace(/[\s\-\(\)]/g, '');
+      if (!/^\+?[1-9]\d{7,14}$/.test(cleanPhone)) {
+        errors.phoneNumber = 'Please enter a valid phone number (e.g., +1234567890 or 1234567890)';
+      }
     }
     
     if (!formData.password) {
@@ -407,27 +435,8 @@ const OTPAuthModal = () => {
         phoneNumberValue: payload.phoneNumber
       });
       
-      const response = await fetch('/api/v1/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Registration Error Response:', errorText);
-        let errorData;
-        try {
-          errorData = JSON.parse(errorText);
-        } catch {
-          errorData = { message: errorText };
-        }
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-      
-      const result = await response.json();
+      const response = await apiClient.post('/auth/register', payload);
+      const result = response.data;
       console.log('✅ Registration Success Response:', result);
       
       if (result.status === 'success') {
@@ -438,14 +447,26 @@ const OTPAuthModal = () => {
         }
         localStorage.setItem('user', JSON.stringify(result.data.user));
         
+        // Update AuthContext to automatically log in the user
+        if (otpLogin) {
+          try {
+            await otpLogin(result.data.user, result.data.accessToken, result.data.refreshToken);
+          } catch (authError) {
+            console.warn('Auth context update failed, but user is still logged in:', authError);
+          }
+        }
+        
         // Close modal
         closeOTPAuthModal();
         
         // Show success message
         showSuccess(
           'Welcome to GrubGate!',
-          'Your account has been created successfully. Start planning your meals!'
+          `Account created successfully! Welcome, ${result.data.user.firstName}!`
         );
+        
+        // Optional: Navigate to dashboard or home page
+        // navigate('/dashboard');
       } else {
         setFormErrors({ general: result.message || 'Registration failed. Please try again.' });
       }
@@ -853,7 +874,9 @@ const OTPAuthModal = () => {
                     name="phoneNumber"
                     value={formData.phoneNumber}
                     onChange={handleInputChange}
-                    placeholder="+1234567890"
+                    placeholder="+1 (234) 567-8900"
+                    pattern="[\+]?[0-9\s\-\(\)]+"
+                    title="Please enter a valid phone number with only numbers, spaces, hyphens, and parentheses"
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
                       formErrors.phoneNumber ? 'border-red-300 bg-red-50' : 'border-gray-300'
                     }`}
@@ -1033,7 +1056,9 @@ const OTPAuthModal = () => {
                           name="phoneNumber"
                           value={!isEmailVerified ? formData.identifier : formData.phoneNumber}
                           onChange={!isEmailVerified ? undefined : handleInputChange}
-                          placeholder={!isEmailVerified ? "" : "Enter your phone number"}
+                          placeholder={!isEmailVerified ? "" : "+1 (234) 567-8900"}
+                          pattern="[\+]?[0-9\s\-\(\)]+"
+                          title="Please enter a valid phone number with only numbers, spaces, hyphens, and parentheses"
                           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
                             !isEmailVerified 
                               ? 'bg-green-50 border-green-300 cursor-not-allowed' 

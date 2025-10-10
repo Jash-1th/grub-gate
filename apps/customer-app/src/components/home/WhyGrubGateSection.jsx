@@ -1,8 +1,9 @@
 // src/components/home/WhyGrubGateSection.jsx
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
+import { getRestaurantStats } from '../../services/restaurantService';
 
 // Individual Benefit Card Component with Animation
 const BenefitCard = ({ benefit }) => {
@@ -40,7 +41,16 @@ const SpecialFeatureCard = ({ feature }) => {
       ref={cardRef}
       className={`text-center scroll-animate ${isVisible ? 'is-visible' : ''}`}
     >
-      <div className="text-2xl font-bold mb-2 text-gray-900">{feature.stat}</div>
+      <div className="text-2xl font-bold mb-2 text-gray-900 flex items-center justify-center">
+        {feature.isLoading && feature.id === '2' ? (
+          <div className="flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-grub-red"></div>
+            <span>Loading...</span>
+          </div>
+        ) : (
+          <span className={feature.id === '2' ? 'text-grub-red' : ''}>{feature.stat}</span>
+        )}
+      </div>
       <h4 className="text-lg font-semibold text-gray-900 mb-2">{t(`additionalFeatures.${feature.id}.title`)}</h4>
       <p className="text-gray-600 text-sm">{t(`additionalFeatures.${feature.id}.description`)}</p>
     </div>
@@ -49,6 +59,27 @@ const SpecialFeatureCard = ({ feature }) => {
 
 const WhyGrubGateSection = () => {
   const { t } = useTranslation();
+  const [restaurantCount, setRestaurantCount] = useState(500); // Default fallback
+  const [loading, setLoading] = useState(true);
+
+  // Fetch restaurant stats from backend
+  useEffect(() => {
+    const fetchRestaurantStats = async () => {
+      try {
+        const response = await getRestaurantStats();
+        if (response.success && response.data.totalRestaurants) {
+          setRestaurantCount(response.data.totalRestaurants);
+        }
+      } catch (error) {
+        console.error('Error fetching restaurant stats:', error);
+        // Keep default fallback value
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRestaurantStats();
+  }, []);
 
   // Data for the benefit cards to make the code cleaner
   const benefitsData = [
@@ -58,10 +89,14 @@ const WhyGrubGateSection = () => {
     { id: '4' }
   ];
 
-  // Data for the special features section
+  // Data for the special features section - now with dynamic restaurant count
   const specialFeaturesData = [
     { id: '1', stat: 'stress free' },
-    { id: '2', stat: '500+ restaurants' },
+    { 
+      id: '2', 
+      stat: loading ? '500+ restaurants' : `${restaurantCount}+ restaurants`,
+      isLoading: loading 
+    },
     { id: '3', stat: '24/7 available' },
     { id: '4', stat: '100% secure' }
   ];

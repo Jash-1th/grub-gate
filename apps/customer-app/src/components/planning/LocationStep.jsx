@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { useModal } from '../../context/ModalContext';
 import { usePlanning } from '../../contexts/PlanningContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
+import { getRestaurantsByPostalCode } from '../../services/restaurantService';
 import HowItWorksPlan from './HowItWorksPlan';
 import ScheduleDemo from './ScheduleDemo';
 
@@ -13,6 +15,7 @@ const LocationStep = ({ onNext }) => {
   const { openLoginModal, openSignupModal } = useModal();
   const { updatePostalCode, updatePreferences } = usePlanning();
   const { isAuthenticated } = useAuth();
+  const { showSuccess, showError } = useToast();
   const [postalCode, setPostalCode] = useState('');
   const [isSearching, setIsSearching] = useState(false);
 
@@ -24,20 +27,47 @@ const LocationStep = ({ onNext }) => {
         // Update postal code in context
         updatePostalCode(postalCode.trim());
         
-        // Simulate API call to validate postal code and fetch restaurants
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Actually fetch restaurants to validate postal code
+        const result = await getRestaurantsByPostalCode(postalCode.trim(), { limit: 1 });
         
-        // Check if user is authenticated before proceeding
-        if (!isAuthenticated) {
-          // Show login modal if user is not authenticated
-          openLoginModal();
-          return;
+        if (result.success) {
+          if (result.data.length === 0) {
+            showError(
+              'No Restaurants Found',
+              `Sorry, we don't have any restaurants available in ${postalCode.toUpperCase()} yet. Please try a different postal code.`
+            );
+            setIsSearching(false);
+            return;
+          }
+          
+          // Show success message
+          showSuccess(
+            'Great!',
+            `Found ${result.pagination?.totalItems || 'several'} restaurants near ${postalCode.toUpperCase()}!`
+          );
+          
+          // Check if user is authenticated before proceeding
+          if (!isAuthenticated) {
+            // Show login modal if user is not authenticated
+            openLoginModal();
+            return;
+          }
+          
+          // Navigate directly to restaurant step
+          navigate('/plan/restaurants?source=plan');
+        } else {
+          // Handle API error
+          showError(
+            'Search Failed',
+            result.error || 'Unable to search for restaurants. Please try again.'
+          );
         }
-        
-        // Navigate directly to restaurant step (no preferences selection here)
-        navigate('/plan/restaurants?source=plan');
       } catch (error) {
         console.error('Error searching for restaurants:', error);
+        showError(
+          'Connection Error',
+          'Unable to connect to our servers. Please check your internet connection and try again.'
+        );
       } finally {
         setIsSearching(false);
       }
@@ -106,8 +136,11 @@ const LocationStep = ({ onNext }) => {
                       >
                         {isSearching ? (
                           <div className="flex items-center justify-center">
-                            <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white mr-2"></div>
-                            <span>Searching...</span>
+                            <svg className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-white mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span className="animate-pulse">Finding restaurants...</span>
                           </div>
                         ) : (
                           t('mealPlanning.hero.findMealsButton')

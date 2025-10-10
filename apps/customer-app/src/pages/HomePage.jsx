@@ -2,7 +2,7 @@ import React, { Suspense, lazy, useState, useEffect } from 'react';
 import HeroSection from '../components/home/HeroSection';
 import WhyGrubGateSection from '../components/home/WhyGrubGateSection';
 import TestimonialsSection from '../components/home/TestimonialsSection';
-import NearbyRestaurants from '../components/home/NearbyRestaurants';
+// import NearbyRestaurants from '../components/home/NearbyRestaurants';
 import GetStartedCTA from '../components/common/GetStartedCTA';
 
 // Lazy load debug component only in development
@@ -43,7 +43,7 @@ const HomePage = () => {
       </Suspense>
       
       <TestimonialsSection />
-      <NearbyRestaurants />
+      {/* <NearbyRestaurants /> */}
       <GetStartedCTA />
       
     

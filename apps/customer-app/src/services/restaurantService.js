@@ -178,49 +178,25 @@ export const getTopRatedRestaurants = async (limit = 10) => {
 };
 
 /**
- * Fallback function to get static restaurants data
- * Used when API is not available or as backup
- * @param {string} postalCode - The postal code to filter by
- * @returns {Array} Filtered restaurants from static data
+ * Get restaurant statistics (total count, etc.)
+ * @returns {Promise} API response with restaurant statistics
  */
-export const getStaticRestaurantsByPostalCode = async (postalCode) => {
+export const getRestaurantStats = async () => {
   try {
-    // Import static data as fallback
-    const { unifiedRestaurants } = await import('../data/unifiedRestaurants');
-    
-    // Filter restaurants by postal code and sort by rating
-    const filteredRestaurants = unifiedRestaurants
-      .filter(restaurant => 
-        restaurant.postalCode && 
-        restaurant.postalCode.toUpperCase() === postalCode.toUpperCase()
-      )
-      .sort((a, b) => {
-        // Sort by rating (descending), then by review count (descending)
-        if (b.rating !== a.rating) {
-          return b.rating - a.rating;
-        }
-        return (b.reviewCount || 0) - (a.reviewCount || 0);
-      });
+    const response = await apiClient.get('/restaurants/stats');
     
     return {
       success: true,
-      data: filteredRestaurants,
-      pagination: {
-        page: 1,
-        limit: filteredRestaurants.length,
-        totalPages: 1,
-        totalItems: filteredRestaurants.length
-      },
-      message: `Found ${filteredRestaurants.length} restaurants near ${postalCode.toUpperCase()} (from static data)`
+      data: response.data.data,
+      message: response.data.message
     };
   } catch (error) {
-    console.error('Error loading static restaurants:', error);
+    console.error('Error fetching restaurant stats:', error);
     
     return {
       success: false,
-      error: 'Failed to load restaurant data',
-      data: [],
-      pagination: null
+      error: error.response?.data?.message || 'Failed to fetch restaurant stats',
+      data: { totalRestaurants: 500 } // Fallback data
     };
   }
 };

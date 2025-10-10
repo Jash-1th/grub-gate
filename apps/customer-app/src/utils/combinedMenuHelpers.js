@@ -1,4 +1,3 @@
-import { unifiedRestaurants } from '../data/unifiedRestaurants';
 import { applyPreferenceFilter } from './filteringHelpers';
 
 /**
@@ -8,10 +7,10 @@ import { applyPreferenceFilter } from './filteringHelpers';
  * @param {Array} preferences - Array of selected preference IDs (optional)
  * @returns {Array} Array of food items with restaurant information
  */
-export const getAllFoodItemsForDayAndSlot = (day, slot, preferences = []) => {
+export const getAllFoodItemsForDayAndSlot = (day, slot, preferences = [], restaurants = []) => {
   const allItems = [];
 
-  unifiedRestaurants.forEach(restaurant => {
+  restaurants.forEach(restaurant => {
     if (restaurant.foodItems && restaurant.foodItems.length > 0) {
       restaurant.foodItems.forEach(item => {
         // Check if item is available for the specified day and slot
@@ -51,9 +50,9 @@ export const getAllFoodItemsForDayAndSlot = (day, slot, preferences = []) => {
  * @param {Array} preferences - Array of selected preference IDs (optional)
  * @returns {Object} Object with lunch and dinner arrays
  */
-export const getAllFoodItemsForDay = (day, preferences = []) => {
-  const lunchItems = getAllFoodItemsForDayAndSlot(day, 'lunch', preferences);
-  const dinnerItems = getAllFoodItemsForDayAndSlot(day, 'dinner', preferences);
+export const getAllFoodItemsForDay = (day, preferences = [], restaurants = []) => {
+  const lunchItems = getAllFoodItemsForDayAndSlot(day, 'lunch', preferences, restaurants);
+  const dinnerItems = getAllFoodItemsForDayAndSlot(day, 'dinner', preferences, restaurants);
 
   return {
     lunch: lunchItems,

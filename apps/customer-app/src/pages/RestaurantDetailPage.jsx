@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { unifiedRestaurants } from '../data/unifiedRestaurants';
+// Static data removed - now uses dynamic API data
 import { DAYS_OF_WEEK } from '../utils/filteringAlgorithms';
 import { applyPreferenceFilter } from '../utils/filteringHelpers';
 import { useMealPlan } from '../contexts/MealPlanContext_SSR_FIXED';

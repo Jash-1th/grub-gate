@@ -41,10 +41,10 @@ const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postal
     <div 
       onClick={handleSlotClick}
       className={`
-        group relative p-2 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all duration-300 cursor-pointer min-h-[80px] sm:min-h-[120px] flex flex-col justify-center transform hover:scale-[1.02] hover:-translate-y-1 touch-manipulation
+        group relative p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-300 cursor-pointer min-h-[100px] sm:min-h-[120px] flex flex-col justify-center transform hover:scale-[1.02] hover:-translate-y-1 touch-manipulation active:scale-95
         ${hasItems 
-          ? 'border-grub-red bg-gradient-to-br from-red-50 to-orange-50 shadow-md sm:shadow-lg hover:shadow-lg sm:hover:shadow-2xl hover:border-red-400' 
-          : 'border-gray-200 bg-gradient-to-br from-white to-gray-50 hover:border-grub-red/60 hover:shadow-md sm:hover:shadow-lg hover:from-red-50/30 hover:to-orange-50/30'
+          ? 'border-grub-red bg-gradient-to-br from-red-50 to-orange-50 shadow-lg hover:shadow-xl hover:border-red-400' 
+          : 'border-gray-200 bg-gradient-to-br from-white to-gray-50 hover:border-grub-red/60 hover:shadow-lg hover:from-red-50/30 hover:to-orange-50/30'
         }
       `}
     >
@@ -520,25 +520,29 @@ const WeeklyMenuPage = () => {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       {/* Header Section */}
       <div className="bg-gradient-to-r from-grub-red to-red-600 text-white">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <div className="flex flex-col gap-6">
+            {/* Title Section */}
             <div className="text-center sm:text-left">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
                 Your Weekly Menu
               </h1>
-              <p className="text-red-100 text-sm sm:text-base">
+              <p className="text-red-100 text-base sm:text-lg">
                 Plan your perfect week with delicious meals
               </p>
             </div>
             
-            <div className="flex justify-center sm:justify-end items-center gap-4 sm:gap-6">
-              <div className="text-center">
-                <div className="text-xs sm:text-sm text-red-200">Total Items (Both Weeks)</div>
-                <div className="text-lg sm:text-2xl font-bold">{totalItemsBothWeeks}</div>
+            {/* Stats Section - Mobile Optimized */}
+            <div className="grid grid-cols-2 gap-4 sm:flex sm:justify-end sm:items-center sm:gap-8">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/20">
+                <div className="text-xs sm:text-sm text-red-100 mb-1">Total Meals</div>
+                <div className="text-xl sm:text-2xl lg:text-3xl font-bold">{totalItemsBothWeeks}</div>
+                <div className="text-xs text-red-200 mt-1">Both Weeks</div>
               </div>
-              <div className="text-center">
-                <div className="text-xs sm:text-sm text-red-200">Estimated Cost (Both Weeks)</div>
-                <div className="text-lg sm:text-2xl font-bold text-yellow-200">${totalCostBothWeeks.toFixed(2)}</div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/20">
+                <div className="text-xs sm:text-sm text-red-100 mb-1">Est. Cost</div>
+                <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-yellow-200">${totalCostBothWeeks.toFixed(2)}</div>
+                <div className="text-xs text-red-200 mt-1">Both Weeks</div>
               </div>
             </div>
           </div>
@@ -546,38 +550,45 @@ const WeeklyMenuPage = () => {
       </div>
 
       {/* Week Selector */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-center">
-            <div className="bg-gray-100 rounded-xl p-1 shadow-inner">
-              <div className="flex">
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-md backdrop-blur-sm bg-white/95">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          {/* Week Selector Buttons */}
+          <div className="flex items-center justify-center mb-4">
+            <div className="bg-gray-100 rounded-2xl p-1.5 shadow-inner w-full max-w-md">
+              <div className="grid grid-cols-2 gap-1">
                 {/* First Week Button */}
                 <button
                   onClick={() => setSelectedWeek(0)}
-                  className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                  className={`px-4 py-3 sm:py-4 rounded-xl text-sm sm:text-base font-semibold transition-all duration-300 touch-manipulation ${
                     selectedWeek === 0
-                      ? 'bg-white text-grub-red shadow-md'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-white text-grub-red shadow-lg transform scale-105'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
-                  <div className="flex items-center space-x-2">
-                    <span className="text-lg">📅</span>
-                    <span>Week 1</span>
+                  <div className="flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <span className="text-xl sm:text-lg">📅</span>
+                    <span className="font-bold">Week 1</span>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1 sm:hidden">
+                    {getWeekTotalItems(0)} meals
                   </div>
                 </button>
 
                 {/* Second Week Button */}
                 <button
                   onClick={() => setSelectedWeek(1)}
-                  className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                  className={`px-4 py-3 sm:py-4 rounded-xl text-sm sm:text-base font-semibold transition-all duration-300 touch-manipulation ${
                     selectedWeek === 1
-                      ? 'bg-white text-grub-red shadow-md'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-white text-grub-red shadow-lg transform scale-105'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
-                  <div className="flex items-center space-x-2">
-                    <span className="text-lg">📆</span>
-                    <span>Week 2</span>
+                  <div className="flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <span className="text-xl sm:text-lg">📆</span>
+                    <span className="font-bold">Week 2</span>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1 sm:hidden">
+                    {getWeekTotalItems(1)} meals
                   </div>
                 </button>
               </div>
@@ -585,25 +596,25 @@ const WeeklyMenuPage = () => {
           </div>
           
           {/* Week Date Range Display */}
-          <div className="text-center mt-3">
-            <p className="text-sm text-gray-600">
+          <div className="text-center space-y-2">
+            <p className="text-sm sm:text-base text-gray-700 font-medium">
               {isClient && (
                 selectedWeek === 0 ? (
-                  <>First Week: {getFirstWeekDateRange()}</>
+                  <>📅 Week 1: {getFirstWeekDateRange()}</>
                 ) : (
-                  <>Second Week: {getSecondWeekDateRange()}</>
+                  <>📆 Week 2: {getSecondWeekDateRange()}</>
                 )
               )}
             </p>
             
             {/* Restaurant Restriction Indicator for Normal Users */}
             {user?.userType === 'normal' && selectedRestaurant && (
-              <div className="mt-2 inline-flex items-center px-3 py-1 bg-orange-50 border border-orange-200 rounded-full">
-                <svg className="w-4 h-4 text-orange-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="inline-flex items-center px-4 py-2 bg-orange-50 border border-orange-200 rounded-full shadow-sm">
+                <svg className="w-4 h-4 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
-                <span className="text-xs text-orange-800 font-medium">
-                  Restricted to {selectedRestaurant.name}
+                <span className="text-sm text-orange-800 font-medium">
+                  🔒 Restricted to {selectedRestaurant.name}
                 </span>
               </div>
             )}
@@ -614,53 +625,72 @@ const WeeklyMenuPage = () => {
       {/* Selected Restaurant Banner */}
       {(selectedRestaurant || (isAuthenticated && !hasLoadedFromDatabase)) && (
         <div className="bg-white border-b border-gray-200 shadow-sm">
-          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-grub-red to-red-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">🍽️</span>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              {/* Restaurant Info */}
+              <div className="flex items-center space-x-4 flex-1">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-grub-red to-red-600 rounded-full flex items-center justify-center shadow-lg">
+                  <span className="text-white font-bold text-xl sm:text-2xl">🍽️</span>
                 </div>
-                <div>
+                <div className="flex-1 min-w-0">
                   {isAuthenticated && !hasLoadedFromDatabase ? (
                     <>
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
                         Loading your restaurant selection...
                       </h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm sm:text-base text-gray-600">
                         Please wait while we load your meal plan
                       </p>
                     </>
                   ) : selectedRestaurant ? (
                     <>
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
                         Planning meals from {selectedRestaurant.name}
                       </h3>
-                      <p className="text-sm text-gray-600">
-                        Click any empty slot to add meals from this restaurant • {selectedRestaurant.cuisine} • ⭐ {selectedRestaurant.rating}
-                      </p>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm sm:text-base text-gray-600">
+                        <span>Click any empty slot to add meals</span>
+                        <span className="hidden sm:inline">•</span>
+                        <div className="flex items-center gap-2">
+                          <span>{selectedRestaurant.cuisine}</span>
+                          <span>•</span>
+                          <span>⭐ {selectedRestaurant.rating}</span>
+                        </div>
+                      </div>
                     </>
                   ) : null}
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
+              
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-3 w-full sm:w-auto">
                 {isAuthenticated && !hasLoadedFromDatabase ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-grub-red"></div>
+                  <div className="flex items-center justify-center space-x-2 py-2">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-grub-red"></div>
                     <span className="text-sm text-gray-600">Loading...</span>
                   </div>
                 ) : selectedRestaurant ? (
                   <>
                     <button
                       onClick={() => navigate(`/restaurant/${selectedRestaurant.id}?source=menu-browse`)}
-                      className="px-4 py-2 bg-grub-red text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                      className="px-4 py-3 bg-grub-red text-white rounded-xl hover:bg-red-700 transition-colors text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 touch-manipulation"
                     >
-                      View Full Menu
+                      <div className="flex items-center justify-center space-x-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span>View Full Menu</span>
+                      </div>
                     </button>
                     <button
                       onClick={handleSelectOtherRestaurant}
-                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                      className="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors text-sm font-semibold border border-gray-200 touch-manipulation"
                     >
-                      Select Other Restaurant
+                      <div className="flex items-center justify-center space-x-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                        <span>Change Restaurant</span>
+                      </div>
                     </button>
                   </>
                 ) : null}
@@ -701,7 +731,7 @@ const WeeklyMenuPage = () => {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 pt-8 sm:pt-12">
         {/* Quick Actions */}
         {weekTotalItems > 0 && (
           <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -718,7 +748,7 @@ const WeeklyMenuPage = () => {
         )}
 
         {/* Weekly Calendar */}
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-200 p-3 sm:p-6 mb-6 sm:mb-8">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-200 p-3 sm:p-6 mb-6 sm:mb-8 mt-4 sm:mt-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-2">
             <h2 className="text-lg sm:text-2xl font-bold text-gray-900">
               {selectedWeek === 0 ? "Week 1 Menu" : "Week 2 Menu"}
@@ -732,7 +762,7 @@ const WeeklyMenuPage = () => {
           </div>
 
           {/* Mobile Layout - Day Cards */}
-          <div className="block sm:hidden space-y-4">
+          <div className="block sm:hidden space-y-3">
             {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day, index) => {
               const dayKey = day.toLowerCase();
               const lunchItems = getWeekMealItems(dayKey, 'lunch', selectedWeek);
@@ -740,27 +770,35 @@ const WeeklyMenuPage = () => {
               const totalDayItems = lunchItems.length + dinnerItems.length;
               
               return (
-                <div key={day} className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
-                  <div className="flex items-center justify-between mb-3">
+                <div key={day} className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
+                  {/* Day Header */}
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
                     <div>
-                      <h3 className="font-bold text-gray-900">{day}</h3>
-                      <p className="text-xs text-gray-600">
+                      <h3 className="text-lg font-bold text-gray-900">{day}</h3>
+                      <p className="text-sm text-gray-600">
                         {isClient ? getDayDateForWeek(day, selectedWeek) : ''}
                       </p>
                     </div>
                     <div className="text-right">
-                      <span className="text-xs text-grub-red font-semibold">
+                      <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+                        totalDayItems > 0 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-gray-100 text-gray-500'
+                      }`}>
                         {totalDayItems} meal{totalDayItems !== 1 ? 's' : ''}
-                      </span>
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-3">
+                  {/* Meal Slots */}
+                  <div className="grid grid-cols-2 gap-4">
                     {/* Lunch */}
                     <div>
-                      <div className="flex items-center space-x-1 mb-2">
-                        <span className="text-sm">🌅</span>
-                        <span className="text-xs font-medium text-yellow-700">Lunch</span>
+                      <div className="flex items-center space-x-2 mb-3">
+                        <div className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center">
+                          <span className="text-sm">🌅</span>
+                        </div>
+                        <span className="text-sm font-semibold text-yellow-700">Lunch</span>
                       </div>
                       <EnhancedMealSlot 
                         day={dayKey}
@@ -778,9 +816,11 @@ const WeeklyMenuPage = () => {
                     
                     {/* Dinner */}
                     <div>
-                      <div className="flex items-center space-x-1 mb-2">
-                        <span className="text-sm">🌙</span>
-                        <span className="text-xs font-medium text-purple-700">Dinner</span>
+                      <div className="flex items-center space-x-2 mb-3">
+                        <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
+                          <span className="text-sm">🌙</span>
+                        </div>
+                        <span className="text-sm font-semibold text-purple-700">Dinner</span>
                       </div>
                       <EnhancedMealSlot 
                         day={dayKey}
@@ -884,77 +924,99 @@ const WeeklyMenuPage = () => {
           </div>
 
           {/* Legend */}
-          <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 mt-6 border border-gray-200">
-            <div className="flex flex-wrap gap-4 md:gap-6 text-sm text-gray-700">
-              <div className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 shadow-sm border border-gray-200">
-                <div className="w-4 h-4 bg-gradient-to-br from-red-50 to-orange-50 border-2 border-grub-red rounded-lg shadow-sm"></div>
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-4 sm:p-6 mt-6 border border-gray-200">
+            <h4 className="text-sm font-semibold text-gray-900 mb-3 sm:hidden">Legend</h4>
+            <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-3 sm:gap-6 text-sm text-gray-700">
+              <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-200">
+                <div className="w-5 h-5 bg-gradient-to-br from-red-50 to-orange-50 border-2 border-grub-red rounded-lg shadow-sm flex-shrink-0"></div>
                 <span className="font-medium">Planned Meals</span>
               </div>
-              <div className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 shadow-sm border border-gray-200">
-                <div className="w-4 h-4 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-300 rounded-lg shadow-sm"></div>
+              <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-200">
+                <div className="w-5 h-5 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-300 rounded-lg shadow-sm flex-shrink-0"></div>
                 <span className="font-medium">Available Slots</span>
               </div>
-              <div className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 shadow-sm border border-gray-200">
-                <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-200">
+                <svg className="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
-                <span className="font-medium">Hover to remove items</span>
+                <span className="font-medium">
+                  <span className="sm:hidden">Tap to remove items</span>
+                  <span className="hidden sm:inline">Hover to remove items</span>
+                </span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Weekly Summary */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Bi-Weekly Summary</h3>
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900">Bi-Weekly Summary</h3>
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H9z" />
                 </svg>
               </div>
             </div>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Total Meals (Both Weeks)</span>
-                <span className="font-semibold text-gray-900">{totalItemsBothWeeks}</span>
+            <div className="space-y-4">
+              <div className="bg-gray-50 rounded-xl p-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-700 font-medium">Total Meals</span>
+                  <span className="text-2xl font-bold text-gray-900">{totalItemsBothWeeks}</span>
+                </div>
+                <div className="text-sm text-gray-500 mt-1">Both weeks combined</div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Estimated Cost (Both Weeks)</span>
-                <span className="font-semibold text-green-600">${totalCostBothWeeks.toFixed(2)}</span>
+              
+              <div className="bg-green-50 rounded-xl p-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-700 font-medium">Estimated Cost</span>
+                  <span className="text-2xl font-bold text-green-600">${totalCostBothWeeks.toFixed(2)}</span>
+                </div>
+                <div className="text-sm text-green-600 mt-1">Both weeks combined</div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Avg per Meal</span>
-                <span className="font-semibold text-gray-900">
-                  ${totalItemsBothWeeks > 0 ? (totalCostBothWeeks / totalItemsBothWeeks).toFixed(2) : '0.00'}
-                </span>
+              
+              <div className="bg-blue-50 rounded-xl p-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-700 font-medium">Avg per Meal</span>
+                  <span className="text-2xl font-bold text-blue-600">
+                    ${totalItemsBothWeeks > 0 ? (totalCostBothWeeks / totalItemsBothWeeks).toFixed(2) : '0.00'}
+                  </span>
+                </div>
+                <div className="text-sm text-blue-600 mt-1">Cost efficiency</div>
               </div>
-              <div className="pt-2 border-t border-gray-100">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Current Week: {getWeekTotalItems(0)} meals</span>
-                  <span className="text-gray-500">Next Week: {getWeekTotalItems(1)} meals</span>
+              
+              <div className="pt-4 border-t border-gray-200">
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div className="bg-yellow-50 rounded-lg p-3">
+                    <div className="text-lg font-bold text-yellow-700">{getWeekTotalItems(0)}</div>
+                    <div className="text-xs text-yellow-600">Week 1 Meals</div>
+                  </div>
+                  <div className="bg-purple-50 rounded-lg p-3">
+                    <div className="text-lg font-bold text-purple-700">{getWeekTotalItems(1)}</div>
+                    <div className="text-xs text-purple-600">Week 2 Meals</div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900">Quick Actions</h3>
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-4">
               <button
                 onClick={() => navigate('/subscription')}
-                className="w-full text-left p-3 rounded-lg bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 border-2 border-red-500 relative overflow-hidden"
+                className="group w-full text-left p-6 rounded-2xl bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border-2 border-red-500 relative overflow-hidden touch-manipulation"
               >
                 {/* Highlight badge */}
-                <div className="absolute top-2 right-2 bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold shadow-md">
+                <div className="absolute top-3 right-3 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse">
                   NEXT STEP
                 </div>
                 
@@ -962,15 +1024,50 @@ const WeeklyMenuPage = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                 
                 <div className="relative z-10">
-                  <div className="font-bold text-white flex items-center">
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                    </svg>
+                  <div className="font-bold text-white flex items-center text-lg mb-2">
+                    <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                      </svg>
+                    </div>
                     Subscribe to Plan
                   </div>
-                  <div className="text-sm text-red-100 mt-1">Complete your meal planning journey</div>
+                  <div className="text-red-100 ml-11">Complete your meal planning journey and start enjoying delicious meals!</div>
                 </div>
               </button>
+              
+              {/* Additional Quick Actions */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  onClick={() => navigate('/restaurants')}
+                  className="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-200 transition-colors touch-manipulation"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm">🏪</span>
+                    </div>
+                    <div className="text-left">
+                      <div className="font-semibold text-gray-900 text-sm">Browse Restaurants</div>
+                      <div className="text-xs text-gray-600">Discover new options</div>
+                    </div>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => navigate('/meal-plan')}
+                  className="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-200 transition-colors touch-manipulation"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm">📅</span>
+                    </div>
+                    <div className="text-left">
+                      <div className="font-semibold text-gray-900 text-sm">View Calendar</div>
+                      <div className="text-xs text-gray-600">See daily meals</div>
+                    </div>
+                  </div>
+                </button>
+              </div>
             </div>
           </div>
 

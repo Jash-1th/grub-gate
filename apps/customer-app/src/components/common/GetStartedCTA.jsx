@@ -1,11 +1,24 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useModal } from '../../context/ModalContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 const GetStartedCTA = () => {
   const { t } = useTranslation();
   const { openSignupModal } = useModal();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  const handleGetStarted = () => {
+    if (isAuthenticated) {
+      // User is logged in, navigate to plan page
+      navigate('/plan');
+    } else {
+      // User is not logged in, open signup modal
+      openSignupModal();
+    }
+  };
 
   return (
     <section className="py-16 px-4 bg-gray-50">
@@ -19,10 +32,10 @@ const GetStartedCTA = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <button
-              onClick={openSignupModal}
+              onClick={handleGetStarted}
               className="bg-grub-red text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-red-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-transform duration-200"
             >
-              {t('getStartedCta.startPlan')}
+              {isAuthenticated ? 'Start Planning' : t('getStartedCta.startPlan')}
             </button>
             <Link
               to="/restaurants"

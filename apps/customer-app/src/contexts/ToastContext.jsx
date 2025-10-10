@@ -15,7 +15,23 @@ export const ToastProvider = ({ children }) => {
       ...toast
     };
 
-    setToasts(prev => [...prev, newToast]);
+    // Check for duplicate toasts (same title and message within 2 seconds)
+    setToasts(prev => {
+      const now = Date.now();
+      const duplicateExists = prev.some(existingToast => 
+        existingToast.title === newToast.title && 
+        existingToast.message === newToast.message &&
+        existingToast.type === newToast.type &&
+        (now - existingToast.createdAt) < 2000 // Within 2 seconds
+      );
+
+      if (duplicateExists) {
+        return prev; // Don't add duplicate
+      }
+
+      return [...prev, { ...newToast, createdAt: now }];
+    });
+    
     return id;
   }, []);
 

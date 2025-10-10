@@ -3,8 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { usePlanning } from '../../contexts/PlanningContext';
 import { useMealPlan } from '../../contexts/MealPlanContext_SSR_FIXED';
 import { getAllFoodItemsForDayAndSlot, getAllFoodItemsForDay, capitalizeFirst, groupItemsByCategory } from '../../utils/combinedMenuHelpers';
-import { unifiedRestaurants } from '../../data/unifiedRestaurants';
-import { getRestaurantsByPostalCode, getStaticRestaurantsByPostalCode } from '../../services/restaurantService';
+import { getRestaurantsByPostalCode } from '../../services/restaurantService';
 import FoodItemCard from '../restaurant/FoodItemCard';
 import RestaurantCard from './RestaurantCard';
 
@@ -88,27 +87,25 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
       try {
         let restaurants;
         if (effectivePostalCode && effectivePostalCode.length >= 3) {
-          // Try API first, fallback to static data
+          // Only use API data - no static fallback
           const result = await getRestaurantsByPostalCode(effectivePostalCode, { limit: 8 });
           
           if (result.success && result.data.length > 0) {
             restaurants = result.data;
           } else {
-            // Fallback to static data
-            const staticResult = await getStaticRestaurantsByPostalCode(effectivePostalCode);
-            restaurants = staticResult.success ? staticResult.data.slice(0, 8) : [];
+            // No restaurants found - set empty array
+            restaurants = [];
           }
         } else {
-          // Use static data sorted by rating
-          restaurants = [...unifiedRestaurants].sort((a, b) => b.rating - a.rating).slice(0, 8);
+          // No postal code - set empty array
+          restaurants = [];
         }
         
         setNearbyRestaurants(restaurants);
       } catch (error) {
         console.error('Error fetching nearby restaurants:', error);
-        // Fallback to static data
-        const fallbackRestaurants = [...unifiedRestaurants].sort((a, b) => b.rating - a.rating).slice(0, 8);
-        setNearbyRestaurants(fallbackRestaurants);
+        // No fallback - set empty array on error
+        setNearbyRestaurants([]);
       } finally {
         setRestaurantsLoading(false);
       }

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { nearbyRestaurants } from '../../data/unifiedRestaurants';
+import { getPopularRestaurants } from '../../services/restaurantService';
 import './NearbyRestaurants.css';
 
 // Use public path for SSR compatibility
@@ -11,13 +11,39 @@ const NearbyRestaurants = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   
+  // State for restaurants data
+  const [restaurants, setRestaurants] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
   // Triple the restaurants for seamless infinite scroll
-  const duplicatedRestaurants = [...nearbyRestaurants, ...nearbyRestaurants, ...nearbyRestaurants];
+  const duplicatedRestaurants = restaurants.length > 0 ? [...restaurants, ...restaurants, ...restaurants] : [];
   
   // State for carousel behavior
   const [isPaused, setIsPaused] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [dragVisualState, setDragVisualState] = useState(false);
+
+  // Fetch popular restaurants
+  useEffect(() => {
+    const fetchRestaurants = async () => {
+      try {
+        const result = await getPopularRestaurants(6); // Get 6 popular restaurants
+        if (result.success && result.data.length > 0) {
+          setRestaurants(result.data);
+        } else {
+          // If no popular restaurants, set empty array
+          setRestaurants([]);
+        }
+      } catch (error) {
+        console.error('Error fetching popular restaurants:', error);
+        setRestaurants([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRestaurants();
+  }, []);
   
   // Refs for carousel control (using refs for drag state to avoid re-render issues)
   const carouselRef = useRef(null);
@@ -558,6 +584,57 @@ const NearbyRestaurants = () => {
       </div>
     </div>
   );
+
+  // Show loading state
+  if (loading) {
+    return (
+      <section className="nearby-restaurants">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-grub-red mb-4">
+              {t('nearbyRestaurants.title')}
+            </h2>
+            <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+              {t('nearbyRestaurants.subtitle')}
+            </p>
+          </div>
+          
+          {/* Loading skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, index) => (
+              <div key={index} className="bg-white rounded-xl shadow-lg overflow-hidden animate-pulse">
+                <div className="h-48 bg-gray-200"></div>
+                <div className="p-6">
+                  <div className="h-6 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded mb-4"></div>
+                  <div className="h-10 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Show empty state if no restaurants
+  if (!loading && restaurants.length === 0) {
+    return (
+      <section className="nearby-restaurants">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-grub-red mb-4">
+              {t('nearbyRestaurants.title')}
+            </h2>
+            <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+              No restaurants available at the moment. Please check back later.
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="nearby-restaurants">
