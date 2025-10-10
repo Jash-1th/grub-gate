@@ -50,7 +50,6 @@ const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 60 * 1000, // 1 minute (was 15 minutes)
   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 10000, // 10000 requests per minute (was 100 per 15 min)
   message: {
-    status: 'error',
     message: 'Too many requests from this IP, please try again later.'
   }
 });
@@ -62,6 +61,12 @@ const allowedOrigins = [
   'http://localhost:5173', // Partner Portal (Vite dev server)
   'http://localhost:4173'  // Partner Portal (Vite preview)
 ];
+
+// Add production origins from environment variable
+if (process.env.CORS_ORIGIN) {
+  const productionOrigins = process.env.CORS_ORIGIN.split(',').map(origin => origin.trim());
+  allowedOrigins.push(...productionOrigins);
+}
 
 console.log('🔧 CORS: Allowing origins:', allowedOrigins);
 app.use(cors({
