@@ -12,11 +12,16 @@ const loadManifest = () => {
   
   try {
     const manifestPath = path.join(__dirname, 'vite-manifest.json');
+    console.log('🔍 Looking for manifest at:', manifestPath);
+    console.log('📁 Directory contents:', fs.readdirSync(__dirname));
+    
     if (fs.existsSync(manifestPath)) {
       const manifestContent = fs.readFileSync(manifestPath, 'utf8');
       cachedManifest = JSON.parse(manifestContent);
-      console.log('✅ Loaded vite-manifest.json successfully');
+      console.log('✅ Loaded vite-manifest.json successfully:', Object.keys(cachedManifest));
       return cachedManifest;
+    } else {
+      console.warn('⚠️ vite-manifest.json not found at:', manifestPath);
     }
   } catch (err) {
     console.warn('⚠️ Could not load vite-manifest.json:', err.message);
@@ -156,11 +161,16 @@ exports.handler = async (event, context) => {
     if (!cachedTemplate) {
       try {
         const templatePath = path.join(__dirname, 'index.html');
+        console.log('🔍 Looking for HTML template at:', templatePath);
+        
         if (fs.existsSync(templatePath)) {
           cachedTemplate = fs.readFileSync(templatePath, 'utf8');
+          console.log('✅ Loaded HTML template successfully, length:', cachedTemplate.length);
+        } else {
+          console.warn('⚠️ HTML template not found at:', templatePath);
         }
       } catch (err) {
-        // Ignore errors, use fallback
+        console.warn('⚠️ Could not load HTML template:', err.message);
       }
     }
 
