@@ -2,7 +2,7 @@
 
 [build]
   # Install dependencies with explicit Rollup binary installation
-  command = "cd ../.. && rm -rf node_modules && npm install && npm install @rollup/rollup-linux-x64-gnu --save-optional && cd apps/partner-portal && npm run build && node -e \"const fs=require('fs'),path=require('path');['assets','icons','images'].forEach(d=>fs.mkdirSync(path.join('dist',d),{recursive:true}));const copy=(s,d)=>{try{fs.cpSync(s,d,{recursive:true,force:true})}catch(e){}};copy('dist/client/assets','dist/assets');copy('dist/client/icons','dist/icons');copy('dist/client/images','dist/images');['index.html','manifest.json','service-worker.js'].forEach(f=>{try{fs.copyFileSync(path.join('dist/client',f),path.join('dist',f))}catch(e){}});\""
+  command = "cd ../.. && npm install --ignore-scripts && cd apps/partner-portal && npm run build && cp -r dist/client/* dist/""
   
   # The directory with the static assets from the client build (relative to base directory)
   # Changed to match Netlify dashboard setting
@@ -11,8 +11,8 @@
   # The directory where your REGULAR Netlify Functions are located (relative to base directory)
   functions = "netlify/functions"
   
-  # Include the built HTML template and manifest in the functions bundle
-  included_files = ["dist/client/index.html", "dist/client/manifest.json"]
+  # Include the built HTML template and manifests in the functions bundle
+  included_files = ["dist/client/index.html", "dist/client/.vite/manifest.json"]
 
 [build.environment]
   # Specify Node.js version for compatibility
