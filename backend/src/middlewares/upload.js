@@ -3,10 +3,14 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Create uploads directory if it doesn't exist
+// Create uploads directory if it doesn't exist (only in local environment)
 const uploadsDir = path.join(__dirname, '../../uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+if (process.env.NODE_ENV !== 'production' && !fs.existsSync(uploadsDir)) {
+  try {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  } catch (error) {
+    console.log('⚠️ Could not create uploads directory (serverless environment):', error.message);
+  }
 }
 
 // Configure multer for file storage
@@ -23,9 +27,13 @@ const storage = multer.diskStorage({
       uploadPath = path.join(uploadsDir, 'documents');
     }
     
-    // Create directory if it doesn't exist
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
+    // Create directory if it doesn't exist (only in local environment)
+    if (process.env.NODE_ENV !== 'production' && !fs.existsSync(uploadPath)) {
+      try {
+        fs.mkdirSync(uploadPath, { recursive: true });
+      } catch (error) {
+        console.log('⚠️ Could not create upload subdirectory (serverless environment):', error.message);
+      }
     }
     
     cb(null, uploadPath);
