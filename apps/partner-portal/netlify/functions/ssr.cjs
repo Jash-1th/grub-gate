@@ -123,7 +123,7 @@ exports.handler = async (event, context) => {
 
     // Extract asset names from the built index.html file
     let cssFile = '/assets/index-DKLhbucu.css';  // Updated to current build
-    let jsFile = '/assets/index-DRdxD5vn.js';    // Updated to current build
+    let jsFile = '/assets/index-DHQ066yb.js';    // Updated to current build
     
     try {
       // Try to extract asset names from the built index.html
@@ -213,7 +213,7 @@ exports.handler = async (event, context) => {
       body: `<!DOCTYPE html>
 <html><head><title>GrubGate</title><link rel="stylesheet" href="/assets/index-DKLhbucu.css" /></head>
 <body><div id="root"></div>
-<script type="module" src="/assets/index-DRdxD5vn.js"></script>
+<script type="module" src="/assets/index-DHQ066yb.js"></script>
 </body></html>`
     };
   }
