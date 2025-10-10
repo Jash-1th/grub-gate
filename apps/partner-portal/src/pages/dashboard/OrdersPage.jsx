@@ -779,16 +779,16 @@ const OrdersPage = () => {
                         {selectedOrder.customerId?.firstName} {selectedOrder.customerId?.lastName}
                       </div>
                       <div className="flex items-center text-gray-600">
-                        <Mail className="h-2.5 w-2.5 mr-1 text-blue-500" />
+                        <FontAwesomeIcon icon={faEnvelope} className="h-2.5 w-2.5 mr-1 text-blue-500" />
                         <span className="text-xs break-all">{selectedOrder.customerId?.email}</span>
                       </div>
                       <div className="flex items-center text-gray-600">
-                        <Phone className="h-2.5 w-2.5 mr-1 text-blue-500" />
+                        <FontAwesomeIcon icon={faPhone} className="h-2.5 w-2.5 mr-1 text-blue-500" />
                         <span className="text-xs">{selectedOrder.customerId?.phone}</span>
                       </div>
                     </div>
                     <div className="flex items-start text-gray-600">
-                      <MapPin className="h-2.5 w-2.5 mr-1 mt-0.5 text-blue-500 flex-shrink-0" />
+                      <FontAwesomeIcon icon={faMapMarkerAlt} className="h-2.5 w-2.5 mr-1 mt-0.5 text-blue-500 flex-shrink-0" />
                       <span className="text-xs break-words">
                         {selectedOrder.deliveryAddress ? (
                           `${selectedOrder.deliveryAddress.street}, ${selectedOrder.deliveryAddress.city}, ${selectedOrder.deliveryAddress.province} ${selectedOrder.deliveryAddress.postalCode}`
@@ -805,7 +805,7 @@ const OrdersPage = () => {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center">
                       <div className="bg-green-100 rounded-full p-1 mr-2">
-                        <Package className="h-3 w-3 text-green-600" />
+                        <FontAwesomeIcon icon={faBox} className="h-3 w-3 text-green-600" />
                       </div>
                       <h3 className="text-xs sm:text-sm font-semibold text-gray-900">Order Items</h3>
                     </div>
@@ -839,7 +839,7 @@ const OrdersPage = () => {
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 sm:p-3">
                   <div className="flex items-start">
                     <div className="bg-amber-100 rounded-full p-1 mr-2 flex-shrink-0">
-                      <Calendar className="h-3 w-3 text-amber-600" />
+                      <FontAwesomeIcon icon={faCalendar} className="h-3 w-3 text-amber-600" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1">Notes</h3>
