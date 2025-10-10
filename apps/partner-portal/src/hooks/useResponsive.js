@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 
 /**
- * Custom hook to detect responsive screen sizes
- * Returns boolean values for different breakpoints
+ * SSR-safe custom hook to detect responsive screen sizes
+ * Returns boolean values for different breakpoints with proper SSR handling
  */
 export const useResponsive = () => {
   const [screenSize, setScreenSize] = useState({
@@ -10,13 +10,17 @@ export const useResponsive = () => {
     isTablet: false,
     isDesktop: false,
     isLarge: false,
+    isXLarge: false,
     width: 0,
-    height: 0
+    height: 0,
+    isClient: false
   });
 
   useEffect(() => {
     // Function to update screen size
     const updateScreenSize = () => {
+      if (typeof window === 'undefined') return;
+      
       const width = window.innerWidth;
       const height = window.innerHeight;
       
@@ -25,16 +29,18 @@ export const useResponsive = () => {
         isTablet: width >= 768 && width < 1024,  // md to lg
         isDesktop: width >= 1024,  // >= lg breakpoint
         isLarge: width >= 1280,    // >= xl breakpoint
+        isXLarge: width >= 1536,   // >= 2xl breakpoint
         width,
-        height
+        height,
+        isClient: true
       });
     };
 
     // Set initial size
     updateScreenSize();
 
-    // Add event listener
-    window.addEventListener('resize', updateScreenSize);
+    // Add event listener with passive option for better performance
+    window.addEventListener('resize', updateScreenSize, { passive: true });
 
     // Cleanup
     return () => window.removeEventListener('resize', updateScreenSize);

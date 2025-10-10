@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, useLocation, useNavigate, NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -11,17 +11,21 @@ import {
   faCog, 
   faQuestionCircle,
   faSignOutAlt,
-  faGlobe
+  faGlobe,
+  faTimes
 } from '@fortawesome/free-solid-svg-icons';
 import { Logo, Button } from '@grub-gate/ui';
 import MobileBottomNav from './MobileBottomNav';
 import { useRestaurant } from '../../contexts/RestaurantContext';
+import { useResponsive } from '../../hooks/useResponsive';
 
 const DashboardLayout = ({ onLanguageChange }) => {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { getRestaurantName, getRestaurantInitial } = useRestaurant();
+  const { isMobile, isTablet, isClient } = useResponsive();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLanguageToggle = () => {
     const newLang = i18n.language === 'en' ? 'fr' : 'en';
@@ -53,7 +57,69 @@ const DashboardLayout = ({ onLanguageChange }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Desktop Sidebar Only */}
+      {/* Mobile Sidebar Overlay */}
+      {isClient && (isMobile || isTablet) && sidebarOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
+          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
+            <div className="absolute top-0 right-0 -mr-12 pt-2">
+              <button
+                className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+                onClick={() => setSidebarOpen(false)}
+              >
+                <FontAwesomeIcon icon={faTimes} className="h-6 w-6 text-white" />
+              </button>
+            </div>
+            <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
+              <div className="flex-shrink-0 flex items-center px-4">
+                <Logo size="lg" />
+              </div>
+              <nav className="mt-5 px-2 space-y-1">
+                {navigation.map((item) => {
+                  const Icon = item.icon;
+                  const active = isCurrentPath(item.href);
+                  return (
+                    <button
+                      key={item.name}
+                      onClick={() => {
+                        navigate(item.href);
+                        setSidebarOpen(false);
+                      }}
+                      className={`group w-full flex items-center px-2 py-2 text-base font-medium rounded-md ${
+                        active
+                          ? 'bg-red-50 text-grub-red'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      }`}
+                    >
+                      <FontAwesomeIcon icon={Icon} className={`mr-4 h-6 w-6 ${
+                        active ? 'text-grub-red' : 'text-gray-400 group-hover:text-gray-500'
+                      }`} />
+                      {item.name}
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+            <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
+              <div className="flex items-center">
+                <div className="h-10 w-10 bg-grub-red rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm font-medium">{getRestaurantInitial()}</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-base font-medium text-gray-700 group-hover:text-gray-900">
+                    {getRestaurantName()}
+                  </p>
+                  <p className="text-sm font-medium text-gray-500 group-hover:text-gray-700">
+                    Partner Account
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:w-64 lg:bg-white lg:shadow-lg lg:flex">
         <div className="flex flex-col h-full">
           {/* Logo */}
@@ -128,40 +194,55 @@ const DashboardLayout = ({ onLanguageChange }) => {
         <div className="sticky top-0 z-10 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-gray-200">
           <div className="mx-auto w-full max-w-7xl flex items-center justify-between h-14 lg:h-16 px-4 sm:px-6 lg:px-8">
             <div className="flex items-center">
+              {/* Mobile menu button */}
+              <button
+                className="lg:hidden -ml-0.5 -mt-0.5 h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-grub-red"
+                onClick={() => setSidebarOpen(true)}
+              >
+                <FontAwesomeIcon icon={faBars} className="h-6 w-6" />
+              </button>
+              
               {/* Mobile Logo */}
-                <div className="lg:hidden mr-4">
+              <div className="lg:hidden ml-2 mr-4">
                 <NavLink to="/" aria-label="Go to landing page" className="inline-flex">
                   <Logo size="md" />
                 </NavLink>
               </div>
               
               <div className="flex items-center">
-                <h1 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
+                <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 truncate">
                   {navigation.find(item => isCurrentPath(item.href))?.name || 'Overview'}
                 </h1>
               </div>
             </div>
 
-            <div className="flex items-center space-x-2 sm:space-x-4">
+            <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4">
               {/* Language switcher - mobile */}
               <button
                 onClick={handleLanguageToggle}
                 className="lg:hidden flex items-center justify-center space-x-1 px-2 py-1.5 text-xs font-medium text-gray-600 hover:text-grub-red hover:bg-gray-100 rounded-md transition-colors border border-gray-300"
                 title={t('common.language')}
               >
-                <FontAwesomeIcon icon={faGlobe} className="h-4 w-4" />
-                <span className="uppercase font-semibold">
+                <FontAwesomeIcon icon={faGlobe} className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline uppercase font-semibold">
                   {i18n.language}
                 </span>
               </button>
               
+              {/* User avatar - mobile */}
+              <div className="lg:hidden flex items-center">
+                <div className="h-8 w-8 bg-grub-red rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-medium">{getRestaurantInitial()}</span>
+                </div>
+              </div>
+              
               {/* Notifications */}
-              <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                <div className="h-6 w-6 relative">
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <button className="p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                <div className="h-5 w-5 sm:h-6 sm:w-6 relative">
+                  <svg className="h-full w-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5-5-5 5h5zM9 7l5 5 5-5H9z" />
                   </svg>
-                  <div className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></div>
+                  <div className="absolute -top-1 -right-1 h-2 w-2 sm:h-3 sm:w-3 bg-red-500 rounded-full"></div>
                 </div>
               </button>
             </div>
@@ -169,7 +250,7 @@ const DashboardLayout = ({ onLanguageChange }) => {
         </div>
 
         {/* Page content */}
-        <main className="p-4 sm:p-6 lg:p-8 pb-24 lg:pb-8">
+        <main className="p-3 sm:p-4 lg:p-6 xl:p-8 pb-20 sm:pb-24 lg:pb-8">
           <div className="mx-auto w-full max-w-7xl">
             <Outlet />
           </div>

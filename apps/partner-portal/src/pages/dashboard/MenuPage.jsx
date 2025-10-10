@@ -341,84 +341,90 @@ const MenuPage = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="rounded-xl bg-gradient-to-r from-grub-red to-red-600 text-white p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-col gap-3">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold">{t('menu.title')}</h1>
             <p className="text-red-100 text-sm">{t('menu.subtitle')}</p>
           </div>
-          <Button
-            variant="primary"
-            onClick={handleAddNewItem}
-            className="px-4 bg-grub-red hover:bg-red-700 text-white shadow focus:outline-none focus:ring-2 focus:ring-red-300"
-          >
-            <FontAwesomeIcon icon={faPlus} className="h-4 w-4 mr-2" />{t('menu.addItem')}
-          </Button>
+          <div className="flex justify-start">
+            <Button
+              variant="primary"
+              onClick={handleAddNewItem}
+              className="w-full sm:w-auto px-4 bg-white bg-opacity-20 hover:bg-opacity-30 text-white shadow focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 backdrop-blur-sm"
+            >
+              <FontAwesomeIcon icon={faPlus} className="h-4 w-4 mr-2" />{t('menu.addItem')}
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Filters */}
       <Card>
-        <CardContent className="p-4 sm:p-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <CardContent className="p-3 sm:p-4 lg:p-6">
+          <div className="space-y-3 sm:space-y-4">
             {/* Search */}
-            <div className="md:col-span-2">
+            <div className="w-full">
               <div className="relative">
                 <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input placeholder="Search menu items..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
+                <Input placeholder="Search menu items..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 text-sm sm:text-base" />
               </div>
             </div>
-            {/* Category */}
-            <div>
-              <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red">
-                {categories.map(category => (
-                  <option key={category.value} value={category.value}>{category.label}</option>
-                ))}
-              </select>
-            </div>
-            {/* Status */}
-            <div>
-              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red">
-                <option value="all">All Statuses</option>
-                <option value="available">Available</option>
-                <option value="unavailable">Unavailable</option>
-              </select>
-            </div>
-            {/* Sort */}
-            <div className="md:col-span-1">
-              <select 
-                value={`${sortBy}-${sortOrder}`} 
-                onChange={(e) => {
-                  const [field, order] = e.target.value.split('-');
-                  setSortBy(field);
-                  setSortOrder(order);
-                }} 
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red"
-              >
-                <option value="createdAt-desc">Sort: Newest First</option>
-                <option value="createdAt-asc">Sort: Oldest First</option>
-                <option value="name-asc">Sort: Name A-Z</option>
-                <option value="name-desc">Sort: Name Z-A</option>
-                <option value="price-asc">Price: Low to High</option>
-                <option value="price-desc">Price: High to Low</option>
-              </select>
+            
+            {/* Filter Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Category */}
+              <div>
+                <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red">
+                  {categories.map(category => (
+                    <option key={category.value} value={category.value}>{category.label}</option>
+                  ))}
+                </select>
+              </div>
+              {/* Status */}
+              <div>
+                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red">
+                  <option value="all">All Statuses</option>
+                  <option value="available">Available</option>
+                  <option value="unavailable">Unavailable</option>
+                </select>
+              </div>
+              {/* Sort */}
+              <div>
+                <select 
+                  value={`${sortBy}-${sortOrder}`} 
+                  onChange={(e) => {
+                    const [field, order] = e.target.value.split('-');
+                    setSortBy(field);
+                    setSortOrder(order);
+                  }} 
+                  className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red"
+                >
+                  <option value="createdAt-desc">Sort: Newest First</option>
+                  <option value="createdAt-asc">Sort: Oldest First</option>
+                  <option value="name-asc">Sort: Name A-Z</option>
+                  <option value="name-desc">Sort: Name Z-A</option>
+                  <option value="price-asc">Price: Low to High</option>
+                  <option value="price-desc">Price: High to Low</option>
+                </select>
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Menu Items Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         {menuItems.length === 0 ? (
-          <div className="col-span-full text-center py-12">
+          <div className="col-span-full text-center py-8 sm:py-12">
             <div className="text-gray-400 mb-4">
-              <FontAwesomeIcon icon={faPlus} className="h-16 w-16 mx-auto mb-4" />
+              <FontAwesomeIcon icon={faPlus} className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No menu items yet</h3>
-            <p className="text-gray-600 mb-4">Start building your menu by adding your first item.</p>
-            <Button onClick={handleAddNewItem} variant="primary" className="bg-grub-red hover:bg-red-700">
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No menu items yet</h3>
+            <p className="text-sm sm:text-base text-gray-600 mb-4">Start building your menu by adding your first item.</p>
+            <Button onClick={handleAddNewItem} variant="primary" className="w-full sm:w-auto bg-grub-red hover:bg-red-700">
               <FontAwesomeIcon icon={faPlus} className="h-4 w-4 mr-2" />
               Add Your First Item
             </Button>
@@ -427,7 +433,7 @@ const MenuPage = () => {
           menuItems.map((item) => (
           <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow">
             {/* Image area */}
-            <div className="h-36 sm:h-44 bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+            <div className="h-32 sm:h-36 lg:h-44 bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
               {item.image ? (
                 <img 
                   src={item.image} 
@@ -442,47 +448,52 @@ const MenuPage = () => {
               {/* Fallback placeholder when no image or image fails to load */}
               <div className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 ${item.image ? 'hidden' : 'flex'}`}>
                 <div className="text-center text-gray-400">
-                  <FontAwesomeIcon icon={faUpload} className="h-8 w-8 mb-2" />
+                  <FontAwesomeIcon icon={faUpload} className="h-6 w-6 sm:h-8 sm:w-8 mb-2" />
                   <p className="text-xs">No Image</p>
                 </div>
               </div>
-              <div className="absolute top-3 right-3">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.status === 'available' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+              <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
+                <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium ${item.status === 'available' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                   {item.status === 'available' ? 'Visible' : 'Hidden'}
                 </span>
               </div>
             </div>
             
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 line-clamp-1">{item.name}</h3>
-                <span className="text-base sm:text-lg font-extrabold text-grub-red">${item.price}</span>
+            <CardContent className="p-3 sm:p-4 lg:p-6">
+              <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2">
+                <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 line-clamp-1 min-w-0">{item.name}</h3>
+                <span className="text-sm sm:text-base lg:text-lg font-extrabold text-grub-red flex-shrink-0">${item.price}</span>
               </div>
 
-              <p className="text-gray-600 text-sm mb-3 line-clamp-2">{item.description}</p>
+              <p className="text-gray-600 text-xs sm:text-sm mb-3 line-clamp-2">{item.description}</p>
 
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs sm:text-sm text-gray-500 mb-3">
-                <span className="inline-flex items-center"><FontAwesomeIcon icon={faClock} className="h-4 w-4 mr-1" />{item.prepTime}min</span>
-                <span className="inline-flex items-center"><FontAwesomeIcon icon={faUsers} className="h-4 w-4 mr-1" />{item.servings}</span>
-                <span className="inline-flex items-center"><FontAwesomeIcon icon={faStar} className="h-4 w-4 mr-1 text-yellow-400" />{item.rating}</span>
+              <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 sm:gap-y-2 text-xs text-gray-500 mb-3">
+                <span className="inline-flex items-center"><FontAwesomeIcon icon={faClock} className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />{item.prepTime}min</span>
+                <span className="inline-flex items-center"><FontAwesomeIcon icon={faUsers} className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />{item.servings}</span>
+                <span className="inline-flex items-center"><FontAwesomeIcon icon={faStar} className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-yellow-400" />{item.rating}</span>
               </div>
 
-              <div className="flex flex-wrap gap-1.5 mb-4">
-                {(item.dietaryPreferences || item.dietary || []).map((diet) => (
-                  <span key={diet} className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full capitalize">
+              <div className="flex flex-wrap gap-1 sm:gap-1.5 mb-3 sm:mb-4">
+                {(item.dietaryPreferences || item.dietary || []).slice(0, 3).map((diet) => (
+                  <span key={diet} className="px-1.5 sm:px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full capitalize">
                     {t(`menu.dietary.${diet}`, diet.replace('-', ' '))}
                   </span>
                 ))}
+                {(item.dietaryPreferences || item.dietary || []).length > 3 && (
+                  <span className="px-1.5 sm:px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
+                    +{(item.dietaryPreferences || item.dietary || []).length - 3}
+                  </span>
+                )}
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">{item.totalOrders} orders</span>
-                <div className="flex space-x-1 sm:space-x-2">
-                  <button onClick={() => handleEditItem(item)} className="px-2 py-1.5 rounded-md border text-gray-600 hover:text-blue-600 hover:border-blue-200">
-                    <FontAwesomeIcon icon={faEdit} className="h-4 w-4" />
+                <span className="text-xs sm:text-sm text-gray-500">{item.totalOrders} orders</span>
+                <div className="flex space-x-1">
+                  <button onClick={() => handleEditItem(item)} className="p-1.5 sm:p-2 rounded-md border text-gray-600 hover:text-blue-600 hover:border-blue-200 transition-colors">
+                    <FontAwesomeIcon icon={faEdit} className="h-3 w-3 sm:h-4 sm:w-4" />
                   </button>
-                  <button onClick={() => handleDeleteItem(item.id)} className="px-2 py-1.5 rounded-md border text-gray-600 hover:text-red-600 hover:border-red-200">
-                    <FontAwesomeIcon icon={faTrash} className="h-4 w-4" />
+                  <button onClick={() => handleDeleteItem(item.id)} className="p-1.5 sm:p-2 rounded-md border text-gray-600 hover:text-red-600 hover:border-red-200 transition-colors">
+                    <FontAwesomeIcon icon={faTrash} className="h-3 w-3 sm:h-4 sm:w-4" />
                   </button>
                 </div>
               </div>
@@ -497,7 +508,7 @@ const MenuPage = () => {
         variant="primary"
         aria-label="Add menu item"
         onClick={handleAddNewItem}
-        className="sm:hidden fixed bottom-24 right-5 z-20 rounded-full bg-grub-red hover:bg-red-700 text-white shadow-xl px-4 py-3 active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-300 transition-transform"
+        className="sm:hidden fixed bottom-20 right-4 z-20 rounded-full bg-grub-red hover:bg-red-700 text-white shadow-xl w-14 h-14 flex items-center justify-center active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-300 transition-transform"
       >
         <FontAwesomeIcon icon={faPlus} className="h-5 w-5" />
       </Button>
@@ -516,30 +527,108 @@ const MenuPage = () => {
         <div className="flex flex-col h-full">
           {/* Scrollable content */}
           <div className="flex-1 overflow-y-auto space-y-5 pr-2">
-          {/* Segmented tabs */}
-          <div className="flex items-center justify-between">
-            <div className="inline-flex bg-gray-100 rounded-lg p-1 text-sm">
-              {[
-                { id: 'basics', label: 'Basics' },
-                { id: 'availability', label: 'Availability' },
-                { id: 'details', label: 'Details' },
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`px-3 py-1.5 rounded-md transition-colors ${
-                    activeTab === tab.id ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+          {/* Progress indicator and tabs - Responsive */}
+          <div className="w-full">
+            {/* Mobile Progress - Simplified */}
+            <div className="block sm:hidden">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-2">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                    activeTab === 'basics' ? 'bg-grub-red text-white' : 
+                    ['availability', 'details'].includes(activeTab) ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
+                  }`}>
+                    {['availability', 'details'].includes(activeTab) ? '✓' : '1'}
+                  </div>
+                  <div className={`w-4 h-0.5 ${
+                    ['availability', 'details'].includes(activeTab) ? 'bg-green-500' : 'bg-gray-200'
+                  }`} />
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                    activeTab === 'availability' ? 'bg-grub-red text-white' : 
+                    activeTab === 'details' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
+                  }`}>
+                    {activeTab === 'details' ? '✓' : '2'}
+                  </div>
+                  <div className={`w-4 h-0.5 ${
+                    activeTab === 'details' ? 'bg-green-500' : 'bg-gray-200'
+                  }`} />
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                    activeTab === 'details' ? 'bg-grub-red text-white' : 'bg-gray-200 text-gray-600'
+                  }`}>
+                    3
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs font-medium text-grub-red">
+                    Step {activeTab === 'basics' ? '1' : activeTab === 'availability' ? '2' : '3'} of 3
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {activeTab === 'basics' ? 'Basics' : activeTab === 'availability' ? 'Availability' : 'Details'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop Progress - Full */}
+            <div className="hidden sm:flex items-center justify-center">
+              <div className="flex items-center space-x-1 lg:space-x-2">
+                {[
+                  { id: 'basics', label: 'Basics', step: 1 },
+                  { id: 'availability', label: 'Availability', step: 2 },
+                  { id: 'details', label: 'Details', step: 3 },
+                ].map((tab, index) => {
+                  const isActive = activeTab === tab.id;
+                  const isCompleted = ['basics', 'availability', 'details'].indexOf(activeTab) > index;
+                  const isClickable = editingItem || index === 0 || isCompleted || 
+                    (index === 1 && formData.name && formData.price && formData.prepTime) ||
+                    (index === 2 && formData.name && formData.price && formData.prepTime);
+                  
+                  return (
+                    <div key={tab.id} className="flex items-center">
+                      <button
+                        onClick={() => isClickable && setActiveTab(tab.id)}
+                        disabled={!isClickable}
+                        className={`flex items-center justify-center w-7 h-7 lg:w-8 lg:h-8 rounded-full text-xs lg:text-sm font-medium transition-colors ${
+                          isActive 
+                            ? 'bg-grub-red text-white' 
+                            : isCompleted
+                            ? 'bg-green-500 text-white'
+                            : isClickable
+                            ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        }`}
+                      >
+                        {isCompleted ? '✓' : tab.step}
+                      </button>
+                      <span className={`ml-1.5 lg:ml-2 text-xs lg:text-sm font-medium hidden md:inline ${
+                        isActive ? 'text-grub-red' : isCompleted ? 'text-green-600' : 'text-gray-500'
+                      }`}>
+                        {tab.label}
+                      </span>
+                      {index < 2 && (
+                        <div className={`w-4 lg:w-8 h-0.5 mx-2 lg:mx-3 ${
+                          isCompleted ? 'bg-green-500' : 'bg-gray-200'
+                        }`} />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
           {/* BASICS TAB */}
           {activeTab === 'basics' && (
             <div className="space-y-3 sm:space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 mb-4">
+                <div className="flex items-center">
+                  <div className="bg-blue-500 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs sm:text-sm font-bold mr-2 sm:mr-3 flex-shrink-0">1</div>
+                  <div className="min-w-0">
+                    <h3 className="text-xs sm:text-sm font-semibold text-blue-900">Step 1: Basic Information</h3>
+                    <p className="text-xs text-blue-700 hidden sm:block">Enter the essential details about your menu item</p>
+                    <p className="text-xs text-blue-700 sm:hidden">Essential details</p>
+                  </div>
+                </div>
+              </div>
               {/* Item name */}
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">Item Name</label>
@@ -721,6 +810,16 @@ const MenuPage = () => {
           {/* AVAILABILITY TAB */}
           {activeTab === 'availability' && (
             <div className="space-y-3">
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 sm:p-4 mb-4">
+                <div className="flex items-center">
+                  <div className="bg-orange-500 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs sm:text-sm font-bold mr-2 sm:mr-3 flex-shrink-0">2</div>
+                  <div className="min-w-0">
+                    <h3 className="text-xs sm:text-sm font-semibold text-orange-900">Step 2: Availability Schedule</h3>
+                    <p className="text-xs text-orange-700 hidden sm:block">Set when this item is available for customers to order</p>
+                    <p className="text-xs text-orange-700 sm:hidden">Set availability times</p>
+                  </div>
+                </div>
+              </div>
               <p className="text-sm text-gray-600">Choose when this item is available for customers to add to their weekly plan.</p>
               <div className="overflow-auto border border-gray-200 rounded-lg">
                 <table className="w-full text-sm">
@@ -783,123 +882,393 @@ const MenuPage = () => {
 
           {/* DETAILS TAB */}
           {activeTab === 'details' && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Dietary Preferences</label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {['vegetarian','vegan','gluten-free','dairy-free','keto','low-carb','halal','kosher','spicy'].map(opt => (
-                    <label key={opt} className="inline-flex items-center space-x-2 text-sm">
-                      <input 
-                        type="checkbox" 
-                        checked={formData.dietaryPreferences.includes(opt)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            handleInputChange('dietaryPreferences', [...formData.dietaryPreferences, opt]);
-                          } else {
-                            handleInputChange('dietaryPreferences', formData.dietaryPreferences.filter(pref => pref !== opt));
-                          }
-                        }}
-                        className="h-4 w-4 text-grub-red" 
-                      />
-                      <span className="capitalize">{opt.replace('-', ' ')}</span>
-                    </label>
-                  ))}
+            <div className="space-y-3 sm:space-y-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
+                <div className="flex items-center">
+                  <div className="bg-green-500 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs sm:text-sm font-bold mr-2 sm:mr-3 flex-shrink-0">3</div>
+                  <div className="min-w-0">
+                    <h3 className="text-xs sm:text-sm font-semibold text-green-900">Step 3: Additional Details</h3>
+                    <p className="text-xs text-green-700 hidden sm:block">Add dietary preferences, allergens, and ingredients</p>
+                    <p className="text-xs text-green-700 sm:hidden">Extra details & preferences</p>
+                  </div>
                 </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Allergens</label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {['gluten', 'dairy', 'eggs', 'fish', 'shellfish', 'nuts', 'peanuts', 'soy', 'sesame', 'alcohol', 'sulfites'].map(allergen => (
-                    <label key={allergen} className="inline-flex items-center space-x-2 text-sm">
-                      <input 
-                        type="checkbox" 
-                        checked={formData.allergens.includes(allergen)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            handleInputChange('allergens', [...formData.allergens, allergen]);
-                          } else {
-                            handleInputChange('allergens', formData.allergens.filter(a => a !== allergen));
-                          }
-                        }}
-                        className="h-4 w-4 text-grub-red" 
-                      />
-                      <span className="capitalize">{allergen}</span>
-                    </label>
-                  ))}
+              
+              {/* Compact Mobile Layout */}
+              <div className="block sm:hidden space-y-3">
+                {/* Dietary Preferences - Compact */}
+                <div className="bg-white border border-gray-200 rounded-lg p-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">🌱 Dietary Preferences</label>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                    {['vegetarian','vegan','gluten-free','dairy-free','keto','low-carb'].map(opt => (
+                      <label key={opt} className="flex items-start space-x-2 text-xs cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={formData.dietaryPreferences.includes(opt)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              handleInputChange('dietaryPreferences', [...formData.dietaryPreferences, opt]);
+                            } else {
+                              handleInputChange('dietaryPreferences', formData.dietaryPreferences.filter(pref => pref !== opt));
+                            }
+                          }}
+                          className="h-4 w-4 text-grub-red flex-shrink-0 rounded mt-0.5" 
+                        />
+                        <span className="capitalize text-xs leading-relaxed flex-1 min-w-0">{opt.replace('-', ' ')}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {/* Show more options in collapsed state */}
+                  <div className="mt-2">
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                      {['halal','kosher','spicy'].map(opt => (
+                        <label key={opt} className="flex items-start space-x-2 text-xs cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            checked={formData.dietaryPreferences.includes(opt)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                handleInputChange('dietaryPreferences', [...formData.dietaryPreferences, opt]);
+                              } else {
+                                handleInputChange('dietaryPreferences', formData.dietaryPreferences.filter(pref => pref !== opt));
+                              }
+                            }}
+                            className="h-4 w-4 text-grub-red flex-shrink-0 rounded mt-0.5" 
+                          />
+                          <span className="capitalize text-xs leading-relaxed flex-1 min-w-0">{opt}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Ingredients</label>
-                <textarea
-                  placeholder="Enter ingredients separated by commas (e.g., chicken breast, mushrooms, olive oil, garlic)"
-                  value={formData.ingredientsText || formData.ingredients.join(', ')}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    console.log('🥬 Ingredients input changed to:', value);
-                    
-                    // Store the raw text for display purposes
-                    handleInputChange('ingredientsText', value);
-                    
-                    // Process ingredients for backend storage
-                    if (value === '') {
-                      handleInputChange('ingredients', []);
-                    } else {
-                      // Split by comma, trim each item, and filter out empty strings
-                      const ingredients = value
-                        .split(',')
-                        .map(item => item.trim())
-                        .filter(item => item.length > 0);
+                {/* Allergens - Compact */}
+                <div className="bg-white border border-gray-200 rounded-lg p-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">⚠️ Common Allergens</label>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                    {['gluten', 'dairy', 'eggs', 'nuts', 'shellfish', 'soy'].map(allergen => (
+                      <label key={allergen} className="flex items-start space-x-2 text-xs cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={formData.allergens.includes(allergen)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              handleInputChange('allergens', [...formData.allergens, allergen]);
+                            } else {
+                              handleInputChange('allergens', formData.allergens.filter(a => a !== allergen));
+                            }
+                          }}
+                          className="h-4 w-4 text-grub-red flex-shrink-0 rounded mt-0.5" 
+                        />
+                        <span className="capitalize text-xs leading-relaxed flex-1 min-w-0">{allergen}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {/* Additional allergens in smaller grid */}
+                  <div className="mt-2">
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                      {['fish', 'peanuts', 'sesame', 'alcohol', 'sulfites'].map(allergen => (
+                        <label key={allergen} className="flex items-start space-x-2 text-xs cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            checked={formData.allergens.includes(allergen)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                handleInputChange('allergens', [...formData.allergens, allergen]);
+                              } else {
+                                handleInputChange('allergens', formData.allergens.filter(a => a !== allergen));
+                              }
+                            }}
+                            className="h-4 w-4 text-grub-red flex-shrink-0 rounded mt-0.5" 
+                          />
+                          <span className="capitalize text-xs leading-relaxed flex-1 min-w-0">{allergen}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Ingredients - Compact */}
+                <div className="bg-white border border-gray-200 rounded-lg p-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">🥘 Ingredients</label>
+                  <textarea
+                    placeholder="chicken, rice, spices..."
+                    value={formData.ingredientsText || formData.ingredients.join(', ')}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      handleInputChange('ingredientsText', value);
                       
-                      console.log('🥬 Processed ingredients:', ingredients);
-                      handleInputChange('ingredients', ingredients);
-                    }
-                  }}
-                  onBlur={(e) => {
-                    // On blur, clean up the display text to match the processed ingredients
-                    const cleanText = formData.ingredients.join(', ');
-                    if (e.target.value !== cleanText) {
-                      handleInputChange('ingredientsText', cleanText);
-                    }
-                  }}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm resize-vertical"
-                />
-                <p className="text-xs text-gray-500 mt-1">Separate ingredients with commas</p>
+                      if (value === '') {
+                        handleInputChange('ingredients', []);
+                      } else {
+                        const ingredients = value
+                          .split(',')
+                          .map(item => item.trim())
+                          .filter(item => item.length > 0);
+                        handleInputChange('ingredients', ingredients);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const cleanText = formData.ingredients.join(', ');
+                      if (e.target.value !== cleanText) {
+                        handleInputChange('ingredientsText', cleanText);
+                      }
+                    }}
+                    rows={2}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm resize-none"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Separate with commas</p>
+                </div>
+              </div>
+
+              {/* Desktop Layout - Full */}
+              <div className="hidden sm:block space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Dietary Preferences</label>
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+                    {['vegetarian','vegan','gluten-free','dairy-free','keto','low-carb','halal','kosher','spicy'].map(opt => (
+                      <label key={opt} className="inline-flex items-center space-x-2 text-sm py-1">
+                        <input 
+                          type="checkbox" 
+                          checked={formData.dietaryPreferences.includes(opt)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              handleInputChange('dietaryPreferences', [...formData.dietaryPreferences, opt]);
+                            } else {
+                              handleInputChange('dietaryPreferences', formData.dietaryPreferences.filter(pref => pref !== opt));
+                            }
+                          }}
+                          className="h-4 w-4 text-grub-red flex-shrink-0" 
+                        />
+                        <span className="capitalize">{opt.replace('-', ' ')}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Allergens</label>
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+                    {['gluten', 'dairy', 'eggs', 'fish', 'shellfish', 'nuts', 'peanuts', 'soy', 'sesame', 'alcohol', 'sulfites'].map(allergen => (
+                      <label key={allergen} className="inline-flex items-center space-x-2 text-sm py-1">
+                        <input 
+                          type="checkbox" 
+                          checked={formData.allergens.includes(allergen)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              handleInputChange('allergens', [...formData.allergens, allergen]);
+                            } else {
+                              handleInputChange('allergens', formData.allergens.filter(a => a !== allergen));
+                            }
+                          }}
+                          className="h-4 w-4 text-grub-red flex-shrink-0" 
+                        />
+                        <span className="capitalize">{allergen}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Ingredients</label>
+                  <textarea
+                    placeholder="Enter ingredients separated by commas (e.g., chicken breast, mushrooms, olive oil, garlic)"
+                    value={formData.ingredientsText || formData.ingredients.join(', ')}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      handleInputChange('ingredientsText', value);
+                      
+                      if (value === '') {
+                        handleInputChange('ingredients', []);
+                      } else {
+                        const ingredients = value
+                          .split(',')
+                          .map(item => item.trim())
+                          .filter(item => item.length > 0);
+                        handleInputChange('ingredients', ingredients);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const cleanText = formData.ingredients.join(', ');
+                      if (e.target.value !== cleanText) {
+                        handleInputChange('ingredientsText', cleanText);
+                      }
+                    }}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm resize-vertical"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Separate ingredients with commas</p>
+                </div>
               </div>
             </div>
           )}
           </div>
           
-          {/* Footer actions - Outside scrollable area */}
-          <div className="border-t bg-white px-0 py-4 flex flex-col sm:flex-row sm:justify-end gap-3 mt-4 flex-shrink-0">
-            <Button
-              variant="secondary"
-              className="w-full sm:w-auto border-gray-300 hover:bg-gray-50"
-              onClick={() => {
-                setShowAddModal(false);
-                resetForm();
-              }}
-              disabled={submitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="primary"
-              className="w-full sm:w-auto bg-grub-red hover:bg-red-700 text-white active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-300"
-              onClick={handleSubmit}
-              disabled={submitting}
-            >
-              {submitting ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  {editingItem ? 'Saving...' : 'Creating...'}
-                </div>
-              ) : (
-                editingItem ? 'Save Changes' : 'Add Menu Item'
-              )}
-            </Button>
+          {/* Footer actions - Outside scrollable area - Responsive */}
+          <div className="border-t bg-white px-0 py-3 sm:py-4 mt-4 flex-shrink-0">
+            {/* Mobile Layout - Stacked */}
+            <div className="block sm:hidden space-y-3">
+              {/* Top row - Cancel and Back */}
+              <div className="flex gap-2">
+                <Button
+                  variant="secondary"
+                  className="flex-1 border-gray-300 hover:bg-gray-50 text-sm py-2"
+                  onClick={() => {
+                    setShowAddModal(false);
+                    resetForm();
+                  }}
+                  disabled={submitting}
+                >
+                  Cancel
+                </Button>
+                
+                {/* Back button - only show if not on first tab */}
+                {activeTab !== 'basics' && (
+                  <Button
+                    variant="secondary"
+                    className="flex-1 border-gray-300 hover:bg-gray-50 text-sm py-2"
+                    onClick={() => {
+                      const tabs = ['basics', 'availability', 'details'];
+                      const currentIndex = tabs.indexOf(activeTab);
+                      if (currentIndex > 0) {
+                        setActiveTab(tabs[currentIndex - 1]);
+                      }
+                    }}
+                    disabled={submitting}
+                  >
+                    ← Back
+                  </Button>
+                )}
+              </div>
+              
+              {/* Bottom row - Primary action */}
+              <div>
+                {/* Next button for basics and availability tabs */}
+                {activeTab === 'basics' && (
+                  <Button
+                    variant="primary"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm py-2.5"
+                    onClick={() => setActiveTab('availability')}
+                    disabled={submitting || !formData.name || !formData.price || !formData.prepTime}
+                  >
+                    Next: Availability →
+                  </Button>
+                )}
+                
+                {activeTab === 'availability' && (
+                  <Button
+                    variant="primary"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm py-2.5"
+                    onClick={() => setActiveTab('details')}
+                    disabled={submitting}
+                  >
+                    Next: Details →
+                  </Button>
+                )}
+                
+                {/* Add/Save button only on details tab */}
+                {activeTab === 'details' && (
+                  <Button
+                    variant="primary"
+                    className="w-full bg-grub-red hover:bg-red-700 text-white text-sm py-2.5 active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-300"
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                  >
+                    {submitting ? (
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        {editingItem ? 'Saving...' : 'Creating...'}
+                      </div>
+                    ) : (
+                      <>
+                        {editingItem ? '💾 Save Changes' : '✨ Add Menu Item'}
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Desktop Layout - Side by side */}
+            <div className="hidden sm:flex sm:justify-between gap-3">
+              <div className="flex gap-3">
+                <Button
+                  variant="secondary"
+                  className="border-gray-300 hover:bg-gray-50"
+                  onClick={() => {
+                    setShowAddModal(false);
+                    resetForm();
+                  }}
+                  disabled={submitting}
+                >
+                  Cancel
+                </Button>
+                
+                {/* Back button - only show if not on first tab */}
+                {activeTab !== 'basics' && (
+                  <Button
+                    variant="secondary"
+                    className="border-gray-300 hover:bg-gray-50"
+                    onClick={() => {
+                      const tabs = ['basics', 'availability', 'details'];
+                      const currentIndex = tabs.indexOf(activeTab);
+                      if (currentIndex > 0) {
+                        setActiveTab(tabs[currentIndex - 1]);
+                      }
+                    }}
+                    disabled={submitting}
+                  >
+                    ← Back
+                  </Button>
+                )}
+              </div>
+              
+              <div className="flex gap-3">
+                {/* Next button for basics and availability tabs */}
+                {activeTab === 'basics' && (
+                  <Button
+                    variant="primary"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    onClick={() => setActiveTab('availability')}
+                    disabled={submitting || !formData.name || !formData.price || !formData.prepTime}
+                  >
+                    Next: Availability →
+                  </Button>
+                )}
+                
+                {activeTab === 'availability' && (
+                  <Button
+                    variant="primary"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    onClick={() => setActiveTab('details')}
+                    disabled={submitting}
+                  >
+                    Next: Details →
+                  </Button>
+                )}
+                
+                {/* Add/Save button only on details tab */}
+                {activeTab === 'details' && (
+                  <Button
+                    variant="primary"
+                    className="bg-grub-red hover:bg-red-700 text-white active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-300"
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                  >
+                    {submitting ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        {editingItem ? 'Saving...' : 'Creating...'}
+                      </div>
+                    ) : (
+                      <>
+                        {editingItem ? '💾 Save Changes' : '✨ Add Menu Item'}
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </Modal>

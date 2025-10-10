@@ -204,8 +204,8 @@ const OrdersPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 lg:p-6 xl:p-8">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         
         {/* Error Message */}
         {error && (
@@ -219,10 +219,10 @@ const OrdersPage = () => {
           />
         )}
         {/* Header */}
-        <div className="bg-gradient-to-r from-grub-red to-red-600 rounded-2xl p-6 text-white">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="bg-gradient-to-r from-grub-red to-red-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
+          <div className="flex flex-col gap-4">
             <div className="flex-1">
-              <h1 className="text-2xl sm:text-3xl font-bold">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">
                 {isClient && selectedDate ? (
                   selectedDate.toDateString() === new Date().toDateString() 
                     ? "Today's Orders" 
@@ -241,7 +241,7 @@ const OrdersPage = () => {
                       })}`
                 ) : "Orders"}
               </h1>
-              <p className="text-red-100 mt-1">
+              <p className="text-red-100 mt-1 text-sm sm:text-base">
                 {isClient ? (
                   orders.length > 0 
                     ? selectedDate > new Date()
@@ -253,25 +253,25 @@ const OrdersPage = () => {
                 ) : "Select a date to view orders"}
               </p>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
               {/* Date Picker */}
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg">
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg w-full sm:w-auto">
                 <DatePicker
                   selectedDate={selectedDate}
                   onDateChange={handleDateChange}
                   placeholder="Select date"
-                  className="w-48"
+                  className="w-full sm:w-48"
                 />
               </div>
-              <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
-                <span className="text-sm font-medium">{orders.length} Orders</span>
+              <div className="bg-white/20 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2">
+                <span className="text-xs sm:text-sm font-medium">{orders.length} Orders</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {[
             { 
               label: 'Pending', 
@@ -305,14 +305,14 @@ const OrdersPage = () => {
             const Icon = stat.icon;
             return (
               <Card key={index} className="hover:shadow-lg transition-all duration-200">
-                <CardContent className="p-4 sm:p-6">
+                <CardContent className="p-3 sm:p-4 lg:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600 mb-1">{stat.label}</p>
-                      <p className="text-2xl sm:text-3xl font-bold text-gray-900">{stat.count}</p>
+                      <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">{stat.label}</p>
+                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{stat.count}</p>
                     </div>
-                    <div className={`h-12 w-12 rounded-full flex items-center justify-center ${stat.bgColor}`}>
-                      <FontAwesomeIcon icon={Icon} className={`h-6 w-6 ${stat.color.replace('bg-', 'text-')}`} />
+                    <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center ${stat.bgColor}`}>
+                      <FontAwesomeIcon icon={Icon} className={`h-5 w-5 sm:h-6 sm:w-6 ${stat.color.replace('bg-', 'text-')}`} />
                     </div>
                   </div>
                 </CardContent>
@@ -323,24 +323,24 @@ const OrdersPage = () => {
 
         {/* Filters */}
         <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
+            <div className="flex flex-col gap-3 sm:gap-4">
               <div className="flex-1">
                 <div className="relative">
                   <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
-                    placeholder="Search weekly plan orders by customer name..."
+                    placeholder="Search orders by customer name..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 text-sm sm:text-base"
                   />
                 </div>
               </div>
-              <div className="sm:w-48">
+              <div className="w-full sm:w-48">
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red"
+                  className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red"
                 >
                   {statuses.map(status => (
                     <option key={status.value} value={status.value}>

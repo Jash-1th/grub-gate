@@ -344,19 +344,38 @@ const SettingsPage = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
           {t('settings.title')}
         </h1>
-        <p className="text-gray-600">
+        <p className="text-sm sm:text-base text-gray-600">
           {t('settings.subtitle')}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Sidebar */}
-        <div className="lg:col-span-1">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
+        {/* Mobile Tab Selector */}
+        <div className="lg:hidden">
+          <Card>
+            <CardContent className="p-3">
+              <select
+                value={activeTab}
+                onChange={(e) => setActiveTab(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red"
+              >
+                {tabs.map((tab) => (
+                  <option key={tab.id} value={tab.id}>
+                    {tab.label}
+                  </option>
+                ))}
+              </select>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block lg:col-span-1">
           <Card>
             <CardContent className="p-0">
               <nav className="space-y-1">
@@ -387,16 +406,17 @@ const SettingsPage = () => {
           {activeTab === 'profile' && (
             <Card>
               <CardHeader>
-                <CardTitle>{t('settings.profile.title')}</CardTitle>
+                <CardTitle className="text-lg sm:text-xl">{t('settings.profile.title')}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <CardContent className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
                     <Input
                       label={t('settings.profile.name')}
                       value={formData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
                       error={errors.name}
+                      className="text-sm sm:text-base"
                     />
                   </div>
                   <div>
@@ -406,6 +426,7 @@ const SettingsPage = () => {
                       onChange={(e) => handleInputChange('cuisine', e.target.value)}
                       placeholder="e.g., French, Italian, American"
                       error={errors.cuisine}
+                      className="text-sm sm:text-base"
                     />
                   </div>
                 </div>
@@ -426,13 +447,14 @@ const SettingsPage = () => {
                     <p className="mt-1 text-sm text-red-600">{errors.description}</p>
                   )}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
                     <Input
                       label={t('settings.profile.address')}
                       value={formData.address}
                       onChange={(e) => handleInputChange('address', e.target.value)}
                       error={errors.address}
+                      className="text-sm sm:text-base"
                     />
                   </div>
                   <div>
@@ -442,10 +464,11 @@ const SettingsPage = () => {
                       onChange={(e) => handleInputChange('phone', e.target.value)}
                       placeholder="+1 (555) 123-4567"
                       error={errors.phone}
+                      className="text-sm sm:text-base"
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
                     <Input
                       label={t('settings.profile.email')}
@@ -453,6 +476,7 @@ const SettingsPage = () => {
                       value={formData.email}
                       onChange={(e) => handleInputChange('email', e.target.value)}
                       error={errors.email}
+                      className="text-sm sm:text-base"
                     />
                   </div>
                   <div>
@@ -462,6 +486,7 @@ const SettingsPage = () => {
                       onChange={(e) => handleInputChange('website', e.target.value)}
                       placeholder="https://yourrestaurant.com"
                       error={errors.website}
+                      className="text-sm sm:text-base"
                     />
                   </div>
                 </div>
@@ -761,14 +786,14 @@ const SettingsPage = () => {
             </Card>
           )}
 
-          <div className="flex justify-end">
+          <div className="flex justify-end pt-4">
             <Button
               onClick={handleSave}
               disabled={loading}
-              className="min-w-[120px] bg-grub-red hover:bg-red-700 text-white"
+              className="w-full sm:w-auto min-w-[120px] bg-grub-red hover:bg-red-700 text-white text-sm sm:text-base py-2.5 sm:py-2"
             >
               {loading ? (
-                <div className="flex items-center">
+                <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                   Saving...
                 </div>
