@@ -1,8 +1,8 @@
 # Netlify configuration for Partner Portal (Monorepo)
 
 [build]
-  # Install dependencies from root (monorepo) and build the partner portal
-  command = "cd ../.. && rm -rf node_modules package-lock.json && npm install && cd apps/partner-portal && npm run build"
+  # Install dependencies from root but exclude problematic packages
+  command = "cd ../.. && rm -rf node_modules package-lock.json && npm install --ignore-scripts && cd apps/partner-portal && npm run build"
   
   # The directory with the static assets from the client build (relative to base directory)
   publish = "dist/client"
