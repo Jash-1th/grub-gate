@@ -1,6 +1,6 @@
 import React from 'react';
-import AlertCircle from 'lucide-react/icons/alert-circle';
-import RefreshCw from 'lucide-react/icons/refresh-cw';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faExclamationTriangle, faSync } from '@fortawesome/free-solid-svg-icons';
 
 /**
  * Error Boundary Component
@@ -58,7 +58,7 @@ class ErrorBoundary extends React.Component {
           <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
             <div className="flex justify-center mb-4">
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-                <AlertCircle className="w-8 h-8 text-red-600" />
+                <FontAwesomeIcon icon={faExclamationTriangle} className="w-8 h-8 text-red-600" />
               </div>
             </div>
             
@@ -75,7 +75,7 @@ class ErrorBoundary extends React.Component {
                 onClick={this.handleRefresh}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-grub-red text-white rounded-lg hover:bg-red-700 transition-colors"
               >
-                <RefreshCw className="w-4 h-4" />
+                <FontAwesomeIcon icon={faSync} className="w-4 h-4" />
                 Try Again
               </button>
               

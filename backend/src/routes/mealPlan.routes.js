@@ -88,6 +88,7 @@ const clearMealPlanValidation = [
 router.use(authMiddleware);
 
 // Routes
+router.get('/me', getMealPlan); // Get current user's meal plan
 router.get('/:userId', userIdValidation, handleValidationErrors, getMealPlan);
 router.post('/', mealPlanValidation, handleValidationErrors, createOrUpdateMealPlan);
 router.post('/:userId/add-item', addItemValidation, handleValidationErrors, addItemToMealPlan);

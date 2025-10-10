@@ -26,19 +26,29 @@ const contactRoutes = require('./src/routes/contact.routes');
 const uploadRoutes = require('./src/routes/upload.routes');
 const searchRoutes = require('./src/routes/search.routes');
 const mealPlanRoutes = require('./src/routes/mealPlan.routes');
+const subscriptionMealPlanRoutes = require('./src/routes/subscriptionMealPlan.routes');
+const partnerMenuItemRoutes = require('./src/routes/partner/menuItem.routes');
+const partnerSettingsRoutes = require('./src/routes/partner/restaurantSettings.routes');
+const partnerOrderRoutes = require('./src/routes/partner/orders.routes');
+const orderGenerationRoutes = require('./src/routes/orderGeneration.routes');
+const adminRoutes = require('./src/routes/admin.routes');
 
 const app = express();
 
 // Connect to MongoDB
 connectDB();
 
+// Start order activation service
+const { startOrderActivationCron } = require('./src/services/orderActivationService');
+startOrderActivationCron();
+
 // Security middleware
 app.use(helmet());
 
-// Rate limiting
+// Rate limiting - More generous for development
 const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limit each IP to 100 requests per windowMs
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 60 * 1000, // 1 minute (was 15 minutes)
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 10000, // 10000 requests per minute (was 100 per 15 min)
   message: {
     status: 'error',
     message: 'Too many requests from this IP, please try again later.'
@@ -46,17 +56,45 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
-// CORS configuration
-const corsOptions = {
-  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000'],
+// CORS configuration - Allow both Customer App and Partner Portal
+const allowedOrigins = [
+  'http://localhost:3000', // Customer App
+  'http://localhost:5173', // Partner Portal (Vite dev server)
+  'http://localhost:4173'  // Partner Portal (Vite preview)
+];
+
+console.log('🔧 CORS: Allowing origins:', allowedOrigins);
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('❌ CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
-  optionsSuccessStatus: 200
-};
-app.use(cors(corsOptions));
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar']
+}));
+
+// Request logging middleware for debugging
+app.use((req, res, next) => {
+  console.log(`🔍 ${req.method} ${req.path} - Origin: ${req.headers.origin || 'none'}`);
+  next();
+});
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
 
 // Logging middleware
 if (process.env.NODE_ENV === 'development') {
@@ -75,6 +113,16 @@ app.get('/health', (req, res) => {
   });
 });
 
+// CORS test endpoint
+app.get('/cors-test', (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'CORS is working!',
+    origin: req.headers.origin,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // API Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
@@ -90,6 +138,12 @@ app.use('/api/v1/contact', contactRoutes);
 app.use('/api/v1/upload', uploadRoutes);
 app.use('/api/v1/search', searchRoutes);
 app.use('/api/v1/meal-plans', mealPlanRoutes);
+app.use('/api/v1/subscription-meal-plans', subscriptionMealPlanRoutes);
+app.use('/api/v1/partner', partnerMenuItemRoutes);
+app.use('/api/v1/partner', partnerSettingsRoutes);
+app.use('/api/v1/partner/orders', partnerOrderRoutes);
+app.use('/api/v1/orders/generate', orderGenerationRoutes);
+app.use('/api/v1/admin', adminRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

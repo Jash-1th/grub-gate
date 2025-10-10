@@ -1,26 +1,33 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router-dom';
-import Eye from 'lucide-react/icons/eye';
-import EyeOff from 'lucide-react/icons/eye-off';
-import Mail from 'lucide-react/icons/mail';
-import Lock from 'lucide-react/icons/lock';
-import ChefHat from 'lucide-react/icons/chef-hat';
-import Users from 'lucide-react/icons/users';
-import TrendingUp from 'lucide-react/icons/trending-up';
-import Shield from 'lucide-react/icons/shield';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faEye, 
+  faEyeSlash, 
+  faEnvelope, 
+  faLock, 
+  faUtensils, 
+  faUsers, 
+  faArrowTrendUp, 
+  faShield 
+} from '@fortawesome/free-solid-svg-icons';
 import { Button, Logo } from '@grub-gate/ui';
+import { useAuth } from '../../contexts/AuthContext.jsx';
+import { useToast } from '../../contexts/ToastContext.jsx';
 
 const LoginPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { login, isLoading, error, clearError } = useAuth();
+  const { showSuccess } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     rememberMe: false
   });
-  const [loading, setLoading] = useState(false);
+  // Remove local loading state, use AuthContext loading
   const [errors, setErrors] = useState({});
 
   const handleInputChange = (e) => {
@@ -29,9 +36,16 @@ const LoginPage = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    // Clear error when user starts typing
+    // Clear errors when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+    if (errors.general) {
+      setErrors(prev => ({ ...prev, general: '' }));
+    }
+    // Clear AuthContext error
+    if (error) {
+      clearError();
     }
   };
 
@@ -59,35 +73,48 @@ const LoginPage = () => {
     
     if (!validateForm()) return;
     
-    setLoading(true);
+    // Clear any previous auth errors
+    clearError();
     
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      // In a real app, you would handle authentication here
-      // For demo purposes, we'll just navigate to dashboard
-      navigate('/dashboard');
-    }, 1500);
+    try {
+      const result = await login(formData.email, formData.password);
+      
+      if (result.success) {
+        console.log('✅ Partner login successful!');
+        console.log('📍 Navigating to dashboard...');
+        
+        // Show success toast message
+        showSuccess(`Welcome back, ${result.user.name || 'Partner'}! You have successfully logged in.`, 6000);
+        
+        navigate('/dashboard');
+        console.log('📍 Navigation called');
+      } else {
+        setErrors({ general: result.error || 'Login failed. Please try again.' });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setErrors({ general: 'Login failed. Please try again.' });
+    }
   };
 
   const features = [
     {
-      icon: ChefHat,
+      icon: faUtensils,
       title: 'Manage Your Menu',
       description: 'Create and update your restaurant menu with ease'
     },
     {
-      icon: Users,
+      icon: faUsers,
       title: 'Track Customers',
       description: 'Monitor customer orders and preferences'
     },
     {
-      icon: TrendingUp,
+      icon: faArrowTrendUp,
       title: 'Boost Revenue',
       description: 'Grow your business with subscription meal plans'
     },
     {
-      icon: Shield,
+      icon: faShield,
       title: 'Secure Platform',
       description: 'Your data is protected with enterprise-grade security'
     }
@@ -116,7 +143,7 @@ const LoginPage = () => {
             {features.map((feature, index) => (
               <div key={index} className="flex items-start space-x-5 group">
                 <div className="flex-shrink-0 w-14 h-14 bg-grub-red/10 rounded-xl flex items-center justify-center group-hover:bg-grub-red/20 transition-all duration-300">
-                  <feature.icon className="w-7 h-7 text-grub-red" />
+                  <FontAwesomeIcon icon={feature.icon} className="w-7 h-7 text-grub-red" />
                 </div>
                 <div className="pt-1">
                   <h3 className="font-semibold text-gray-900 mb-2 text-lg">{feature.title}</h3>
@@ -177,7 +204,7 @@ const LoginPage = () => {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="h-5 w-5 text-gray-400" />
+                    <FontAwesomeIcon icon={faEnvelope} className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
                     id="email"
@@ -205,7 +232,7 @@ const LoginPage = () => {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-gray-400" />
+                    <FontAwesomeIcon icon={faLock} className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
                     id="password"
@@ -226,9 +253,9 @@ const LoginPage = () => {
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                      <FontAwesomeIcon icon={faEyeSlash} className="h-5 w-5 text-gray-400 hover:text-gray-600" />
                     ) : (
-                      <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                      <FontAwesomeIcon icon={faEye} className="h-5 w-5 text-gray-400 hover:text-gray-600" />
                     )}
                   </button>
                 </div>
@@ -267,11 +294,20 @@ const LoginPage = () => {
                   type="submit"
                   variant="primary"
                   size="lg"
-                  loading={loading}
+                  disabled={isLoading}
                   className="w-full py-4 text-base font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
                 >
-                  {loading ? 'Signing in...' : 'Sign in'}
+                  {isLoading ? 'Signing in...' : 'Sign in'}
                 </Button>
+                
+                {/* Error Display */}
+                {(errors.general || error) && (
+                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-600">
+                      {errors.general || error}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Sign Up Link */}
@@ -298,7 +334,7 @@ const LoginPage = () => {
             <div className="grid grid-cols-2 gap-6">
               {features.slice(0, 4).map((feature, index) => (
                 <div key={index} className="text-center p-4 bg-white rounded-xl shadow-soft border border-gray-100">
-                  <feature.icon className="w-6 h-6 text-grub-red mx-auto mb-2" />
+                  <FontAwesomeIcon icon={feature.icon} className="w-6 h-6 text-grub-red mx-auto mb-2" />
                   <h4 className="font-medium text-gray-900 text-sm mb-1">{feature.title}</h4>
                   <p className="text-xs text-gray-600 leading-relaxed">{feature.description}</p>
                 </div>
@@ -313,8 +349,3 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
-
-
-
-
-

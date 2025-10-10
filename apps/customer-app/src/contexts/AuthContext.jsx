@@ -200,12 +200,12 @@ export const AuthProvider = ({ children }) => {
   }, [state.isAuthenticated, state.isLoading, isClient]);
 
   // Login function
-  const login = async (email, password) => {
+  const login = async (identifier, password) => {
     dispatch({ type: AUTH_ACTIONS.LOGIN_START });
     
     try {
       const response = await apiClient.post('/auth/login', {
-        email,
+        identifier,
         password,
       });
 
@@ -245,7 +245,7 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true, user };
     } catch (error) {
-      let errorMessage = 'Invalid email or password. Please try again.';
+      let errorMessage = 'Invalid credentials. Please try again.';
       let fieldErrors = {};
       
       // Handle validation errors from backend

@@ -1,13 +1,14 @@
 import React from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  Home,
-  LogIn,
-  UserPlus,
-  Globe,
-  MessageCircle
-} from 'lucide-react';
+  faHome,
+  faSignInAlt,
+  faUserPlus,
+  faGlobe,
+  faCommentDots
+} from '@fortawesome/free-solid-svg-icons';
 
 /**
  * Mobile Bottom Navigation Component for Partner Portal Public Pages
@@ -23,25 +24,25 @@ const PublicMobileBottomNav = () => {
     { 
       name: 'home', 
       href: '/', 
-      icon: Home,
+      icon: faHome,
       label: t('common.home', 'Home')
     },
     { 
       name: 'login', 
       href: '/login', 
-      icon: LogIn,
+      icon: faSignInAlt,
       label: t('auth.login.signIn', 'Sign In')
     },
     { 
       name: 'register', 
       href: '/register', 
-      icon: UserPlus,
+      icon: faUserPlus,
       label: t('auth.register.getStarted', 'Join Us')
     },
     { 
       name: 'language', 
       href: '#', 
-      icon: Globe,
+      icon: faGlobe,
       label: i18n.language.toUpperCase(),
       onClick: () => {
         const newLang = i18n.language === 'en' ? 'fr' : 'en';
@@ -51,7 +52,7 @@ const PublicMobileBottomNav = () => {
     { 
       name: 'faqs', 
       href: '/faqs', 
-      icon: MessageCircle,
+      icon: faCommentDots,
       label: t('common.faqs', 'FAQs')
     }
   ];
@@ -82,7 +83,7 @@ const PublicMobileBottomNav = () => {
       {/* Main Navigation */}
       <ul className="flex items-stretch justify-between px-2 py-2">
         {publicNavigation.map((item) => {
-          const Icon = item.icon;
+          const iconDef = item.icon;
           const isActive = item.href !== '#' && isCurrentPath(item.href);
           
           return (
@@ -94,7 +95,7 @@ const PublicMobileBottomNav = () => {
                   aria-label={item.label}
                 >
                   <div className="flex items-center justify-center h-6 w-6 mb-1 flex-shrink-0">
-                    <Icon className="h-5 w-5" />
+                    <FontAwesomeIcon icon={iconDef} className="h-5 w-5" />
                   </div>
                   <div className="flex items-center justify-center h-4 text-center min-w-0 w-full px-0.5">
                     <span 
@@ -118,7 +119,7 @@ const PublicMobileBottomNav = () => {
                   onClick={(e) => handleNavClick(item, e)}
                 >
                   <div className="flex items-center justify-center h-6 w-6 mb-1 flex-shrink-0">
-                    <Icon className="h-5 w-5" />
+                    <FontAwesomeIcon icon={iconDef} className="h-5 w-5" />
                   </div>
                   <div className="flex items-center justify-center h-4 text-center min-w-0 w-full px-0.5">
                     <span 

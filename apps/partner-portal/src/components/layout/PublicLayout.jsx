@@ -2,8 +2,8 @@ import React from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Logo, Button } from '@grub-gate/ui';
-import Globe from 'lucide-react/icons/globe';
-import ChevronDown from 'lucide-react/icons/chevron-down';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faGlobe, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import PublicMobileBottomNav from './PublicMobileBottomNav';
 
 const PublicLayout = ({ onLanguageChange }) => {
@@ -119,7 +119,7 @@ const PublicLayout = ({ onLanguageChange }) => {
                 className="flex items-center space-x-1 text-gray-600 hover:text-grub-red transition-colors"
                 title={t('common.language')}
               >
-                <Globe className="h-4 w-4" />
+                <FontAwesomeIcon icon={faGlobe} className="h-4 w-4" />
                 <span className="text-sm font-medium uppercase">
                   {i18n.language}
                 </span>
@@ -151,7 +151,7 @@ const PublicLayout = ({ onLanguageChange }) => {
                 className="p-2 text-gray-600 hover:text-grub-red transition-colors"
                 title={t('common.language')}
               >
-                <Globe className="h-5 w-5" />
+                <FontAwesomeIcon icon={faGlobe} className="h-5 w-5" />
               </button>
             </div>
           </div>

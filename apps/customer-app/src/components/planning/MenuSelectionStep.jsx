@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { usePlanning } from '../../contexts/PlanningContext';
-import { useMealPlan } from '../../contexts/MealPlanContext';
+import { useMealPlan } from '../../contexts/MealPlanContext_SSR_FIXED';
 import { getAllFoodItemsForDayAndSlot, getAllFoodItemsForDay, capitalizeFirst, groupItemsByCategory } from '../../utils/combinedMenuHelpers';
 import { unifiedRestaurants } from '../../data/unifiedRestaurants';
 import { getRestaurantsByPostalCode, getStaticRestaurantsByPostalCode } from '../../services/restaurantService';

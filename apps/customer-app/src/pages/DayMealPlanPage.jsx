@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { useMealPlan } from '../contexts/MealPlanContext';
+import { useMealPlan } from '../contexts/MealPlanContext_SSR_FIXED';
 import { useToast } from '../contexts/ToastContext';
 import { usePlanning } from '../contexts/PlanningContext';
 import { useAuth } from '../contexts/AuthContext';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useMealPlan } from '../../contexts/MealPlanContext';
+import { useMealPlan } from '../../contexts/MealPlanContext_SSR_FIXED';
 
 const FoodItemCard = ({ 
   item, 
@@ -14,11 +14,16 @@ const FoodItemCard = ({
   planEntries = [],
   onItemClick
 }) => {
-  const { getItemQuantityInPlan, isItemInPlan: checkItemInPlan } = useMealPlan();
+  const mealPlanContext = useMealPlan();
+  
+  // Safely extract functions with fallbacks during loading
+  const getItemQuantityInPlan = mealPlanContext?.getItemQuantityInPlan;
+  const checkItemInPlan = mealPlanContext?.isItemInPlan;
   
   // Get current quantity of this item in the meal plan for specific day/meal
-  const currentQuantity = getItemQuantityInPlan(item.id, selectedDay, selectedMealType);
-  const isInSpecificSlot = checkItemInPlan(item.id, selectedDay, selectedMealType);
+  // Add null checks to prevent errors during loading
+  const currentQuantity = getItemQuantityInPlan ? getItemQuantityInPlan(item.id, selectedDay, selectedMealType) : 0;
+  const isInSpecificSlot = checkItemInPlan ? checkItemInPlan(item.id, selectedDay, selectedMealType) : false;
   
   // Use passed props for general meal plan status
   const itemIsInPlan = isInPlan || isInSpecificSlot;

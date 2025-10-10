@@ -1,14 +1,15 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  LayoutDashboard, 
-  Menu as MenuIcon, 
-  ShoppingBag, 
-  BarChart3, 
-  Users, 
-  Settings
-} from 'lucide-react';
+  faTachometerAlt, 
+  faUtensils, 
+  faShoppingBag, 
+  faChartBar, 
+  faUsers, 
+  faCog
+} from '@fortawesome/free-solid-svg-icons';
 
 /**
  * Mobile Bottom Navigation Component for Partner Portal Dashboard
@@ -23,31 +24,31 @@ const MobileBottomNav = () => {
     { 
       name: 'overview', 
       href: '/dashboard', 
-      icon: LayoutDashboard,
+      icon: faTachometerAlt,
       label: 'Overview'
     },
     { 
       name: 'menu', 
       href: '/dashboard/menu', 
-      icon: MenuIcon,
+      icon: faUtensils,
       label: 'Menu'
     },
     { 
       name: 'orders', 
       href: '/dashboard/orders', 
-      icon: ShoppingBag,
+      icon: faShoppingBag,
       label: 'Orders'
     },
     { 
       name: 'analytics', 
       href: '/dashboard/analytics', 
-      icon: BarChart3,
+      icon: faChartBar,
       label: 'Analytics'
     },
     { 
       name: 'settings', 
       href: '/dashboard/settings', 
-      icon: Settings,
+      icon: faCog,
       label: 'Settings'
     }
   ];
@@ -69,7 +70,7 @@ const MobileBottomNav = () => {
       {/* Main Navigation */}
       <ul className="flex items-stretch justify-between px-1 py-1">
         {mobileNavigation.map((item) => {
-          const Icon = item.icon;
+          const iconDef = item.icon;
           const isActive = isCurrentPath(item.href);
           
           return (
@@ -85,7 +86,7 @@ const MobileBottomNav = () => {
                 aria-label={item.label}
               >
                 <div className="flex items-center justify-center h-7 w-7 mb-1 flex-shrink-0">
-                  <Icon className={`h-5 w-5 ${isActive ? 'scale-110' : ''} transition-transform`} />
+                  <FontAwesomeIcon icon={iconDef} className={`h-5 w-5 ${isActive ? 'scale-110' : ''} transition-transform`} />
                 </div>
                 <div className="flex items-center justify-center h-5 text-center min-w-0 w-full px-1">
                   <span 

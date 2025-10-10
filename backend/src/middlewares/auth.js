@@ -89,7 +89,13 @@ const roleMiddleware = (...allowedRoles) => {
       });
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    // Check both roles array (new) and role field (legacy) for backward compatibility
+    const userRoles = req.user.roles || (req.user.role ? [req.user.role] : []);
+    
+    // Check if user has any of the allowed roles
+    const hasRequiredRole = allowedRoles.some(role => userRoles.includes(role));
+    
+    if (!hasRequiredRole) {
       return res.status(403).json({
         status: 'error',
         message: `Access denied. Required role: ${allowedRoles.join(' or ')}`
@@ -110,8 +116,11 @@ const ownershipMiddleware = (resourceUserIdField = 'customerId') => {
       });
     }
 
+    // Check both roles array (new) and role field (legacy) for backward compatibility
+    const userRoles = req.user.roles || (req.user.role ? [req.user.role] : []);
+    
     // Admin can access everything
-    if (req.user.role === 'admin') {
+    if (userRoles.includes('admin')) {
       return next();
     }
 
@@ -141,13 +150,16 @@ const restaurantOwnershipMiddleware = async (req, res, next) => {
       });
     }
 
+    // Check both roles array (new) and role field (legacy) for backward compatibility
+    const userRoles = req.user.roles || (req.user.role ? [req.user.role] : []);
+    
     // Admin can access everything
-    if (req.user.role === 'admin') {
+    if (userRoles.includes('admin')) {
       return next();
     }
 
     // Partners can only access their own restaurants
-    if (req.user.role === 'partner') {
+    if (userRoles.includes('partner')) {
       const restaurantId = req.params.restaurantId || req.params.id || req.body.restaurantId;
       
       if (restaurantId) {

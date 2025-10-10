@@ -4,18 +4,59 @@ const { successResponse, errorResponse, notFoundResponse } = require('../utils/a
 
 /**
  * @desc    Get user's meal plan
+ * @route   GET /api/v1/meal-plans/me
  * @route   GET /api/v1/meal-plans/:userId
  * @access  Private
  */
 const getMealPlan = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
+  // Handle both /me and /:userId routes
+  const userId = req.params.userId || req.user.id;
 
   // Ensure user can only access their own meal plan
   if (req.user.id !== userId) {
     return errorResponse(res, 'Access denied', 403);
   }
 
-  const mealPlan = await MealPlan.findOrCreateForUser(userId);
+  console.log(`🔍 Getting meal plan for user: ${userId}`);
+
+  // Try to find meal plan in the mealplans collection
+  const mealPlan = await MealPlan.findOne({ userId });
+
+  if (!mealPlan) {
+    console.log('📋 No meal plan found, returning empty structure');
+    return successResponse(res, {
+      userId,
+      weeklyPlans: {
+        week0: {
+          monday: { lunch: [], dinner: [] },
+          tuesday: { lunch: [], dinner: [] },
+          wednesday: { lunch: [], dinner: [] },
+          thursday: { lunch: [], dinner: [] },
+          friday: { lunch: [], dinner: [] },
+          saturday: { lunch: [], dinner: [] },
+          sunday: { lunch: [], dinner: [] }
+        },
+        week1: {
+          monday: { lunch: [], dinner: [] },
+          tuesday: { lunch: [], dinner: [] },
+          wednesday: { lunch: [], dinner: [] },
+          thursday: { lunch: [], dinner: [] },
+          friday: { lunch: [], dinner: [] },
+          saturday: { lunch: [], dinner: [] },
+          sunday: { lunch: [], dinner: [] }
+        }
+      },
+      totalItems: 0,
+      selectedRestaurantId: null,
+      selectedRestaurantName: null,
+      selectedRestaurantData: null
+    }, 'Empty meal plan retrieved');
+  }
+
+  console.log('✅ Meal plan found:', {
+    totalItems: mealPlan.totalItems,
+    restaurant: mealPlan.selectedRestaurantName
+  });
 
   successResponse(res, mealPlan, 'Meal plan retrieved successfully');
 });

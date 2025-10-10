@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  Bell, 
-  Download, 
-  Trash2, 
-  Wifi, 
-  WifiOff, 
-  RefreshCw,
-  Settings,
-  AlertCircle,
-  CheckCircle
-} from 'lucide-react';
+  faBell, 
+  faDownload, 
+  faTrash, 
+  faWifi, 
+  faWifiSlash, 
+  faSync,
+  faCog,
+  faExclamationCircle,
+  faCheckCircle
+} from '@fortawesome/free-solid-svg-icons';
 import { 
   requestNotificationPermission,
   testPushNotification,
@@ -134,10 +135,10 @@ const PWADevTools = () => {
 
   const getStatusIcon = (type) => {
     switch (type) {
-      case 'success': return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'error': return <AlertCircle className="w-4 h-4 text-red-500" />;
-      case 'warning': return <AlertCircle className="w-4 h-4 text-yellow-500" />;
-      default: return <AlertCircle className="w-4 h-4 text-blue-500" />;
+      case 'success': return <FontAwesomeIcon icon={faCheckCircle} className="w-4 h-4 text-green-500" />;
+      case 'error': return <FontAwesomeIcon icon={faExclamationCircle} className="w-4 h-4 text-red-500" />;
+      case 'warning': return <FontAwesomeIcon icon={faExclamationCircle} className="w-4 h-4 text-yellow-500" />;
+      default: return <FontAwesomeIcon icon={faExclamationCircle} className="w-4 h-4 text-blue-500" />;
     }
   };
 
@@ -149,7 +150,7 @@ const PWADevTools = () => {
         className="bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-gray-700 transition-colors"
         title="PWA Dev Tools"
       >
-        <Settings className="w-5 h-5" />
+        <FontAwesomeIcon icon={faCog} className="w-5 h-5" />
       </button>
 
       {/* Dev Tools Panel */}
@@ -172,7 +173,7 @@ const PWADevTools = () => {
               <div className="flex items-center justify-between">
                 <span>Online:</span>
                 <div className="flex items-center gap-1">
-                  {status.online ? <Wifi className="w-3 h-3 text-green-500" /> : <WifiOff className="w-3 h-3 text-red-500" />}
+                  {status.online ? <FontAwesomeIcon icon={faWifi} className="w-3 h-3 text-green-500" /> : <FontAwesomeIcon icon={faWifiSlash} className="w-3 h-3 text-red-500" />}
                   <span className={status.online ? 'text-green-600' : 'text-red-600'}>
                     {status.online ? 'Yes' : 'No'}
                   </span>
@@ -219,7 +220,7 @@ const PWADevTools = () => {
                 className="w-full flex items-center gap-2 px-3 py-2 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition-colors"
                 disabled={status.notificationPermission === 'granted'}
               >
-                <Bell className="w-3 h-3" />
+                <FontAwesomeIcon icon={faBell} className="w-3 h-3" />
                 Request Notifications
               </button>
               
@@ -228,7 +229,7 @@ const PWADevTools = () => {
                 className="w-full flex items-center gap-2 px-3 py-2 text-xs bg-green-50 text-green-700 rounded hover:bg-green-100 transition-colors"
                 disabled={status.notificationPermission !== 'granted'}
               >
-                <Bell className="w-3 h-3" />
+                <FontAwesomeIcon icon={faBell} className="w-3 h-3" />
                 Test Notification
               </button>
               
@@ -236,7 +237,7 @@ const PWADevTools = () => {
                 onClick={handleClearCaches}
                 className="w-full flex items-center gap-2 px-3 py-2 text-xs bg-red-50 text-red-700 rounded hover:bg-red-100 transition-colors"
               >
-                <Trash2 className="w-3 h-3" />
+                <FontAwesomeIcon icon={faTrash} className="w-3 h-3" />
                 Clear Caches
               </button>
               
@@ -244,7 +245,7 @@ const PWADevTools = () => {
                 onClick={handleRefreshStatus}
                 className="w-full flex items-center gap-2 px-3 py-2 text-xs bg-gray-50 text-gray-700 rounded hover:bg-gray-100 transition-colors"
               >
-                <RefreshCw className="w-3 h-3" />
+                <FontAwesomeIcon icon={faSync} className="w-3 h-3" />
                 Refresh Status
               </button>
             </div>

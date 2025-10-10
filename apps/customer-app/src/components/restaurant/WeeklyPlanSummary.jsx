@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMealPlan } from '../../contexts/MealPlanContext';
+import { useMealPlan } from '../../contexts/MealPlanContext_SSR_FIXED';
 import { DAYS_OF_WEEK } from '../../utils/filteringAlgorithms';
 
 const WeeklyPlanSummary = ({ restaurantId, restaurantName }) => {

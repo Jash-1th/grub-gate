@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useMealPlan } from '../../contexts/MealPlanContext';
+import { useMealPlan } from '../../contexts/MealPlanContext_SSR_FIXED';
 import { DAYS_OF_WEEK } from '../../utils/filteringAlgorithms';
 
 const ScheduleDemo = () => {

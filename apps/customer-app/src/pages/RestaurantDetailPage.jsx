@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { unifiedRestaurants } from '../data/unifiedRestaurants';
 import { DAYS_OF_WEEK } from '../utils/filteringAlgorithms';
 import { applyPreferenceFilter } from '../utils/filteringHelpers';
-import { useMealPlan } from '../contexts/MealPlanContext';
+import { useMealPlan } from '../contexts/MealPlanContext_SSR_FIXED';
 import { useToast } from '../contexts/ToastContext';
 import { usePlanning } from '../contexts/PlanningContext';
 import { useAuth } from '../contexts/AuthContext';

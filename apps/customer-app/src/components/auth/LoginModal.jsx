@@ -16,7 +16,7 @@ const LoginModal = () => {
   
   // Form state management
   const [formData, setFormData] = useState({
-    email: '',
+    identifier: '', // Can be email or phone
     password: ''
   });
   
@@ -56,10 +56,16 @@ const LoginModal = () => {
   const validateForm = () => {
     const errors = {};
     
-    if (!formData.email) {
-      errors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = 'Email is invalid';
+    if (!formData.identifier) {
+      errors.identifier = 'Email or phone number is required';
+    } else {
+      // Check if it's a valid email or phone
+      const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.identifier);
+      const isPhone = /^[+]?[1-9]\d{1,14}$/.test(formData.identifier.replace(/[\s()-]/g, ''));
+      
+      if (!isEmail && !isPhone) {
+        errors.identifier = 'Please enter a valid email address or phone number';
+      }
     }
     
     if (!formData.password) {
@@ -103,7 +109,7 @@ const LoginModal = () => {
   // Separate async login function
   const performLogin = async () => {
     try {
-      const result = await login(formData.email, formData.password);
+      const result = await login(formData.identifier, formData.password);
       
       if (result && result.success) {
         // Success - immediately close modal to prevent any timing issues
@@ -132,7 +138,7 @@ const LoginModal = () => {
         if (result && result.fieldErrors && Object.keys(result.fieldErrors).length > 0) {
           setFormErrors(result.fieldErrors);
         } else {
-          const errorMsg = result?.error || 'Invalid email or password. Please try again.';
+          const errorMsg = result?.error || 'Invalid credentials. Please try again.';
           setFormErrors({ general: errorMsg });
         }
       }
@@ -250,26 +256,26 @@ const LoginModal = () => {
             
             <form onSubmit={handleSubmit} className="space-y-3">
               
-              {/* Email Field */}
+              {/* Email or Phone Field */}
               <div>
-                <label htmlFor="login-email" className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('login.emailLabel')}
+                <label htmlFor="login-identifier" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Email or Phone Number
                 </label>
                 <input
-                  type="email"
-                  id="login-email"
-                  name="email"
-                  value={formData.email}
+                  type="text"
+                  id="login-identifier"
+                  name="identifier"
+                  value={formData.identifier}
                   onChange={handleInputChange}
-                  placeholder={t('login.emailPlaceholder')}
+                  placeholder="Enter your email or phone number"
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
-                    formErrors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    formErrors.identifier ? 'border-red-300 bg-red-50' : 'border-gray-300'
                   }`}
                   required
                   disabled={isLoading || isLocalLoading}
                 />
-                {formErrors.email && (
-                  <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
+                {formErrors.identifier && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.identifier}</p>
                 )}
               </div>
 

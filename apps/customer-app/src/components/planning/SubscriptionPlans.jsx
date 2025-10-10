@@ -1,13 +1,22 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useMealPlan } from '../../contexts/MealPlanContext';
+import { useNavigate } from 'react-router-dom';
+import { useMealPlan } from '../../contexts/MealPlanContext_SSR_FIXED';
+import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
+import BillingFormModal from '../modals/BillingFormModal';
 
 const SubscriptionPlans = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { getWeekTotalCost, getWeekTotalItems } = useMealPlan();
+  const { isAuthenticated, user } = useAuth();
+  const { showSuccess, showError, showInfo } = useToast();
   
   // State to track selected subscription plan
-  const [selectedPlan, setSelectedPlan] = useState('biweekly');
+  const [selectedPlan, setSelectedPlan] = useState('monthly');
+  const [showBillingModal, setShowBillingModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Calculate actual meal costs from user's meal plan
   const biweeklyMealCost = getWeekTotalCost(0) + getWeekTotalCost(1);
@@ -16,27 +25,27 @@ const SubscriptionPlans = () => {
   // Calculate costs based on selected plan
   const getServiceFeeForPlan = (planId) => {
     switch (planId) {
-      case 'biweekly': return 19.99;
-      case 'fourweeks': return 39.99;
-      case 'sixweeks': return 59.99;
+      case 'bi-weekly': return 19.99;
+      case 'monthly': return 39.99;
+      case 'quarterly': return 59.99;
       default: return 19.99;
     }
   };
 
   const getMealCostForPlan = (planId) => {
     switch (planId) {
-      case 'biweekly': return biweeklyMealCost;
-      case 'fourweeks': return biweeklyMealCost * 2; // 4 weeks = 2 biweeks
-      case 'sixweeks': return biweeklyMealCost * 3; // 6 weeks = 3 biweeks
+      case 'bi-weekly': return biweeklyMealCost;
+      case 'monthly': return biweeklyMealCost * 2; // 1 month = 2 biweeks
+      case 'quarterly': return biweeklyMealCost * 6; // 3 months = 6 biweeks
       default: return biweeklyMealCost;
     }
   };
 
   const getPlanDurationText = (planId) => {
     switch (planId) {
-      case 'biweekly': return 'Biweekly';
-      case 'fourweeks': return '4 Weeks';
-      case 'sixweeks': return '6 Weeks';
+      case 'bi-weekly': return 'Biweekly';
+      case 'monthly': return '1 Month';
+      case 'quarterly': return '3 Months';
       default: return 'Biweekly';
     }
   };
@@ -45,9 +54,41 @@ const SubscriptionPlans = () => {
   const currentMealCost = getMealCostForPlan(selectedPlan);
   const currentTotalCost = currentServiceFee + currentMealCost;
 
+  // Handle Get Started button click
+  const handleGetStarted = (planId) => {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      showInfo('Login Required', 'Please login to subscribe to a plan');
+      navigate('/login?redirect=/subscription');
+      return;
+    }
+
+    // Set the selected plan and show billing modal
+    setSelectedPlan(planId);
+    setShowBillingModal(true);
+  };
+
+  // Handle billing modal close
+  const handleCloseBillingModal = () => {
+    setShowBillingModal(false);
+    setIsProcessing(false);
+  };
+
+  // Get plan details by ID
+  const getPlanById = (planId) => {
+    return plans.find(plan => plan.id === planId);
+  };
+
+  // Handle successful subscription creation
+  const handleSubscriptionSuccess = () => {
+    showSuccess('Welcome to GrubGate!', 'Your subscription is now active.');
+    // Navigate to weekly menu or dashboard
+    navigate('/weekly-menu');
+  };
+
   const plans = [
     {
-      id: 'biweekly',
+      id: 'bi-weekly',
       name: 'Bi-Weekly Plan',
       price: '$19.99',
       period: 'every 2 weeks',
@@ -64,38 +105,38 @@ const SubscriptionPlans = () => {
       color: 'blue'
     },
     {
-      id: 'fourweeks',
-      name: '4 Weeks Plan',
+      id: 'monthly',
+      name: '1 Month Plan',
       price: '$39.99',
-      period: 'every 4 weeks',
+      period: 'every month',
       description: 'Best value for consistent planning',
       features: [
         'Everything in Bi-Weekly',
-        '28 days of meal planning',
+        '30 days of meal planning',
         'Advanced nutritional tracking',
         'Multiple dietary profiles',
         'Priority support',
         'Exclusive restaurant deals',
         '10% savings vs bi-weekly'
       ],
-      popular: false,
+      popular: true,
       color: 'grub-red'
     },
     {
-      id: 'sixweeks',
-      name: '6 Weeks Plan',
+      id: 'quarterly',
+      name: '3 Months Plan',
       price: '$59.99',
-      period: 'every 6 weeks',
+      period: 'every 3 months',
       description: 'Maximum savings for committed users',
       features: [
-        'Everything in 4 Weeks',
-        '42 days of meal planning',
+        'Everything in Monthly',
+        '90 days of meal planning',
         'Personal meal consultant',
         'Custom meal plans',
         'Restaurant partnerships',
         '24/7 phone support',
         'Early access to new features',
-        '15% savings vs bi-weekly'
+        '25% savings vs bi-weekly'
       ],
       popular: false,
       color: 'purple'
@@ -272,8 +313,12 @@ const SubscriptionPlans = () => {
                   ))}
                 </ul>
 
-                <button className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-colors duration-200 ${colors.button} mt-auto`}>
-                  Get Started
+                <button 
+                  onClick={() => handleGetStarted(plan.id)}
+                  disabled={isProcessing}
+                  className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-colors duration-200 ${colors.button} mt-auto hover:transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {isProcessing ? 'Processing...' : 'Get Started'}
                 </button>
               </div>
             );
@@ -306,6 +351,14 @@ const SubscriptionPlans = () => {
           </div>
         </div>
       </div>
+
+      {/* Billing Form Modal */}
+      <BillingFormModal
+        isOpen={showBillingModal}
+        onClose={handleCloseBillingModal}
+        selectedPlan={getPlanById(selectedPlan)}
+        onSuccess={handleSubscriptionSuccess}
+      />
     </div>
   );
 };

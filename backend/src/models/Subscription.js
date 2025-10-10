@@ -10,7 +10,7 @@ const subscriptionSchema = new mongoose.Schema({
   planId: {
     type: String,
     required: [true, 'Plan ID is required'],
-    enum: ['bi-weekly', 'monthly', 'quarterly', 'semi-annual']
+    enum: ['bi-weekly', 'monthly', 'quarterly']
   },
   planName: {
     type: String,
@@ -135,8 +135,7 @@ subscriptionSchema.pre('save', function(next) {
     const durationMap = {
       'bi-weekly': 14,
       'monthly': 30,
-      'quarterly': 90,
-      'semi-annual': 180
+      'quarterly': 90
     };
     
     if (durationMap[this.planId]) {
@@ -218,8 +217,7 @@ subscriptionSchema.methods.addBillingRecord = function(amount, status, stripeInv
     const billingCycleMap = {
       'bi-weekly': 14,
       'monthly': 30,
-      'quarterly': 90,
-      'semi-annual': 180
+      'quarterly': 90
     };
     
     const cycleDays = billingCycleMap[this.planId] || 30;

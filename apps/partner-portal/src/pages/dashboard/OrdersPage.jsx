@@ -1,90 +1,115 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  Search, 
-  Filter, 
-  Eye, 
-  CheckCircle, 
-  Clock, 
-  X,
-  MapPin,
-  Phone,
-  Mail,
-  Package,
-  User,
-  Calendar,
-  DollarSign,
-  ChevronRight,
-  MoreVertical
-} from 'lucide-react';
+  faSearch, 
+  faFilter, 
+  faEye, 
+  faCheckCircle, 
+  faClock, 
+  faTimes,
+  faMapMarkerAlt,
+  faPhone,
+  faEnvelope,
+  faBox,
+  faUser,
+  faCalendar,
+  faDollarSign,
+  faChevronRight,
+  faEllipsisV,
+  faExclamationCircle,
+  faSync
+} from '@fortawesome/free-solid-svg-icons';
 import { Button, Input, Card, CardContent, CardHeader, CardTitle, Modal } from '@grub-gate/ui';
-import { mockWeeklyPlans } from '../../lib/mock-data.js';
+import { useOrders } from '../../hooks/useOrders';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import ErrorMessage from '../../components/ui/ErrorMessage';
+import DatePicker from '../../components/common/DatePicker';
+import EnhancedItemCard from '../../components/orders/EnhancedItemCard';
 
 const OrdersPage = () => {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
+  const [updateStatusLoading, setUpdateStatusLoading] = useState(null);
 
+  // Initialize orders hook with date filter to prevent showing all orders initially
+  const initialFilters = useMemo(() => {
+    const today = new Date();
+    const todayFormatted = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    
+    return {
+      limit: 50,
+      sortBy: 'createdAt',
+      sortOrder: 'desc',
+      date: todayFormatted,
+      includeScheduled: 'true'
+    };
+  }, []);
 
-  // Get current day name
+  const {
+    orders,
+    loading,
+    error,
+    pagination,
+    updateOrderStatus,
+    cancelOrder,
+    refreshOrders,
+    getTodaysOrders,
+    clearError,
+    updateFilters,
+    isClient
+  } = useOrders(initialFilters);
+
+  // SSR-safe date formatting (memoized to prevent re-renders)
+  const formatDateForAPI = useCallback((date) => {
+    if (!isClient || !date) return '';
+    // Use local date to avoid timezone issues
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`; // YYYY-MM-DD format
+  }, [isClient]);
+
+  // Handle date change
+  const handleDateChange = useCallback((newDate) => {
+    console.log('🗓️ OrdersPage: handleDateChange called with:', newDate);
+    setSelectedDate(newDate);
+    
+    // Update filters to fetch orders for selected date
+    if (isClient && updateFilters) {
+      const formattedDate = formatDateForAPI(newDate);
+      console.log('🗓️ OrdersPage: Formatted date for API:', formattedDate);
+      updateFilters({
+        date: formattedDate,
+        includeScheduled: 'true'
+      });
+    }
+  }, [isClient, updateFilters, formatDateForAPI]);
+
+  // Debug authentication on mount (only once)
+  useEffect(() => {
+    if (isClient) {
+      // Debug user authentication
+      const token = localStorage.getItem('accessToken');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      console.log('🔐 OrdersPage: Current user:', user);
+      console.log('🔐 OrdersPage: User roles:', user.roles);
+      console.log('🔐 OrdersPage: Has token:', !!token);
+      
+      // Note: Initial date filter is now set in initialFilters, no need to call updateFilters here
+    }
+  }, [isClient]); // Only run once when client is ready
+
+  // Get current day name (SSR-safe)
   const getCurrentDayName = () => {
+    if (!isClient) return 'monday'; // Default for SSR
     const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     const today = new Date();
     return days[today.getDay()];
-  };
-
-  // Get today's meals from weekly plans
-  const getTodaysMeals = () => {
-    const currentDay = getCurrentDayName();
-    const todaysMeals = [];
-    
-    mockWeeklyPlans.forEach(plan => {
-      if (plan.status === 'active' && plan.meals[currentDay]) {
-        const dayMeals = plan.meals[currentDay];
-        
-        // Add lunch if exists
-        if (dayMeals.lunch) {
-          todaysMeals.push({
-            id: `${plan.id}_${currentDay}_lunch`,
-            customer: plan.customer,
-            items: [dayMeals.lunch],
-            total: dayMeals.lunch.price,
-            status: 'pending',
-            orderDate: new Date().toISOString(),
-            deliveryDate: new Date().toISOString(),
-            deliveryAddress: plan.deliveryAddress,
-            notes: plan.notes,
-            mealType: 'lunch',
-            deliveryTime: dayMeals.lunch.deliveryTime,
-            planId: plan.id,
-            isWeeklyPlan: true
-          });
-        }
-        
-        // Add dinner if exists
-        if (dayMeals.dinner) {
-          todaysMeals.push({
-            id: `${plan.id}_${currentDay}_dinner`,
-            customer: plan.customer,
-            items: [dayMeals.dinner],
-            total: dayMeals.dinner.price,
-            status: 'pending',
-            orderDate: new Date().toISOString(),
-            deliveryDate: new Date().toISOString(),
-            deliveryAddress: plan.deliveryAddress,
-            notes: plan.notes,
-            mealType: 'dinner',
-            deliveryTime: dayMeals.dinner.deliveryTime,
-            planId: plan.id,
-            isWeeklyPlan: true
-          });
-        }
-      }
-    });
-    
-    return todaysMeals;
   };
 
   const statuses = [
@@ -97,22 +122,47 @@ const OrdersPage = () => {
     { value: 'cancelled', label: t('orders.statuses.cancelled') }
   ];
 
-  // Get today's meals from weekly plans
-  const filteredOrders = getTodaysMeals().filter(order => {
-    const matchesSearch = order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  // Filter orders based on search and status
+  const filteredOrders = useMemo(() => {
+    if (!isClient) return [];
+    
+    return orders.filter(order => {
+      const customerName = `${order.customerId?.firstName || ''} ${order.customerId?.lastName || ''}`.trim();
+      const customerEmail = order.customerId?.email || '';
+      const orderNumber = order.orderNumber || order._id;
+      
+      const matchesSearch = searchTerm === '' || 
+        customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        orderNumber.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [orders, searchTerm, statusFilter, isClient]);
 
   const handleViewOrder = (order) => {
     setSelectedOrder(order);
     setShowOrderModal(true);
   };
 
-  const handleUpdateStatus = (orderId, newStatus) => {
-    // In a real app, this would update the order status via API
-    console.log('Update order status:', orderId, newStatus);
+  const handleUpdateStatus = async (orderId, newStatus) => {
+    try {
+      setUpdateStatusLoading(orderId);
+      const result = await updateOrderStatus(orderId, newStatus);
+      
+      if (result.success) {
+        // Show success message (you can add toast notification here)
+        console.log('Order status updated successfully');
+      } else {
+        console.error('Failed to update order status:', result.error);
+      }
+    } catch (err) {
+      console.error('Error updating order status:', err);
+    } finally {
+      setUpdateStatusLoading(null);
+    }
   };
 
   const getStatusColor = (status) => {
@@ -129,32 +179,92 @@ const OrdersPage = () => {
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'confirmed': return <CheckCircle className="h-4 w-4" />;
-      case 'preparing': return <Clock className="h-4 w-4" />;
-      case 'ready': return <CheckCircle className="h-4 w-4" />;
-      case 'delivered': return <CheckCircle className="h-4 w-4" />;
-      case 'cancelled': return <X className="h-4 w-4" />;
-      default: return <Clock className="h-4 w-4" />;
+      case 'confirmed': return <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4" />;
+      case 'preparing': return <FontAwesomeIcon icon={faClock} className="h-4 w-4" />;
+      case 'ready': return <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4" />;
+      case 'delivered': return <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4" />;
+      case 'cancelled': return <FontAwesomeIcon icon={faTimes} className="h-4 w-4" />;
+      default: return <FontAwesomeIcon icon={faClock} className="h-4 w-4" />;
     }
   };
+
+  // SSR loading state
+  if (!isClient) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+        <div className="max-w-7xl mx-auto">
+          <LoadingSpinner 
+            size="large" 
+            text="Loading orders..." 
+            className="mt-20"
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
+        
+        {/* Error Message */}
+        {error && (
+          <ErrorMessage
+            error={error}
+            onRetry={refreshOrders}
+            onDismiss={clearError}
+            title="Failed to load orders"
+            showRetry={true}
+            showDismiss={true}
+          />
+        )}
         {/* Header */}
         <div className="bg-gradient-to-r from-grub-red to-red-600 rounded-2xl p-6 text-white">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
+            <div className="flex-1">
               <h1 className="text-2xl sm:text-3xl font-bold">
-                Today's Weekly Plan Orders
+                {isClient && selectedDate ? (
+                  selectedDate.toDateString() === new Date().toDateString() 
+                    ? "Today's Orders" 
+                    : selectedDate > new Date()
+                    ? `Scheduled Orders for ${selectedDate.toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}`
+                    : `Orders for ${selectedDate.toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}`
+                ) : "Orders"}
               </h1>
               <p className="text-red-100 mt-1">
-                Current day's lunch and dinner from weekly meal plans - {getCurrentDayName().charAt(0).toUpperCase() + getCurrentDayName().slice(1)}
+                {isClient ? (
+                  orders.length > 0 
+                    ? selectedDate > new Date()
+                      ? `${orders.length} scheduled orders found for selected date`
+                      : `${orders.length} orders found for selected date`
+                    : selectedDate > new Date()
+                      ? "No scheduled orders found for this date"
+                      : "No orders found for this date"
+                ) : "Select a date to view orders"}
               </p>
             </div>
             <div className="flex items-center space-x-3">
+              {/* Date Picker */}
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg">
+                <DatePicker
+                  selectedDate={selectedDate}
+                  onDateChange={handleDateChange}
+                  placeholder="Select date"
+                  className="w-48"
+                />
+              </div>
               <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
-                <span className="text-sm font-medium">{filteredOrders.length} Orders</span>
+                <span className="text-sm font-medium">{orders.length} Orders</span>
               </div>
             </div>
           </div>
@@ -168,28 +278,28 @@ const OrdersPage = () => {
               count: filteredOrders.filter(o => o.status === 'pending').length, 
               color: 'bg-yellow-500', 
               bgColor: 'bg-yellow-50',
-              icon: Clock 
+              icon: faClock 
             },
             { 
               label: 'Preparing', 
               count: filteredOrders.filter(o => o.status === 'preparing').length, 
               color: 'bg-orange-500', 
               bgColor: 'bg-orange-50',
-              icon: Package 
+              icon: faBox 
             },
             { 
               label: 'Ready', 
               count: filteredOrders.filter(o => o.status === 'ready').length, 
               color: 'bg-green-500', 
               bgColor: 'bg-green-50',
-              icon: CheckCircle 
+              icon: faCheckCircle 
             },
             { 
               label: 'Delivered', 
               count: filteredOrders.filter(o => o.status === 'delivered').length, 
               color: 'bg-blue-500', 
               bgColor: 'bg-blue-50',
-              icon: CheckCircle 
+              icon: faCheckCircle 
             }
           ].map((stat, index) => {
             const Icon = stat.icon;
@@ -202,7 +312,7 @@ const OrdersPage = () => {
                       <p className="text-2xl sm:text-3xl font-bold text-gray-900">{stat.count}</p>
                     </div>
                     <div className={`h-12 w-12 rounded-full flex items-center justify-center ${stat.bgColor}`}>
-                      <Icon className={`h-6 w-6 ${stat.color.replace('bg-', 'text-')}`} />
+                      <FontAwesomeIcon icon={Icon} className={`h-6 w-6 ${stat.color.replace('bg-', 'text-')}`} />
                     </div>
                   </div>
                 </CardContent>
@@ -217,7 +327,7 @@ const OrdersPage = () => {
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder="Search weekly plan orders by customer name..."
                     value={searchTerm}
@@ -243,12 +353,26 @@ const OrdersPage = () => {
           </CardContent>
         </Card>
 
+        {/* Loading State */}
+        {loading && (
+          <Card>
+            <CardContent className="p-8">
+              <LoadingSpinner 
+                size="large" 
+                text="Loading today's orders..." 
+                className="py-8"
+              />
+            </CardContent>
+          </Card>
+        )}
+
         {/* Orders List - Responsive Design */}
-        <div className="space-y-4">
-          {filteredOrders.length === 0 ? (
+        {!loading && (
+          <div className="space-y-4">
+            {filteredOrders.length === 0 ? (
             <Card>
               <CardContent className="p-8 text-center">
-                <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <FontAwesomeIcon icon={faBox} className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No weekly plan orders for today</h3>
                 <p className="text-gray-500">No lunch or dinner orders from weekly meal plans scheduled for {getCurrentDayName()}.</p>
               </CardContent>
@@ -275,40 +399,52 @@ const OrdersPage = () => {
                         </thead>
                         <tbody>
                           {filteredOrders.map((order) => (
-                            <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                            <tr key={order._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                               <td className="py-4 px-6">
-                                <span className="font-semibold text-gray-900">#{order.id.split('_')[1]}</span>
+                                <span className="font-semibold text-gray-900">#{order.orderNumber}</span>
                               </td>
                               <td className="py-4 px-6">
                                 <div>
-                                  <div className="font-medium text-gray-900">{order.customer.name}</div>
-                                  <div className="text-sm text-gray-500">{order.customer.email}</div>
+                                  <div className="font-medium text-gray-900">
+                                    {order.customerId?.firstName} {order.customerId?.lastName}
+                                  </div>
+                                  <div className="text-sm text-gray-500">{order.customerId?.email}</div>
                                 </div>
                               </td>
                               <td className="py-4 px-6">
-                                <span className="text-gray-900">{order.items.length} items</span>
+                                <span className="text-gray-900">{order.items?.length || 0} items</span>
                               </td>
                               <td className="py-4 px-6">
                                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                                   order.mealType === 'lunch' 
                                     ? 'bg-yellow-100 text-yellow-800' 
-                                    : 'bg-purple-100 text-purple-800'
+                                    : order.mealType === 'dinner'
+                                    ? 'bg-purple-100 text-purple-800'
+                                    : 'bg-gray-100 text-gray-800'
                                 }`}>
-                                  {order.mealType === 'lunch' ? '🍽️ Lunch' : '🍽️ Dinner'}
+                                  {order.mealType === 'lunch' ? '🍽️ Lunch' : 
+                                   order.mealType === 'dinner' ? '🍽️ Dinner' : 
+                                   '🍽️ Order'}
                                 </span>
                               </td>
                               <td className="py-4 px-6">
-                                <span className="font-bold text-lg text-grub-red">${order.total}</span>
+                                <span className="font-bold text-lg text-grub-red">${order.total?.toFixed(2)}</span>
                               </td>
                               <td className="py-4 px-6">
                                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
                                   {getStatusIcon(order.status)}
-                                  <span className="ml-2">{order.status}</span>
+                                  <span className="ml-2 capitalize">{order.status}</span>
                                 </span>
                               </td>
                               <td className="py-4 px-6">
                                 <span className="text-gray-900">
-                                  {order.deliveryTime}
+                                  {order.deliveryTime?.estimated ? 
+                                    new Date(order.deliveryTime.estimated).toLocaleTimeString('en-US', {
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    }) : 
+                                    'TBD'
+                                  }
                                 </span>
                               </td>
                               <td className="py-4 px-6">
@@ -317,33 +453,57 @@ const OrdersPage = () => {
                                     onClick={() => handleViewOrder(order)}
                                     className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                                   >
-                                    <Eye className="h-4 w-4" />
+                                    <FontAwesomeIcon icon={faEye} className="h-4 w-4" />
                                   </button>
                                   {order.status === 'pending' && (
                                     <Button
                                       size="sm"
-                                      onClick={() => handleUpdateStatus(order.id, 'confirmed')}
-                                      className="bg-green-600 hover:bg-green-700 text-white"
+                                      onClick={() => handleUpdateStatus(order._id, 'confirmed')}
+                                      disabled={updateStatusLoading === order._id}
+                                      className="bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
                                     >
-                                      Confirm
+                                      {updateStatusLoading === order._id ? (
+                                        <>
+                                          <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
+                                          Confirming...
+                                        </>
+                                      ) : (
+                                        'Confirm'
+                                      )}
                                     </Button>
                                   )}
                                   {order.status === 'confirmed' && (
                                     <Button
                                       size="sm"
-                                      onClick={() => handleUpdateStatus(order.id, 'preparing')}
-                                      className="bg-orange-600 hover:bg-orange-700 text-white"
+                                      onClick={() => handleUpdateStatus(order._id, 'preparing')}
+                                      disabled={updateStatusLoading === order._id}
+                                      className="bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-50"
                                     >
-                                      Start Prep
+                                      {updateStatusLoading === order._id ? (
+                                        <>
+                                          <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
+                                          Starting...
+                                        </>
+                                      ) : (
+                                        'Start Prep'
+                                      )}
                                     </Button>
                                   )}
                                   {order.status === 'preparing' && (
                                     <Button
                                       size="sm"
-                                      onClick={() => handleUpdateStatus(order.id, 'ready')}
-                                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                                      onClick={() => handleUpdateStatus(order._id, 'ready')}
+                                      disabled={updateStatusLoading === order._id}
+                                      className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
                                     >
-                                      Mark Ready
+                                      {updateStatusLoading === order._id ? (
+                                        <>
+                                          <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
+                                          Updating...
+                                        </>
+                                      ) : (
+                                        'Mark Ready'
+                                      )}
                                     </Button>
                                   )}
                                 </div>
@@ -360,28 +520,32 @@ const OrdersPage = () => {
               {/* Mobile Card View */}
               <div className="lg:hidden space-y-3">
                 {filteredOrders.map((order) => (
-                  <Card key={order.id} className="hover:shadow-lg transition-all duration-200">
+                  <Card key={order._id} className="hover:shadow-lg transition-all duration-200">
                     <CardContent className="p-3">
                       <div className="space-y-3">
                         {/* Header Row */}
                         <div className="flex items-start justify-between">
                           <div className="flex items-center space-x-2">
-                            <span className="font-bold text-gray-900 text-sm">#{order.id.split('_')[1]}</span>
+                            <span className="font-bold text-gray-900 text-sm">#{order.orderNumber}</span>
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                               {getStatusIcon(order.status)}
-                              <span className="ml-1">{order.status}</span>
+                              <span className="ml-1 capitalize">{order.status}</span>
                             </span>
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                               order.mealType === 'lunch' 
                                 ? 'bg-yellow-100 text-yellow-800' 
-                                : 'bg-purple-100 text-purple-800'
+                                : order.mealType === 'dinner'
+                                ? 'bg-purple-100 text-purple-800'
+                                : 'bg-gray-100 text-gray-800'
                             }`}>
-                              {order.mealType === 'lunch' ? '🍽️ Lunch' : '🍽️ Dinner'}
+                              {order.mealType === 'lunch' ? '🍽️ Lunch' : 
+                               order.mealType === 'dinner' ? '🍽️ Dinner' : 
+                               '🍽️ Order'}
                             </span>
                           </div>
                           <div className="text-right">
-                            <div className="font-bold text-lg text-grub-red">${order.total}</div>
-                            <div className="text-xs text-gray-500">{order.items.length} items</div>
+                            <div className="font-bold text-lg text-grub-red">${order.total?.toFixed(2)}</div>
+                            <div className="text-xs text-gray-500">{order.items?.length || 0} items</div>
                           </div>
                         </div>
 
@@ -389,12 +553,20 @@ const OrdersPage = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2 flex-1 min-w-0">
                             <div className="bg-blue-100 rounded-full p-1.5">
-                              <User className="h-3 w-3 text-blue-600" />
+                              <FontAwesomeIcon icon={faUser} className="h-3 w-3 text-blue-600" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="font-medium text-gray-900 text-sm truncate">{order.customer.name}</div>
+                              <div className="font-medium text-gray-900 text-sm truncate">
+                                {order.customerId?.firstName} {order.customerId?.lastName}
+                              </div>
                               <div className="text-xs text-gray-500">
-                                Delivery: {order.deliveryTime}
+                                Delivery: {order.deliveryTime?.estimated ? 
+                                  new Date(order.deliveryTime.estimated).toLocaleTimeString('en-US', {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  }) : 
+                                  'TBD'
+                                }
                               </div>
                             </div>
                           </div>
@@ -405,36 +577,51 @@ const OrdersPage = () => {
                               onClick={() => handleViewOrder(order)}
                               className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
                             >
-                              <Eye className="h-4 w-4" />
+                              <FontAwesomeIcon icon={faEye} className="h-4 w-4" />
                             </button>
                             {order.status === 'pending' && (
                               <Button
                                 size="sm"
-                                onClick={() => handleUpdateStatus(order.id, 'confirmed')}
-                                className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1"
+                                onClick={() => handleUpdateStatus(order._id, 'confirmed')}
+                                disabled={updateStatusLoading === order._id}
+                                className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1 disabled:opacity-50"
                               >
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                Confirm
+                                {updateStatusLoading === order._id ? (
+                                  <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
+                                ) : (
+                                  <FontAwesomeIcon icon={faCheckCircle} className="h-3 w-3 mr-1" />
+                                )}
+                                {updateStatusLoading === order._id ? 'Confirming...' : 'Confirm'}
                               </Button>
                             )}
                             {order.status === 'confirmed' && (
                               <Button
                                 size="sm"
-                                onClick={() => handleUpdateStatus(order.id, 'preparing')}
-                                className="bg-orange-600 hover:bg-orange-700 text-white text-xs px-2 py-1"
+                                onClick={() => handleUpdateStatus(order._id, 'preparing')}
+                                disabled={updateStatusLoading === order._id}
+                                className="bg-orange-600 hover:bg-orange-700 text-white text-xs px-2 py-1 disabled:opacity-50"
                               >
-                                <Clock className="h-3 w-3 mr-1" />
-                                Prep
+                                {updateStatusLoading === order._id ? (
+                                  <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
+                                ) : (
+                                  <FontAwesomeIcon icon={faClock} className="h-3 w-3 mr-1" />
+                                )}
+                                {updateStatusLoading === order._id ? 'Starting...' : 'Prep'}
                               </Button>
                             )}
                             {order.status === 'preparing' && (
                               <Button
                                 size="sm"
-                                onClick={() => handleUpdateStatus(order.id, 'ready')}
-                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1"
+                                onClick={() => handleUpdateStatus(order._id, 'ready')}
+                                disabled={updateStatusLoading === order._id}
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 disabled:opacity-50"
                               >
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                Ready
+                                {updateStatusLoading === order._id ? (
+                                  <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
+                                ) : (
+                                  <FontAwesomeIcon icon={faCheckCircle} className="h-3 w-3 mr-1" />
+                                )}
+                                {updateStatusLoading === order._id ? 'Updating...' : 'Ready'}
                               </Button>
                             )}
                           </div>
@@ -446,7 +633,8 @@ const OrdersPage = () => {
               </div>
             </>
           )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Order Details Modal */}
@@ -469,23 +657,36 @@ const OrdersPage = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-3">
                   <div>
                     <h2 className="text-base sm:text-lg font-bold">
-                      Weekly Plan - {selectedOrder.mealType}
+                      Order #{selectedOrder.orderNumber}
                     </h2>
                     <p className="text-red-100 text-xs">
-                      {getCurrentDayName().charAt(0).toUpperCase() + getCurrentDayName().slice(1)} - Delivery: {selectedOrder.deliveryTime}
+                      {selectedOrder.type === 'weekly-plan' ? 'Weekly Plan' : 'Single Order'} - 
+                      Delivery: {selectedOrder.deliveryTime?.estimated ? 
+                        new Date(selectedOrder.deliveryTime.estimated).toLocaleTimeString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) : 
+                        'TBD'
+                      }
                     </p>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg sm:text-xl font-bold">${selectedOrder.total}</div>
+                    <div className="text-lg sm:text-xl font-bold">${selectedOrder.total?.toFixed(2)}</div>
                     <div className="text-red-100 text-xs">
-                      {selectedOrder.items.length} items
-                      <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                        selectedOrder.mealType === 'lunch' 
-                          ? 'bg-yellow-100 text-yellow-800' 
-                          : 'bg-purple-100 text-purple-800'
-                      }`}>
-                        {selectedOrder.mealType === 'lunch' ? '🍽️ Lunch' : '🍽️ Dinner'}
-                      </span>
+                      {selectedOrder.items?.length || 0} items
+                      {selectedOrder.mealType && (
+                        <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                          selectedOrder.mealType === 'lunch' 
+                            ? 'bg-yellow-100 text-yellow-800' 
+                            : selectedOrder.mealType === 'dinner'
+                            ? 'bg-purple-100 text-purple-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {selectedOrder.mealType === 'lunch' ? '🍽️ Lunch' : 
+                           selectedOrder.mealType === 'dinner' ? '🍽️ Dinner' : 
+                           '🍽️ Order'}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -505,41 +706,56 @@ const OrdersPage = () => {
                     <Button
                       size="sm"
                       onClick={() => {
-                        handleUpdateStatus(selectedOrder.id, 'confirmed');
+                        handleUpdateStatus(selectedOrder._id, 'confirmed');
                         setShowOrderModal(false);
                         setSelectedOrder(null);
                       }}
-                      className="bg-green-600 hover:bg-green-700 text-white text-xs"
+                      disabled={updateStatusLoading === selectedOrder._id}
+                      className="bg-green-600 hover:bg-green-700 text-white text-xs disabled:opacity-50"
                     >
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Confirm
+                      {updateStatusLoading === selectedOrder._id ? (
+                        <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
+                      ) : (
+                        <FontAwesomeIcon icon={faCheckCircle} className="h-3 w-3 mr-1" />
+                      )}
+                      {updateStatusLoading === selectedOrder._id ? 'Confirming...' : 'Confirm'}
                     </Button>
                   )}
                   {selectedOrder.status === 'confirmed' && (
                     <Button
                       size="sm"
                       onClick={() => {
-                        handleUpdateStatus(selectedOrder.id, 'preparing');
+                        handleUpdateStatus(selectedOrder._id, 'preparing');
                         setShowOrderModal(false);
                         setSelectedOrder(null);
                       }}
-                      className="bg-orange-600 hover:bg-orange-700 text-white text-xs"
+                      disabled={updateStatusLoading === selectedOrder._id}
+                      className="bg-orange-600 hover:bg-orange-700 text-white text-xs disabled:opacity-50"
                     >
-                      <Clock className="h-3 w-3 mr-1" />
-                      Start Prep
+                      {updateStatusLoading === selectedOrder._id ? (
+                        <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
+                      ) : (
+                        <FontAwesomeIcon icon={faClock} className="h-3 w-3 mr-1" />
+                      )}
+                      {updateStatusLoading === selectedOrder._id ? 'Starting...' : 'Start Prep'}
                     </Button>
                   )}
                   {selectedOrder.status === 'preparing' && (
                     <Button
                       size="sm"
                       onClick={() => {
-                        handleUpdateStatus(selectedOrder.id, 'ready');
+                        handleUpdateStatus(selectedOrder._id, 'ready');
                         setShowOrderModal(false);
                         setSelectedOrder(null);
                       }}
-                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs"
+                      disabled={updateStatusLoading === selectedOrder._id}
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs disabled:opacity-50"
                     >
-                      <CheckCircle className="h-3 w-3 mr-1" />
+                      {updateStatusLoading === selectedOrder._id ? (
+                        <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
+                      ) : (
+                        <FontAwesomeIcon icon={faCheckCircle} className="h-3 w-3 mr-1" />
+                      )}
                       Ready
                     </Button>
                   )}
@@ -559,26 +775,34 @@ const OrdersPage = () => {
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div className="space-y-1.5">
-                      <div className="font-medium text-gray-900 text-xs sm:text-sm">{selectedOrder.customer.name}</div>
+                      <div className="font-medium text-gray-900 text-xs sm:text-sm">
+                        {selectedOrder.customerId?.firstName} {selectedOrder.customerId?.lastName}
+                      </div>
                       <div className="flex items-center text-gray-600">
                         <Mail className="h-2.5 w-2.5 mr-1 text-blue-500" />
-                        <span className="text-xs break-all">{selectedOrder.customer.email}</span>
+                        <span className="text-xs break-all">{selectedOrder.customerId?.email}</span>
                       </div>
                       <div className="flex items-center text-gray-600">
                         <Phone className="h-2.5 w-2.5 mr-1 text-blue-500" />
-                        <span className="text-xs">{selectedOrder.customer.phone}</span>
+                        <span className="text-xs">{selectedOrder.customerId?.phone}</span>
                       </div>
                     </div>
                     <div className="flex items-start text-gray-600">
                       <MapPin className="h-2.5 w-2.5 mr-1 mt-0.5 text-blue-500 flex-shrink-0" />
-                      <span className="text-xs break-words">{selectedOrder.deliveryAddress}</span>
+                      <span className="text-xs break-words">
+                        {selectedOrder.deliveryAddress ? (
+                          `${selectedOrder.deliveryAddress.street}, ${selectedOrder.deliveryAddress.city}, ${selectedOrder.deliveryAddress.province} ${selectedOrder.deliveryAddress.postalCode}`
+                        ) : (
+                          'Address not available'
+                        )}
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Order Items - Compact */}
+                {/* Order Items - Enhanced */}
                 <div className="bg-white border border-gray-200 rounded-lg p-2.5 sm:p-3">
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center">
                       <div className="bg-green-100 rounded-full p-1 mr-2">
                         <Package className="h-3 w-3 text-green-600" />
@@ -586,44 +810,32 @@ const OrdersPage = () => {
                       <h3 className="text-xs sm:text-sm font-semibold text-gray-900">Order Items</h3>
                     </div>
                     <span className="bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded-full text-xs font-medium">
-                      {selectedOrder.items.length}
+                      {selectedOrder.items?.length || 0} items
                     </span>
                   </div>
                   
-                  <div className="space-y-1.5 max-h-28 overflow-y-auto">
-                    {selectedOrder.items.map((item, index) => (
-                      <div key={index} className="flex items-center justify-between p-1.5 bg-gray-50 rounded text-xs">
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-gray-900 truncate">{item.name}</div>
-                          <div className="text-gray-600">${item.price} × {item.quantity}</div>
-                        </div>
-                        <div className="font-bold text-grub-red ml-2">
-                          ${(item.price * item.quantity).toFixed(2)}
-                        </div>
-                      </div>
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {selectedOrder.items?.map((item, index) => (
+                      <EnhancedItemCard 
+                        key={index} 
+                        item={item} 
+                        index={index}
+                      />
                     ))}
                   </div>
-                </div>
-              </div>
-
-              {/* Order Total - Compact */}
-              <div className="bg-gradient-to-r from-grub-red/5 to-red-100/50 border border-grub-red/20 rounded-lg p-2.5 sm:p-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="bg-grub-red/10 rounded-full p-1.5 mr-2">
-                      <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-grub-red" />
-                    </div>
-                    <div>
-                      <h3 className="text-xs sm:text-sm font-semibold text-gray-900">Order Total</h3>
-                      <p className="text-gray-600 text-xs">All items</p>
+                  
+                  {/* Order Summary */}
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-gray-900 text-sm">Order Total:</span>
+                      <span className="font-bold text-grub-red text-lg">${selectedOrder.total?.toFixed(2)}</span>
                     </div>
                   </div>
-                  <div className="text-lg sm:text-xl font-bold text-grub-red">${selectedOrder.total}</div>
                 </div>
               </div>
 
               {/* Special Instructions - Compact */}
-              {selectedOrder.notes && (
+              {selectedOrder.specialInstructions && (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 sm:p-3">
                   <div className="flex items-start">
                     <div className="bg-amber-100 rounded-full p-1 mr-2 flex-shrink-0">
@@ -631,7 +843,7 @@ const OrdersPage = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1">Notes</h3>
-                      <p className="text-gray-700 text-xs break-words">{selectedOrder.notes}</p>
+                      <p className="text-gray-700 text-xs break-words">{selectedOrder.specialInstructions}</p>
                     </div>
                   </div>
                 </div>

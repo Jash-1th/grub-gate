@@ -1,5 +1,5 @@
 // FILE: src/controllers/weeklyPlan.controller.js
-const WeeklyPlan = require('../models/WeeklyPlan');
+const SubscriptionMealPlan = require('../models/SubscriptionMealPlan');
 const Restaurant = require('../models/Restaurant');
 const MenuItem = require('../models/MenuItem');
 const { 
@@ -16,7 +16,7 @@ const { asyncHandler } = require('../middlewares/errorHandler');
  * @route   GET /api/v1/weekly-plans
  * @access  Private
  */
-const getWeeklyPlans = asyncHandler(async (req, res) => {
+const getSubscriptionMealPlans = asyncHandler(async (req, res) => {
   const {
     page = 1,
     limit = 20,
@@ -45,9 +45,9 @@ const getWeeklyPlans = asyncHandler(async (req, res) => {
   }
 
   if (startDate || endDate) {
-    query.startDate = {};
-    if (startDate) query.startDate.$gte = new Date(startDate);
-    if (endDate) query.startDate.$lte = new Date(endDate);
+    query.planStartDate = {};
+    if (startDate) query.planStartDate.$gte = new Date(startDate);
+    if (endDate) query.planStartDate.$lte = new Date(endDate);
   }
 
   // Build sort object
@@ -56,7 +56,7 @@ const getWeeklyPlans = asyncHandler(async (req, res) => {
 
   // Execute query with pagination
   const skip = (parseInt(page) - 1) * parseInt(limit);
-  const weeklyPlans = await WeeklyPlan.find(query)
+  const weeklyPlans = await SubscriptionMealPlan.find(query)
     .sort(sort)
     .skip(skip)
     .limit(parseInt(limit))
@@ -64,7 +64,7 @@ const getWeeklyPlans = asyncHandler(async (req, res) => {
     .populate('restaurantId', 'name cuisine phone address')
     .populate('subscriptionId', 'planName status');
 
-  const total = await WeeklyPlan.countDocuments(query);
+  const total = await SubscriptionMealPlan.countDocuments(query);
 
   const pagination = {
     page: parseInt(page),
@@ -81,7 +81,7 @@ const getWeeklyPlans = asyncHandler(async (req, res) => {
  * @route   GET /api/v1/weekly-plans/:id
  * @access  Private
  */
-const getWeeklyPlan = asyncHandler(async (req, res) => {
+const getSubscriptionMealPlan = asyncHandler(async (req, res) => {
   let query = { _id: req.params.id };
 
   // Add ownership filter based on user role
@@ -93,7 +93,7 @@ const getWeeklyPlan = asyncHandler(async (req, res) => {
     query.restaurantId = { $in: restaurantIds };
   }
 
-  const weeklyPlan = await WeeklyPlan.findOne(query)
+  const weeklyPlan = await SubscriptionMealPlan.findOne(query)
     .populate('customerId', 'firstName lastName email phone')
     .populate('restaurantId', 'name cuisine phone address operatingHours')
     .populate('subscriptionId', 'planName status')
@@ -111,7 +111,7 @@ const getWeeklyPlan = asyncHandler(async (req, res) => {
  * @route   POST /api/v1/weekly-plans
  * @access  Private (Customer)
  */
-const createWeeklyPlan = asyncHandler(async (req, res) => {
+const createSubscriptionMealPlan = asyncHandler(async (req, res) => {
   const { 
     restaurantId, 
     planType, 
@@ -148,18 +148,23 @@ const createWeeklyPlan = asyncHandler(async (req, res) => {
     }
   }
 
-  // Create weekly plan
-  const weeklyPlan = await WeeklyPlan.create({
-    customerId: req.user._id,
+  // Create weekly plan using the findOrCreateForUser method
+  const weeklyPlan = await SubscriptionMealPlan.findOrCreateForUser(
+    req.user._id,
+    subscriptionId,
     restaurantId,
-    planType,
-    startDate: new Date(startDate),
-    endDate: new Date(endDate),
-    deliveryAddress,
-    meals,
-    specialInstructions,
-    subscriptionId
-  });
+    planType
+  );
+  
+  // Update with provided data
+  if (deliveryAddress) {
+    weeklyPlan.deliveryAddress = deliveryAddress;
+  }
+  if (specialInstructions) {
+    weeklyPlan.specialInstructions = specialInstructions;
+  }
+  
+  await weeklyPlan.save();
 
   // Populate for response
   await weeklyPlan.populate([
@@ -175,8 +180,8 @@ const createWeeklyPlan = asyncHandler(async (req, res) => {
  * @route   PATCH /api/v1/weekly-plans/:id
  * @access  Private (Customer)
  */
-const updateWeeklyPlan = asyncHandler(async (req, res) => {
-  const weeklyPlan = await WeeklyPlan.findOne({
+const updateSubscriptionMealPlan = asyncHandler(async (req, res) => {
+  const weeklyPlan = await SubscriptionMealPlan.findOne({
     _id: req.params.id,
     customerId: req.user._id
   });
@@ -211,8 +216,8 @@ const updateWeeklyPlan = asyncHandler(async (req, res) => {
  * @route   DELETE /api/v1/weekly-plans/:id
  * @access  Private (Customer)
  */
-const deleteWeeklyPlan = asyncHandler(async (req, res) => {
-  const weeklyPlan = await WeeklyPlan.findOne({
+const deleteSubscriptionMealPlan = asyncHandler(async (req, res) => {
+  const weeklyPlan = await SubscriptionMealPlan.findOne({
     _id: req.params.id,
     customerId: req.user._id
   });
@@ -232,8 +237,8 @@ const deleteWeeklyPlan = asyncHandler(async (req, res) => {
  * @route   POST /api/v1/weekly-plans/:id/pause
  * @access  Private (Customer)
  */
-const pauseWeeklyPlan = asyncHandler(async (req, res) => {
-  const weeklyPlan = await WeeklyPlan.findOne({
+const pauseSubscriptionMealPlan = asyncHandler(async (req, res) => {
+  const weeklyPlan = await SubscriptionMealPlan.findOne({
     _id: req.params.id,
     customerId: req.user._id
   });
@@ -255,8 +260,8 @@ const pauseWeeklyPlan = asyncHandler(async (req, res) => {
  * @route   POST /api/v1/weekly-plans/:id/resume
  * @access  Private (Customer)
  */
-const resumeWeeklyPlan = asyncHandler(async (req, res) => {
-  const weeklyPlan = await WeeklyPlan.findOne({
+const resumeSubscriptionMealPlan = asyncHandler(async (req, res) => {
+  const weeklyPlan = await SubscriptionMealPlan.findOne({
     _id: req.params.id,
     customerId: req.user._id
   });
@@ -286,7 +291,7 @@ const generateOrders = asyncHandler(async (req, res) => {
     query.customerId = req.user._id;
   }
 
-  const weeklyPlan = await WeeklyPlan.findOne(query);
+  const weeklyPlan = await SubscriptionMealPlan.findOne(query);
 
   if (!weeklyPlan) {
     return notFoundResponse(res, 'Weekly plan not found');
@@ -315,7 +320,7 @@ const generateOrders = asyncHandler(async (req, res) => {
 const addMeal = asyncHandler(async (req, res) => {
   const { day, mealType, menuItemId, deliveryTime } = req.body;
 
-  const weeklyPlan = await WeeklyPlan.findOne({
+  const weeklyPlan = await SubscriptionMealPlan.findOne({
     _id: req.params.id,
     customerId: req.user._id
   });
@@ -356,7 +361,7 @@ const addMeal = asyncHandler(async (req, res) => {
 const removeMeal = asyncHandler(async (req, res) => {
   const { day, mealType } = req.params;
 
-  const weeklyPlan = await WeeklyPlan.findOne({
+  const weeklyPlan = await SubscriptionMealPlan.findOne({
     _id: req.params.id,
     customerId: req.user._id
   });
@@ -383,7 +388,7 @@ const removeMeal = asyncHandler(async (req, res) => {
  * @route   GET /api/v1/restaurants/:restaurantId/weekly-plans
  * @access  Private (Partner)
  */
-const getRestaurantWeeklyPlans = asyncHandler(async (req, res) => {
+const getRestaurantSubscriptionMealPlans = asyncHandler(async (req, res) => {
   const { restaurantId } = req.params;
   const { status, startDate, endDate } = req.query;
 
@@ -397,7 +402,7 @@ const getRestaurantWeeklyPlans = asyncHandler(async (req, res) => {
     return notFoundResponse(res, 'Restaurant not found');
   }
 
-  const weeklyPlans = await WeeklyPlan.getForRestaurant(restaurantId, status);
+  const weeklyPlans = await SubscriptionMealPlan.getForRestaurant(restaurantId, status);
 
   successResponse(res, { weeklyPlans }, 'Restaurant weekly plans retrieved successfully');
 });
@@ -407,23 +412,23 @@ const getRestaurantWeeklyPlans = asyncHandler(async (req, res) => {
  * @route   GET /api/v1/weekly-plans/active
  * @access  Private (Customer)
  */
-const getActiveWeeklyPlans = asyncHandler(async (req, res) => {
-  const weeklyPlans = await WeeklyPlan.getActiveForCustomer(req.user._id);
+const getActiveSubscriptionMealPlans = asyncHandler(async (req, res) => {
+  const weeklyPlans = await SubscriptionMealPlan.getActiveForCustomer(req.user._id);
 
   successResponse(res, { weeklyPlans }, 'Active weekly plans retrieved successfully');
 });
 
 module.exports = {
-  getWeeklyPlans,
-  getWeeklyPlan,
-  createWeeklyPlan,
-  updateWeeklyPlan,
-  deleteWeeklyPlan,
-  pauseWeeklyPlan,
-  resumeWeeklyPlan,
+  getWeeklyPlans: getSubscriptionMealPlans,
+  getWeeklyPlan: getSubscriptionMealPlan,
+  createWeeklyPlan: createSubscriptionMealPlan,
+  updateWeeklyPlan: updateSubscriptionMealPlan,
+  deleteWeeklyPlan: deleteSubscriptionMealPlan,
+  pauseWeeklyPlan: pauseSubscriptionMealPlan,
+  resumeWeeklyPlan: resumeSubscriptionMealPlan,
   generateOrders,
   addMeal,
   removeMeal,
-  getRestaurantWeeklyPlans,
-  getActiveWeeklyPlans
+  getRestaurantWeeklyPlans: getRestaurantSubscriptionMealPlans,
+  getActiveWeeklyPlans: getActiveSubscriptionMealPlans
 };

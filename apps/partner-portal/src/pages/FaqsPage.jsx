@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import ChevronDown from 'lucide-react/icons/chevron-down';
-import ChevronUp from 'lucide-react/icons/chevron-up';
-import MessageCircle from 'lucide-react/icons/message-circle';
-import Phone from 'lucide-react/icons/phone';
-import Mail from 'lucide-react/icons/mail';
-import ExternalLink from 'lucide-react/icons/external-link';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faChevronDown, 
+  faChevronUp, 
+  faCommentDots, 
+  faPhone, 
+  faEnvelope, 
+  faExternalLinkAlt 
+} from '@fortawesome/free-solid-svg-icons';
 import { Card, CardContent, CardHeader, CardTitle } from '@grub-gate/ui';
 
 /**
@@ -26,9 +29,9 @@ const AccordionItem = ({ question, answer, isOpen, onToggle }) => {
           </h3>
           <div className="flex-shrink-0 text-grub-red">
             {isOpen ? (
-              <ChevronUp className="h-5 w-5" />
+              <FontAwesomeIcon icon={faChevronUp} className="h-5 w-5" />
             ) : (
-              <ChevronDown className="h-5 w-5" />
+              <FontAwesomeIcon icon={faChevronDown} className="h-5 w-5" />
             )}
           </div>
         </button>
@@ -303,7 +306,7 @@ const FaqsPage = () => {
         <div className="text-center">
           <div className="flex justify-center mb-4">
             <div className="w-16 h-16 bg-grub-red rounded-full flex items-center justify-center">
-              <MessageCircle className="h-8 w-8 text-white" />
+              <FontAwesomeIcon icon={faCommentDots} className="h-8 w-8 text-white" />
             </div>
           </div>
           <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
@@ -355,14 +358,14 @@ const FaqsPage = () => {
                 href="mailto:partners@grubgate.app"
                 className="inline-flex items-center justify-center px-6 py-3 bg-white text-grub-red rounded-lg hover:bg-gray-100 transition-colors font-semibold"
               >
-                <Mail className="h-5 w-5 mr-2" />
+                <FontAwesomeIcon icon={faEnvelope} className="h-5 w-5 mr-2" />
                 {t('faqs.contact.email', 'Email Us')}
               </a>
               <a
                 href="tel:+15141234567"
                 className="inline-flex items-center justify-center px-6 py-3 bg-white bg-opacity-20 text-white border border-white rounded-lg hover:bg-opacity-30 transition-colors font-semibold"
               >
-                <Phone className="h-5 w-5 mr-2" />
+                <FontAwesomeIcon icon={faPhone} className="h-5 w-5 mr-2" />
                 {t('faqs.contact.phone', 'Call Us')}
               </a>
             </div>

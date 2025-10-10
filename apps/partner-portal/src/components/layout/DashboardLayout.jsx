@@ -1,24 +1,27 @@
 import React from 'react';
 import { Outlet, useLocation, useNavigate, NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  LayoutDashboard, 
-  Menu as MenuIcon, 
-  ShoppingBag, 
-  BarChart3, 
-  Users, 
-  Settings, 
-  HelpCircle,
-  LogOut,
-  Globe
-} from 'lucide-react';
+  faTachometerAlt, 
+  faBars, 
+  faShoppingBag, 
+  faChartBar, 
+  faUsers, 
+  faCog, 
+  faQuestionCircle,
+  faSignOutAlt,
+  faGlobe
+} from '@fortawesome/free-solid-svg-icons';
 import { Logo, Button } from '@grub-gate/ui';
 import MobileBottomNav from './MobileBottomNav';
+import { useRestaurant } from '../../contexts/RestaurantContext';
 
 const DashboardLayout = ({ onLanguageChange }) => {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
+  const { getRestaurantName, getRestaurantInitial } = useRestaurant();
 
   const handleLanguageToggle = () => {
     const newLang = i18n.language === 'en' ? 'fr' : 'en';
@@ -27,13 +30,13 @@ const DashboardLayout = ({ onLanguageChange }) => {
   };
 
   const navigation = [
-    { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Menu Management', href: '/dashboard/menu', icon: MenuIcon },
-    { name: 'Orders', href: '/dashboard/orders', icon: ShoppingBag },
-    { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
-    { name: 'Customers', href: '/dashboard/customers', icon: Users },
-    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
-    { name: 'Support', href: '/dashboard/support', icon: HelpCircle },
+    { name: 'Overview', href: '/dashboard', icon: faTachometerAlt },
+    { name: 'Menu Management', href: '/dashboard/menu', icon: faBars },
+    { name: 'Orders', href: '/dashboard/orders', icon: faShoppingBag },
+    { name: 'Analytics', href: '/dashboard/analytics', icon: faChartBar },
+    { name: 'Customers', href: '/dashboard/customers', icon: faUsers },
+    { name: 'Settings', href: '/dashboard/settings', icon: faCog },
+    { name: 'Support', href: '/dashboard/support', icon: faQuestionCircle },
   ];
 
   const isCurrentPath = (path) => {
@@ -75,7 +78,7 @@ const DashboardLayout = ({ onLanguageChange }) => {
                       : 'text-gray-700 hover:bg-gray-50 border-transparent'
                   }`}
                 >
-                  <Icon className={`mr-3 h-5 w-5 ${active ? 'text-grub-red' : 'text-gray-500 group-hover:text-grub-red'}`} />
+                  <FontAwesomeIcon icon={Icon} className={`mr-3 h-5 w-5 ${active ? 'text-grub-red' : 'text-gray-500 group-hover:text-grub-red'}`} />
                   {item.name}
                 </button>
               );
@@ -86,11 +89,11 @@ const DashboardLayout = ({ onLanguageChange }) => {
           <div className="border-t border-gray-200 p-4">
             <div className="flex items-center space-x-3 mb-4">
               <div className="h-8 w-8 bg-grub-red rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">B</span>
+                <span className="text-white text-sm font-medium">{getRestaurantInitial()}</span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">
-                  Bistro Montreal
+                  {getRestaurantName()}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
                   Partner Account
@@ -103,24 +106,22 @@ const DashboardLayout = ({ onLanguageChange }) => {
               onClick={handleLanguageToggle}
               className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors mb-2"
             >
-              <Globe className="h-4 w-4" />
+              <FontAwesomeIcon icon={faGlobe} className="h-4 w-4" />
               <span className="font-medium uppercase">
                 {i18n.language}
               </span>
             </button>
-
             {/* Logout button */}
             <button
               onClick={handleLogout}
               className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
             >
-              <LogOut className="h-4 w-4" />
+              <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4" />
               <span>{t('dashboard.logout')}</span>
             </button>
           </div>
         </div>
       </div>
-
       {/* Main content */}
       <div className="lg:ml-64">
         {/* Top bar */}
@@ -148,7 +149,7 @@ const DashboardLayout = ({ onLanguageChange }) => {
                 className="lg:hidden flex items-center justify-center space-x-1 px-2 py-1.5 text-xs font-medium text-gray-600 hover:text-grub-red hover:bg-gray-100 rounded-md transition-colors border border-gray-300"
                 title={t('common.language')}
               >
-                <Globe className="h-4 w-4" />
+                <FontAwesomeIcon icon={faGlobe} className="h-4 w-4" />
                 <span className="uppercase font-semibold">
                   {i18n.language}
                 </span>

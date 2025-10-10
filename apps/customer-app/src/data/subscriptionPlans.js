@@ -72,33 +72,6 @@ export const subscriptionPlans = [
     popular: false,
     color: 'bg-green-50',
     borderColor: 'border-green-200'
-  },
-  {
-    id: 'semi-annual',
-    name: '6 Months',
-    duration: '6 months',
-    deliveryFrequency: 'Semi-annual planning',
-    price: {
-      monthly: 119.99,
-      savings: 40
-    },
-    features: [
-      'All 3-Month features',
-      'VIP customer support',
-      'Unlimited delivery flexibility',
-      'Personal meal consultant',
-      'Advanced analytics',
-      'Early access to new restaurants'
-    ],
-    benefits: [
-      'Maximum savings',
-      'VIP treatment',
-      'Perfect for committed users',
-      'Best overall value'
-    ],
-    popular: false,
-    color: 'bg-purple-50',
-    borderColor: 'border-purple-200'
   }
 ];
 

@@ -9,6 +9,7 @@ const {
   paginatedResponse
 } = require('../utils/apiResponse');
 const { asyncHandler } = require('../middlewares/errorHandler');
+const { geocodeAddress } = require('../services/geocodingService');
 
 // Helper function to handle ID mapping for frontend compatibility
 const findRestaurantById = async (id) => {
@@ -69,8 +70,17 @@ const getRestaurants = asyncHandler(async (req, res) => {
     query.cuisine = new RegExp(cuisine, 'i');
   }
 
+  // Handle postal code search with enhanced proximity search
+  let postalCodeRestaurants = null;
   if (postalCode) {
-    query['address.postalCode'] = postalCode;
+    try {
+      // Use enhanced postal code search instead of exact match
+      postalCodeRestaurants = await Restaurant.findNearbyByPostalCode(postalCode.trim().toUpperCase(), 10);
+      console.log(`📍 Enhanced postal code search found ${postalCodeRestaurants.length} restaurants for ${postalCode}`);
+    } catch (error) {
+      console.error('🚨 Enhanced postal code search failed, falling back to exact match:', error.message);
+      query['address.postalCode'] = postalCode.toUpperCase();
+    }
   }
 
   if (rating) {
@@ -101,13 +111,66 @@ const getRestaurants = asyncHandler(async (req, res) => {
 
   // Execute query with pagination
   const skip = (parseInt(page) - 1) * parseInt(limit);
-  const restaurants = await Restaurant.find(query)
-    .sort(sort)
-    .skip(skip)
-    .limit(parseInt(limit))
-    .populate('ownerId', 'firstName lastName email');
+  let restaurants, total;
 
-  const total = await Restaurant.countDocuments(query);
+  if (postalCodeRestaurants) {
+    // Use enhanced postal code search results and apply additional filters
+    let filteredRestaurants = postalCodeRestaurants;
+
+    // Apply additional filters to postal code results
+    if (cuisine) {
+      const cuisineRegex = new RegExp(cuisine, 'i');
+      filteredRestaurants = filteredRestaurants.filter(r => cuisineRegex.test(r.cuisine));
+    }
+
+    if (rating) {
+      const minRating = parseFloat(rating);
+      filteredRestaurants = filteredRestaurants.filter(r => r.rating >= minRating);
+    }
+
+    if (isPopular === 'true') {
+      filteredRestaurants = filteredRestaurants.filter(r => r.isPopular);
+    }
+
+    if (isTopRated === 'true') {
+      filteredRestaurants = filteredRestaurants.filter(r => r.rating >= 4.5 && r.reviewCount >= 50);
+    }
+
+    if (search) {
+      const searchRegex = new RegExp(search, 'i');
+      filteredRestaurants = filteredRestaurants.filter(r => 
+        searchRegex.test(r.name) || 
+        searchRegex.test(r.description) || 
+        searchRegex.test(r.cuisine) ||
+        (r.tags && r.tags.some(tag => searchRegex.test(tag)))
+      );
+    }
+
+    // Sort results
+    filteredRestaurants.sort((a, b) => {
+      if (sortOrder === 'desc') {
+        return b[sortBy] > a[sortBy] ? 1 : -1;
+      }
+      return a[sortBy] > b[sortBy] ? 1 : -1;
+    });
+
+    total = filteredRestaurants.length;
+    restaurants = filteredRestaurants.slice(skip, skip + parseInt(limit));
+
+    // Populate owner information for postal code results
+    for (let restaurant of restaurants) {
+      await restaurant.populate('ownerId', 'firstName lastName email');
+    }
+  } else {
+    // Use regular database query
+    restaurants = await Restaurant.find(query)
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(limit))
+      .populate('ownerId', 'firstName lastName email');
+
+    total = await Restaurant.countDocuments(query);
+  }
 
   const pagination = {
     page: parseInt(page),
@@ -146,9 +209,90 @@ const createRestaurant = asyncHandler(async (req, res) => {
   // Add owner ID from authenticated user
   req.body.ownerId = req.user._id;
 
-  const restaurant = await Restaurant.create(req.body);
+  // Extract address components for geocoding
+  const { street, city, province, postalCode } = req.body.address || req.body;
+  
+  // Process tags if provided
+  if (req.body.tags) {
+    if (Array.isArray(req.body.tags)) {
+      // If tags come as array (from form submission)
+      req.body.tags = req.body.tags.filter(tag => tag && tag.trim());
+    } else if (typeof req.body.tags === 'string') {
+      // If tags come as comma-separated string
+      req.body.tags = req.body.tags
+        .split(',')
+        .map(tag => tag.trim().toLowerCase())
+        .filter(tag => tag.length > 0);
+    }
+  }
 
-  createdResponse(res, { restaurant }, 'Restaurant created successfully');
+  try {
+    // Attempt to geocode the address
+    if (postalCode && city && province) {
+      console.log(`🌍 Geocoding address: ${street}, ${city}, ${province}, ${postalCode}`);
+      
+      const coordinates = await geocodeAddress(postalCode, city, province, 'Canada');
+      
+      // Structure the address with coordinates
+      req.body.address = {
+        street: street || '',
+        city: city,
+        province: province,
+        postalCode: postalCode.toUpperCase(),
+        coordinates: {
+          lat: coordinates.lat,
+          lng: coordinates.lng
+        }
+      };
+      
+      console.log(`✅ Geocoding successful:`, coordinates);
+      
+    } else {
+      // Create address without coordinates if geocoding info is incomplete
+      req.body.address = {
+        street: street || '',
+        city: city || '',
+        province: province || '',
+        postalCode: postalCode ? postalCode.toUpperCase() : ''
+      };
+      
+      console.log('⚠️ Incomplete address info for geocoding, creating restaurant without coordinates');
+    }
+
+    // Create the restaurant
+    const restaurant = await Restaurant.create(req.body);
+    
+    // Populate owner information for response
+    await restaurant.populate('ownerId', 'firstName lastName email');
+    
+    createdResponse(res, { restaurant }, 'Restaurant created successfully with location data');
+    
+  } catch (geocodingError) {
+    console.error('🚨 Geocoding failed:', geocodingError.message);
+    
+    // Still create restaurant but without coordinates
+    req.body.address = {
+      street: street || '',
+      city: city || '',
+      province: province || '',
+      postalCode: postalCode ? postalCode.toUpperCase() : ''
+    };
+    
+    try {
+      const restaurant = await Restaurant.create(req.body);
+      await restaurant.populate('ownerId', 'firstName lastName email');
+      
+      // Return success but note that coordinates will be updated later
+      createdResponse(res, { 
+        restaurant,
+        warning: 'Restaurant created successfully but location coordinates could not be determined. Please update your address for better delivery accuracy.'
+      }, 'Restaurant created (coordinates will be updated later)');
+      
+    } catch (dbError) {
+      console.error('🚨 Database error:', dbError);
+      errorResponse(res, 'Failed to create restaurant', 500);
+    }
+  }
 });
 
 /**
@@ -292,69 +436,85 @@ const getNearbyRestaurants = asyncHandler(async (req, res) => {
 });
 
 /**
- * @desc    Get restaurants by postal code sorted by rating
+ * @desc    Get restaurants by postal code with enhanced proximity search
  * @route   GET /api/v1/restaurants/by-postal-code
  * @access  Public
  */
 const getRestaurantsByPostalCode = asyncHandler(async (req, res) => {
-  const { postalCode, limit = 20, page = 1 } = req.query;
+  const { postalCode, limit = 20, page = 1, radius = 10 } = req.query;
   
   if (!postalCode) {
     return errorResponse(res, 'Postal code is required', 400);
   }
 
-  // Build query for active restaurants in the postal code area
-  const query = { 
-    status: 'active',
-    'address.postalCode': postalCode.toUpperCase()
-  };
+  console.log(`🔍 Enhanced postal code search for: ${postalCode} (radius: ${radius}km)`);
 
-  // Calculate pagination
-  const skip = (parseInt(page) - 1) * parseInt(limit);
+  try {
+    // Use enhanced search method with improved MapBox geocoding and postal code range matching
+    const restaurants = await Restaurant.findNearbyByPostalCode(
+      postalCode.trim().toUpperCase(), 
+      parseInt(radius)
+    );
 
-  // Find restaurants sorted by rating (descending) then by review count (descending)
-  const restaurants = await Restaurant.find(query)
-    .sort({ rating: -1, reviewCount: -1, totalOrders: -1 })
-    .skip(skip)
-    .limit(parseInt(limit))
-    .select('-ownerId -commissionRate -__v')
-    .lean();
+    console.log(`📍 Enhanced search found ${restaurants.length} restaurants for postal code: ${postalCode}`);
 
-  // Get total count for pagination
-  const total = await Restaurant.countDocuments(query);
+    // Apply pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const paginatedRestaurants = restaurants
+      .slice(skip, skip + parseInt(limit))
+      .map(restaurant => {
+        // Remove sensitive fields
+        const { ownerId, commissionRate, __v, ...publicData } = restaurant.toObject ? restaurant.toObject() : restaurant;
+        return publicData;
+      });
 
-  // Transform data to match frontend expectations
-  const transformedRestaurants = restaurants.map(restaurant => ({
-    id: restaurant._id,
-    name: restaurant.name,
-    image: restaurant.logo || '/images/grub-gate-default-restaurant-img.jpg',
-    rating: restaurant.rating,
-    reviewCount: restaurant.reviewCount,
-    description: restaurant.description,
-    cuisine: restaurant.cuisine,
-    deliveryTime: `${restaurant.deliverySettings.avgDeliveryTime - 5}-${restaurant.deliverySettings.avgDeliveryTime + 5} min`,
-    deliveryFee: `$${restaurant.deliverySettings.fee.toFixed(2)}`,
-    minOrder: `$${restaurant.deliverySettings.minOrderAmount}`,
-    isOpen: restaurant.isOpen,
-    isPopular: restaurant.isPopular,
-    isTopRated: restaurant.rating >= 4.5 && restaurant.reviewCount >= 50,
-    tags: restaurant.tags,
-    location: `${restaurant.address.postalCode} - ${restaurant.address.city}`,
-    postalCode: restaurant.address.postalCode,
-    phone: restaurant.phone,
-    address: restaurant.fullAddress || `${restaurant.address.street}, ${restaurant.address.city}, ${restaurant.address.province} ${restaurant.address.postalCode}`,
-    coordinates: restaurant.address.coordinates,
-    preferences: restaurant.tags // Using tags as preferences for now
-  }));
+    const total = restaurants.length;
 
-  const pagination = {
-    page: parseInt(page),
-    limit: parseInt(limit),
-    totalPages: Math.ceil(total / parseInt(limit)),
-    totalItems: total
-  };
+    // Transform data to match frontend expectations
+    const transformedRestaurants = paginatedRestaurants.map(restaurant => ({
+      id: restaurant._id,
+      name: restaurant.name,
+      image: restaurant.logo || '/images/grub-gate-default-restaurant-img.jpg',
+      rating: restaurant.rating,
+      reviewCount: restaurant.reviewCount,
+      description: restaurant.description,
+      cuisine: restaurant.cuisine,
+      deliveryTime: restaurant.deliverySettings ? `${restaurant.deliverySettings.avgDeliveryTime - 5}-${restaurant.deliverySettings.avgDeliveryTime + 5} min` : '30-40 min',
+      deliveryFee: restaurant.deliverySettings ? `$${restaurant.deliverySettings.fee.toFixed(2)}` : '$0.00',
+      minOrder: restaurant.deliverySettings ? `$${restaurant.deliverySettings.minOrderAmount}` : '$0',
+      isOpen: restaurant.isOpen,
+      isPopular: restaurant.isPopular,
+      isTopRated: restaurant.rating >= 4.5 && restaurant.reviewCount >= 50,
+      tags: restaurant.tags,
+      location: `${restaurant.address.postalCode} - ${restaurant.address.city}`,
+      postalCode: restaurant.address.postalCode,
+      phone: restaurant.phone,
+      address: restaurant.fullAddress || `${restaurant.address.street}, ${restaurant.address.city}, ${restaurant.address.province} ${restaurant.address.postalCode}`,
+      coordinates: restaurant.address.coordinates,
+      preferences: restaurant.tags // Using tags as preferences for now
+    }));
 
-  paginatedResponse(res, transformedRestaurants, pagination, `Found ${total} restaurants near ${postalCode.toUpperCase()}`);
+    const pagination = {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(total / parseInt(limit)),
+      totalItems: total
+    };
+
+    // Enhanced success message based on search results
+    let searchMessage = `Found ${total} restaurants for postal code ${postalCode.toUpperCase()}`;
+    if (total > 0) {
+      searchMessage += ` (using enhanced proximity search with ${radius}km radius)`;
+    } else {
+      searchMessage = `No restaurants found for postal code ${postalCode.toUpperCase()} within ${radius}km. Try expanding your search radius or check nearby postal codes.`;
+    }
+
+    paginatedResponse(res, transformedRestaurants, pagination, searchMessage);
+    
+  } catch (error) {
+    console.error('🚨 Error searching restaurants by postal code:', error);
+    errorResponse(res, `Failed to search restaurants for postal code ${postalCode}`, 500);
+  }
 });
 
 /**

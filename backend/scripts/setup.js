@@ -7,7 +7,7 @@ require('../src/models/User');
 require('../src/models/Restaurant');
 require('../src/models/MenuItem');
 require('../src/models/Order');
-require('../src/models/WeeklyPlan');
+require('../src/models/SubscriptionMealPlan');
 require('../src/models/Subscription');
 require('../src/models/Review');
 require('../src/models/ContactMessage');

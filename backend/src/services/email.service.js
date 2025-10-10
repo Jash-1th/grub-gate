@@ -189,9 +189,9 @@ class EmailService {
   }
 
   /**
-   * Send weekly plan reminder
+   * Send subscription meal plan reminder
    */
-  async sendWeeklyPlanReminder(email, weeklyPlan) {
+  async sendWeeklyPlanReminder(email, subscriptionMealPlan) {
     const mailOptions = {
       from: process.env.EMAIL_FROM,
       to: email,
@@ -203,9 +203,9 @@ class EmailService {
           
           <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h3>Plan Details</h3>
-            <p><strong>Restaurant:</strong> ${weeklyPlan.restaurantId.name}</p>
-            <p><strong>Start Date:</strong> ${new Date(weeklyPlan.startDate).toLocaleDateString()}</p>
-            <p><strong>Total Value:</strong> $${weeklyPlan.totalWeeklyValue.toFixed(2)}</p>
+            <p><strong>Restaurant:</strong> ${subscriptionMealPlan.restaurantId.name}</p>
+            <p><strong>Start Date:</strong> ${new Date(subscriptionMealPlan.planStartDate).toLocaleDateString()}</p>
+            <p><strong>Total Value:</strong> $${subscriptionMealPlan.totalPlanValue.toFixed(2)}</p>
           </div>
 
           <p>Your meals will be delivered according to the schedule you selected. We're excited to serve you!</p>
