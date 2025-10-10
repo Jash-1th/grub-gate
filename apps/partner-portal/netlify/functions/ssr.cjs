@@ -210,15 +210,21 @@ exports.handler = async (event, context) => {
           }
           
           console.log('✅ Extracted assets from index.html fallback:', { cssFile, jsFile });
+        } else {
+          console.log('⚠️ index.html not found, using hardcoded fallback');
         }
       } catch (err) {
         console.log('⚠️ Could not extract assets from index.html, using hardcoded fallback:', err.message);
-        // Last resort hardcoded fallback (will be updated by build process)
+      }
+      
+      // Apply hardcoded fallback if still missing (will be updated by build process)
+      if (!cssFile || !jsFile) {
         cssFile = cssFile || '/assets/index-DKLhbucu.css';
         jsFile = jsFile || '/assets/index-DRdxD5vn.js';
-        
         console.log('🎯 Using hardcoded fallback assets:', { cssFile, jsFile });
       }
+    } else {
+      console.log('✅ Using assets from manifest:', { cssFile, jsFile });
     }
     
     // Ultra-simple fallback HTML - no complex operations

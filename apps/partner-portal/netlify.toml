@@ -10,9 +10,6 @@
   
   # The directory for your regular Netlify Functions.
   functions = "netlify/functions"
-  
-  # Include necessary files for the SSR function to render the page.
-  included_files = ["dist/client/index.html", "dist/client/.vite/manifest.json", "netlify/functions/index.html", "netlify/functions/vite-manifest.json"]
 
 [build.environment]
   # Specify Node.js and npm versions for build consistency.
