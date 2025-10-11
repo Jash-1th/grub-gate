@@ -425,7 +425,7 @@ const WeeklyMenuPage = () => {
         
         setSwitchModalData({
           existingRestaurant: mealPlanSelectedRestaurantName,
-          newRestaurant: 'Browse Restaurants',
+          newRestaurant: 'New Restaurant',
           itemCount: totalItems
         });
         setShowRestaurantSwitchModal(true);
@@ -1035,39 +1035,7 @@ const WeeklyMenuPage = () => {
                   <div className="text-red-100 ml-11">Complete your meal planning journey and start enjoying delicious meals!</div>
                 </div>
               </button>
-              
-              {/* Additional Quick Actions */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button
-                  onClick={() => navigate('/restaurants')}
-                  className="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-200 transition-colors touch-manipulation"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm">🏪</span>
-                    </div>
-                    <div className="text-left">
-                      <div className="font-semibold text-gray-900 text-sm">Browse Restaurants</div>
-                      <div className="text-xs text-gray-600">Discover new options</div>
-                    </div>
-                  </div>
-                </button>
-                
-                <button
-                  onClick={() => navigate('/meal-plan')}
-                  className="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-200 transition-colors touch-manipulation"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm">📅</span>
-                    </div>
-                    <div className="text-left">
-                      <div className="font-semibold text-gray-900 text-sm">View Calendar</div>
-                      <div className="text-xs text-gray-600">See daily meals</div>
-                    </div>
-                  </div>
-                </button>
-              </div>
+
             </div>
           </div>
 

@@ -196,7 +196,114 @@ export const getRestaurantStats = async () => {
     return {
       success: false,
       error: error.response?.data?.message || 'Failed to fetch restaurant stats',
-      data: { totalRestaurants: 500 } // Fallback data
+      data: { 
+        totalRestaurants: 500,
+        totalMenuItems: 0,
+        averageRating: 4.5,
+        cuisineDistribution: [],
+        businessTypeDistribution: [],
+        lastUpdated: new Date().toISOString()
+      } // Enhanced fallback data
+    };
+  }
+};
+
+/**
+ * Get platform statistics (customers, restaurants, orders)
+ * @returns {Promise} API response with platform statistics
+ */
+export const getPlatformStats = async () => {
+  try {
+    const response = await apiClient.get('/stats/platform');
+    
+    return {
+      success: true,
+      data: response.data.data,
+      message: response.data.message
+    };
+  } catch (error) {
+    console.error('Error fetching platform stats:', error);
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || 'Failed to fetch platform stats',
+      data: { 
+        totalRestaurants: 500,
+        totalCustomers: 10000,
+        totalOrders: 50000,
+        totalMenuItems: 2500,
+        averageRating: 4.5,
+        cuisineDistribution: [],
+        growth: {
+          newCustomers: 150,
+          newOrders: 1200,
+          newRestaurants: 5
+        },
+        lastUpdated: new Date().toISOString(),
+        dataSource: 'fallback'
+      } // Enhanced fallback data
+    };
+  }
+};
+
+/**
+ * Get popular dishes (most ordered menu items)
+ * @param {number} limit - Number of dishes to fetch
+ * @returns {Promise} API response with popular dishes
+ */
+export const getPopularDishes = async (limit = 6) => {
+  try {
+    const response = await apiClient.get('/stats/popular-dishes', {
+      params: { limit }
+    });
+    
+    return {
+      success: true,
+      data: response.data.data,
+      message: response.data.message
+    };
+  } catch (error) {
+    console.error('Error fetching popular dishes:', error);
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || 'Failed to fetch popular dishes',
+      data: { 
+        dishes: [
+          {
+            _id: 'fallback1',
+            name: 'Gourmet Burger',
+            description: 'Juicy beef patty with fresh vegetables and special sauce',
+            price: 12.99,
+            image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80',
+            category: 'Main Course',
+            totalOrders: 50,
+            restaurant: { name: 'Sample Restaurant', cuisine: ['American'] }
+          },
+          {
+            _id: 'fallback2',
+            name: 'Margherita Pizza',
+            description: 'Classic Italian pizza with fresh basil and mozzarella',
+            price: 14.99,
+            image: 'https://images.unsplash.com/photo-1604382355076-af4b0eb60143?auto=format&fit=crop&w=500&q=80',
+            category: 'Main Course',
+            totalOrders: 45,
+            restaurant: { name: 'Sample Pizzeria', cuisine: ['Italian'] }
+          },
+          {
+            _id: 'fallback3',
+            name: 'Sushi Platter',
+            description: 'Assorted fresh sushi with wasabi and soy sauce',
+            price: 18.99,
+            image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=500&q=80',
+            category: 'Main Course',
+            totalOrders: 40,
+            restaurant: { name: 'Sample Sushi Bar', cuisine: ['Japanese'] }
+          }
+        ],
+        total: 3,
+        dataSource: 'fallback'
+      }
     };
   }
 };

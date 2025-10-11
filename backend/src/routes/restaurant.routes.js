@@ -12,7 +12,9 @@ const {
   debugRestaurants,
   getPopularRestaurants,
   getTopRatedRestaurants,
-  getRestaurantAnalytics
+  getRestaurantAnalytics,
+  getRestaurantStats,
+  checkDeliveryZone
 } = require('../controllers/restaurant.controller');
 const { authMiddleware, roleMiddleware, restaurantOwnershipMiddleware, optionalAuthMiddleware } = require('../middlewares/auth');
 const { mealPlanningAuthMiddleware } = require('../middlewares/mealPlanningAuth');
@@ -27,6 +29,8 @@ router.get('/by-postal-code', mealPlanningAuthMiddleware, getRestaurantsByPostal
 router.get('/debug', debugRestaurants);
 router.get('/popular', getPopularRestaurants);
 router.get('/top-rated', getTopRatedRestaurants);
+router.get('/stats', getRestaurantStats);
+router.post('/check-delivery', mealPlanningAuthMiddleware, checkDeliveryZone);
 router.get('/:id', mealPlanningAuthMiddleware, commonValidations.flexibleId, require('../middlewares/validation').handleValidationErrors, getRestaurant);
 router.get('/:id/menu', mealPlanningAuthMiddleware, commonValidations.flexibleId, require('../middlewares/validation').handleValidationErrors, getRestaurantMenu);
 

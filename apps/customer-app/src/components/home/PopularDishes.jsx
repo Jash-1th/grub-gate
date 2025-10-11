@@ -1,60 +1,34 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { useServerData } from '../../utils/serverData';
+import { getPopularDishes } from '../../services/restaurantService';
 
 const PopularDishes = () => {
   // Get dishes from server data or use empty array as fallback
   const serverDishes = useServerData('popularDishes') || [];
-  const [dishes, setDishes] = useState(serverDishes);
+  const [dishes, setDishes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [dataSource, setDataSource] = useState('loading');
   
-  // If no server data, fetch on client side
+  // Fetch popular dishes from API
   useEffect(() => {
-    if (dishes.length === 0) {
-      // In a real app, you would fetch from your API here
-      const fetchDishes = async () => {
-        try {
-          // This is just an example - replace with your actual API call
-          // const response = await fetch('/api/popular-dishes');
-          // const data = await response.json();
-          // setDishes(data);
-          
-          // Fallback static data
-          const fallbackDishes = [
-            {
-              id: 1,
-              name: 'Gourmet Burger',
-              description: 'Juicy beef patty with fresh vegetables and special sauce',
-              image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80',
-              rating: 4.8,
-              price: 12.99,
-            },
-            {
-              id: 2,
-              name: 'Margherita Pizza',
-              description: 'Classic Italian pizza with fresh basil and mozzarella',
-              image: 'https://images.unsplash.com/photo-1604382355076-af4b0eb60143?auto=format&fit=crop&w=500&q=80',
-              rating: 4.7,
-              price: 14.99,
-            },
-            {
-              id: 3,
-              name: 'Sushi Platter',
-              description: 'Assorted fresh sushi with wasabi and soy sauce',
-              image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=500&q=80',
-              rating: 4.9,
-              price: 18.99,
-            },
-          ];
-          
-          setDishes(fallbackDishes);
-        } catch (error) {
-          console.error('Error fetching popular dishes:', error);
+    const fetchDishes = async () => {
+      try {
+        const response = await getPopularDishes(6);
+        if (response.success && response.data.dishes) {
+          setDishes(response.data.dishes);
+          setDataSource(response.data.dataSource || 'api');
         }
-      };
-      
-      fetchDishes();
-    }
-  }, [dishes.length]);
+      } catch (error) {
+        console.error('Error fetching popular dishes:', error);
+        // Keep empty array, will show fallback in UI
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchDishes();
+  }, []);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isClient, setIsClient] = useState(false);
   const [isInView, setIsInView] = useState(false);
@@ -118,18 +92,30 @@ const PopularDishes = () => {
                   />
                 </div>
                 <div className="p-8 md:w-1/2 flex flex-col justify-center">
-                  <div className="flex justify-between items-start">
-                    <h3 className="text-2xl font-bold text-gray-900">{dishes[0]?.name || 'Gourmet Burger'}</h3>
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
-                      {dishes[0]?.rating || 4.8} ★
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-2xl font-bold text-gray-900">Popular Dishes</h3>
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                      🔥 Most Ordered
                     </span>
                   </div>
-                  <p className="mt-4 text-gray-600">{dishes[0]?.description || 'Juicy beef patty with fresh vegetables and special sauce'}</p>
-                  <div className="mt-6 flex items-center justify-between">
-                    <span className="text-2xl font-bold text-gray-900">${(dishes[0]?.price || 12.99).toFixed(2)}</span>
-                    <button className="px-6 py-3 bg-grub-red text-white rounded-lg hover:bg-red-900 transition-colors">
-                      Order Now
-                    </button>
+                  
+                  <p className="text-gray-600 mb-4">Discover our most loved dishes from top restaurants</p>
+                  
+                  {/* Restaurant info placeholder */}
+                  <div className="flex items-center mb-4">
+                    <div className="w-8 h-8 bg-grub-red rounded-full flex items-center justify-center mr-3">
+                      <span className="text-white text-sm font-bold">R</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Featured Restaurant</p>
+                      <p className="text-xs text-gray-500">Various Cuisines</p>
+                    </div>
+                  </div>
+                  
+                  {/* Loading state */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl font-bold text-grub-red">Loading...</span>
+                    <span className="text-xs text-blue-600 font-medium">⭐ Featured</span>
                   </div>
                 </div>
               </div>
@@ -189,7 +175,7 @@ const PopularDishes = () => {
             {dishes.map((dish, index) => (
               index === currentIndex && (
                 <motion.div
-                  key={dish.id}
+                  key={dish._id || dish.id || `dish-${index}`}
                   initial="hidden"
                   animate="visible"
                   exit="exit"
@@ -207,21 +193,45 @@ const PopularDishes = () => {
                       />
                     </div>
                     <div className="p-8 md:w-1/2 flex flex-col justify-center">
-                      <div className="flex justify-between items-start">
+                      <div className="flex justify-between items-start mb-4">
                         <h3 className="text-2xl font-bold text-gray-900">{dish.name}</h3>
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
-                          {dish.rating} ★
-                        </span>
+                        {dish.totalOrders > 0 && (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            🔥 {dish.totalOrders} orders
+                          </span>
+                        )}
                       </div>
-                      <p className="mt-4 text-gray-600">{dish.description}</p>
-                      <div className="mt-6 flex items-center justify-between">
-                        <span className="text-2xl font-bold text-gray-900">${dish.price.toFixed(2)}</span>
-                        <button 
-                          className="px-6 py-3 bg-grub-red text-white rounded-lg hover:bg-red-900 transition-colors"
-                          onClick={() => console.log(`Ordered ${dish.name}`)}
-                        >
-                          Order Now
-                        </button>
+                      
+                      <p className="text-gray-600 mb-4">{dish.description}</p>
+                      
+                      {/* Restaurant info */}
+                      <div className="flex items-center mb-4">
+                        <div className="w-8 h-8 bg-grub-red rounded-full flex items-center justify-center mr-3">
+                          <span className="text-white text-sm font-bold">
+                            {dish.restaurant?.name?.charAt(0) || 'R'}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{dish.restaurant?.name}</p>
+                          <p className="text-xs text-gray-500">
+                            {dish.restaurant?.cuisine?.join(', ') || dish.category}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Price and popularity */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl font-bold text-grub-red">
+                          ${typeof dish.price === 'number' ? dish.price.toFixed(2) : dish.price}
+                        </span>
+                        <div className="flex items-center space-x-2">
+                          {dataSource === 'order_analytics' && (
+                            <span className="text-xs text-green-600 font-medium">📊 Most Ordered</span>
+                          )}
+                          {dataSource === 'random_sample' && (
+                            <span className="text-xs text-blue-600 font-medium">⭐ Featured</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -242,6 +252,17 @@ const PopularDishes = () => {
               />
             ))}
           </div>
+          
+          {/* Data source indicator */}
+          {!loading && dataSource && (
+            <div className="text-center mt-4">
+              <p className="text-sm text-gray-500">
+                {dataSource === 'order_analytics' && '📊 Based on actual order data'}
+                {dataSource === 'random_sample' && '🎲 Sample dishes from our restaurants'}
+                {dataSource === 'fallback' && '⚠️ Using sample data'}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 // FILE: src/controllers/partner/menuItem.controller.js
 const MenuItem = require('../../models/MenuItem');
 const Restaurant = require('../../models/Restaurant');
+const Order = require('../../models/Order');
 
 // Helper function to find restaurant by flexible ID (mock ID or ObjectId)
 const findRestaurantById = async (id, ownerId) => {
@@ -124,13 +125,57 @@ const getPartnerMenuItems = asyncHandler(async (req, res) => {
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
   }
 
-  // Execute query with pagination
+  // Execute aggregation with order counts
   const skip = (parseInt(page) - 1) * parseInt(limit);
-  const menuItems = await MenuItem.find(query, search ? { score: { $meta: 'textScore' } } : {})
-    .sort(sort)
-    .skip(skip)
-    .limit(parseInt(limit));
+  
+  // Build aggregation pipeline
+  const pipeline = [
+    // Match menu items for this restaurant
+    { $match: query },
+    
+    // Add text search score if searching
+    ...(search ? [{ $addFields: { score: { $meta: 'textScore' } } }] : []),
+    
+    // Lookup order counts for each menu item
+    {
+      $lookup: {
+        from: 'orders',
+        let: { menuItemId: '$_id' },
+        pipeline: [
+          // Match non-cancelled orders
+          { $match: { status: { $ne: 'cancelled' } } },
+          // Unwind items array
+          { $unwind: '$items' },
+          // Match this specific menu item
+          { $match: { $expr: { $eq: ['$items.menuItemId', '$$menuItemId'] } } },
+          // Sum the quantities
+          { $group: { _id: null, totalOrders: { $sum: '$items.quantity' } } }
+        ],
+        as: 'orderStats'
+      }
+    },
+    
+    // Add totalOrders field
+    {
+      $addFields: {
+        totalOrders: {
+          $ifNull: [{ $arrayElemAt: ['$orderStats.totalOrders', 0] }, 0]
+        }
+      }
+    },
+    
+    // Remove the temporary orderStats field
+    { $unset: 'orderStats' },
+    
+    // Sort
+    { $sort: sort },
+    
+    // Pagination
+    { $skip: skip },
+    { $limit: parseInt(limit) }
+  ];
 
+  const menuItems = await MenuItem.aggregate(pipeline);
   const total = await MenuItem.countDocuments(query);
 
   const pagination = {
@@ -140,7 +185,7 @@ const getPartnerMenuItems = asyncHandler(async (req, res) => {
     totalItems: total
   };
 
-  paginatedResponse(res, menuItems, pagination, 'Menu items retrieved successfully');
+  paginatedResponse(res, menuItems, pagination, 'Menu items with order counts retrieved successfully');
 });
 
 /**

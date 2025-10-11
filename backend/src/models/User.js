@@ -136,6 +136,27 @@ const userSchema = new mongoose.Schema({
       trim: true,
       uppercase: true
     },
+    country: {
+      type: String,
+      trim: true,
+      uppercase: true
+    },
+    coordinates: {
+      lat: {
+        type: Number,
+        min: -90,
+        max: 90
+      },
+      lng: {
+        type: Number,
+        min: -180,
+        max: 180
+      }
+    },
+    formattedAddress: {
+      type: String,
+      trim: true
+    },
     instructions: {
       type: String,
       trim: true,

@@ -71,6 +71,15 @@ export const ToastProvider = ({ children }) => {
     });
   }, [addToast]);
 
+  const showWarning = useCallback((title, message, options = {}) => {
+    return addToast({
+      type: 'warning',
+      title,
+      message,
+      ...options
+    });
+  }, [addToast]);
+
   // Special method for meal plan additions
   const showMealPlanSuccess = useCallback((itemName, day, mealType, restaurantName, price) => {
     return addToast({
@@ -95,6 +104,7 @@ export const ToastProvider = ({ children }) => {
     showSuccess,
     showError,
     showInfo,
+    showWarning,
     showMealPlanSuccess
   };
 

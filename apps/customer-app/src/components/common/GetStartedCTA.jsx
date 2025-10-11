@@ -30,19 +30,13 @@ const GetStartedCTA = () => {
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
             {t('getStartedCta.subtitle')}
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="flex justify-center">
             <button
               onClick={handleGetStarted}
               className="bg-grub-red text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-red-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-transform duration-200"
             >
               {isAuthenticated ? 'Start Planning' : t('getStartedCta.startPlan')}
             </button>
-            <Link
-              to="/restaurants"
-              className="border-2 border-grub-red text-grub-red px-8 py-4 rounded-lg font-semibold text-lg hover:bg-grub-red hover:text-white transition-all duration-200"
-            >
-              {t('getStartedCta.learnMore')}
-            </Link>
           </div>
         </div>
       </div>

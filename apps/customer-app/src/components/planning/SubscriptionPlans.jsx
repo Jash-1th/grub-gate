@@ -5,6 +5,7 @@ import { useMealPlan } from '../../contexts/MealPlanContext_SSR_FIXED';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import BillingFormModal from '../modals/BillingFormModal';
+import EnhancedSubscriptionFlow from '../subscription/EnhancedSubscriptionFlow';
 
 const SubscriptionPlans = () => {
   const { t } = useTranslation();
@@ -16,6 +17,7 @@ const SubscriptionPlans = () => {
   // State to track selected subscription plan
   const [selectedPlan, setSelectedPlan] = useState('monthly');
   const [showBillingModal, setShowBillingModal] = useState(false);
+  const [showEnhancedFlow, setShowEnhancedFlow] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Calculate actual meal costs from user's meal plan
@@ -63,15 +65,27 @@ const SubscriptionPlans = () => {
       return;
     }
 
-    // Set the selected plan and show billing modal
+    // Set the selected plan and show enhanced subscription flow
     setSelectedPlan(planId);
-    setShowBillingModal(true);
+    setShowEnhancedFlow(true);
   };
 
   // Handle billing modal close
   const handleCloseBillingModal = () => {
     setShowBillingModal(false);
     setIsProcessing(false);
+  };
+
+  // Handle enhanced flow completion
+  const handleEnhancedFlowComplete = (subscriptionData) => {
+    setShowEnhancedFlow(false);
+    showSuccess('Subscription Created!', 'Your meal plan subscription is now active.');
+    navigate('/weekly-menu');
+  };
+
+  // Handle enhanced flow cancellation
+  const handleEnhancedFlowCancel = () => {
+    setShowEnhancedFlow(false);
   };
 
   // Get plan details by ID
@@ -359,6 +373,33 @@ const SubscriptionPlans = () => {
         selectedPlan={getPlanById(selectedPlan)}
         onSuccess={handleSubscriptionSuccess}
       />
+
+      {/* Enhanced Subscription Flow Modal */}
+      {showEnhancedFlow && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Complete Your Subscription</h2>
+                <button
+                  onClick={handleEnhancedFlowCancel}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <EnhancedSubscriptionFlow
+                selectedPlan={getPlanById(selectedPlan)}
+                onComplete={handleEnhancedFlowComplete}
+                onCancel={handleEnhancedFlowCancel}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

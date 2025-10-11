@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useServerData } from '../../utils/serverData';
 import { useInView } from 'react-intersection-observer';
+import { getPlatformStats } from '../../services/restaurantService';
 
 const AnimatedCounter = ({ target, duration = 2000, prefix = '', suffix = '' }) => {
   const [count, setCount] = useState(0);
@@ -49,40 +50,36 @@ const StatisticsSection = () => {
   const serverStats = useServerData('statistics') || {};
   const [stats, setStats] = useState({
     totalRestaurants: 0,
-    happyCustomers: 0,
-    deliveryAreas: 0,
-    orderCount: 0,
+    totalCustomers: 0,
+    totalOrders: 0,
     ...serverStats
   });
+  const [loading, setLoading] = useState(true);
   
-  // If no server data, fetch on client side
+  // Fetch platform statistics from API
   useEffect(() => {
-    if (Object.keys(serverStats).length === 0) {
-      // In a real app, you would fetch from your API here
-      const fetchStats = async () => {
-        try {
-          // This is just an example - replace with your actual API call
-          // const response = await fetch('/api/statistics');
-          // const data = await response.json();
-          // setStats(prev => ({ ...prev, ...data }));
-          
-          // Fallback static data
-          const fallbackStats = {
-            totalRestaurants: 500,
-            happyCustomers: 10000,
-            deliveryAreas: 25,
-            orderCount: 50000,
-          };
-          
-          setStats(fallbackStats);
-        } catch (error) {
-          console.error('Error fetching statistics:', error);
+    const fetchStats = async () => {
+      try {
+        const response = await getPlatformStats();
+        if (response.success && response.data) {
+          setStats({
+            totalRestaurants: response.data.totalRestaurants || 0,
+            totalCustomers: response.data.totalCustomers || 0,
+            totalOrders: response.data.totalOrders || 0,
+            averageRating: response.data.averageRating || 0,
+            dataSource: response.data.dataSource || 'live'
+          });
         }
-      };
-      
-      fetchStats();
-    }
-  }, [serverStats]);
+      } catch (error) {
+        console.error('Error fetching statistics:', error);
+        // Keep default fallback values
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchStats();
+  }, []);
 
   // Use dynamic imports for browser-only code
   const [isClient, setIsClient] = useState(false);
@@ -106,17 +103,17 @@ const StatisticsSection = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-white p-6 rounded-xl shadow-md text-center hover:shadow-lg transition-shadow duration-300">
-              <div className="text-4xl md:text-5xl font-bold text-grub-red">1000</div>
+              <div className="text-4xl md:text-5xl font-bold text-grub-red">10,000+</div>
               <h3 className="text-xl font-semibold mt-2 text-gray-800">Happy Customers</h3>
               <p className="text-gray-600 mt-2">and counting</p>
             </div>
             <div className="bg-white p-6 rounded-xl shadow-md text-center hover:shadow-lg transition-shadow duration-300">
-              <div className="text-4xl md:text-5xl font-bold text-grub-red">200</div>
+              <div className="text-4xl md:text-5xl font-bold text-grub-red">500+</div>
               <h3 className="text-xl font-semibold mt-2 text-gray-800">Partner Restaurants</h3>
               <p className="text-gray-600 mt-2">and growing</p>
             </div>
             <div className="bg-white p-6 rounded-xl shadow-md text-center hover:shadow-lg transition-shadow duration-300">
-              <div className="text-4xl md:text-5xl font-bold text-grub-red">5000</div>
+              <div className="text-4xl md:text-5xl font-bold text-grub-red">50,000+</div>
               <h3 className="text-xl font-semibold mt-2 text-gray-800">Meals Served</h3>
               <p className="text-gray-600 mt-2">and many more to come</p>
             </div>
@@ -140,21 +137,28 @@ const StatisticsSection = () => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <StatCard 
-            value={1000} 
+            value={stats.totalCustomers || 10000} 
             title="Happy Customers" 
-            description="and counting"
+            description={loading ? "Loading..." : "and counting"}
           />
           <StatCard 
-            value={200} 
+            value={stats.totalRestaurants || 500} 
             title="Partner Restaurants" 
-            description="and growing"
+            description={loading ? "Loading..." : "and growing"}
           />
           <StatCard 
-            value={5000} 
+            value={stats.totalOrders || 50000} 
             title="Meals Served" 
-            description="and many more to come"
+            description={loading ? "Loading..." : "and many more to come"}
           />
         </div>
+        {!loading && stats.dataSource && (
+          <div className="text-center mt-4">
+            <p className="text-sm text-gray-500">
+              {stats.dataSource === 'live' ? '📊 Live data from database' : '⚠️ Using fallback data'}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

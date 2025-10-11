@@ -51,26 +51,42 @@ const restaurantSchema = new mongoose.Schema({
     required: [true, 'Owner ID is required']
   },
   address: {
-    street: {
+    // Global address support
+    country: {
       type: String,
-      required: [true, 'Street address is required'],
-      trim: true
+      required: [true, 'Country is required'],
+      uppercase: true,
+      minlength: [2, 'Country code must be at least 2 characters'],
+      maxlength: [3, 'Country code cannot exceed 3 characters']
+    },
+    addressLine1: {
+      type: String,
+      required: [true, 'Address line 1 is required'],
+      trim: true,
+      maxlength: [200, 'Address line 1 cannot exceed 200 characters']
+    },
+    addressLine2: {
+      type: String,
+      trim: true,
+      maxlength: [200, 'Address line 2 cannot exceed 200 characters']
     },
     city: {
       type: String,
       required: [true, 'City is required'],
-      trim: true
+      trim: true,
+      maxlength: [100, 'City name cannot exceed 100 characters']
     },
-    province: {
+    state: {
       type: String,
-      required: [true, 'Province is required'],
-      trim: true
+      trim: true,
+      maxlength: [100, 'State/Province cannot exceed 100 characters']
     },
     postalCode: {
       type: String,
       required: [true, 'Postal code is required'],
       trim: true,
-      uppercase: true
+      uppercase: true,
+      maxlength: [20, 'Postal code cannot exceed 20 characters']
     },
     coordinates: {
       lat: {
@@ -83,6 +99,14 @@ const restaurantSchema = new mongoose.Schema({
         min: [-180, 'Longitude must be between -180 and 180'],
         max: [180, 'Longitude must be between -180 and 180']
       }
+    },
+    timezone: {
+      type: String,
+      trim: true
+    },
+    formattedAddress: {
+      type: String,
+      trim: true
     }
   },
   phone: {
@@ -396,10 +420,37 @@ const restaurantSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Virtual for full address
+// Virtual for full address (global support)
 restaurantSchema.virtual('fullAddress').get(function() {
-  return `${this.address.street}, ${this.address.city}, ${this.address.province} ${this.address.postalCode}`;
+  const parts = [
+    this.address.addressLine1,
+    this.address.addressLine2,
+    this.address.city,
+    this.address.state,
+    this.address.postalCode,
+    this.getCountryName()
+  ].filter(Boolean);
+  
+  return parts.join(', ');
 });
+
+// Method to get country name from code
+restaurantSchema.methods.getCountryName = function() {
+  const countryNames = {
+    'US': 'United States',
+    'CA': 'Canada', 
+    'IN': 'India',
+    'UK': 'United Kingdom',
+    'AU': 'Australia',
+    'DE': 'Germany',
+    'FR': 'France',
+    'JP': 'Japan',
+    'BR': 'Brazil',
+    'MX': 'Mexico'
+  };
+  
+  return countryNames[this.address.country] || this.address.country;
+};
 
 // Virtual for isOpen status
 restaurantSchema.virtual('isOpen').get(function() {
@@ -512,95 +563,191 @@ restaurantSchema.statics.findByLocation = function(coordinates, radius = 10) {
   });
 };
 
-// Static method to find restaurants by postal code with coordinate fallback
-restaurantSchema.statics.findNearbyByPostalCode = async function(postalCode, radius = 10) {
+// Static method to calculate distance between two coordinates (Haversine formula)
+restaurantSchema.statics.calculateDistance = function(coord1, coord2) {
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = (coord2.lat - coord1.lat) * Math.PI / 180;
+  const dLng = (coord2.lng - coord1.lng) * Math.PI / 180;
+  
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(coord1.lat * Math.PI / 180) * Math.cos(coord2.lat * Math.PI / 180) *
+            Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in kilometers
+};
+
+// Static method to find restaurants by postal code with global support
+restaurantSchema.statics.findNearbyByPostalCode = async function(postalCode, radius = 10, country = null) {
   try {
     // First try to find restaurants with the exact postal code
-    const exactMatches = await this.find({
+    const query = {
       status: 'active',
       'address.postalCode': postalCode.toUpperCase()
-    }).sort({ rating: -1, reviewCount: -1 });
+    };
+    
+    // Add country filter if provided
+    if (country) {
+      query['address.country'] = country.toUpperCase();
+    }
+    
+    const exactMatches = await this.find(query).sort({ rating: -1, reviewCount: -1 });
     
     if (exactMatches.length > 0) {
+      console.log(`✅ Found ${exactMatches.length} exact matches for ${postalCode}`);
       return exactMatches;
     }
     
-    // Step 2: Try postal code range matching (for Indian postal codes)
-    if (postalCode.length === 6 && /^\d{6}$/.test(postalCode)) {
-      // Indian postal code format: XXXXXX
+    // Step 2: Detect country from postal code if not provided
+    if (!country) {
+      const { detectCountryFromPostalCode } = require('../services/globalGeocodingService');
+      country = detectCountryFromPostalCode(postalCode);
+      console.log(`🌍 Detected country from postal code: ${country}`);
+    }
+    
+    // Step 3: Try postal code range matching (for numeric postal codes like India)
+    if (postalCode.length === 6 && /^\d{6}$/.test(postalCode) && country === 'IN') {
       const baseCode = parseInt(postalCode);
       const rangeMatches = [];
       
-      // Search within ±10 range (e.g., 515670-515680 for 515671)
+      // Search within ±10 range for Indian postal codes
       for (let i = -10; i <= 10; i++) {
         const testCode = (baseCode + i).toString();
         if (testCode.length === 6) {
           const matches = await this.find({
             status: 'active',
-            'address.postalCode': testCode
+            'address.postalCode': testCode,
+            'address.country': 'IN'
           });
           rangeMatches.push(...matches);
         }
       }
       
       if (rangeMatches.length > 0) {
-        console.log('✅ Found postal code range matches');
+        console.log(`✅ Found ${rangeMatches.length} postal code range matches`);
         return rangeMatches.sort((a, b) => b.rating - a.rating);
       }
     }
     
-    // Step 3: Try coordinate-based search with proper context
-    const { geocodeAddress } = require('../services/geocodingService');
+    // Step 4: Try coordinate-based search using global geocoding
+    const { geocodeGlobalAddress } = require('../services/globalGeocodingService');
     
     try {
-      // For Indian postal codes, provide better context based on area
-      let coordinates;
-      if (postalCode.startsWith('515')) {
-        // Dharmavaram/Anantapur area
-        coordinates = await geocodeAddress(postalCode, 'Dharmavaram', 'Andhra Pradesh', 'India');
-      } else if (postalCode.startsWith('500')) {
-        // Hyderabad area
-        coordinates = await geocodeAddress(postalCode, 'Hyderabad', 'Telangana', 'India');
-      } else if (postalCode.startsWith('560')) {
-        // Bangalore area
-        coordinates = await geocodeAddress(postalCode, 'Bangalore', 'Karnataka', 'India');
-      } else if (postalCode.startsWith('H')) {
-        // Canadian postal codes
-        coordinates = await geocodeAddress(postalCode, '', '', 'Canada');
-      } else {
-        // Generic search with India as default
-        coordinates = await geocodeAddress(postalCode, '', '', 'India');
+      // Build address object for geocoding
+      const addressObj = {
+        country: country || 'US', // Default to US if no country detected
+        postalCode: postalCode,
+        city: '', // Will be filled by geocoding service
+        state: '',
+        addressLine1: ''
+      };
+      
+      console.log('🌍 Using global coordinate-based search');
+      const coordinates = await geocodeGlobalAddress(addressObj);
+      
+      // Enhanced proximity search with multiple methods
+      let nearbyRestaurants = [];
+      
+      console.log(`🎯 Searching for restaurants near: ${coordinates.lat}, ${coordinates.lng} (${radius}km radius)`);
+      
+      // Method 1: Try $geoWithin first (more reliable than $near)
+      try {
+        console.log('🔍 Method 1: Using $geoWithin circular search');
+        
+        const geoWithinQuery = {
+          status: 'active',
+          'address.coordinates.lat': { $exists: true, $ne: null },
+          'address.coordinates.lng': { $exists: true, $ne: null },
+          'address.coordinates': {
+            $geoWithin: {
+              $centerSphere: [
+                [coordinates.lng, coordinates.lat],
+                radius / 6371 // Convert km to radians (Earth radius = 6371km)
+              ]
+            }
+          }
+        };
+        
+        // Add country filter
+        if (country) {
+          geoWithinQuery['address.country'] = country.toUpperCase();
+        }
+        
+        nearbyRestaurants = await this.find(geoWithinQuery).limit(50);
+        console.log(`✅ $geoWithin found ${nearbyRestaurants.length} restaurants`);
+        
+      } catch (geoWithinError) {
+        console.warn('$geoWithin failed:', geoWithinError.message);
+        
+        // Method 2: Fallback to manual distance calculation
+        try {
+          console.log('🔍 Method 2: Using manual distance calculation');
+          
+          const allRestaurants = await this.find({
+            status: 'active',
+            'address.coordinates.lat': { $exists: true, $ne: null },
+            'address.coordinates.lng': { $exists: true, $ne: null },
+            ...(country && { 'address.country': country.toUpperCase() })
+          });
+          
+          // Calculate distances manually using Haversine formula
+          nearbyRestaurants = allRestaurants.filter(restaurant => {
+            const rCoords = restaurant.address.coordinates;
+            if (!rCoords || !rCoords.lat || !rCoords.lng) return false;
+            
+            const distance = this.calculateDistance(
+              { lat: coordinates.lat, lng: coordinates.lng },
+              { lat: rCoords.lat, lng: rCoords.lng }
+            );
+            
+            return distance <= radius;
+          });
+          
+          // Sort by distance
+          nearbyRestaurants.sort((a, b) => {
+            const distA = this.calculateDistance(
+              { lat: coordinates.lat, lng: coordinates.lng },
+              { lat: a.address.coordinates.lat, lng: a.address.coordinates.lng }
+            );
+            const distB = this.calculateDistance(
+              { lat: coordinates.lat, lng: coordinates.lng },
+              { lat: b.address.coordinates.lat, lng: b.address.coordinates.lng }
+            );
+            return distA - distB;
+          });
+          
+          console.log(`✅ Manual calculation found ${nearbyRestaurants.length} restaurants`);
+          
+        } catch (manualError) {
+          console.warn('Manual distance calculation failed:', manualError.message);
+          nearbyRestaurants = [];
+        }
       }
       
-      console.log('✅ Using coordinate-based search with context');
-      
-      // Use MongoDB geospatial query to find nearby restaurants
-      return await this.find({
-        status: 'active',
-        'address.coordinates': {
-          $near: {
-            $geometry: {
-              type: 'Point',
-              coordinates: [coordinates.lng, coordinates.lat]
-            },
-            $maxDistance: radius * 1000 // Convert km to meters
-          }
-        }
-      }).sort({ 'address.coordinates': 1 });
+      console.log(`✅ Found ${nearbyRestaurants.length} restaurants within ${radius}km`);
+      return nearbyRestaurants;
       
     } catch (geocodingError) {
-      console.warn('Geocoding failed for postal code search:', geocodingError.message);
+      console.warn('Global geocoding failed:', geocodingError.message);
       
-      // Step 4: Fallback to partial postal code matching
+      // Step 5: Fallback to partial postal code matching within country
       const partialPostal = postalCode.toUpperCase().substring(0, Math.min(4, postalCode.length));
-      return await this.find({
+      const fallbackQuery = {
         status: 'active',
         'address.postalCode': { $regex: `^${partialPostal}`, $options: 'i' }
-      }).sort({ rating: -1, reviewCount: -1 });
+      };
+      
+      if (country) {
+        fallbackQuery['address.country'] = country.toUpperCase();
+      }
+      
+      const fallbackResults = await this.find(fallbackQuery).sort({ rating: -1, reviewCount: -1 });
+      console.log(`✅ Fallback: Found ${fallbackResults.length} partial matches`);
+      return fallbackResults;
     }
     
   } catch (error) {
-    console.error('Error in findNearbyByPostalCode:', error);
+    console.error('Error in global findNearbyByPostalCode:', error);
     return [];
   }
 };

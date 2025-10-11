@@ -2,6 +2,7 @@ import React, { Suspense, lazy, useState, useEffect } from 'react';
 import HeroSection from '../components/home/HeroSection';
 import WhyGrubGateSection from '../components/home/WhyGrubGateSection';
 import TestimonialsSection from '../components/home/TestimonialsSection';
+import RoleCards from '../components/home/RoleCards';
 // import NearbyRestaurants from '../components/home/NearbyRestaurants';
 import GetStartedCTA from '../components/common/GetStartedCTA';
 
@@ -43,6 +44,7 @@ const HomePage = () => {
       </Suspense>
       
       <TestimonialsSection />
+      <RoleCards />
       {/* <NearbyRestaurants /> */}
       <GetStartedCTA />
       

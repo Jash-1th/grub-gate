@@ -206,7 +206,7 @@ const MenuPage = () => {
       
       if (editingItem) {
         // Update existing item
-        await updateMenuItem(restaurant.id, editingItem.id, submitData);
+        await updateMenuItem(restaurant.id, editingItem._id || editingItem.id, submitData);
         showToast('Menu item updated successfully!', 'success');
       } else {
         // Create new item
@@ -431,7 +431,7 @@ const MenuPage = () => {
           </div>
         ) : (
           menuItems.map((item) => (
-          <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+          <Card key={item._id || item.id} className="overflow-hidden hover:shadow-lg transition-shadow">
             {/* Image area */}
             <div className="h-32 sm:h-36 lg:h-44 bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
               {item.image ? (
@@ -492,7 +492,7 @@ const MenuPage = () => {
                   <button onClick={() => handleEditItem(item)} className="p-1.5 sm:p-2 rounded-md border text-gray-600 hover:text-blue-600 hover:border-blue-200 transition-colors">
                     <FontAwesomeIcon icon={faEdit} className="h-3 w-3 sm:h-4 sm:w-4" />
                   </button>
-                  <button onClick={() => handleDeleteItem(item.id)} className="p-1.5 sm:p-2 rounded-md border text-gray-600 hover:text-red-600 hover:border-red-200 transition-colors">
+                  <button onClick={() => handleDeleteItem(item._id || item.id)} className="p-1.5 sm:p-2 rounded-md border text-gray-600 hover:text-red-600 hover:border-red-200 transition-colors">
                     <FontAwesomeIcon icon={faTrash} className="h-3 w-3 sm:h-4 sm:w-4" />
                   </button>
                 </div>

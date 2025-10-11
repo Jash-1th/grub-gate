@@ -145,12 +145,43 @@ const getOrder = asyncHandler(async (req, res) => {
  * @access  Private (Customer)
  */
 const createOrder = asyncHandler(async (req, res) => {
-  const { restaurantId, items, deliveryAddress, specialInstructions, mealType, weeklyPlanId } = req.body;
+  const { 
+    restaurantId, 
+    items, 
+    deliveryAddress, 
+    specialInstructions, 
+    mealType, 
+    weeklyPlanId,
+    paymentMethod = 'card',
+    paymentStatus = 'paid',
+    orderType = 'single',
+    subtotal,
+    deliveryFee,
+    tax,
+    total
+  } = req.body;
+
+  // Validate required fields
+  if (!restaurantId || !items || !Array.isArray(items) || items.length === 0) {
+    return errorResponse(res, 'Restaurant ID and items are required', 400);
+  }
+
+  if (!deliveryAddress || !deliveryAddress.street || !deliveryAddress.city || !deliveryAddress.postalCode) {
+    return errorResponse(res, 'Complete delivery address is required', 400);
+  }
 
   // Verify restaurant exists and is active
   const restaurant = await Restaurant.findOne({ _id: restaurantId, status: 'active' });
   if (!restaurant) {
     return notFoundResponse(res, 'Restaurant not found or inactive');
+  }
+
+  // Verify delivery address is within restaurant's delivery zone
+  if (deliveryAddress.coordinates) {
+    const canDeliver = restaurant.deliversTo(deliveryAddress.coordinates);
+    if (!canDeliver) {
+      return errorResponse(res, 'Restaurant does not deliver to this address', 400);
+    }
   }
 
   // Verify all menu items exist and are available
@@ -165,36 +196,65 @@ const createOrder = asyncHandler(async (req, res) => {
     return errorResponse(res, 'Some menu items are not available', 400);
   }
 
-  // Calculate order totals
-  let subtotal = 0;
+  // Calculate order totals if not provided
+  let calculatedSubtotal = 0;
   const orderItems = items.map(item => {
     const menuItem = menuItems.find(mi => mi._id.toString() === item.menuItemId);
-    const itemTotal = menuItem.price * item.quantity;
-    subtotal += itemTotal;
+    if (!menuItem) {
+      throw new Error(`Menu item ${item.menuItemId} not found`);
+    }
+    
+    const quantity = item.quantity || 1;
+    const itemTotal = menuItem.price * quantity;
+    calculatedSubtotal += itemTotal;
 
     return {
       menuItemId: item.menuItemId,
-      name: menuItem.name,
-      price: menuItem.price,
-      quantity: item.quantity,
+      name: item.name || menuItem.name,
+      price: item.price || menuItem.price,
+      quantity: quantity,
       specialInstructions: item.specialInstructions || ''
     };
   });
 
+  // Use provided totals or calculate them
+  const finalSubtotal = subtotal || calculatedSubtotal;
+  const finalDeliveryFee = deliveryFee || restaurant.deliverySettings?.fee || 2.99;
+  const finalTax = tax || (finalSubtotal * 0.13); // 13% tax (adjust based on location)
+  const finalTotal = total || (finalSubtotal + finalDeliveryFee + finalTax);
+
+  // Generate unique order number
+  const orderNumber = `GG${Date.now()}${Math.floor(Math.random() * 1000)}`;
+
   // Create order
   const order = new Order({
+    orderNumber,
     customerId: req.user._id,
     restaurantId,
-    type: weeklyPlanId ? 'weekly-plan' : 'single',
+    type: orderType,
+    isSubscriptionOrder: orderType === 'subscription',
     items: orderItems,
-    deliveryAddress,
-    specialInstructions,
+    subtotal: finalSubtotal,
+    deliveryFee: finalDeliveryFee,
+    tax: finalTax,
+    total: finalTotal,
+    status: paymentStatus === 'paid' ? 'pending' : 'scheduled',
+    paymentStatus,
+    paymentMethod,
+    deliveryAddress: {
+      street: deliveryAddress.street,
+      city: deliveryAddress.city,
+      province: deliveryAddress.province,
+      postalCode: deliveryAddress.postalCode,
+      instructions: deliveryAddress.instructions || ''
+    },
+    specialInstructions: specialInstructions || '',
     mealType,
-    weeklyPlanId
+    weeklyPlanId,
+    scheduledDate: new Date(),
+    activationDate: new Date(),
+    estimatedDeliveryTime: restaurant.deliverySettings?.avgDeliveryTime || 30
   });
-
-  // Calculate totals
-  order.calculateTotals(restaurant.deliverySettings.fee);
 
   await order.save();
 
@@ -202,20 +262,30 @@ const createOrder = asyncHandler(async (req, res) => {
   for (const item of items) {
     const menuItem = await MenuItem.findById(item.menuItemId);
     if (menuItem) {
-      await menuItem.incrementOrderCount(item.quantity);
+      if (typeof menuItem.incrementOrderCount === 'function') {
+        await menuItem.incrementOrderCount(item.quantity || 1);
+      } else {
+        // Fallback if method doesn't exist
+        menuItem.orderCount = (menuItem.orderCount || 0) + (item.quantity || 1);
+        await menuItem.save();
+      }
     }
   }
 
   // Update restaurant total orders
-  restaurant.totalOrders += 1;
+  restaurant.totalOrders = (restaurant.totalOrders || 0) + 1;
   await restaurant.save();
 
   // Populate order for response
   await order.populate([
-    { path: 'customerId', select: 'firstName lastName email phone' },
-    { path: 'restaurantId', select: 'name cuisine phone' },
-    { path: 'items.menuItemId', select: 'name description image' }
+    { path: 'customerId', select: 'firstName lastName email phone phoneNumber' },
+    { path: 'restaurantId', select: 'name cuisine phone address' },
+    { path: 'items.menuItemId', select: 'name description image category' }
   ]);
+
+  // TODO: Send notification emails/SMS
+  // TODO: Notify restaurant of new order
+  // TODO: Process payment if not already processed
 
   createdResponse(res, { order }, 'Order created successfully');
 });

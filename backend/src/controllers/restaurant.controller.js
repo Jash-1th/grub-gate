@@ -649,6 +649,231 @@ const getRestaurantAnalytics = asyncHandler(async (req, res) => {
   }, 'Restaurant analytics retrieved successfully');
 });
 
+/**
+ * @desc    Get restaurant statistics
+ * @route   GET /api/v1/restaurants/stats
+ * @access  Public
+ */
+const getRestaurantStats = asyncHandler(async (req, res) => {
+  // Get total count of active restaurants
+  const totalRestaurants = await Restaurant.countDocuments({ 
+    status: 'active' 
+  });
+
+  // Get additional stats for comprehensive data
+  const totalMenuItems = await MenuItem.countDocuments({
+    restaurantId: { $in: await Restaurant.find({ status: 'active' }).distinct('_id') }
+  });
+
+  // Get cuisine distribution
+  const cuisineStats = await Restaurant.aggregate([
+    { $match: { status: 'active' } },
+    { $unwind: '$cuisine' },
+    { $group: { _id: '$cuisine', count: { $sum: 1 } } },
+    { $sort: { count: -1 } },
+    { $limit: 10 }
+  ]);
+
+  // Get restaurants by business type
+  const businessTypeStats = await Restaurant.aggregate([
+    { $match: { status: 'active' } },
+    { $group: { _id: '$businessType', count: { $sum: 1 } } },
+    { $sort: { count: -1 } }
+  ]);
+
+  // Get average rating
+  const avgRatingResult = await Restaurant.aggregate([
+    { $match: { status: 'active', rating: { $exists: true, $ne: null } } },
+    { $group: { _id: null, avgRating: { $avg: '$rating' } } }
+  ]);
+
+  const avgRating = avgRatingResult.length > 0 ? avgRatingResult[0].avgRating : 0;
+
+  successResponse(res, {
+    totalRestaurants,
+    totalMenuItems,
+    averageRating: Math.round(avgRating * 10) / 10, // Round to 1 decimal
+    cuisineDistribution: cuisineStats,
+    businessTypeDistribution: businessTypeStats,
+    lastUpdated: new Date().toISOString()
+  }, 'Restaurant statistics retrieved successfully');
+});
+
+/**
+ * @desc    Check if restaurant delivers to specific address
+ * @route   POST /api/v1/restaurants/check-delivery
+ * @access  Public
+ */
+const checkDeliveryZone = asyncHandler(async (req, res) => {
+  const { address, restaurantId, coordinates } = req.body;
+
+  console.log('🚚 === DELIVERY ZONE CHECK START ===');
+  console.log('📍 Customer Address Input:', JSON.stringify(address, null, 2));
+  console.log('🏪 Restaurant ID:', restaurantId);
+  console.log('📍 Customer Coordinates Input:', coordinates);
+
+  // Validate required fields
+  if (!address && !coordinates) {
+    console.log('❌ No address or coordinates provided');
+    return errorResponse(res, 'Address or coordinates are required', 400);
+  }
+
+  let targetCoordinates = coordinates;
+
+  // Check if coordinates are in the address object
+  if (!targetCoordinates && address && address.coordinates) {
+    console.log('🎯 Found coordinates in address object');
+    targetCoordinates = [address.coordinates.lng, address.coordinates.lat]; // [lng, lat] format
+    console.log('✅ Customer coordinates from address:', targetCoordinates);
+  }
+
+  // If still no coordinates, try to geocode the address
+  if (!targetCoordinates && address) {
+    console.log('🔄 Geocoding customer address...');
+    try {
+      const geocodeResult = await geocodeAddress(address);
+      console.log('🎯 Geocoding result:', JSON.stringify(geocodeResult, null, 2));
+      if (geocodeResult && geocodeResult.coordinates) {
+        targetCoordinates = geocodeResult.coordinates;
+        console.log('✅ Customer coordinates from geocoding:', targetCoordinates);
+      } else {
+        console.log('⚠️ Geocoding returned no coordinates');
+      }
+    } catch (error) {
+      console.log('❌ Geocoding failed:', error.message);
+    }
+  } else if (targetCoordinates) {
+    console.log('✅ Customer coordinates provided directly:', targetCoordinates);
+  }
+
+  // If restaurantId is provided, check specific restaurant delivery zone
+  if (restaurantId) {
+    try {
+      const restaurant = await findRestaurantById(restaurantId);
+      
+      if (!restaurant) {
+        console.log('❌ Restaurant not found for ID:', restaurantId);
+        return notFoundResponse(res, 'Restaurant not found');
+      }
+
+      console.log('🏪 === RESTAURANT DETAILS ===');
+      console.log('🏪 Restaurant Name:', restaurant.name);
+      console.log('🏪 Restaurant Address:', JSON.stringify(restaurant.address, null, 2));
+      console.log('🏪 Restaurant Delivery Settings:', JSON.stringify(restaurant.deliverySettings, null, 2));
+
+      // Check if restaurant has delivery settings configured (FIXED SCHEMA)
+      if (restaurant.deliverySettings && restaurant.deliverySettings.radius && restaurant.address && restaurant.address.coordinates) {
+        console.log('📏 === DISTANCE CALCULATION ===');
+        if (targetCoordinates) {
+          console.log('🏪 Restaurant Coordinates:', {
+            lat: restaurant.address.coordinates.lat,
+            lng: restaurant.address.coordinates.lng
+          });
+          console.log('📍 Customer Coordinates:', {
+            lat: targetCoordinates[1],
+            lng: targetCoordinates[0]
+          });
+          
+          // Calculate distance between restaurant and delivery address
+          const distance = calculateDistance(
+            restaurant.address.coordinates.lat, // lat
+            restaurant.address.coordinates.lng, // lng
+            targetCoordinates[1], // lat
+            targetCoordinates[0]  // lng
+          );
+
+          console.log('📏 Calculated Distance:', distance, 'km');
+          console.log('🎯 Delivery Zone Radius:', restaurant.deliverySettings.radius, 'km');
+
+          const isWithinZone = distance <= restaurant.deliverySettings.radius;
+          console.log('✅ Is Within Delivery Zone:', isWithinZone);
+          console.log('📊 Distance Check:', `${distance} km <= ${restaurant.deliverySettings.radius} km = ${isWithinZone}`);
+
+          const response = {
+            delivers: isWithinZone,
+            distance: Math.round(distance * 100) / 100,
+            maxDistance: restaurant.deliverySettings.radius,
+            restaurant: {
+              id: restaurant._id,
+              name: restaurant.name
+            }
+          };
+          
+          console.log('🚚 === FINAL RESPONSE ===');
+          console.log('📦 Response Data:', JSON.stringify(response, null, 2));
+          console.log('🚚 === DELIVERY ZONE CHECK END ===');
+          
+          return successResponse(res, response, isWithinZone ? 'Delivery available' : 'Outside delivery zone');
+        } else {
+          console.log('❌ No customer coordinates available for distance calculation');
+        }
+      } else {
+        console.log('⚠️ Restaurant has no delivery settings or address coordinates configured');
+        console.log('🔍 Missing fields check:');
+        console.log('  - deliverySettings:', !!restaurant.deliverySettings);
+        console.log('  - deliverySettings.radius:', restaurant.deliverySettings?.radius);
+        console.log('  - address:', !!restaurant.address);
+        console.log('  - address.coordinates:', !!restaurant.address?.coordinates);
+      }
+
+      // Default: assume delivery is available (fallback)
+      const fallbackResponse = {
+        delivers: true,
+        distance: null,
+        maxDistance: null,
+        restaurant: {
+          id: restaurant._id,
+          name: restaurant.name
+        },
+        note: 'Delivery zone not configured, assuming available'
+      };
+      
+      console.log('🚚 === FALLBACK RESPONSE ===');
+      console.log('📦 Fallback Data:', JSON.stringify(fallbackResponse, null, 2));
+      console.log('🚚 === DELIVERY ZONE CHECK END ===');
+      
+      return successResponse(res, fallbackResponse, 'Delivery assumed available');
+
+    } catch (error) {
+      console.error('Restaurant delivery check error:', error);
+      return errorResponse(res, 'Error checking restaurant delivery zone', 500);
+    }
+  }
+
+  // General delivery zone check (no specific restaurant)
+  console.log('⚠️ No restaurant ID provided - using general delivery check');
+  const generalResponse = {
+    delivers: true,
+    distance: null,
+    maxDistance: null,
+    note: 'General delivery check - assumed available'
+  };
+  
+  console.log('🚚 === GENERAL RESPONSE ===');
+  console.log('📦 General Data:', JSON.stringify(generalResponse, null, 2));
+  console.log('🚚 === DELIVERY ZONE CHECK END ===');
+  
+  return successResponse(res, generalResponse, 'Delivery available');
+});
+
+// Helper function to calculate distance between two coordinates (Haversine formula)
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371; // Radius of the Earth in kilometers
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const distance = R * c; // Distance in kilometers
+  return distance;
+};
+
+const deg2rad = (deg) => {
+  return deg * (Math.PI/180);
+};
+
 module.exports = {
   getRestaurants,
   getRestaurant,
@@ -661,5 +886,7 @@ module.exports = {
   debugRestaurants,
   getPopularRestaurants,
   getTopRatedRestaurants,
-  getRestaurantAnalytics
+  getRestaurantAnalytics,
+  getRestaurantStats,
+  checkDeliveryZone
 };

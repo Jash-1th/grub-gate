@@ -202,6 +202,11 @@ const BusinessDetailsStep = ({
     if (!formData.postalCode.trim()) validationErrors.postalCode = 'Postal code is required';
     if (!formData.businessPhone.trim()) validationErrors.businessPhone = 'Business phone is required';
     
+    // Delivery settings validation
+    if (!formData.deliveryRadius || formData.deliveryRadius < 1 || formData.deliveryRadius > 50) {
+      validationErrors.deliveryRadius = 'Delivery radius must be between 1 and 50 km';
+    }
+    
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
@@ -628,6 +633,96 @@ const BusinessDetailsStep = ({
             {errors.postalCode && (
               <p className="mt-1 text-sm text-red-600">{errors.postalCode}</p>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Delivery Settings */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium text-gray-900">Delivery Settings</h3>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="deliveryRadius" className="block text-sm font-medium text-gray-700 mb-1">
+              Delivery Radius (km) *
+            </label>
+            <input
+              type="number"
+              id="deliveryRadius"
+              name="deliveryRadius"
+              value={formData.deliveryRadius}
+              onChange={handleInputChange}
+              min="1"
+              max="50"
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+                errors.deliveryRadius ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              }`}
+              placeholder="5"
+              disabled={isLoading}
+            />
+            {errors.deliveryRadius && (
+              <p className="mt-1 text-sm text-red-600">{errors.deliveryRadius}</p>
+            )}
+            <p className="mt-1 text-xs text-gray-500">Maximum distance for delivery (1-50 km)</p>
+          </div>
+          
+          <div>
+            <label htmlFor="deliveryFee" className="block text-sm font-medium text-gray-700 mb-1">
+              Delivery Fee ($)
+            </label>
+            <input
+              type="number"
+              id="deliveryFee"
+              name="deliveryFee"
+              value={formData.deliveryFee}
+              onChange={handleInputChange}
+              min="0"
+              step="0.01"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors"
+              placeholder="2.99"
+              disabled={isLoading}
+            />
+            <p className="mt-1 text-xs text-gray-500">Delivery fee charged to customers</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="minOrderAmount" className="block text-sm font-medium text-gray-700 mb-1">
+              Minimum Order ($)
+            </label>
+            <input
+              type="number"
+              id="minOrderAmount"
+              name="minOrderAmount"
+              value={formData.minOrderAmount}
+              onChange={handleInputChange}
+              min="0"
+              step="0.01"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors"
+              placeholder="15.00"
+              disabled={isLoading}
+            />
+            <p className="mt-1 text-xs text-gray-500">Minimum order amount for delivery</p>
+          </div>
+          
+          <div>
+            <label htmlFor="avgDeliveryTime" className="block text-sm font-medium text-gray-700 mb-1">
+              Delivery Time (minutes)
+            </label>
+            <input
+              type="number"
+              id="avgDeliveryTime"
+              name="avgDeliveryTime"
+              value={formData.avgDeliveryTime}
+              onChange={handleInputChange}
+              min="10"
+              max="120"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors"
+              placeholder="30"
+              disabled={isLoading}
+            />
+            <p className="mt-1 text-xs text-gray-500">Average delivery time (10-120 minutes)</p>
           </div>
         </div>
       </div>

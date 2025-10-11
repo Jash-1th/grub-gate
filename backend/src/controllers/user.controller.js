@@ -88,7 +88,24 @@ const getAddresses = asyncHandler(async (req, res) => {
  * @access  Private
  */
 const addAddress = asyncHandler(async (req, res) => {
-  const { label, street, city, province, postalCode, instructions, isDefault } = req.body;
+  const { 
+    type, 
+    label, 
+    street, 
+    city, 
+    province, 
+    postalCode, 
+    country,
+    instructions, 
+    isDefault,
+    coordinates,
+    formattedAddress
+  } = req.body;
+
+  console.log('📍 Adding address with coordinates:', {
+    hasCoordinates: !!coordinates,
+    coordinates: coordinates
+  });
 
   const user = await User.findById(req.user._id);
   
@@ -97,13 +114,17 @@ const addAddress = asyncHandler(async (req, res) => {
   }
 
   await user.addAddress({
+    type: type || label, // Use type if provided, fallback to label
     label,
     street,
     city,
     province,
     postalCode,
+    country,
     instructions,
-    isDefault
+    isDefault,
+    coordinates,
+    formattedAddress
   });
 
   successResponse(res, { addresses: user.addresses }, 'Address added successfully');
