@@ -42,5 +42,4 @@ router.delete('/:id', commonValidations.mongoId, roleMiddleware('partner', 'admi
 
 // Analytics route
 router.get('/:id/analytics', commonValidations.mongoId, roleMiddleware('partner', 'admin'), restaurantOwnershipMiddleware, getRestaurantAnalytics);
-
 module.exports = router;

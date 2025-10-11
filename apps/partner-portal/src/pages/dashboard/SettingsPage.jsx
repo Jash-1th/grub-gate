@@ -7,11 +7,13 @@ import {
   faMapMarkerAlt, 
   faClock, 
   faBell, 
-  faCreditCard 
+  faCreditCard,
+  faExclamationTriangle
 } from '@fortawesome/free-solid-svg-icons';
 import { Button, Input, Card, CardContent, CardHeader, CardTitle } from '@grub-gate/ui';
 import { useRestaurant } from '../../hooks/useRestaurant';
 import { useToast } from '../../contexts/ToastContext';
+import EnhancedAddressForm from '../../components/address/EnhancedAddressForm';
 import {
   getRestaurantSettings,
   updateRestaurantSettings,
@@ -40,6 +42,15 @@ const SettingsPage = () => {
     name: '',
     cuisine: '',
     description: '',
+    // Enhanced address fields
+    street: '',
+    city: '',
+    province: '',
+    postalCode: '',
+    country: '',
+    coordinates: null,
+    formattedAddress: '',
+    // Legacy address field for backward compatibility
     address: '',
     phone: '',
     email: '',
@@ -101,13 +112,26 @@ const SettingsPage = () => {
       console.log('💳 Billing info response:', billingData);
       const billingInfo = billingData.data.billingInfo;
       
+      // Parse address data (support both legacy and enhanced formats)
+      const addressData = settings.address || {};
+      const isEnhancedAddress = addressData.street || addressData.city || addressData.country;
+      
       // Update form data
       setFormData({
         // Profile
         name: settings.name || '',
         cuisine: Array.isArray(settings.cuisine) ? settings.cuisine.join(', ') : settings.cuisine || '',
         description: settings.description || '',
-        address: formatAddress(settings.address) || '',
+        // Enhanced address fields
+        street: isEnhancedAddress ? (addressData.street || '') : '',
+        city: isEnhancedAddress ? (addressData.city || '') : '',
+        province: isEnhancedAddress ? (addressData.province || addressData.state || '') : '',
+        postalCode: isEnhancedAddress ? (addressData.postalCode || '') : '',
+        country: isEnhancedAddress ? (addressData.country || '') : '',
+        coordinates: isEnhancedAddress ? (addressData.coordinates || null) : null,
+        formattedAddress: isEnhancedAddress ? (addressData.formattedAddress || '') : '',
+        // Legacy address field for backward compatibility
+        address: !isEnhancedAddress ? (formatAddress(settings.address) || '') : '',
         phone: settings.phone || '',
         email: settings.email || '',
         website: settings.website || '',
@@ -157,12 +181,26 @@ const SettingsPage = () => {
       
       // If API calls fail, use fallback data from restaurant hook
       console.log('🔄 Using fallback data from restaurant hook...');
+      
+      // Parse restaurant address data (support both legacy and enhanced formats)
+      const restaurantAddressData = restaurant?.address || {};
+      const isRestaurantEnhancedAddress = restaurantAddressData.street || restaurantAddressData.city || restaurantAddressData.country;
+      
       setFormData({
         // Profile - Use restaurant hook data as fallback
         name: restaurant?.name || '',
         cuisine: Array.isArray(restaurant?.cuisine) ? restaurant.cuisine.join(', ') : restaurant?.cuisine || '',
         description: restaurant?.description || '',
-        address: restaurant?.address || '',
+        // Enhanced address fields
+        street: isRestaurantEnhancedAddress ? (restaurantAddressData.street || '') : '',
+        city: isRestaurantEnhancedAddress ? (restaurantAddressData.city || '') : '',
+        province: isRestaurantEnhancedAddress ? (restaurantAddressData.province || restaurantAddressData.state || '') : '',
+        postalCode: isRestaurantEnhancedAddress ? (restaurantAddressData.postalCode || '') : '',
+        country: isRestaurantEnhancedAddress ? (restaurantAddressData.country || '') : '',
+        coordinates: isRestaurantEnhancedAddress ? (restaurantAddressData.coordinates || null) : null,
+        formattedAddress: isRestaurantEnhancedAddress ? (restaurantAddressData.formattedAddress || '') : '',
+        // Legacy address field for backward compatibility
+        address: !isRestaurantEnhancedAddress ? (restaurant?.address || '') : '',
         phone: restaurant?.phone || '',
         email: restaurant?.email || '',
         website: restaurant?.website || '',
@@ -205,7 +243,23 @@ const SettingsPage = () => {
       if (!formData.name.trim()) newErrors.name = 'Restaurant name is required';
       if (!formData.cuisine.trim()) newErrors.cuisine = 'Cuisine is required';
       if (!formData.description.trim()) newErrors.description = 'Description is required';
-      if (!formData.address.trim()) newErrors.address = 'Address is required';
+      
+      // Enhanced address validation
+      const hasEnhancedAddress = formData.street || formData.city || formData.country;
+      const hasLegacyAddress = formData.address && formData.address.trim();
+      
+      if (hasEnhancedAddress) {
+        // Validate enhanced address fields
+        if (!formData.street.trim()) newErrors.street = 'Street address is required';
+        if (!formData.city.trim()) newErrors.city = 'City is required';
+        if (!formData.province.trim()) newErrors.province = 'Province/State is required';
+        if (!formData.postalCode.trim()) newErrors.postalCode = 'Postal code is required';
+        if (!formData.country.trim()) newErrors.country = 'Country is required';
+      } else if (!hasLegacyAddress) {
+        // Require at least legacy address if no enhanced address
+        newErrors.address = 'Address is required';
+      }
+      
       if (!formData.phone.trim()) newErrors.phone = 'Phone is required';
       else if (!validatePhone(formData.phone)) newErrors.phone = 'Invalid phone format';
       if (!formData.email.trim()) newErrors.email = 'Email is required';
@@ -240,6 +294,28 @@ const SettingsPage = () => {
     }
   };
 
+  // Helper function to migrate legacy address to enhanced format
+  const migrateLegacyAddress = () => {
+    if (formData.address && !formData.street && !formData.city) {
+      // Simple parsing attempt for common address formats
+      const addressParts = formData.address.split(',').map(part => part.trim());
+      
+      if (addressParts.length >= 2) {
+        setFormData(prev => ({
+          ...prev,
+          street: addressParts[0] || '',
+          city: addressParts[1] || '',
+          province: addressParts[2] || '',
+          postalCode: addressParts[3] || '',
+          country: addressParts[4] || 'CA', // Default to Canada
+          address: '' // Clear legacy address
+        }));
+        
+        showToast('Address migrated to enhanced format. Please review and update as needed.', 'info');
+      }
+    }
+  };
+
   // Save settings
   const handleSave = async () => {
     if (!validateForm()) {
@@ -256,6 +332,26 @@ const SettingsPage = () => {
       setLoading(true);
       
       if (activeTab === 'profile' || activeTab === 'delivery') {
+        // Prepare address data (enhanced or legacy format)
+        const hasEnhancedAddress = formData.street || formData.city || formData.country;
+        let addressData;
+        
+        if (hasEnhancedAddress) {
+          // Use enhanced address format
+          addressData = {
+            street: formData.street.trim(),
+            city: formData.city.trim(),
+            province: formData.province.trim(),
+            postalCode: formData.postalCode.trim(),
+            country: formData.country.trim(),
+            coordinates: formData.coordinates,
+            formattedAddress: formData.formattedAddress || `${formData.street}, ${formData.city}, ${formData.province} ${formData.postalCode}, ${formData.country}`
+          };
+        } else {
+          // Use legacy address format
+          addressData = formData.address.trim();
+        }
+
         // Update restaurant settings
         const restaurantData = {
           name: formData.name.trim(),
@@ -264,7 +360,7 @@ const SettingsPage = () => {
           phone: formData.phone.trim(),
           email: formData.email.trim().toLowerCase(),
           website: formData.website.trim(),
-          address: formData.address.trim(),
+          address: addressData,
           deliverySettings: {
             radius: parseFloat(formData.deliveryRadius),
             fee: parseFloat(formData.deliveryFee),
@@ -447,16 +543,56 @@ const SettingsPage = () => {
                     <p className="mt-1 text-sm text-red-600">{errors.description}</p>
                   )}
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                  <div>
-                    <Input
-                      label={t('settings.profile.address')}
-                      value={formData.address}
-                      onChange={(e) => handleInputChange('address', e.target.value)}
-                      error={errors.address}
-                      className="text-sm sm:text-base"
+                {/* Enhanced Address Form */}
+                <div className="space-y-4">
+                  <div className="border-t pt-4">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
+                      <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-2 text-grub-red" />
+                      Restaurant Address
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Enhanced address system with global support, automatic country detection, and coordinate validation for accurate deliveries.
+                    </p>
+                    <EnhancedAddressForm
+                      formData={formData}
+                      handleInputChange={handleInputChange}
+                      errors={errors}
+                      loading={loading}
+                      showCountrySelection={true}
+                      showCoordinateCapture={true}
                     />
                   </div>
+                  
+                  {/* Legacy address fallback for existing data */}
+                  {formData.address && !formData.street && !formData.city && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start">
+                          <FontAwesomeIcon icon={faExclamationTriangle} className="text-yellow-600 mt-1 mr-2" />
+                          <div>
+                            <h4 className="text-sm font-medium text-yellow-800">Legacy Address Format</h4>
+                            <p className="text-sm text-yellow-700 mt-1">
+                              Current address: <strong>{formData.address}</strong>
+                            </p>
+                            <p className="text-xs text-yellow-600 mt-2">
+                              Please update to the enhanced address format above for better delivery accuracy.
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={migrateLegacyAddress}
+                          className="ml-4 text-yellow-800 border-yellow-300 hover:bg-yellow-100"
+                        >
+                          Migrate Address
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
                     <Input
                       label={t('settings.profile.phone')}
@@ -467,8 +603,6 @@ const SettingsPage = () => {
                       className="text-sm sm:text-base"
                     />
                   </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
                     <Input
                       label={t('settings.profile.email')}
@@ -479,6 +613,8 @@ const SettingsPage = () => {
                       className="text-sm sm:text-base"
                     />
                   </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
                     <Input
                       label={t('settings.profile.website')}

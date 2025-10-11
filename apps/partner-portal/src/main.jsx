@@ -4,12 +4,12 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import ErrorBoundary from './components/common/ErrorBoundary.jsx'
 import './styles/index.css'
+import './styles/onboarding.css'
 import './config/i18n.js'
 import { initializePWA } from './pwa.js'
 import './utils/debug-styles.js'
 
 const rootEl = document.getElementById('root')
-
 // Check if we're in a browser environment
 if (typeof window !== 'undefined' && rootEl) {
   const app = (

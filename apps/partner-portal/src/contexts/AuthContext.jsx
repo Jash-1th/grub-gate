@@ -116,6 +116,59 @@ const removeStorageItem = (key) => {
   }
 };
 
+// Helper function to determine redirect route based on registration status
+const getRedirectRoute = (user, isSignup = false) => {
+  if (!user) return '/login';
+  
+  // Check if user has partner info (from registration)
+  const hasPartnerInfo = user.partnerInfo && Object.keys(user.partnerInfo).length > 0;
+  
+  // Check registration completion status
+  const registrationComplete = user.registrationComplete || false;
+  const registrationStage = user.registrationStage || 1;
+  
+  console.log('🔍 Registration Status Check:', {
+    hasPartnerInfo,
+    registrationComplete,
+    registrationStage,
+    userRoles: user.roles,
+    isSignup,
+    userId: user._id,
+    restaurantId: user.restaurantId,
+    fullUserObject: user
+  });
+  
+  // For signup flow - always start with welcome page
+  if (isSignup) {
+    return '/onboarding/welcome';
+  }
+  
+  // For login flow - check completion status
+  // If registration is complete, go directly to dashboard
+  if (registrationComplete && registrationStage >= 3) {
+    return '/dashboard';
+  }
+  
+  // If no restaurant info is available, assume incomplete registration
+  if (registrationComplete === undefined && registrationStage === undefined) {
+    console.log('⚠️ No restaurant info available, redirecting to onboarding');
+    return '/onboarding/welcome';
+  }
+  
+  // If registration is not complete, redirect to onboarding
+  if (!registrationComplete || registrationStage < 3) {
+    return '/onboarding/welcome';
+  }
+  
+  // If no partner info exists, redirect to setup
+  if (!hasPartnerInfo) {
+    return '/onboarding/setup';
+  }
+  
+  // Default to dashboard
+  return '/dashboard';
+};
+
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
@@ -151,8 +204,9 @@ export const AuthProvider = ({ children }) => {
             console.log('❌ Partner AuthContext: User lacks partner role, cleared storage');
           }
         } else {
+          // No token or user data found
           dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
-          console.log('ℹ️ Partner AuthContext: No stored authentication found');
+          console.log('ℹ️ Partner AuthContext: No authentication data found');
         }
       } catch (error) {
         console.error('Partner AuthContext initialization error:', error);
@@ -183,6 +237,16 @@ export const AuthProvider = ({ children }) => {
 
       if (result.status === 'success') {
         const { accessToken, user } = result.data;
+        
+        console.log('🔍 Login user data received:', {
+          userId: user._id,
+          email: user.email,
+          roles: user.roles,
+          registrationComplete: user.registrationComplete,
+          registrationStage: user.registrationStage,
+          restaurantId: user.restaurantId,
+          restaurantStatus: user.restaurantStatus
+        });
 
         // Verify user has partner role
         if (!user.roles || !user.roles.includes('partner')) {
@@ -202,7 +266,11 @@ export const AuthProvider = ({ children }) => {
           payload: { user }
         });
 
-        return { success: true, user };
+        return { 
+          success: true, 
+          user,
+          redirectRoute: getRedirectRoute(user, false) // false = login flow
+        };
       } else {
         const errorMessage = result.message || 'Login failed';
         dispatch({
@@ -243,7 +311,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Set authenticated user directly (for post-signup login)
-  const setAuthenticatedUser = (userData) => {
+  const setAuthenticatedUser = (userData, isSignup = false) => {
     try {
       // Verify user has partner role
       if (!userData.user.roles || !userData.user.roles.includes('partner')) {
@@ -262,12 +330,21 @@ export const AuthProvider = ({ children }) => {
         payload: { user: userData.user }
       });
 
-      console.log('✅ Partner AuthContext: User authenticated directly');
-      return { success: true, user: userData.user };
+      console.log('✅ Partner AuthContext: User authenticated directly', isSignup ? '(signup)' : '(login)');
+      return { 
+        success: true, 
+        user: userData.user,
+        redirectRoute: getRedirectRoute(userData.user, isSignup)
+      };
     } catch (error) {
       console.error('Set authenticated user error:', error);
       return { success: false, error: error.message };
     }
+  };
+
+  // Signup function (wrapper for setAuthenticatedUser with signup flag)
+  const handleSignupSuccess = (userData) => {
+    return setAuthenticatedUser(userData, true);
   };
 
   const value = {
@@ -275,7 +352,11 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     clearError,
-    setAuthenticatedUser
+    setAuthenticatedUser,
+    handleSignupSuccess,
+    getRedirectRoute: () => getRedirectRoute(state.user),
+    getLoginRedirectRoute: () => getRedirectRoute(state.user, false),
+    getSignupRedirectRoute: () => getRedirectRoute(state.user, true)
   };
 
   return (

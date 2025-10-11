@@ -1,6 +1,7 @@
 // FILE: src/controllers/restaurant.controller.js
 const Restaurant = require('../models/Restaurant');
 const MenuItem = require('../models/MenuItem');
+const User = require('../models/User');
 const { 
   successResponse, 
   errorResponse,

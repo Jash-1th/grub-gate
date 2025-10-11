@@ -17,7 +17,8 @@ const {
   registerPartner,
   requestPartnerOTP,
   verifyPartnerOTP,
-  completePartnerBilling
+  completePartnerBilling,
+  updateOperatingHours
 } = require('../controllers/auth.controller');
 const { authMiddleware } = require('../middlewares/auth');
 const { validateRequest, userSchemas, partnerSchemas } = require('../middlewares/joiValidation');
@@ -67,5 +68,8 @@ router.use(authMiddleware); // Apply auth middleware to all routes below
 router.post('/logout', logout);
 router.get('/me', getMe);
 router.post('/change-password', changePassword);
+
+// Partner setup routes
+router.put('/partner/operating-hours', updateOperatingHours);
 
 module.exports = router;

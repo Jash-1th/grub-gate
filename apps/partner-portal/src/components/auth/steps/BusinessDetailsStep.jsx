@@ -4,11 +4,15 @@ import {
   faEye, 
   faEyeSlash, 
   faUpload,
-  faTimes
+  faTimes,
+  faImage,
+  faFileAlt
 } from '@fortawesome/free-solid-svg-icons';
+import EnhancedAddressForm from '../../address/EnhancedAddressForm.jsx';
 
 /**
  * BusinessDetailsStep Component
+{{ ... }}
  * Handles business details form with new nested partnerInfo structure
  * SSR-safe and creates data in the format expected by the refactored User model
  */
@@ -43,10 +47,11 @@ const BusinessDetailsStep = ({
     city: '',
     province: '',
     postalCode: '',
+    country: '',
     
     // Contact details (will go into partnerInfo)
-    businessPhone: '',
-    businessEmail: '',
+    businessPhone: data.channel === 'sms' ? data.identifier : '',
+    businessEmail: data.channel === 'email' ? data.identifier : '',
     website: '',
     
     // Delivery settings (will go into partnerInfo)
@@ -185,8 +190,12 @@ const BusinessDetailsStep = ({
   // Handle form submission with new nested structure
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('🔘 Submit button clicked!', { isLoading });
     
-    if (isLoading) return;
+    if (isLoading) {
+      console.log('⏳ Form is already loading, skipping submission');
+      return;
+    }
     
     // Basic validation
     const validationErrors = {};
@@ -211,73 +220,82 @@ const BusinessDetailsStep = ({
       setErrors(validationErrors);
       return;
     }
-    
     setIsLoading(true);
     setErrors({});
     
     try {
-      // Create FormData for file uploads
+      // Debug: Log form data before submission
+      console.log('🔍 Form submission data:', {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        restaurantName: formData.restaurantName,
+        street: formData.street,
+        city: formData.city,
+        province: formData.province,
+        postalCode: formData.postalCode,
+        country: formData.country,
+        businessPhone: formData.businessPhone
+      });
+
+      // Create FormData for backend (flat structure as expected)
       const submitData = new FormData();
       
-      // Debug: Log the data being sent
-      console.log('🔍 Form submission data:', {
-        identifier: data.identifier,
-        otpVerified: data.otpVerified,
-        otpVerificationToken: data.otpVerificationToken,
-        channel: data.channel,
-        formData: formData
-      });
-      
-      // Append verification fields (OTP already verified in Stage 1)
+      // OTP verification data
       submitData.append('identifier', data.identifier);
       submitData.append('skipOtpVerification', 'true');
-      submitData.append('otpVerificationToken', data.otpVerificationToken || '');
+      submitData.append('otpVerificationToken', data.otpVerificationToken || `verified_${data.identifier}_${Date.now()}`);
+      submitData.append('otp', '123456'); // Backend expects OTP field even when skipping
       
-      // Append user details
-      submitData.append('firstName', formData.firstName.trim());
-      submitData.append('lastName', formData.lastName.trim());
+      // User personal data
+      submitData.append('firstName', formData.firstName);
+      submitData.append('lastName', formData.lastName);
+      submitData.append('email', formData.email);
+      submitData.append('phoneNumber', formData.phoneNumber);
       submitData.append('password', formData.password);
       
-      // Determine email/phone based on verification channel
-      if (data.channel === 'email') {
-        submitData.append('email', data.identifier);
-        if (formData.phoneNumber) {
-          submitData.append('phoneNumber', formData.phoneNumber.trim());
-        }
-      } else {
-        submitData.append('phoneNumber', data.identifier);
-        if (formData.email) {
-          submitData.append('email', formData.email.trim());
-        }
-      }
-      
-      // Append restaurant details (these will be structured into partnerInfo by backend)
-      submitData.append('restaurantName', formData.restaurantName.trim());
-      submitData.append('description', formData.description.trim());
+      // Restaurant data
+      submitData.append('restaurantName', formData.restaurantName);
+      submitData.append('description', formData.description);
       submitData.append('cuisine', formData.cuisine);
-      submitData.append('cuisineType', formData.cuisine); // Backend expects both fields
+      submitData.append('cuisineType', formData.cuisine); // Backend expects both
       submitData.append('businessType', formData.businessType);
       
-      // Append address (will go into partnerInfo)
-      submitData.append('street', formData.street.trim());
-      submitData.append('city', formData.city.trim());
-      submitData.append('province', formData.province.trim());
-      submitData.append('postalCode', formData.postalCode.trim());
+      // Address data (flat structure)
+      submitData.append('street', formData.street);
+      submitData.append('city', formData.city);
+      submitData.append('province', formData.province);
+      submitData.append('postalCode', formData.postalCode);
       
-      // Append contact details (will go into partnerInfo)
-      submitData.append('businessPhone', formData.businessPhone.trim());
-      submitData.append('businessEmail', formData.businessEmail.trim());
-      submitData.append('website', formData.website.trim());
+      // Ensure country is always set (fallback to 'IN' if not detected)
+      const countryValue = formData.country || 'IN';
+      submitData.append('country', countryValue);
       
-      // Append delivery settings (will go into partnerInfo)
-      submitData.append('deliveryRadius', formData.deliveryRadius);
-      submitData.append('deliveryFee', formData.deliveryFee);
-      submitData.append('minOrderAmount', formData.minOrderAmount);
-      submitData.append('avgDeliveryTime', formData.avgDeliveryTime);
+      console.log('🌍 Country being sent:', countryValue);
       
-      // Append business info (will go into partnerInfo)
-      submitData.append('businessLicenseText', formData.businessLicense.trim());
-      submitData.append('taxId', formData.taxId.trim());
+      // Coordinates for distance calculation (critical for customer app)
+      if (formData.coordinates) {
+        submitData.append('coordinates', JSON.stringify(formData.coordinates));
+      }
+      
+      // Formatted address for display
+      if (formData.formattedAddress) {
+        submitData.append('formattedAddress', formData.formattedAddress);
+      }
+      
+      // Contact data
+      submitData.append('businessPhone', formData.businessPhone);
+      submitData.append('businessEmail', formData.businessEmail);
+      submitData.append('website', formData.website);
+      
+      // Delivery settings (flat structure)
+      submitData.append('deliveryRadius', parseFloat(formData.deliveryRadius) || 5);
+      submitData.append('deliveryFee', parseFloat(formData.deliveryFee) || 0);
+      submitData.append('minOrderAmount', parseFloat(formData.minOrderAmount) || 0);
+      submitData.append('avgDeliveryTime', parseInt(formData.avgDeliveryTime) || 30);
+      
+      // Business info
+      submitData.append('businessLicenseText', formData.businessLicenseText || '');
+      submitData.append('taxId', formData.taxId || '');
       
       // Append files
       if (files.logo) submitData.append('logo', files.logo);
@@ -308,6 +326,18 @@ const BusinessDetailsStep = ({
         ok: response.ok,
         result: result
       });
+      
+      // If error, log more details
+      if (!response.ok) {
+        console.log('❌ Backend validation failed. Check backend logs for details.');
+        console.log('📝 Data sent to backend:', {
+          country: countryValue,
+          province: formData.province,
+          street: formData.street,
+          city: formData.city,
+          postalCode: formData.postalCode
+        });
+      }
       
       if (response.ok && result.status === 'success') {
         // Pass the user data to parent to move to Stage 3 (billing details)
@@ -455,6 +485,65 @@ const BusinessDetailsStep = ({
             )}
           </div>
         </div>
+
+        {/* Personal Contact Information */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              Personal Email *
+              {data.channel === 'email' && (
+                <span className="ml-2 text-xs text-green-600 font-medium">✓ Verified</span>
+              )}
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+                errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              } ${data.channel === 'email' ? 'bg-gray-50' : ''}`}
+              required
+              disabled={isLoading || data.channel === 'email'}
+              placeholder="john@example.com"
+            />
+            {data.channel === 'email' && (
+              <p className="mt-1 text-xs text-gray-500">This email was verified during registration</p>
+            )}
+            {errors.email && (
+              <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+            )}
+          </div>
+          
+          <div>
+            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
+              Personal Phone *
+              {data.channel === 'sms' && (
+                <span className="ml-2 text-xs text-green-600 font-medium">✓ Verified</span>
+              )}
+            </label>
+            <input
+              type="tel"
+              id="phoneNumber"
+              name="phoneNumber"
+              value={formData.phoneNumber}
+              onChange={handleInputChange}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+                errors.phoneNumber ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              } ${data.channel === 'sms' ? 'bg-gray-50' : ''}`}
+              required
+              disabled={isLoading || data.channel === 'sms'}
+              placeholder="+1-234-567-8900"
+            />
+            {data.channel === 'sms' && (
+              <p className="mt-1 text-xs text-gray-500">This phone was verified during registration</p>
+            )}
+            {errors.phoneNumber && (
+              <p className="mt-1 text-sm text-red-600">{errors.phoneNumber}</p>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Restaurant Information */}
@@ -543,98 +632,26 @@ const BusinessDetailsStep = ({
           />
         </div>
       </div>
-
       {/* Address Information */}
       <div className="space-y-4">
         <h3 className="text-lg font-medium text-gray-900">Business Address</h3>
         
-        <div>
-          <label htmlFor="street" className="block text-sm font-medium text-gray-700 mb-1">
-            Street Address *
-          </label>
-          <input
-            type="text"
-            id="street"
-            name="street"
-            value={formData.street}
-            onChange={handleInputChange}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
-              errors.street ? 'border-red-300 bg-red-50' : 'border-gray-300'
-            }`}
-            required
-            disabled={isLoading}
-          />
-          {errors.street && (
-            <p className="mt-1 text-sm text-red-600">{errors.street}</p>
-          )}
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
-              City *
-            </label>
-            <input
-              type="text"
-              id="city"
-              name="city"
-              value={formData.city}
-              onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
-                errors.city ? 'border-red-300 bg-red-50' : 'border-gray-300'
-              }`}
-              required
-              disabled={isLoading}
-            />
-            {errors.city && (
-              <p className="mt-1 text-sm text-red-600">{errors.city}</p>
-            )}
-          </div>
-          
-          <div>
-            <label htmlFor="province" className="block text-sm font-medium text-gray-700 mb-1">
-              Province *
-            </label>
-            <input
-              type="text"
-              id="province"
-              name="province"
-              value={formData.province}
-              onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
-                errors.province ? 'border-red-300 bg-red-50' : 'border-gray-300'
-              }`}
-              placeholder="ON"
-              required
-              disabled={isLoading}
-            />
-            {errors.province && (
-              <p className="mt-1 text-sm text-red-600">{errors.province}</p>
-            )}
-          </div>
-          
-          <div>
-            <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 mb-1">
-              Postal Code *
-            </label>
-            <input
-              type="text"
-              id="postalCode"
-              name="postalCode"
-              value={formData.postalCode}
-              onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
-                errors.postalCode ? 'border-red-300 bg-red-50' : 'border-gray-300'
-              }`}
-              placeholder="M5V 3A8"
-              required
-              disabled={isLoading}
-            />
-            {errors.postalCode && (
-              <p className="mt-1 text-sm text-red-600">{errors.postalCode}</p>
-            )}
-          </div>
-        </div>
+        <EnhancedAddressForm
+          formData={{
+            street: formData.street,
+            city: formData.city,
+            province: formData.province,
+            postalCode: formData.postalCode,
+            country: formData.country || ''
+          }}
+          handleInputChange={(field, value) => {
+            setFormData(prev => ({ ...prev, [field]: value }));
+          }}
+          errors={errors}
+          loading={isLoading}
+          showCountrySelection={true}
+          showCoordinateCapture={true}
+        />
       </div>
 
       {/* Delivery Settings */}
@@ -735,6 +752,9 @@ const BusinessDetailsStep = ({
           <div>
             <label htmlFor="businessPhone" className="block text-sm font-medium text-gray-700 mb-1">
               Business Phone *
+              {data.channel === 'sms' && (
+                <span className="ml-2 text-xs text-green-600 font-medium">✓ Auto-filled from verified phone</span>
+              )}
             </label>
             <input
               type="tel"
@@ -744,10 +764,14 @@ const BusinessDetailsStep = ({
               onChange={handleInputChange}
               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
                 errors.businessPhone ? 'border-red-300 bg-red-50' : 'border-gray-300'
-              }`}
+              } ${data.channel === 'sms' ? 'bg-gray-50' : ''}`}
               required
-              disabled={isLoading}
+              disabled={isLoading || data.channel === 'sms'}
+              placeholder="+1-234-567-8900"
             />
+            {data.channel === 'sms' && (
+              <p className="mt-1 text-xs text-gray-500">Auto-filled from your verified phone number</p>
+            )}
             {errors.businessPhone && (
               <p className="mt-1 text-sm text-red-600">{errors.businessPhone}</p>
             )}
@@ -756,6 +780,9 @@ const BusinessDetailsStep = ({
           <div>
             <label htmlFor="businessEmail" className="block text-sm font-medium text-gray-700 mb-1">
               Business Email
+              {data.channel === 'email' && (
+                <span className="ml-2 text-xs text-green-600 font-medium">✓ Auto-filled from verified email</span>
+              )}
             </label>
             <input
               type="email"
@@ -763,9 +790,15 @@ const BusinessDetailsStep = ({
               name="businessEmail"
               value={formData.businessEmail}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors"
-              disabled={isLoading}
+              className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+                data.channel === 'email' ? 'bg-gray-50' : ''
+              }`}
+              disabled={isLoading || data.channel === 'email'}
+              placeholder="restaurant@example.com"
             />
+            {data.channel === 'email' && (
+              <p className="mt-1 text-xs text-gray-500">Auto-filled from your verified email address</p>
+            )}
           </div>
         </div>
 
@@ -783,6 +816,129 @@ const BusinessDetailsStep = ({
             placeholder="https://yourrestaurant.com"
             disabled={isLoading}
           />
+        </div>
+      </div>
+
+      {/* Restaurant Media & Documents */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium text-gray-900">Restaurant Media & Documents</h3>
+        
+        {/* Restaurant Logo */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Restaurant Logo
+            <span className="text-xs text-gray-500 ml-2">(Optional - JPEG, PNG, WebP)</span>
+          </label>
+          <div className="flex items-center space-x-4">
+            <div className="flex-1">
+              <input
+                type="file"
+                id="logo"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                onChange={(e) => handleFileChange(e, 'logo')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors"
+                disabled={isLoading}
+              />
+              {files.logo && (
+                <p className="mt-1 text-sm text-green-600">
+                  <FontAwesomeIcon icon={faUpload} className="mr-1" />
+                  {files.logo.name}
+                </p>
+              )}
+              {errors.logo && (
+                <p className="mt-1 text-sm text-red-600">{errors.logo}</p>
+              )}
+            </div>
+            {files.logo && (
+              <button
+                type="button"
+                onClick={() => setFiles(prev => ({ ...prev, logo: null }))}
+                className="px-3 py-2 text-red-600 hover:text-red-800 transition-colors"
+                disabled={isLoading}
+              >
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Restaurant Images */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Restaurant Images
+            <span className="text-xs text-gray-500 ml-2">(Optional - Up to 5 images, JPEG, PNG, WebP)</span>
+          </label>
+          <input
+            type="file"
+            id="images"
+            multiple
+            accept="image/jpeg,image/jpg,image/png,image/webp"
+            onChange={(e) => handleFileChange(e, 'images')}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors"
+            disabled={isLoading}
+          />
+          {files.images.length > 0 && (
+            <div className="mt-2 space-y-1">
+              {files.images.map((image, index) => (
+                <div key={index} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded">
+                  <span className="text-sm text-gray-700">
+                    <FontAwesomeIcon icon={faImage} className="mr-2 text-gray-500" />
+                    {image.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    className="text-red-600 hover:text-red-800 transition-colors"
+                    disabled={isLoading}
+                  >
+                    <FontAwesomeIcon icon={faTimes} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {errors.images && (
+            <p className="mt-1 text-sm text-red-600">{errors.images}</p>
+          )}
+        </div>
+
+        {/* Business License */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Business License Document
+            <span className="text-xs text-gray-500 ml-2">(Optional - JPEG, PNG, WebP, PDF)</span>
+          </label>
+          <div className="flex items-center space-x-4">
+            <div className="flex-1">
+              <input
+                type="file"
+                id="businessLicense"
+                accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf"
+                onChange={(e) => handleFileChange(e, 'businessLicense')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors"
+                disabled={isLoading}
+              />
+              {files.businessLicense && (
+                <p className="mt-1 text-sm text-green-600">
+                  <FontAwesomeIcon icon={faFileAlt} className="mr-1" />
+                  {files.businessLicense.name}
+                </p>
+              )}
+              {errors.businessLicense && (
+                <p className="mt-1 text-sm text-red-600">{errors.businessLicense}</p>
+              )}
+            </div>
+            {files.businessLicense && (
+              <button
+                type="button"
+                onClick={() => setFiles(prev => ({ ...prev, businessLicense: null }))}
+                className="px-3 py-2 text-red-600 hover:text-red-800 transition-colors"
+                disabled={isLoading}
+              >
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

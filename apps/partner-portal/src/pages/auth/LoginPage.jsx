@@ -19,7 +19,7 @@ import { useToast } from '../../contexts/ToastContext.jsx';
 const LoginPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { login, isLoading, error, clearError } = useAuth();
+  const { login, isLoading, error, clearError, getRedirectRoute } = useAuth();
   const { showSuccess } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -81,13 +81,16 @@ const LoginPage = () => {
       
       if (result.success) {
         console.log('✅ Partner login successful!');
-        console.log('📍 Navigating to dashboard...');
+        
+        // Use redirect route returned from login function (for login flow)
+        const redirectRoute = result.redirectRoute || getRedirectRoute();
+        console.log('📍 Login redirect route determined:', redirectRoute);
         
         // Show success toast message
-        showSuccess(`Welcome back, ${result.user.name || 'Partner'}! You have successfully logged in.`, 6000);
+        showSuccess(`Welcome back, ${result.user.firstName || 'Partner'}! You have successfully logged in.`, 6000);
         
-        navigate('/dashboard');
-        console.log('📍 Navigation called');
+        navigate(redirectRoute);
+        console.log('📍 Navigation called to:', redirectRoute);
       } else {
         setErrors({ general: result.error || 'Login failed. Please try again.' });
       }

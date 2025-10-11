@@ -19,13 +19,20 @@ import ToastContainer from './components/ui/Toast.jsx';
 // Layout Components
 import DashboardLayout from './components/layout/DashboardLayout.jsx';
 import PublicLayout from './components/layout/PublicLayout.jsx';
+import OnboardingLayout from './components/layout/OnboardingLayout.jsx';
 
 // Public Pages
 import LandingPage from './pages/LandingPage.jsx';
 import LoginPage from './pages/auth/LoginPage.jsx';
 import RegisterPage from './pages/auth/RegisterPage.jsx';
+import BusinessDetailsPage from './pages/auth/BusinessDetailsPage.jsx';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage.jsx';
 import FaqsPage from './pages/FaqsPage.jsx';
+
+// Onboarding Pages
+import WelcomePage from './pages/onboarding/WelcomePage.jsx';
+import SetupWizard from './pages/onboarding/SetupWizard.jsx';
+import SetupComplete from './pages/onboarding/SetupComplete.jsx';
 
 // Dashboard Pages
 import DashboardHome from './pages/dashboard/DashboardHome.jsx';
@@ -48,13 +55,17 @@ const AppContent = () => {
   console.log('🔐 App.jsx - Authentication state:', { 
     isAuthenticated, 
     isLoading, 
-    user: user ? 'User logged in' : 'No user' 
+    user: user ? `User logged in: ${user.firstName} ${user.lastName}` : 'No user',
+    isAuthenticationComplete: !isLoading
   });
   
   // Show loading screen while authentication is being initialized
   if (isLoading) {
     return <LoadingScreen />;
   }
+
+  // Additional check to prevent flash of unauthenticated content
+  const isAuthenticationComplete = !isLoading;
 
   // Language switching handler
   const handleLanguageChange = (language) => {
@@ -82,15 +93,32 @@ const AppContent = () => {
             <Route index element={<LandingPage />} />
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
+            <Route path="register/business-details" element={<BusinessDetailsPage />} />
             <Route path="forgot-password" element={<ForgotPasswordPage />} />
             <Route path="faqs" element={<FaqsPage />} />
+          </Route>
+
+          {/* Protected Onboarding Routes */}
+          <Route
+            path="/onboarding"
+            element={
+              isAuthenticationComplete && isAuthenticated ? (
+                <OnboardingLayout />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          >
+            <Route path="welcome" element={<WelcomePage />} />
+            <Route path="setup" element={<SetupWizard />} />
+            <Route path="complete" element={<SetupComplete />} />
           </Route>
 
           {/* Protected Dashboard Routes */}
           <Route
             path="/dashboard"
             element={
-              isAuthenticated ? (
+              isAuthenticationComplete && isAuthenticated ? (
                 <DashboardLayout onLanguageChange={handleLanguageChange} />
               ) : (
                 <Navigate to="/login" replace />

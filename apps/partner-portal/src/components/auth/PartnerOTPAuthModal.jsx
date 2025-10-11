@@ -54,45 +54,72 @@ const PartnerOTPAuthModal = ({ isOpen, onClose }) => {
   // Handle successful OTP verification
   const handleOTPVerified = (data) => {
     setSharedData(prev => ({
-      ...prev,
       ...data
     }));
     setCurrentStep('business-details');
   };
 
-  // Handle business details completion (Stage 2 -> Stage 3)
-  const handleBusinessDetailsComplete = (userData) => {
-    setSharedData(prev => ({
-      ...prev,
-      ...userData
-    }));
+  // Handle OTP verification completion - redirect to full page registration
+  const handleOTPComplete = (verificationData) => {
+    try {
+      // Store verification data in sessionStorage for the full-page form
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('otpVerificationData', JSON.stringify({
+          ...sharedData,
+          ...verificationData,
+          timestamp: Date.now()
+        }));
+      }
+      
+      // Close modal and redirect to full-page business details
+      handleClose();
+      navigate('/register/business-details');
+      
+    } catch (error) {
+      console.error('OTP completion error:', error);
+      showError('Verification failed. Please try again.');
+    }
+  };
+
+  // Handle business details completion (legacy - for modal flow)
+  const handleBusinessDetailsComplete = (businessData) => {
+    setSharedData(prev => ({ ...prev, ...businessData }));
     setCurrentStep('billing-details');
   };
 
-  // Handle final signup completion (Stage 3)
-  const handleSignupComplete = async (userData) => {
+  // Handle signup completion (legacy - for modal flow)
+  const handleSignupComplete = async (finalData) => {
     try {
-      // Store auth data and set authenticated user
+      setIsLoading(true);
+      
+      const completeData = { ...sharedData, ...finalData };
+      console.log('Final registration data:', completeData);
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const userData = {
+        user: completeData.user,
+        accessToken: completeData.accessToken || 'temp_token',
+        refreshToken: completeData.refreshToken || 'temp_refresh'
+      };
+      
       const authResult = setAuthenticatedUser(userData);
       
       if (authResult.success) {
-        showSuccess('Partner account created successfully! Redirecting to dashboard...');
-        onClose();
-        
-        // Use requestAnimationFrame to ensure DOM updates are complete
-        if (isClient) {
-          requestAnimationFrame(() => {
-            setTimeout(() => {
-              navigate('/dashboard', { replace: true });
-            }, 150);
-          });
-        }
+        showSuccess('Registration successful! Welcome to GrubGate Partner Portal.');
+        handleClose();
+        navigate('/onboarding/welcome');
       } else {
-        showError(authResult.error || 'Authentication failed. Please try logging in manually.');
+        throw new Error(authResult.error);
       }
-    } catch (authError) {
-      console.error('Authentication error:', authError);
-      showError('Authentication failed. Please try logging in manually.');
+      
+    } catch (error) {
+      console.error('Registration completion error:', error);
+      showError('Registration failed. Please try again.');
+      setErrors({ general: error.message });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -191,7 +218,7 @@ const PartnerOTPAuthModal = ({ isOpen, onClose }) => {
             <OTPStep
               data={sharedData}
               onDataChange={setSharedData}
-              onNext={handleOTPVerified}
+              onNext={handleOTPComplete}
               onBack={goBack}
               isLoading={isLoading}
               setIsLoading={setIsLoading}

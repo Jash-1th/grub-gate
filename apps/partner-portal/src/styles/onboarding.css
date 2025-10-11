@@ -1,0 +1,140 @@
+/* Onboarding-specific styles for enhanced UX */
+
+/* Animation delays for confetti effect */
+.animation-delay-200 {
+  animation-delay: 0.2s;
+}
+
+.animation-delay-400 {
+  animation-delay: 0.4s;
+}
+
+.animation-delay-600 {
+  animation-delay: 0.6s;
+}
+
+.animation-delay-800 {
+  animation-delay: 0.8s;
+}
+
+/* Smooth transitions for step navigation */
+.step-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Progress bar animations */
+.progress-step {
+  transition: all 0.3s ease-in-out;
+}
+
+.progress-step.completed {
+  transform: scale(1.1);
+  animation: pulse-success 0.6s ease-in-out;
+}
+
+@keyframes pulse-success {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1.1);
+  }
+}
+
+/* Hover effects for cards */
+.onboarding-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.onboarding-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Loading states */
+.loading-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Success animations */
+.success-bounce {
+  animation: bounce-in 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes bounce-in {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Form validation states */
+.input-error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.input-success {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .onboarding-card {
+    margin-bottom: 1rem;
+  }
+  
+  .step-transition {
+    transition: none; /* Reduce animations on mobile for performance */
+  }
+}
+
+/* Focus states for accessibility */
+.focus-ring:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .onboarding-card {
+    border: 2px solid #000;
+  }
+  
+  .progress-step {
+    border: 2px solid #000;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .step-transition,
+  .progress-step,
+  .onboarding-card,
+  .success-bounce {
+    animation: none;
+    transition: none;
+  }
+}

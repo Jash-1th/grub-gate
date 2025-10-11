@@ -2,19 +2,47 @@
 const mongoose = require('mongoose');
 
 const operatingHoursSchema = new mongoose.Schema({
+  // Traditional single period (for backward compatibility)
   open: {
     type: String,
-    required: true,
     match: [/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Please enter time in HH:MM format']
   },
   close: {
     type: String,
-    required: true,
     match: [/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Please enter time in HH:MM format']
   },
   closed: {
     type: Boolean,
     default: false
+  },
+  // Lunch and dinner periods
+  lunch: {
+    open: {
+      type: String,
+      match: [/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Please enter time in HH:MM format']
+    },
+    close: {
+      type: String,
+      match: [/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Please enter time in HH:MM format']
+    },
+    available: {
+      type: Boolean,
+      default: true
+    }
+  },
+  dinner: {
+    open: {
+      type: String,
+      match: [/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Please enter time in HH:MM format']
+    },
+    close: {
+      type: String,
+      match: [/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Please enter time in HH:MM format']
+    },
+    available: {
+      type: Boolean,
+      default: true
+    }
   }
 });
 
@@ -51,17 +79,23 @@ const restaurantSchema = new mongoose.Schema({
     required: [true, 'Owner ID is required']
   },
   address: {
-    // Global address support
+    // Flexible address support - accepts both formats
     country: {
       type: String,
-      required: [true, 'Country is required'],
+      required: false, // Made optional with default
+      default: 'IN',
       uppercase: true,
       minlength: [2, 'Country code must be at least 2 characters'],
       maxlength: [3, 'Country code cannot exceed 3 characters']
     },
+    // Accept both street and addressLine1
+    street: {
+      type: String,
+      trim: true,
+      maxlength: [200, 'Street address cannot exceed 200 characters']
+    },
     addressLine1: {
       type: String,
-      required: [true, 'Address line 1 is required'],
       trim: true,
       maxlength: [200, 'Address line 1 cannot exceed 200 characters']
     },
@@ -76,7 +110,13 @@ const restaurantSchema = new mongoose.Schema({
       trim: true,
       maxlength: [100, 'City name cannot exceed 100 characters']
     },
+    // Accept both state and province
     state: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'State/Province cannot exceed 100 characters']
+    },
+    province: {
       type: String,
       trim: true,
       maxlength: [100, 'State/Province cannot exceed 100 characters']
