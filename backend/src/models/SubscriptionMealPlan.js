@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { findSubscriptionDayForDate, getNextSunday, getWeekDateRange } = require('../utils/dateHelpers');
+const { findSubscriptionDayForDate, getNextSunday, getSubscriptionStartSunday, getWeekDateRange } = require('../utils/dateHelpers');
 
 // Individual meal item schema
 const mealItemSchema = new mongoose.Schema({
@@ -501,8 +501,8 @@ subscriptionMealPlanSchema.statics.findOrCreateForUser = async function(userId, 
   });
   
   if (!mealPlan) {
-    // Calculate plan dates based on type - FIXED: Use proper Sunday-based calculation
-    const startDate = getNextSunday(); // Start on next Sunday, not current date
+    // Calculate plan dates based on type - FIXED: Use proper subscription start calculation
+    const startDate = getSubscriptionStartSunday(); // Start on next upcoming Sunday with proper notice
     const endDate = new Date(startDate);
     let weekCount = 1;
     

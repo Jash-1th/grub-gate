@@ -15,6 +15,11 @@ import { useToast } from '../../contexts/ToastContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMealPlan } from '../../contexts/MealPlanContext_SSR_FIXED';
 import apiClient from '../../api/apiClient';
+import { 
+  getSubscriptionStartSunday, 
+  getSubscriptionWeekInfo,
+  formatSubscriptionDateRange 
+} from '../../utils/subscriptionDateUtils';
 
 /**
  * Enhanced Subscription Flow with Address Integration
@@ -39,8 +44,25 @@ const EnhancedSubscriptionFlow = ({ selectedPlan, onComplete, onCancel }) => {
     deliveryAddress: null,
     paymentMethod: null,
     userId: user?._id || null,
-    startDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Start next week
+    startDate: null // Will be calculated by backend with proper logic
   });
+
+  // Calculate subscription start date for display
+  const [subscriptionPreview, setSubscriptionPreview] = useState(null);
+  
+  useEffect(() => {
+    if (selectedPlan) {
+      const startDate = getSubscriptionStartSunday();
+      const weekInfo = getSubscriptionWeekInfo(startDate, selectedPlan.id);
+      setSubscriptionPreview(weekInfo);
+      
+      // Update subscription data with calculated start date
+      setSubscriptionData(prev => ({
+        ...prev,
+        startDate: startDate
+      }));
+    }
+  }, [selectedPlan]);
 
   // Steps configuration (removed plan selection - already done)
   const steps = [

@@ -79,7 +79,7 @@ const SubscriptionPlans = () => {
   // Handle enhanced flow completion
   const handleEnhancedFlowComplete = (subscriptionData) => {
     setShowEnhancedFlow(false);
-    showSuccess('Subscription Created!', 'Your meal plan subscription is now active.');
+    // Toast already shown in EnhancedSubscriptionFlow, no need to show again
     navigate('/weekly-menu');
   };
 
@@ -95,7 +95,7 @@ const SubscriptionPlans = () => {
 
   // Handle successful subscription creation
   const handleSubscriptionSuccess = () => {
-    showSuccess('Welcome to GrubGate!', 'Your subscription is now active.');
+    // Toast already shown in BillingFormModal, no need to show again
     // Navigate to weekly menu or dashboard
     navigate('/weekly-menu');
   };

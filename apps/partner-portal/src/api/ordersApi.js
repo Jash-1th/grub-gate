@@ -27,16 +27,14 @@ export const ordersApi = {
       if (params.date && !params.startDate && !params.endDate) {
         // Convert single date to date range (same day)
         transformedParams.startDate = params.date;
-        transformedParams.endDate = params.date;
-        delete transformedParams.date;
       }
       
-      console.log('🌐 ordersApi: Making request to /orders with params:', transformedParams);
+      console.log(' ordersApi: Making request to /orders with params:', transformedParams);
       
       const response = await apiClient.get('/orders', { params: transformedParams });
       
-      console.log('🌐 ordersApi: Response received:', response.data?.data?.length, 'orders');
-      console.log('🌐 ordersApi: Full response data:', response.data);
+      console.log(' ordersApi: Response received:', response.data?.data?.length, 'orders');
+      console.log(' ordersApi: Full response data:', response.data);
       
       return response;
     } catch (error) {
@@ -109,8 +107,9 @@ export const ordersApi = {
         throw new Error('Order ID is required');
       }
 
-      const response = await apiClient.post(`/orders/${orderId}/cancel`, { 
-        reason: reason.trim() || 'Cancelled by restaurant'
+      // Use the status update endpoint to cancel the order
+      const response = await apiClient.delete(`/orders/${orderId}`, { 
+        data: { reason: reason.trim() || 'Cancelled by restaurant' }
       });
       return response;
     } catch (error) {

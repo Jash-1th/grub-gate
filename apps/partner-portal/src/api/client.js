@@ -13,11 +13,8 @@ const getApiBaseUrl = () => {
     return 'https://gg0b1.netlify.app/api/v1';
   }
   
-  // For local development, use local backend
-  return 'http://localhost:5000/api/v1';
-  
-  // COMMENTED OUT: Production backend for deployment
-  // return 'https://gg0b1.netlify.app/api/v1';
+  // FALLBACK: Production backend
+  return 'https://gg0b1.netlify.app/api/v1';
 };
 
 // Create axios instance with base configuration

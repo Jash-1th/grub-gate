@@ -70,11 +70,25 @@ export const useOrders = (initialFilters = {}) => {
         return;
       }
 
-      // Debug: Log the actual response structure
-      console.log('📦 useOrders: API Response received:', response?.data?.data?.length, 'orders');
-
       if (response?.data?.status === 'success') {
-        const ordersData = response.data.data || [];
+        // Handle both response formats:
+        // 1. Partner endpoint: { data: { orders: [...] } }
+        // 2. General endpoint: { data: [...] }
+        let ordersData = [];
+        
+        if (Array.isArray(response.data.data)) {
+          // General orders endpoint format
+          ordersData = response.data.data;
+          console.log('📦 useOrders: Using general endpoint format, received:', ordersData.length, 'orders');
+        } else if (response.data.data?.orders) {
+          // Partner-specific endpoint format
+          ordersData = response.data.data.orders;
+          console.log('📦 useOrders: Using partner endpoint format, received:', ordersData.length, 'orders');
+        } else {
+          console.warn('⚠️ useOrders: Unexpected response format:', response.data);
+          ordersData = [];
+        }
+        
         console.log('✅ useOrders: Setting orders:', ordersData.length, 'orders');
         setOrders(ordersData);
         setPagination(response.data.pagination || pagination);

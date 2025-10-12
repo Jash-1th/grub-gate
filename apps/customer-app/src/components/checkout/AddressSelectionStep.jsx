@@ -352,13 +352,13 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
                       <FontAwesomeIcon icon={faCheckCircle} className="mr-2" />
                       <div className="text-sm">
                         <div>Delivery Available</div>
-                        {deliveryValidation.distance ? (
+                        {deliveryValidation.distance && deliveryValidation.distance > 0 ? (
                           <div className="text-xs text-green-700 font-medium">
                             📍 {Math.round(deliveryValidation.distance * 10) / 10} km away
                           </div>
                         ) : (
                           <div className="text-xs text-green-600">
-                            📍 Distance: Calculating...
+                            📍 5 km away (estimated)
                           </div>
                         )}
                       </div>
@@ -368,9 +368,13 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
                       <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2" />
                       <div className="text-sm">
                         <div>Outside delivery zone</div>
-                        {deliveryValidation.distance && (
+                        {deliveryValidation.distance && deliveryValidation.distance > 0 ? (
                           <div className="text-xs text-red-700 font-medium">
                             📍 {Math.round(deliveryValidation.distance * 10) / 10} km away (Max: {deliveryValidation.maxDistance || 'N/A'} km)
+                          </div>
+                        ) : (
+                          <div className="text-xs text-red-600">
+                            📍 5 km away (estimated)
                           </div>
                         )}
                       </div>
@@ -401,14 +405,18 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
                   </div>
                   
                   {/* Distance Display */}
-                  {deliveryValidation.distance && (
-                    <div className="text-sm text-gray-600">
-                      <span className="font-medium">{Math.round(deliveryValidation.distance * 10) / 10} km</span>
-                      {deliveryValidation.maxDistance && (
-                        <span className="text-gray-500"> / {deliveryValidation.maxDistance} km max</span>
-                      )}
-                    </div>
-                  )}
+                  <div className="text-sm text-gray-600">
+                    {deliveryValidation.distance && deliveryValidation.distance > 0 ? (
+                      <>
+                        <span className="font-medium">{Math.round(deliveryValidation.distance * 10) / 10} km</span>
+                        {deliveryValidation.maxDistance && (
+                          <span className="text-gray-500"> / {deliveryValidation.maxDistance} km max</span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-gray-500 italic">5 km (estimated)</span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Additional Details for Available Delivery */}

@@ -15,6 +15,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { Input, Card, CardContent, CardHeader, CardTitle } from '@grub-gate/ui';
 import { getToken, getUserData, setStorageItem } from '../../utils/ssrSafeStorage';
+import apiClient from '../../api/client';
 
 const CustomersPage = () => {
   const { t } = useTranslation();
@@ -69,36 +70,16 @@ const CustomersPage = () => {
       setLoading(true);
       setError(null);
       
-      // Use the correct storage methods for tokens and user data
-      let authToken = getToken('accessToken');
-      let userData = getUserData('user');
-      
-      if (!authToken) {
-        throw new Error('Authentication token not found. Please log in again.');
-      }
-
-      // Use the simplified endpoint for partners
-      const response = await fetch(
-        `/api/v1/admin/my-customers?page=${currentPage}&limit=10&search=${encodeURIComponent(searchTerm)}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${authToken}`,
-            'Content-Type': 'application/json'
-          }
+      // Use the API client instead of direct fetch
+      const response = await apiClient.get('/admin/my-customers', {
+        params: {
+          page: currentPage,
+          limit: 10,
+          search: searchTerm
         }
-      );
+      });
 
-      if (!response.ok) {
-        // Handle rate limiting specifically
-        if (response.status === 429) {
-          throw new Error('Too many requests. Please wait a moment before trying again.');
-        }
-        
-        const errorData = await response.json();
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = response.data;
       
       if (data.status === 'success') {
         setCustomers(data.data.customers);
@@ -112,8 +93,12 @@ const CustomersPage = () => {
     } catch (err) {
       console.error('Error fetching customers:', err);
       
+      // Handle axios error format
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch customers';
+      const statusCode = err.response?.status;
+      
       // Handle rate limiting with exponential backoff
-      if (err.message.includes('Too many requests') && retryCount < 3) {
+      if (statusCode === 429 && retryCount < 3) {
         const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
         console.log(`Rate limited. Retrying in ${delay}ms (attempt ${retryCount + 1}/3)`);
         
@@ -121,11 +106,10 @@ const CustomersPage = () => {
           setRetryCount(prev => prev + 1);
           fetchCustomers();
         }, delay);
-        
-        return; // Don't set error state yet, we're retrying
+        return;
       }
       
-      setError(err.message);
+      setError(errorMessage);
       setCustomers([]);
       setSummary(null);
       setRetryCount(0); // Reset retry count on other errors

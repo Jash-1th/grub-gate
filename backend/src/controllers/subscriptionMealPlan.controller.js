@@ -3,7 +3,7 @@ const MealPlan = require('../models/MealPlan');
 const SubscriptionMealPlan = require('../models/SubscriptionMealPlan');
 const Restaurant = require('../models/Restaurant');
 const User = require('../models/User');
-const { getNextSunday, getWeekDateRange } = require('../utils/dateHelpers');
+const { getNextSunday, getSubscriptionStartSunday, getWeekDateRange } = require('../utils/dateHelpers');
 const { generateAllSubscriptionOrders } = require('../services/enhancedOrderGenerationService');
 const Subscription = require('../models/Subscription');
 const MenuItem = require('../models/MenuItem');
@@ -402,14 +402,8 @@ const getTodaysOrders = async (req, res) => {
 // Create subscription meal plan from user's weekly meal plan (after payment)
 const createSubscriptionFromMealPlan = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Validation failed',
-        errors: errors.array()
-      });
-    }
+    console.log('🚀 ===== SUBSCRIPTION CREATION STARTED =====');
+    console.log('🚀 Creating subscription meal plan from weekly meal plan...');
 
     const userId = req.user.id;
     const { 
@@ -530,9 +524,16 @@ const createSubscriptionFromMealPlan = async (req, res) => {
       });
     }
 
-    // 4. Create SubscriptionMealPlan using UTC dates
-    const nextSunday = getNextSunday(today);  // Already returns UTC midnight
-    const planStartDate = nextSunday;  // Use the UTC date directly
+    // 4. Create SubscriptionMealPlan using UTC dates with proper planning time
+    const subscriptionStartSunday = getSubscriptionStartSunday(today);  // Always gives proper notice
+    const planStartDate = subscriptionStartSunday;  // Use the UTC date directly
+    
+    // DEBUG: Log the calculated dates
+    console.log('🔍 DEBUG - Date Calculation:');
+    console.log('  Today:', today.toISOString());
+    console.log('  Calculated Start Date:', planStartDate.toISOString());
+    console.log('  Expected: 2025-10-19 (Sunday)');
+    console.log('  Function Used: getSubscriptionStartSunday');
     
     // Calculate plan end date using UTC
     const planDurationDays = planType === 'bi-weekly' ? 14 : planType === 'quarterly' ? 90 : 30;
@@ -543,21 +544,9 @@ const createSubscriptionFromMealPlan = async (req, res) => {
       23, 59, 59, 999
     ));
 
-    // Calculate next billing date based on plan type
-    const nextBillingDate = new Date();
-    switch (planType) {
-      case 'bi-weekly':
-        nextBillingDate.setDate(nextBillingDate.getDate() + 14);
-        break;
-      case 'monthly':
-        nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
-        break;
-      case 'quarterly':
-        nextBillingDate.setMonth(nextBillingDate.getMonth() + 3);
-        break;
-      default:
-        nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
-    }
+    // Calculate next billing date based on plan end date (not today)
+    const nextBillingDate = new Date(planEndDate);
+    nextBillingDate.setDate(planEndDate.getDate() + 1); // Day after plan ends
 
     // Calculate weekStartDates using UTC for the entire subscription duration
     const weekStartDates = [];

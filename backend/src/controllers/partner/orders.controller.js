@@ -10,6 +10,9 @@ const { createDateRange, getCurrentDateUTC } = require('../../utils/smartDateCal
  */
 const getTodaysOrders = async (req, res) => {
   try {
+    console.log('🔍 ===== PARTNER ORDERS REQUEST =====');
+    console.log('🔍 Partner ID:', req.user.id);
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({

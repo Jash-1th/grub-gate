@@ -8,12 +8,12 @@ const IMAGE_CACHE = `grubgate-partner-images-v${CACHE_VERSION}`;
 // App Shell - Critical resources for instant loading
 const APP_SHELL_ASSETS = [
   '/',
-  '/index.html',
-  '/manifest.json'
+  '/index.html'
 ];
 
 // Optional assets that may not exist
 const OPTIONAL_ASSETS = [
+  '/manifest.json',
   '/icons/logo192.png',
   '/icons/logo512.png',
   '/icons/Logo.png'

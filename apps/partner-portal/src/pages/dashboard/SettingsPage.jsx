@@ -285,13 +285,55 @@ const SettingsPage = () => {
       [field]: value
     }));
     
-    // Clear error for this field
+    // Clear error for this field when user starts typing
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
         [field]: undefined
       }));
     }
+  };
+
+  // Real-time field validation on blur
+  const validateField = (field, value) => {
+    const newErrors = { ...errors };
+    
+    // Address field validation
+    if (field === 'street' && !value.trim()) {
+      newErrors.street = 'Street address is required';
+    } else if (field === 'city' && !value.trim()) {
+      newErrors.city = 'City is required';
+    } else if (field === 'province' && !value.trim()) {
+      newErrors.province = 'Province/State is required';
+    } else if (field === 'postalCode' && !value.trim()) {
+      newErrors.postalCode = 'Postal code is required';
+    } else if (field === 'country' && !value.trim()) {
+      newErrors.country = 'Country is required';
+    }
+    // Other field validation
+    else if (field === 'name' && !value.trim()) {
+      newErrors.name = 'Restaurant name is required';
+    } else if (field === 'cuisine' && !value.trim()) {
+      newErrors.cuisine = 'Cuisine is required';
+    } else if (field === 'description' && !value.trim()) {
+      newErrors.description = 'Description is required';
+    } else if (field === 'phone') {
+      if (!value.trim()) {
+        newErrors.phone = 'Phone is required';
+      } else if (!validatePhone(value)) {
+        newErrors.phone = 'Invalid phone format';
+      }
+    } else if (field === 'email') {
+      if (!value.trim()) {
+        newErrors.email = 'Email is required';
+      } else if (!validateEmail(value)) {
+        newErrors.email = 'Invalid email format';
+      }
+    } else if (field === 'website' && value && !validateURL(value)) {
+      newErrors.website = 'Invalid website URL';
+    }
+    
+    setErrors(newErrors);
   };
 
   // Helper function to migrate legacy address to enhanced format
@@ -545,14 +587,33 @@ const SettingsPage = () => {
                 </div>
                 {/* Enhanced Address Form */}
                 <div className="space-y-4">
-                  <div className="border-t pt-4">
-                    <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
-                      <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-2 text-grub-red" />
-                      Restaurant Address
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Enhanced address system with global support, automatic country detection, and coordinate validation for accurate deliveries.
-                    </p>
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900 flex items-center">
+                          <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-2 text-grub-red" />
+                          Restaurant Address
+                        </h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Enhanced address system with global support, automatic country detection, and coordinate validation for accurate deliveries.
+                        </p>
+                      </div>
+                      {process.env.NODE_ENV === 'development' && (
+                        <button
+                          onClick={() => {
+                            // Test validation by validating all address fields
+                            validateField('street', formData.street || '');
+                            validateField('city', formData.city || '');
+                            validateField('province', formData.province || '');
+                            validateField('postalCode', formData.postalCode || '');
+                            validateField('country', formData.country || '');
+                          }}
+                          className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+                        >
+                          Test Validation
+                        </button>
+                      )}
+                    </div>
                     <EnhancedAddressForm
                       formData={formData}
                       handleInputChange={handleInputChange}
@@ -560,6 +621,7 @@ const SettingsPage = () => {
                       loading={loading}
                       showCountrySelection={true}
                       showCoordinateCapture={true}
+                      onFieldBlur={validateField}
                     />
                   </div>
                   

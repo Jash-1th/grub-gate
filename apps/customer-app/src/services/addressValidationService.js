@@ -293,7 +293,7 @@ class AddressValidationService {
    */
   getValidationRules(country) {
     const baseRules = {
-      street: { required: true, minLength: 5, maxLength: 100 },
+      street: { required: true, minLength: 2, maxLength: 100 }, // Reduced from 5 to 2 for flexibility
       city: { required: true, minLength: 2, maxLength: 50 },
       postalCode: { required: true }
     };
@@ -301,7 +301,7 @@ class AddressValidationService {
     const countrySpecific = {
       'US': {
         ...baseRules,
-        state: { required: true, minLength: 2, maxLength: 2 },
+        province: { required: true, minLength: 2, maxLength: 2 }, // Changed from 'state' to 'province' for consistency
         postalCode: { ...baseRules.postalCode, pattern: /^\d{5}(-\d{4})?$/ }
       },
       'CA': {
@@ -311,7 +311,7 @@ class AddressValidationService {
       },
       'IN': {
         ...baseRules,
-        state: { required: true, minLength: 2, maxLength: 50 },
+        province: { required: true, minLength: 2, maxLength: 50 }, // Changed from 'state' to 'province'
         postalCode: { ...baseRules.postalCode, pattern: /^\d{6}$/ }
       },
       'UK': {

@@ -45,11 +45,12 @@ router.get('/',
       .withMessage('End date must be a valid ISO 8601 date'),
     query('status')
       .optional()
-      .isIn(['scheduled', 'pending', 'in_progress', 'completed', 'cancelled'])
+      .isIn(['pending', 'confirmed', 'preparing', 'ready', 'out-for-delivery', 'delivered', 'cancelled'])
       .withMessage('Invalid status value')
   ],
   getOrdersByDateRange
 );
+
 
 /**
  * @route   PUT /api/v1/partner/orders/:orderId/status

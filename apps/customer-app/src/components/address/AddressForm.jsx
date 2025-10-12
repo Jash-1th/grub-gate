@@ -144,37 +144,77 @@ const AddressForm = ({
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
-        [field]: ''
+        [field]: undefined
       }));
     }
   }, [errors, showSuccess]);
 
-  // Detect country from postal code
+  // Detect country from postal code with automatic country update
   const detectCountryFromPostalCode = useCallback(async (postalCode) => {
-    try {
-      const detection = await addressValidationService.detectCountryFromPostalCode(postalCode);
+    if (!postalCode || postalCode.length < 3) {
+      setCountryDetection({ detected: false, country: null, format: null });
       
-      if (detection.country) {
+      // Reset country when postal code is cleared
+      if (!postalCode && formData.country) {
+        console.log('🌍 Clearing country because postal code was removed');
+        setFormData(prev => ({
+          ...prev,
+          country: ''
+        }));
+      }
+      return;
+    }
+
+    try {
+      // First try client-side detection for immediate feedback
+      const clientDetection = addressValidationService.detectCountryClientSide(postalCode);
+      
+      if (clientDetection.country) {
         setCountryDetection({
           detected: true,
-          country: detection.country,
-          format: detection.format
+          country: clientDetection.country,
+          format: clientDetection.format
         });
 
-        // Auto-fill country if not already set
-        if (!formData.country) {
+        // Auto-update country immediately (not just when empty)
+        if (clientDetection.country !== formData.country) {
+          console.log('🌍 Auto-updating country from', formData.country, 'to', clientDetection.country);
           setFormData(prev => ({
             ...prev,
-            country: detection.country
+            country: clientDetection.country
+          }));
+        }
+      }
+
+      // Then try server-side detection for more accuracy
+      const serverDetection = await addressValidationService.detectCountryFromPostalCode(postalCode);
+      
+      if (serverDetection.country && serverDetection.country !== clientDetection.country) {
+        setCountryDetection({
+          detected: true,
+          country: serverDetection.country,
+          format: serverDetection.format
+        });
+
+        // Update country if server detection is different
+        if (serverDetection.country !== formData.country) {
+          console.log('🌍 Server correction: updating country to', serverDetection.country);
+          setFormData(prev => ({
+            ...prev,
+            country: serverDetection.country
           }));
         }
       }
     } catch (error) {
       console.warn('Country detection failed:', error);
+      setCountryDetection({
+        detected: false,
+        country: null,
+        format: null
+      });
     }
   }, [formData.country]);
 
-  // Trigger country detection when postal code changes
   useEffect(() => {
     if (formData.postalCode && formData.postalCode.length >= 3) {
       detectCountryFromPostalCode(formData.postalCode);
@@ -211,30 +251,62 @@ const AddressForm = ({
     showError('Location Error', error);
   }, [showError]);
 
+
   // Validate form
   const validateForm = useCallback(() => {
     const newErrors = {};
     const rules = addressValidationService.getValidationRules(formData.country);
+
+    // Debug: Always log validation attempt in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 === ADDRESS VALIDATION DEBUG START ===');
+      console.log('📝 Form data:', JSON.stringify(formData, null, 2));
+      console.log('📋 Validation rules:', JSON.stringify(rules, null, 2));
+      console.log('🌍 Country:', formData.country);
+    }
 
     // Required field validation
     Object.keys(rules).forEach(field => {
       const rule = rules[field];
       const value = formData[field];
 
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔍 Validating field "${field}":`, {
+          value: value,
+          valueLength: value ? value.length : 0,
+          trimmedLength: value ? value.trim().length : 0,
+          rule: rule
+        });
+      }
+
       if (rule.required && (!value || value.trim().length === 0)) {
         newErrors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`❌ Field "${field}" failed: required but empty`);
+        }
       } else if (value && rule.minLength && value.length < rule.minLength) {
         newErrors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} must be at least ${rule.minLength} characters`;
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`❌ Field "${field}" failed: length ${value.length} < ${rule.minLength}`);
+        }
       } else if (value && rule.maxLength && value.length > rule.maxLength) {
         newErrors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} cannot exceed ${rule.maxLength} characters`;
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`❌ Field "${field}" failed: length ${value.length} > ${rule.maxLength}`);
+        }
       } else if (value && rule.pattern && !rule.pattern.test(value)) {
         newErrors[field] = `Please enter a valid ${field}`;
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`❌ Field "${field}" failed: pattern test failed`, rule.pattern);
+        }
+      } else if (process.env.NODE_ENV === 'development') {
+        console.log(`✅ Field "${field}" passed validation`);
       }
     });
 
-    // Custom validation
-    if (formData.street && formData.street.length < 5) {
-      newErrors.street = 'Please enter a complete street address';
+    // Custom validation - only check if street is not empty
+    if (formData.street && formData.street.trim().length < 2) {
+      newErrors.street = 'Please enter a street address';
     }
 
     // Street address validation
@@ -242,10 +314,7 @@ const AddressForm = ({
       // Check for common typos and incomplete addresses
       const streetLower = formData.street.toLowerCase();
       
-      // Check for missing street number
-      if (!/^\d+/.test(formData.street.trim())) {
-        newErrors.street = 'Please include a street number (e.g., 123 Main Street)';
-      }
+      // Removed restrictive street number validation - users can enter any street address format
       
       // Check for common typos in street names
       const commonTypos = {
@@ -319,6 +388,18 @@ const AddressForm = ({
       }
     }
 
+    // Debug: Log validation results in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 === ADDRESS VALIDATION DEBUG END ===');
+      console.log('❌ Validation errors found:', Object.keys(newErrors).length);
+      if (Object.keys(newErrors).length > 0) {
+        console.log('📋 All validation errors:', JSON.stringify(newErrors, null, 2));
+      } else {
+        console.log('✅ All validation passed!');
+      }
+      console.log('🔍 === ADDRESS VALIDATION DEBUG COMPLETE ===');
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [formData, countryDetection.format]);
@@ -372,6 +453,7 @@ const AddressForm = ({
       };
       
       console.log('📦 Final address data to save:', JSON.stringify(addressData, null, 2));
+      console.log('🏷️ Address type being saved:', addressData.type);
       console.log('🔍 Coordinates check:', {
         hasCoordinates: !!addressData.coordinates,
         coordinatesValue: addressData.coordinates
@@ -421,7 +503,10 @@ const AddressForm = ({
               <button
                 key={type.value}
                 type="button"
-                onClick={() => handleInputChange('type', type.value)}
+                onClick={() => {
+                  console.log('🏷️ Address type selected:', type.value);
+                  handleInputChange('type', type.value);
+                }}
                 className={`
                   flex items-center justify-center p-3 rounded-lg border-2 transition-all duration-200
                   ${formData.type === type.value
@@ -544,6 +629,12 @@ const AddressForm = ({
               id="postalCode"
               value={formData.postalCode}
               onChange={(e) => handleInputChange('postalCode', e.target.value)}
+              onBlur={(e) => {
+                // Trigger country detection when user finishes typing
+                if (e.target.value.length >= 3) {
+                  detectCountryFromPostalCode(e.target.value);
+                }
+              }}
               className={`
                 w-full px-4 py-3 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors
                 ${errors.postalCode ? 'border-red-300 bg-red-50' : 'border-gray-300'}
@@ -570,14 +661,15 @@ const AddressForm = ({
             <p className="mt-1 text-sm text-red-600">{errors.postalCode}</p>
           )}
           {countryDetection.detected && (
-            <p className="mt-1 text-sm text-green-600">
-              ✓ {countryDetection.format} format detected
+            <p className="mt-1 text-sm text-green-600 flex items-center">
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              {countryDetection.format} format detected - Country automatically set to {countryDetection.country}
             </p>
           )}
         </div>
       </div>
-
-      {/* Country */}
       <div>
         <div className="flex items-center justify-between mb-1">
           <label htmlFor="country" className="block text-sm font-medium text-gray-700">
@@ -585,7 +677,9 @@ const AddressForm = ({
           </label>
           {countryDetection.detected && (
             <span className="text-xs text-green-600 flex items-center">
-              <FontAwesomeIcon icon={faCheck} className="w-3 h-3 mr-1" />
+              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
               Auto-detected from postal code
             </span>
           )}
@@ -681,27 +775,22 @@ const AddressForm = ({
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-          disabled={loading}
+          className="w-full sm:w-auto px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium"
         >
           Cancel
         </button>
+        
+        
         <button
           type="submit"
-          disabled={loading || validating}
-          className={`
-            flex-1 px-6 py-3 font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-            ${loading || validating
-              ? 'bg-gray-400 text-white cursor-not-allowed'
-              : 'bg-blue-600 text-white hover:bg-blue-700 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl'
-            }
-          `}
+          disabled={loading}
+          className="w-full sm:w-auto px-6 py-3 bg-grub-red text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium flex items-center justify-center space-x-2"
         >
           {loading ? (
-            <span className="flex items-center justify-center">
-              <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
-              Saving...
-            </span>
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              <span>Saving...</span>
+            </>
           ) : (
             'Save Address'
           )}

@@ -26,6 +26,34 @@ const getNextSunday = (fromDate = new Date()) => {
 };
 
 /**
+ * Get the next upcoming Sunday for subscription start (always gives at least 1 week notice)
+ * @param {Date} fromDate - Starting date (defaults to today)
+ * @returns {Date} - Next upcoming Sunday for subscription start
+ */
+const getSubscriptionStartSunday = (fromDate = new Date()) => {
+  const date = new Date(fromDate);
+  const dayOfWeek = date.getUTCDay(); // Use UTC day to avoid timezone issues
+  
+  // Always start from NEXT Sunday to give proper planning time
+  // If today is Sunday, start from next Sunday (7 days later)
+  // If today is Monday-Saturday, start from upcoming Sunday
+  const daysUntilSunday = dayOfWeek === 0 ? 7 : 7 - dayOfWeek;
+  
+  // Create UTC date for precise calculation
+  const subscriptionStartSunday = new Date(Date.UTC(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate() + daysUntilSunday,
+    0, 0, 0, 0
+  ));
+  
+  // Debug log for verification
+  console.log(`📅 getSubscriptionStartSunday: From ${date.toDateString()} (UTC day ${dayOfWeek}) -> ${subscriptionStartSunday.toDateString()} (+${daysUntilSunday} days)`);
+  
+  return subscriptionStartSunday;
+};
+
+/**
  * Get week date range starting from next Sunday
  * @param {number} weekOffset - Week offset (0 = first week, 1 = second week, etc.)
  * @param {Date} fromDate - Starting date (defaults to today)
@@ -161,6 +189,7 @@ const isDateInSubscriptionPeriod = (targetDate, weeks) => {
 
 module.exports = {
   getNextSunday,
+  getSubscriptionStartSunday,
   getWeekDateRange,
   findSubscriptionDayForDate,
   getCalendarDateForSubscriptionDay,

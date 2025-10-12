@@ -21,7 +21,8 @@ const EnhancedAddressForm = ({
   errors = {},
   loading = false,
   showCountrySelection = true,
-  showCoordinateCapture = true
+  showCoordinateCapture = true,
+  onFieldBlur = null // Optional callback for field validation on blur
 }) => {
   const [isClient, setIsClient] = useState(false);
   const [validatingAddress, setValidatingAddress] = useState(false);
@@ -232,6 +233,7 @@ const EnhancedAddressForm = ({
             name="country"
             value={formData.country || ''}
             onChange={(e) => handleInputChange('country', e.target.value)}
+            onBlur={(e) => onFieldBlur && onFieldBlur('country', e.target.value)}
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
               errors.country ? 'border-red-300 bg-red-50' : 'border-gray-300'
             } ${countryDetection.detected ? 'bg-green-50 border-green-300' : ''}`}
@@ -266,6 +268,7 @@ const EnhancedAddressForm = ({
           name="street"
           value={formData.street || ''}
           onChange={(e) => handleInputChange('street', e.target.value)}
+          onBlur={(e) => onFieldBlur && onFieldBlur('street', e.target.value)}
           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
             errors.street ? 'border-red-300 bg-red-50' : 'border-gray-300'
           }`}
@@ -289,6 +292,7 @@ const EnhancedAddressForm = ({
             name="city"
             value={formData.city || ''}
             onChange={(e) => handleInputChange('city', e.target.value)}
+            onBlur={(e) => onFieldBlur && onFieldBlur('city', e.target.value)}
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
               errors.city ? 'border-red-300 bg-red-50' : 'border-gray-300'
             }`}
@@ -310,6 +314,7 @@ const EnhancedAddressForm = ({
             name="province"
             value={formData.province || ''}
             onChange={(e) => handleInputChange('province', e.target.value)}
+            onBlur={(e) => onFieldBlur && onFieldBlur('province', e.target.value)}
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
               errors.province ? 'border-red-300 bg-red-50' : 'border-gray-300'
             }`}
@@ -338,6 +343,10 @@ const EnhancedAddressForm = ({
                 // Trigger country detection only when user finishes typing (focus leaves field)
                 if (e.target.value.length >= 3) {
                   detectCountryFromPostalCode(e.target.value);
+                }
+                // Also trigger field validation
+                if (onFieldBlur) {
+                  onFieldBlur('postalCode', e.target.value);
                 }
               }}
               className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${

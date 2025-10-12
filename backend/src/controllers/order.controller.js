@@ -38,9 +38,15 @@ const getOrders = asyncHandler(async (req, res) => {
     query.customerId = req.user._id;
   } else if (req.user.role === 'partner') {
     // Get restaurants owned by this partner
-    const restaurants = await Restaurant.find({ ownerId: req.user._id }).select('_id');
+    const restaurants = await Restaurant.find({ ownerId: req.user._id }).select('_id name');
     const restaurantIds = restaurants.map(r => r._id);
     query.restaurantId = { $in: restaurantIds };
+    
+    // Debug logging
+    console.log('🏪 Partner orders query - Partner ID:', req.user._id);
+    console.log('🏪 Partner restaurants found:', restaurants.length);
+    console.log('🏪 Restaurant details:', restaurants.map(r => ({ id: r._id, name: r.name })));
+    console.log('🏪 Final query restaurantId filter:', query.restaurantId);
   }
   // Admin can see all orders (no additional query filters)
 

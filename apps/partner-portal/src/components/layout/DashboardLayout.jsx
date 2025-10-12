@@ -18,6 +18,7 @@ import { Logo, Button } from '@grub-gate/ui';
 import MobileBottomNav from './MobileBottomNav';
 import { useRestaurant } from '../../contexts/RestaurantContext';
 import { useResponsive } from '../../hooks/useResponsive';
+import { useAuth } from '../../contexts/AuthContext';
 
 const DashboardLayout = ({ onLanguageChange }) => {
   const { t, i18n } = useTranslation();
@@ -25,6 +26,7 @@ const DashboardLayout = ({ onLanguageChange }) => {
   const navigate = useNavigate();
   const { getRestaurantName, getRestaurantInitial } = useRestaurant();
   const { isMobile, isTablet, isClient } = useResponsive();
+  const { logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLanguageToggle = () => {
@@ -50,9 +52,15 @@ const DashboardLayout = ({ onLanguageChange }) => {
     return location.pathname.startsWith(path);
   };
 
-  const handleLogout = () => {
-    // In a real app, this would clear authentication state
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still navigate to login even if logout fails
+      navigate('/login');
+    }
   };
 
   return (
@@ -100,8 +108,8 @@ const DashboardLayout = ({ onLanguageChange }) => {
                 })}
               </nav>
             </div>
-            <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
-              <div className="flex items-center">
+            <div className="flex-shrink-0 border-t border-gray-200 p-4">
+              <div className="flex items-center mb-4">
                 <div className="h-10 w-10 bg-grub-red rounded-full flex items-center justify-center">
                   <span className="text-white text-sm font-medium">{getRestaurantInitial()}</span>
                 </div>
@@ -114,6 +122,26 @@ const DashboardLayout = ({ onLanguageChange }) => {
                   </p>
                 </div>
               </div>
+              
+              {/* Mobile Language switcher */}
+              <button
+                onClick={handleLanguageToggle}
+                className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors mb-2"
+              >
+                <FontAwesomeIcon icon={faGlobe} className="h-4 w-4" />
+                <span className="font-medium uppercase">
+                  {i18n.language}
+                </span>
+              </button>
+              
+              {/* Mobile Logout button */}
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center space-x-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4" />
+                <span>{t('dashboard.logout')}</span>
+              </button>
             </div>
           </div>
         </div>
@@ -227,6 +255,15 @@ const DashboardLayout = ({ onLanguageChange }) => {
                 <span className="hidden sm:inline uppercase font-semibold">
                   {i18n.language}
                 </span>
+              </button>
+              
+              {/* Logout button - mobile */}
+              <button
+                onClick={handleLogout}
+                className="lg:hidden flex items-center justify-center p-1.5 sm:p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                title="Logout"
+              >
+                <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
               
               {/* User avatar - mobile */}
