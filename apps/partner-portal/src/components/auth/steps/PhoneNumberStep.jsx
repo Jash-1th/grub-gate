@@ -71,6 +71,14 @@ const PhoneNumberStep = ({
       // Use environment variable for API base URL with fallback
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
       
+      // Debug: Log what we're sending
+      console.log('🔍 OTP Request Debug:', {
+        apiBaseUrl,
+        identifier: data.identifier,
+        channel: data.channel,
+        fullUrl: `${apiBaseUrl}/auth/partner/otp/request`
+      });
+      
       const response = await fetch(`${apiBaseUrl}/auth/partner/otp/request`, {
         method: 'POST',
         headers: {
@@ -83,6 +91,13 @@ const PhoneNumberStep = ({
       });
       
       const result = await response.json();
+      
+      // Debug: Log the response
+      console.log('🔍 OTP Response Debug:', {
+        status: response.status,
+        ok: response.ok,
+        result: result
+      });
       
       if (response.ok && result.status === 'success') {
         // Check if user exists to determine if this is a new signup

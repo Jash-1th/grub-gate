@@ -219,8 +219,8 @@ exports.handler = async (event, context) => {
       
       // Apply hardcoded fallback if still missing (will be updated by build process)
       if (!cssFile || !jsFile) {
-        cssFile = cssFile || '/assets/index-DKLhbucu.css';
-        jsFile = jsFile || '/assets/index-BrOpJj1S.js';
+        cssFile = cssFile || '/assets/index-ujRipZJA.css';
+        jsFile = jsFile || '/assets/index-C1bEIHfe.js';
         console.log('🎯 Using hardcoded fallback assets:', { cssFile, jsFile });
       }
     } else {
@@ -290,8 +290,8 @@ exports.handler = async (event, context) => {
     
     // Try to get assets even in error state
     let { cssFile, jsFile } = getAssetPaths();
-    cssFile = cssFile || '/assets/index-DKLhbucu.css';
-    jsFile = jsFile || '/assets/index-BrOpJj1S.js';
+    cssFile = cssFile || '/assets/index-ujRipZJA.css';
+    jsFile = jsFile || '/assets/index-C1bEIHfe.js';
     
     console.log('🚨 Error state - using fallback assets:', { cssFile, jsFile });
     

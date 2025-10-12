@@ -8,6 +8,7 @@ import {
   faMapMarkerAlt,
   faGlobe
 } from '@fortawesome/free-solid-svg-icons';
+import apiClient from '../../api/client';
 
 /**
  * Enhanced Address Form for Partner Portal
@@ -77,29 +78,14 @@ const EnhancedAddressForm = ({
     return null;
   };
 
-  // Country detection from postal code (with client-side fallback)
+  // Country detection from postal code (server-side only, triggered on blur)
   const detectCountryFromPostalCode = useCallback(async (postalCode) => {
-    // First try client-side detection for instant feedback
-    const clientDetection = detectCountryClientSide(postalCode);
-    if (clientDetection) {
-      setCountryDetection({
-        detected: true,
-        country: clientDetection.country,
-        format: clientDetection.format
-      });
-
-      // Auto-fill country if not already set
-      if (!formData.country) {
-        handleInputChange('country', clientDetection.country);
-      }
-    }
-
-    // Then try server-side detection for validation
+    // Only do server-side detection when user finishes typing
     try {
-      const response = await fetch(`/api/v1/geocoding/detect-country?postalCode=${encodeURIComponent(postalCode)}`);
+      const response = await apiClient.get(`/geocoding/detect-country?postalCode=${encodeURIComponent(postalCode)}`);
       
-      if (response.ok) {
-        const data = await response.json();
+      if (response.data) {
+        const data = response.data;
         
         if (data.data && data.data.country) {
           setCountryDetection({
@@ -108,15 +94,27 @@ const EnhancedAddressForm = ({
             format: data.data.format
           });
 
-          // Update country if server detection differs from client
-          if (data.data.country !== clientDetection?.country) {
+          // Auto-fill country - always update when detection changes
+          console.log('🌍 Country Detection:', {
+            detected: data.data.country,
+            current: formData.country,
+            willUpdate: data.data.country !== formData.country
+          });
+          
+          if (data.data.country !== formData.country) {
+            console.log('🔄 Updating country from', formData.country, 'to', data.data.country);
             handleInputChange('country', data.data.country);
           }
         }
       }
     } catch (error) {
-      console.warn('Server country detection failed, using client-side detection:', error);
-      // Client-side detection already applied above
+      console.warn('Server country detection failed:', error);
+      // Reset country detection state on error
+      setCountryDetection({
+        detected: false,
+        country: null,
+        format: null
+      });
     }
   }, [formData.country, handleInputChange]);
 
@@ -138,16 +136,10 @@ const EnhancedAddressForm = ({
         country: formData.country || countryDetection.country
       };
 
-      const response = await fetch('/api/v1/geocoding/validate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ address: addressData })
-      });
+      const response = await apiClient.post('/geocoding/validate', { address: addressData });
 
-      if (response.ok) {
-        const data = await response.json();
+      if (response.data) {
+        const data = response.data;
         
         if (data.data && data.data.coordinates && showCoordinateCapture) {
           // Update coordinates in form data
@@ -341,7 +333,9 @@ const EnhancedAddressForm = ({
               value={formData.postalCode || ''}
               onChange={(e) => {
                 handleInputChange('postalCode', e.target.value);
-                // Trigger country detection for new postal codes
+              }}
+              onBlur={(e) => {
+                // Trigger country detection only when user finishes typing (focus leaves field)
                 if (e.target.value.length >= 3) {
                   detectCountryFromPostalCode(e.target.value);
                 }

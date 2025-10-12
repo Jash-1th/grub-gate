@@ -269,25 +269,48 @@ class GlobalGeocodingService {
    * Detect country from postal code pattern
    */
   detectCountryFromPostalCode(postalCode) {
-    const patterns = {
-      'US': /^\d{5}(-\d{4})?$/,
-      'CA': /^[A-Z]\d[A-Z] \d[A-Z]\d$/,
-      'IN': /^\d{6}$/,
-      'UK': /^[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2}$/i,
-      'AU': /^\d{4}$/,
-      'DE': /^\d{5}$/,
-      'FR': /^\d{5}$/,
-      'JP': /^\d{3}-\d{4}$/,
-      'BR': /^\d{5}-\d{3}$/
-    };
+    // Order patterns by specificity (more specific patterns first)
+    // This prevents shorter patterns from matching longer postal codes
+    const patterns = [
+      { country: 'CA', pattern: /^[A-Z]\d[A-Z] \d[A-Z]\d$/i, name: 'Canadian Postal Code' },
+      { country: 'UK', pattern: /^[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2}$/i, name: 'UK Postcode' },
+      { country: 'JP', pattern: /^\d{3}-\d{4}$/, name: 'Japanese Postal Code' },
+      { country: 'BR', pattern: /^\d{5}-\d{3}$/, name: 'Brazilian CEP' },
+      { country: 'IN', pattern: /^\d{6}$/, name: 'Indian PIN Code' },
+      { country: 'US', pattern: /^\d{5}(-\d{4})?$/, name: 'US ZIP Code' },
+      { country: 'DE', pattern: /^\d{5}$/, name: 'German Postleitzahl' },
+      { country: 'FR', pattern: /^\d{5}$/, name: 'French Code Postal' },
+      { country: 'AU', pattern: /^\d{4}$/, name: 'Australian Postcode' }
+    ];
 
-    for (const [country, pattern] of Object.entries(patterns)) {
-      if (pattern.test(postalCode)) {
-        return country;
-      }
+    // Find all matching patterns
+    const matches = patterns.filter(({ pattern }) => pattern.test(postalCode));
+    
+    if (matches.length === 0) {
+      return null; // No matches found
     }
-
-    return null; // Unknown format
+    
+    if (matches.length === 1) {
+      return matches[0].country; // Single match, return it
+    }
+    
+    // Multiple matches - prefer more specific patterns
+    // For numeric codes, prefer longer patterns (6 digits over 5 over 4)
+    const numericMatches = matches.filter(match => 
+      ['IN', 'US', 'DE', 'FR', 'AU'].includes(match.country)
+    );
+    
+    if (numericMatches.length > 0) {
+      // Sort by postal code length requirement (descending)
+      const lengthPriority = { 'IN': 6, 'US': 5, 'DE': 5, 'FR': 5, 'AU': 4 };
+      numericMatches.sort((a, b) => lengthPriority[b.country] - lengthPriority[a.country]);
+      
+      // Return the country with the longest required postal code length
+      return numericMatches[0].country;
+    }
+    
+    // If no numeric matches, return the first match
+    return matches[0].country;
   }
 
   /**

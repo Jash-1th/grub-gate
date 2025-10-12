@@ -9,6 +9,7 @@ import {
   faFileAlt
 } from '@fortawesome/free-solid-svg-icons';
 import EnhancedAddressForm from '../../address/EnhancedAddressForm.jsx';
+// Removed apiClient import to fix build issue
 
 /**
  * BusinessDetailsStep Component
@@ -224,19 +225,6 @@ const BusinessDetailsStep = ({
     setErrors({});
     
     try {
-      // Debug: Log form data before submission
-      console.log('🔍 Form submission data:', {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        restaurantName: formData.restaurantName,
-        street: formData.street,
-        city: formData.city,
-        province: formData.province,
-        postalCode: formData.postalCode,
-        country: formData.country,
-        businessPhone: formData.businessPhone
-      });
-
       // Create FormData for backend (flat structure as expected)
       const submitData = new FormData();
       
@@ -263,14 +251,16 @@ const BusinessDetailsStep = ({
       // Address data (flat structure)
       submitData.append('street', formData.street);
       submitData.append('city', formData.city);
-      submitData.append('province', formData.province);
+      // Send both to satisfy Joi schema AND controller
+      submitData.append('province', formData.province); // Joi schema expects this
+      submitData.append('state', formData.province);    // Controller destructuring expects this
       submitData.append('postalCode', formData.postalCode);
       
-      // Ensure country is always set (fallback to 'IN' if not detected)
+      // Controller validation requires 'country' field
       const countryValue = formData.country || 'IN';
       submitData.append('country', countryValue);
       
-      console.log('🌍 Country being sent:', countryValue);
+      console.log('🌍 Sending state:', formData.province, 'country:', countryValue);
       
       // Coordinates for distance calculation (critical for customer app)
       if (formData.coordinates) {
@@ -310,8 +300,8 @@ const BusinessDetailsStep = ({
         console.log(`${key}:`, value);
       }
       
-      // Use environment variable for API base URL with fallback
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
+      // Use production backend URL directly
+      const apiBaseUrl = 'https://gg0b1.netlify.app/api/v1';
       
       const response = await fetch(`${apiBaseUrl}/auth/partner/otp/verify`, {
         method: 'POST',
@@ -323,21 +313,8 @@ const BusinessDetailsStep = ({
       // Debug: Log the response
       console.log('🔍 API Response:', {
         status: response.status,
-        ok: response.ok,
         result: result
       });
-      
-      // If error, log more details
-      if (!response.ok) {
-        console.log('❌ Backend validation failed. Check backend logs for details.');
-        console.log('📝 Data sent to backend:', {
-          country: countryValue,
-          province: formData.province,
-          street: formData.street,
-          city: formData.city,
-          postalCode: formData.postalCode
-        });
-      }
       
       if (response.ok && result.status === 'success') {
         // Pass the user data to parent to move to Stage 3 (billing details)

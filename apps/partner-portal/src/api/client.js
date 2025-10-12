@@ -1,9 +1,28 @@
 // FILE: src/api/client.js
 import axios from 'axios';
 
+// Determine the correct API base URL
+const getApiBaseUrl = () => {
+  // If environment variable is set, use it
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  
+  // If we're in production (on Netlify), use the backend URL
+  if (typeof window !== 'undefined' && window.location.hostname.includes('netlify.app')) {
+    return 'https://gg0b1.netlify.app/api/v1';
+  }
+  
+  // For local development, use production backend for testing
+  return 'https://gg0b1.netlify.app/api/v1';
+};
+
 // Create axios instance with base configuration
+const baseURL = getApiBaseUrl();
+console.log('🔧 Partner Portal API Client - Base URL:', baseURL);
+
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1',
+  baseURL,
   timeout: 30000, // 30 seconds timeout for file uploads
   headers: {
     'Content-Type': 'application/json',

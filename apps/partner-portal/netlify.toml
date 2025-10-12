@@ -50,11 +50,9 @@
   status = 200
   force = true
 
-# Proxy API requests to your serverless functions.
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
+# Note: Partner Portal doesn't have its own API functions
+# All API requests are handled by the external backend via axios client
+# No API redirect needed since we use full URLs in the API client
 
 # SSR Fallback: Send all other page requests to the ssr function.
 [[redirects]]
