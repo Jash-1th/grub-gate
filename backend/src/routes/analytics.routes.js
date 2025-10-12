@@ -371,9 +371,6 @@ router.get('/restaurant-info', roleMiddleware('partner'), analyticsController.ge
 router.get('/subscription-overview', roleMiddleware('partner'), analyticsController.getSubscriptionOverview);
 router.get('/revenue-breakdown', roleMiddleware('partner'), analyticsController.getRevenueBreakdown);
 
-// Public partner stats for welcome page
-router.get('/partner-stats', analyticsController.getPartnerStats);
-
 // Existing routes
 router.get('/restaurant/:restaurantId', 
   commonValidations.mongoId, 

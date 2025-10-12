@@ -193,10 +193,10 @@ const DashboardHome = () => {
           <p className="text-sm font-medium">{notification.message}</p>
         </div>
       )}
-      {/* Welcome Section - Mobile Responsive */}
-      <div className="bg-gradient-to-r from-grub-red to-grub-red-light rounded-lg p-4 sm:p-6 lg:p-6 text-white">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-2 mb-2">
-          <h1 className="mobile-heading text-white">
+      {/* Welcome Section */}
+      <div className="bg-gradient-to-r from-grub-red to-grub-red-light rounded-lg p-4 lg:p-6 text-white">
+        <div className="flex justify-between items-start mb-2">
+          <h1 className="text-xl lg:text-2xl font-bold">
             {loading ? (
               'Loading Dashboard...'
             ) : (
@@ -204,9 +204,9 @@ const DashboardHome = () => {
             )}
           </h1>
           {!loading && (
-            <div className="flex items-center justify-between sm:justify-end space-x-3">
+            <div className="flex items-center space-x-3">
               {lastUpdated && (
-                <div className="text-left sm:text-right">
+                <div className="text-right">
                   <p className="text-red-100 text-xs">Last updated</p>
                   <p className="text-white text-xs font-medium">
                     {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -216,7 +216,7 @@ const DashboardHome = () => {
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="touch-target p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all duration-200 disabled:opacity-50"
+                className="p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all duration-200 disabled:opacity-50"
                 title="Refresh dashboard data"
               >
                 <FontAwesomeIcon icon={faSync} className={`h-4 w-4 text-white ${refreshing ? 'animate-spin' : ''}`} />
@@ -224,7 +224,7 @@ const DashboardHome = () => {
             </div>
           )}
         </div>
-        <p className="text-red-100 mobile-body">
+        <p className="text-red-100 text-sm lg:text-base">
           {loading ? (
             'Setting up your restaurant dashboard...'
           ) : (

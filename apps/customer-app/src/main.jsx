@@ -2,17 +2,17 @@ import React from 'react';
 import { Suspense, useEffect } from 'react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
-import App from './App.jsx'
 import './index.css'
-import './i18n.js'
-import { initializePWA } from './pwa.js'
-import './utils/fontawesome.js'
+import './i18n'
+import App from './App.jsx'
 import ScrollToTop from './components/common/ScrollToTop'
 import { registerPWA } from './pwa.js'
 
 // Enhanced Loading fallback component that integrates with App Shell
 const LoadingFallback = () => {
-  console.log('🔄 React Suspense fallback component mounted');
+  useEffect(() => {
+    console.log('🔄 React Suspense fallback component mounted');
+  }, []);
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white to-gray-50">

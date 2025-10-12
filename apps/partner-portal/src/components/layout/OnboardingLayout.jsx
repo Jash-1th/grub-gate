@@ -80,99 +80,95 @@ const OnboardingLayout = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
-          <div className="flex justify-between items-center h-14 sm:h-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
             <div className="flex items-center">
-              <button
-                onClick={handleBack}
-                className="mr-2 sm:mr-4 p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-target"
-                aria-label="Go back"
-              >
-                <FontAwesomeIcon icon={faArrowLeft} className="h-4 w-4 sm:h-5 sm:w-5" />
-              </button>
-              <Logo className="h-6 sm:h-8 w-auto" />
+              <Logo className="h-8 w-auto" />
+              <span className="ml-3 text-xl font-semibold text-gray-900">
+                Partner Onboarding
+              </span>
             </div>
-            
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <span className="text-xs sm:text-sm text-gray-600 hidden xs:inline">
-                Step {currentStep} of 3
-              </span>
-              <span className="text-xs text-gray-600 xs:hidden">
-                {currentStep}/3
-              </span>
+
+            {/* Navigation Actions */}
+            <div className="flex items-center space-x-4">
               <button
-                onClick={handleHome}
-                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-target"
-                aria-label="Go to dashboard"
+                onClick={handleBackToDashboard}
+                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
-                <FontAwesomeIcon icon={faHome} className="h-4 w-4 sm:h-5 sm:w-5" />
+                <FontAwesomeIcon icon={faArrowLeft} className="mr-2 h-4 w-4" />
+                Dashboard
+              </button>
+              
+              <button
+                onClick={handleGoHome}
+                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <FontAwesomeIcon icon={faHome} className="mr-2 h-4 w-4" />
+                Home
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Progress Bar - Mobile Responsive */}
+      {/* Progress Bar */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
-          <div className="py-3 sm:py-4">
-            {/* Mobile Progress Bar */}
-            <div className="sm:hidden">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-gray-900">
-                  {steps[currentStep - 1]?.title}
-                </span>
-                <span className="text-xs text-gray-500">
-                  {currentStep} of {steps.length}
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${(currentStep / steps.length) * 100}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Desktop Progress Steps */}
-            <div className="hidden sm:flex items-center justify-between">
-              {steps.map((step, index) => (
-                <div key={step.id} className="flex items-center">
-                  <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${
-                    index + 1 < currentStep 
-                      ? 'bg-green-500 border-green-500 text-white' 
-                      : index + 1 === currentStep
-                      ? 'bg-blue-500 border-blue-500 text-white'
-                      : 'bg-gray-100 border-gray-300 text-gray-500'
-                  }`}>
-                    {index + 1 < currentStep ? (
-                      <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4" />
-                    ) : (
-                      <span className="text-sm font-medium">{index + 1}</span>
-                    )}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <nav aria-label="Progress">
+            <ol className="flex items-center">
+              {steps.map((step, stepIdx) => (
+                <li key={step.name} className={`${stepIdx !== steps.length - 1 ? 'pr-8 sm:pr-20' : ''} relative`}>
+                  <div className="flex items-center">
+                    <div className="relative flex items-center justify-center">
+                      {step.id < currentStep ? (
+                        <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
+                          <FontAwesomeIcon icon={faCheckCircle} className="h-5 w-5 text-white" />
+                        </div>
+                      ) : step.id === currentStep ? (
+                        <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
+                          <span className="text-white text-sm font-medium">{step.id}</span>
+                        </div>
+                      ) : (
+                        <div className="h-8 w-8 rounded-full border-2 border-gray-300 flex items-center justify-center">
+                          <span className="text-gray-500 text-sm font-medium">{step.id}</span>
+                        </div>
+                      )}
+                    </div>
+                    <span className={`ml-3 text-sm font-medium ${
+                      step.id <= currentStep ? 'text-gray-900' : 'text-gray-500'
+                    }`}>
+                      {step.name}
+                    </span>
                   </div>
-                  <span className={`ml-2 text-sm font-medium ${
-                    index + 1 <= currentStep ? 'text-gray-900' : 'text-gray-500'
-                  }`}>
-                    {step.title}
-                  </span>
-                  {index < steps.length - 1 && (
-                    <div className={`ml-4 w-12 h-0.5 ${
-                      index + 1 < currentStep ? 'bg-green-500' : 'bg-gray-300'
-                    }`} />
+                  
+                  {stepIdx !== steps.length - 1 && (
+                    <div className="absolute top-4 left-4 -ml-px mt-0.5 h-full w-0.5 bg-gray-300" aria-hidden="true" />
                   )}
-                </div>
+                </li>
               ))}
-            </div>
-          </div>
+            </ol>
+          </nav>
         </div>
       </div>
 
-      {/* Main Content - Mobile Responsive */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
-        <Outlet context={{ currentStep, setCurrentStep }} />
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[600px]">
+          <Outlet context={{ currentStep, user }} />
+        </div>
       </main>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-200 mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="text-center text-sm text-gray-500">
+            <p>Need help? Contact our support team at support@grubgate.com</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

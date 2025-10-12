@@ -11,12 +11,10 @@ import {
   faCheckCircle,
   faStar,
   faHandshake,
-  faGift,
-  faSpinner
+  faGift
 } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@grub-gate/ui';
 import { useAuth } from '../../contexts/AuthContext';
-import { getPartnerStats, formatStatNumber, formatRating } from '../../services/partnerStatsService';
 
 /**
  * WelcomePage Component
@@ -32,39 +30,10 @@ const WelcomePage = () => {
   // SSR safety
   const [isClient, setIsClient] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Partner statistics
-  const [stats, setStats] = useState({
-    activeRestaurants: 500,
-    monthlyOrders: 10000,
-    averageRating: 4.8,
-    loading: true,
-    fallback: true
-  });
 
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  // Fetch partner statistics
-  useEffect(() => {
-    if (!isClient) return;
-    
-    const fetchStats = async () => {
-      try {
-        const partnerStats = await getPartnerStats();
-        setStats({
-          ...partnerStats,
-          loading: false
-        });
-      } catch (error) {
-        console.error('Failed to load partner stats:', error);
-        setStats(prev => ({ ...prev, loading: false }));
-      }
-    };
-
-    fetchStats();
-  }, [isClient]);
 
   const handleGetStarted = async () => {
     setIsLoading(true);
@@ -136,37 +105,43 @@ const WelcomePage = () => {
       onClick: handleSkipToMenu
     }
   ];
+
   return (
-    <div className="mobile-container">
-      {/* Welcome Header - Mobile Responsive */}
-      <div className="text-center mb-6 sm:mb-8">
-        <h1 className="mobile-heading text-gray-900 mb-3 sm:mb-4">
-          Welcome to GrubGate Partner Portal! 🎉
+    <div className="p-8">
+      {/* Welcome Header */}
+      <div className="text-center mb-12">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-6">
+          <FontAwesomeIcon icon={faRocket} className="text-2xl text-blue-600" />
+        </div>
+        
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          Welcome to GrubGate, {user?.firstName || 'Partner'}! 🎉
         </h1>
-        <p className="mobile-body text-gray-600 max-w-2xl mx-auto px-2 sm:px-0">
-          You're just a few steps away from joining Montreal's most innovative food delivery platform. 
-          Let's get your restaurant set up and ready to serve customers!
+        
+        <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+          Congratulations on joining our platform! You're now part of a growing network of successful restaurants. 
+          Let's get your restaurant set up and ready to receive orders.
         </p>
       </div>
 
       {/* Benefits Section */}
-      <div className="mb-8 sm:mb-12">
-        <h2 className="mobile-subheading text-gray-900 text-center mb-6 sm:mb-8">
+      <div className="mb-12">
+        <h2 className="text-2xl font-semibold text-gray-900 text-center mb-8">
           What You'll Get as a GrubGate Partner
         </h2>
         
-        <div className="mobile-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {benefits.map((benefit, index) => (
-            <div key={index} className="mobile-card hover:shadow-md transition-shadow duration-200">
-              <div className="flex items-start space-x-3 sm:space-x-4">
-                <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-white flex items-center justify-center ${benefit.color}`}>
-                  <FontAwesomeIcon icon={benefit.icon} className="text-lg sm:text-xl" />
+            <div key={index} className="bg-gray-50 rounded-xl p-6 hover:shadow-md transition-shadow duration-200">
+              <div className="flex items-start space-x-4">
+                <div className={`flex-shrink-0 w-12 h-12 rounded-lg bg-white flex items-center justify-center ${benefit.color}`}>
+                  <FontAwesomeIcon icon={benefit.icon} className="text-xl" />
                 </div>
                 <div>
-                  <h3 className="mobile-subheading text-gray-900 mb-2">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     {benefit.title}
                   </h3>
-                  <p className="mobile-body text-gray-600 leading-relaxed">
+                  <p className="text-gray-600 leading-relaxed">
                     {benefit.description}
                   </p>
                 </div>
@@ -176,54 +151,56 @@ const WelcomePage = () => {
         </div>
       </div>
 
-      {/* Quick Actions - Mobile Responsive */}
-      <div className="mb-8 sm:mb-12">
-        <h2 className="mobile-subheading text-gray-900 text-center mb-6 sm:mb-8">
+      {/* Quick Actions */}
+      <div className="mb-12">
+        <h2 className="text-2xl font-semibold text-gray-900 text-center mb-8">
           Choose Your Next Step
         </h2>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {quickActions.map((action, index) => (
             <div 
               key={index} 
-              className={`relative mobile-card border-2 transition-all duration-200 hover:shadow-lg ${
+              className={`relative rounded-xl p-6 border-2 transition-all duration-200 hover:shadow-lg ${
                 action.primary 
                   ? 'border-blue-500 bg-blue-50 hover:bg-blue-100' 
                   : 'border-gray-200 bg-white hover:border-gray-300'
               }`}
             >
               {action.primary && (
-                <div className="absolute -top-2 sm:-top-3 left-4 sm:left-6">
-                  <span className="bg-blue-600 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
+                <div className="absolute -top-3 left-6">
+                  <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
                     Recommended
                   </span>
                 </div>
               )}
               
-              <div className="mb-4 sm:mb-6">
-                <h3 className="mobile-subheading text-gray-900 mb-2">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   {action.title}
                 </h3>
-                <p className="mobile-body text-gray-600">
+                <p className="text-gray-600">
                   {action.description}
                 </p>
               </div>
               
               <Button
                 onClick={action.onClick}
-                className={`mobile-button-primary ${action.primary ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'mobile-button-secondary'}`}
                 disabled={isLoading}
+                className={`w-full ${
+                  action.primary 
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                    : 'bg-white hover:bg-gray-50 text-gray-900 border border-gray-300'
+                }`}
               >
-                {isLoading ? (
+                {isLoading && action.primary ? (
                   <>
-                    <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
-                    <span className="hidden sm:inline">Setting up...</span>
-                    <span className="sm:hidden">Loading...</span>
+                    <FontAwesomeIcon icon={faRocket} className="animate-spin mr-2" />
+                    Setting up...
                   </>
                 ) : (
                   <>
-                    <span className="hidden sm:inline">{action.action}</span>
-                    <span className="sm:hidden">{action.action.split(' ')[0]}</span>
+                    {action.action}
                     <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
                   </>
                 )}
@@ -233,47 +210,24 @@ const WelcomePage = () => {
         </div>
       </div>
 
-      {/* Success Stats - Dynamic & Mobile Responsive */}
-      <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8">
-        <h3 className="text-lg sm:text-xl font-semibold text-gray-900 text-center mb-4 sm:mb-6">
+      {/* Success Stats */}
+      <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-8 mb-8">
+        <h3 className="text-xl font-semibold text-gray-900 text-center mb-6">
           Join Successful Partners Already on GrubGate
-          {stats.fallback && (
-            <span className="block text-xs sm:text-sm text-gray-500 mt-1 font-normal">
-              Live data loading...
-            </span>
-          )}
         </h3>
         
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-center">
-          <div className="bg-white/50 rounded-lg p-3 sm:p-4">
-            <div className="text-2xl sm:text-3xl font-bold text-green-600 mb-1 sm:mb-2 flex items-center justify-center">
-              {stats.loading ? (
-                <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
-              ) : (
-                `${formatStatNumber(stats.activeRestaurants)}+`
-              )}
-            </div>
-            <div className="text-xs sm:text-sm text-gray-600">Active Restaurants</div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+          <div>
+            <div className="text-3xl font-bold text-green-600 mb-2">500+</div>
+            <div className="text-gray-600">Active Restaurants</div>
           </div>
-          <div className="bg-white/50 rounded-lg p-3 sm:p-4">
-            <div className="text-2xl sm:text-3xl font-bold text-blue-600 mb-1 sm:mb-2 flex items-center justify-center">
-              {stats.loading ? (
-                <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
-              ) : (
-                `${formatStatNumber(stats.monthlyOrders)}+`
-              )}
-            </div>
-            <div className="text-xs sm:text-sm text-gray-600">Monthly Orders</div>
+          <div>
+            <div className="text-3xl font-bold text-blue-600 mb-2">10K+</div>
+            <div className="text-gray-600">Monthly Orders</div>
           </div>
-          <div className="bg-white/50 rounded-lg p-3 sm:p-4">
-            <div className="text-2xl sm:text-3xl font-bold text-purple-600 mb-1 sm:mb-2 flex items-center justify-center">
-              {stats.loading ? (
-                <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
-              ) : (
-                formatRating(stats.averageRating)
-              )}
-            </div>
-            <div className="text-xs sm:text-sm text-gray-600">Average Rating</div>
+          <div>
+            <div className="text-3xl font-bold text-purple-600 mb-2">4.8★</div>
+            <div className="text-gray-600">Average Rating</div>
           </div>
         </div>
       </div>
