@@ -673,13 +673,35 @@ const verifyPartnerOTP = asyncHandler(async (req, res) => {
       }
     }
 
-    if (!firstName || !lastName || !password || !restaurantName || !cuisine || !street || !city || !postalCode || !country || !businessPhone) {
-        return errorResponse(res, 'Missing required fields for registration.', 400);
-    }
-
-    const existingRestaurant = await Restaurant.findOne({ name: { $regex: new RegExp(`^${restaurantName}$`, 'i') } });
-    if (existingRestaurant) {
-      return conflictResponse(res, 'Restaurant with this name already exists');
+    // Debug: Log all received fields
+    console.log('🔍 Registration Debug - Full req.body:', Object.keys(req.body));
+    console.log('🔍 Registration Debug - Received fields:');
+    console.log('firstName:', firstName);
+    console.log('lastName:', lastName);
+    console.log('password:', password ? '[PRESENT]' : '[MISSING]');
+    console.log('restaurantName:', restaurantName);
+    console.log('cuisine:', cuisine);
+    console.log('street:', street);
+    console.log('city:', city);
+    console.log('postalCode:', postalCode);
+    console.log('country:', country);
+    console.log('businessPhone:', businessPhone);
+    
+    const missingFields = [];
+    if (!firstName) missingFields.push('firstName');
+    if (!lastName) missingFields.push('lastName');
+    if (!password) missingFields.push('password');
+    if (!restaurantName) missingFields.push('restaurantName');
+    if (!cuisine) missingFields.push('cuisine');
+    if (!street) missingFields.push('street');
+    if (!city) missingFields.push('city');
+    if (!postalCode) missingFields.push('postalCode');
+    if (!country) missingFields.push('country');
+    if (!businessPhone) missingFields.push('businessPhone');
+    
+    if (missingFields.length > 0) {
+        console.log('❌ Missing required fields:', missingFields);
+        return errorResponse(res, `Missing required fields: ${missingFields.join(', ')}`, 400);
     }
 
     const isEmail = emailService.validateEmail(formattedIdentifier);
@@ -687,23 +709,76 @@ const verifyPartnerOTP = asyncHandler(async (req, res) => {
     let user = await User.findOne(searchQuery);
     let isNewUser = false;
     
-    // Handle file uploads
+    // Handle file uploads with comprehensive error handling
     let fileUrls = {};
+    console.log('🔍 File upload debug - req.files:', req.files ? Object.keys(req.files) : 'No files');
+    console.log('🔍 Cloudinary config check:', {
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? 'SET' : 'MISSING',
+      api_key: process.env.CLOUDINARY_API_KEY ? 'SET' : 'MISSING', 
+      api_secret: process.env.CLOUDINARY_API_SECRET ? 'SET' : 'MISSING'
+    });
+    
     if (req.files) {
-        if (req.files.logo) {
-            const result = await uploadToCloudinary(req.files.logo[0].buffer, { folder: 'logos' });
-            fileUrls.logo = result.secure_url;
+        try {
+            // Upload logo
+            if (req.files.logo && req.files.logo.length > 0) {
+                console.log('📸 Uploading logo:', req.files.logo[0].originalname, 'Size:', req.files.logo[0].size, 'bytes');
+                try {
+                    const result = await uploadToCloudinary(req.files.logo[0].buffer, { 
+                      folder: 'grubgate/logos',
+                      transformation: [
+                        { width: 300, height: 300, crop: 'fill' },
+                        { quality: 'auto', fetch_format: 'auto' }
+                      ]
+                    });
+                    fileUrls.logo = result.secure_url;
+                    console.log('✅ Logo uploaded successfully:', result.secure_url);
+                } catch (logoError) {
+                    console.error('❌ Logo upload failed:', logoError.message);
+                    fileUrls.logo = null;
+                }
+            } else {
+                console.log('ℹ️ No logo file provided');
+                fileUrls.logo = null;
+            }
+            
+            // Upload restaurant images
+            if (req.files.images && req.files.images.length > 0) {
+                console.log('🖼️ Uploading', req.files.images.length, 'restaurant images');
+                fileUrls.images = await Promise.all(req.files.images.map(async (file, index) => {
+                    const result = await uploadToCloudinary(file.buffer, { 
+                      folder: 'grubgate/restaurants',
+                      public_id: `restaurant_${Date.now()}_${index}`,
+                      transformation: [
+                        { width: 800, height: 600, crop: 'fill' },
+                        { quality: 'auto', fetch_format: 'auto' }
+                      ]
+                    });
+                    console.log(`✅ Image ${index + 1} uploaded:`, result.secure_url);
+                    return result.secure_url;
+                }));
+            } else {
+                fileUrls.images = [];
+            }
+            
+            // Upload business license
+            if (req.files.businessLicenseFile && req.files.businessLicenseFile.length > 0) {
+                console.log('📄 Uploading business license:', req.files.businessLicenseFile[0].originalname);
+                const result = await uploadToCloudinary(req.files.businessLicenseFile[0].buffer, { 
+                  folder: 'grubgate/documents',
+                  resource_type: 'auto' // Supports both images and PDFs
+                });
+                fileUrls.businessLicense = result.secure_url;
+                console.log('✅ Business license uploaded:', result.secure_url);
+            }
+        } catch (uploadError) {
+            console.error('❌ File upload error:', uploadError);
+            // Continue with registration even if file uploads fail
+            fileUrls = { logo: null, images: [], businessLicense: null };
         }
-        if (req.files.images) {
-            fileUrls.images = await Promise.all(req.files.images.map(async (file) => {
-                const result = await uploadToCloudinary(file.buffer, { folder: 'restaurants' });
-                return result.secure_url;
-            }));
-        }
-        if (req.files.businessLicenseFile) {
-            const result = await uploadToCloudinary(req.files.businessLicenseFile[0].buffer, { folder: 'documents' });
-            fileUrls.businessLicense = result.secure_url;
-        }
+    } else {
+        console.log('ℹ️ No files to upload');
+        fileUrls = { logo: null, images: [], businessLicense: null };
     }
 
 
@@ -737,12 +812,15 @@ const verifyPartnerOTP = asyncHandler(async (req, res) => {
       ownerId: user._id,
       address: {
         country: country || 'IN',
+        street: street,
         addressLine1: street,
         city,
         state: province,
+        province: province,
         postalCode,
         coordinates: coordinates ? JSON.parse(coordinates) : undefined,
-        formattedAddress,
+        formattedAddress: formattedAddress,
+        timezone: 'Asia/Kolkata' // Default timezone for India
       },
       phone: businessPhone,
       email: businessEmail || (isEmail ? formattedIdentifier : ''),
@@ -757,8 +835,18 @@ const verifyPartnerOTP = asyncHandler(async (req, res) => {
         avgDeliveryTime: parseInt(avgDeliveryTime) || 30
       },
       businessLicense: fileUrls.businessLicense || businessLicenseText,
-      taxId,
-      status: 'pending'
+      businessLicenseText: businessLicenseText || '',
+      taxId: taxId || '',
+      status: 'pending', // New restaurants should be pending approval
+      registrationComplete: false,
+      registrationStage: 2,
+      isVerified: false,
+      rating: 0,
+      reviewCount: 0,
+      totalOrders: 0,
+      isPopular: false,
+      tags: [],
+      commissionRate: 15
     });
 
     user.restaurantId = restaurant._id;

@@ -9,7 +9,7 @@ import {
   faFileAlt
 } from '@fortawesome/free-solid-svg-icons';
 import EnhancedAddressForm from '../../address/EnhancedAddressForm.jsx';
-// Removed apiClient import to fix build issue
+import { apiClient } from '../../../api/client.js';
 
 /**
  * BusinessDetailsStep Component
@@ -232,7 +232,8 @@ const BusinessDetailsStep = ({
       submitData.append('identifier', data.identifier);
       submitData.append('skipOtpVerification', 'true');
       submitData.append('otpVerificationToken', data.otpVerificationToken || `verified_${data.identifier}_${Date.now()}`);
-      submitData.append('otp', '123456'); // Backend expects OTP field even when skipping
+      submitData.append('otp', data.otp || '123456'); // Use actual OTP from data
+      submitData.append('userType', 'partner'); // Required by backend validation schema
       
       // User personal data
       submitData.append('firstName', formData.firstName);
@@ -300,15 +301,11 @@ const BusinessDetailsStep = ({
         console.log(`${key}:`, value);
       }
       
-      // Use production backend URL directly
-      const apiBaseUrl = 'https://gg0b1.netlify.app/api/v1';
+      // Use the configured API client (respects local/production backend settings)
+      // Note: Don't set Content-Type manually for FormData - let Axios handle the boundary
+      const response = await apiClient.post('/auth/partner/otp/verify', submitData);
       
-      const response = await fetch(`${apiBaseUrl}/auth/partner/otp/verify`, {
-        method: 'POST',
-        body: submitData
-      });
-      
-      const result = await response.json();
+      const result = response.data;
       
       // Debug: Log the response
       console.log('🔍 API Response:', {
@@ -316,7 +313,7 @@ const BusinessDetailsStep = ({
         result: result
       });
       
-      if (response.ok && result.status === 'success') {
+      if ((response.status === 200 || response.status === 201) && result.status === 'success') {
         // Pass the user data to parent to move to Stage 3 (billing details)
         onComplete({
           user: result.data.user,
@@ -338,7 +335,24 @@ const BusinessDetailsStep = ({
       }
     } catch (error) {
       console.error('Registration error:', error);
-      setErrors({ general: 'Network error. Please check your connection and try again.' });
+      
+      // Handle axios errors
+      if (error.response) {
+        // Server responded with error status
+        const errorData = error.response.data;
+        if (errorData.errors && Array.isArray(errorData.errors)) {
+          const errorObj = {};
+          errorData.errors.forEach(err => {
+            errorObj[err.field] = err.message;
+          });
+          setErrors(errorObj);
+        } else {
+          setErrors({ general: errorData.message || 'Registration failed. Please try again.' });
+        }
+      } else {
+        // Network error or other issue
+        setErrors({ general: 'Network error. Please check your connection and try again.' });
+      }
     } finally {
       setIsLoading(false);
     }

@@ -70,6 +70,6 @@ router.get('/me', getMe);
 router.post('/change-password', changePassword);
 
 // Partner setup routes
-router.put('/partner/operating-hours', updateOperatingHours);
+router.put('/partner/operating-hours', validateRequest(partnerSchemas.updateOperatingHours), updateOperatingHours);
 
 module.exports = router;

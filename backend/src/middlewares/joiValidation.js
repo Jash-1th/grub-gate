@@ -624,6 +624,14 @@ const partnerSchemas = {
     skipOtpVerification: Joi.boolean().optional(),
     otpVerificationToken: Joi.string().optional(),
     
+    // User type (required by controller)
+    userType: Joi.string()
+      .valid('customer', 'partner')
+      .default('partner')
+      .messages({
+        'any.only': 'User type must be either customer or partner'
+      }),
+    
     // User details (optional when verifyOnly is true)
     firstName: Joi.string()
       .min(2)
@@ -659,10 +667,15 @@ const partnerSchemas = {
     
     email: Joi.string()
       .email()
-      .optional()
-      .allow('')
+      .when('verifyOnly', {
+        is: true,
+        then: Joi.optional(),
+        otherwise: Joi.required()
+      })
       .messages({
-        'string.email': 'Please provide a valid email address'
+        'string.email': 'Please provide a valid email address',
+        'string.empty': 'Email is required',
+        'any.required': 'Email is required'
       }),
     
     phoneNumber: Joi.string()
@@ -671,6 +684,20 @@ const partnerSchemas = {
       .allow('')
       .messages({
         'string.pattern.base': 'Please provide a valid phone number'
+      }),
+    
+    // Business phone (required by controller)
+    businessPhone: Joi.string()
+      .pattern(/^\+?[\d\s\-\(\)]+$/)
+      .when('verifyOnly', {
+        is: true,
+        then: Joi.optional(),
+        otherwise: Joi.required()
+      })
+      .messages({
+        'string.pattern.base': 'Please provide a valid business phone number',
+        'string.empty': 'Business phone is required',
+        'any.required': 'Business phone is required'
       }),
     
     password: Joi.string()
@@ -801,6 +828,98 @@ const partnerSchemas = {
       .messages({
         'string.empty': 'Postal code is required',
         'any.required': 'Postal code is required'
+      }),
+    
+    country: Joi.string()
+      .trim()
+      .min(2)
+      .max(3)
+      .uppercase()
+      .when('verifyOnly', {
+        is: true,
+        then: Joi.optional(),
+        otherwise: Joi.required()
+      })
+      .messages({
+        'string.empty': 'Country is required',
+        'string.min': 'Country code must be at least 2 characters',
+        'string.max': 'Country code cannot exceed 3 characters',
+        'any.required': 'Country is required'
+      }),
+    
+    // Additional address fields
+    state: Joi.string()
+      .trim()
+      .optional()
+      .allow('')
+      .messages({
+        'string.empty': 'State is optional'
+      }),
+    
+    coordinates: Joi.string()
+      .optional()
+      .allow('')
+      .messages({
+        'string.base': 'Coordinates must be a valid JSON string'
+      }),
+    
+    formattedAddress: Joi.string()
+      .trim()
+      .optional()
+      .allow('')
+      .messages({
+        'string.base': 'Formatted address must be a string'
+      }),
+    
+    // Delivery settings
+    deliveryRadius: Joi.alternatives()
+      .try(
+        Joi.number().min(1).max(50),
+        Joi.string().pattern(/^\d+(\.\d+)?$/)
+      )
+      .optional()
+      .messages({
+        'number.min': 'Delivery radius must be at least 1 km',
+        'number.max': 'Delivery radius cannot exceed 50 km'
+      }),
+    
+    deliveryFee: Joi.alternatives()
+      .try(
+        Joi.number().min(0),
+        Joi.string().pattern(/^\d+(\.\d+)?$/)
+      )
+      .optional()
+      .messages({
+        'number.min': 'Delivery fee cannot be negative'
+      }),
+    
+    minOrderAmount: Joi.alternatives()
+      .try(
+        Joi.number().min(0),
+        Joi.string().pattern(/^\d+(\.\d+)?$/)
+      )
+      .optional()
+      .messages({
+        'number.min': 'Minimum order amount cannot be negative'
+      }),
+    
+    avgDeliveryTime: Joi.alternatives()
+      .try(
+        Joi.number().min(10).max(120),
+        Joi.string().pattern(/^\d+$/)
+      )
+      .optional()
+      .messages({
+        'number.min': 'Average delivery time must be at least 10 minutes',
+        'number.max': 'Average delivery time cannot exceed 120 minutes'
+      }),
+    
+    businessLicenseText: Joi.string()
+      .trim()
+      .optional()
+      .allow('')
+      .messages({
+        'string.base': 'Business license text must be a string'
       }),
     
     // Contact details (optional when verifyOnly is true)
@@ -1339,6 +1458,117 @@ const partnerSchemas = {
       .valid('bank_transfer', 'direct_deposit', 'check')
       .default('bank_transfer')
       .optional()
+  }),
+
+  // Update operating hours schema
+  updateOperatingHours: Joi.object({
+    operatingHours: Joi.object({
+      monday: Joi.object({
+        open: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+        close: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+        closed: Joi.boolean().default(false),
+        lunch: Joi.object({
+          open: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          close: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          available: Joi.boolean().default(true)
+        }).optional(),
+        dinner: Joi.object({
+          open: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          close: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          available: Joi.boolean().default(true)
+        }).optional()
+      }).required(),
+      tuesday: Joi.object({
+        open: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+        close: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+        closed: Joi.boolean().default(false),
+        lunch: Joi.object({
+          open: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          close: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          available: Joi.boolean().default(true)
+        }).optional(),
+        dinner: Joi.object({
+          open: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          close: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          available: Joi.boolean().default(true)
+        }).optional()
+      }).required(),
+      wednesday: Joi.object({
+        open: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+        close: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+        closed: Joi.boolean().default(false),
+        lunch: Joi.object({
+          open: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          close: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          available: Joi.boolean().default(true)
+        }).optional(),
+        dinner: Joi.object({
+          open: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          close: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          available: Joi.boolean().default(true)
+        }).optional()
+      }).required(),
+      thursday: Joi.object({
+        open: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+        close: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+        closed: Joi.boolean().default(false),
+        lunch: Joi.object({
+          open: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          close: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          available: Joi.boolean().default(true)
+        }).optional(),
+        dinner: Joi.object({
+          open: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          close: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          available: Joi.boolean().default(true)
+        }).optional()
+      }).required(),
+      friday: Joi.object({
+        open: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+        close: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+        closed: Joi.boolean().default(false),
+        lunch: Joi.object({
+          open: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          close: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          available: Joi.boolean().default(true)
+        }).optional(),
+        dinner: Joi.object({
+          open: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          close: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          available: Joi.boolean().default(true)
+        }).optional()
+      }).required(),
+      saturday: Joi.object({
+        open: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+        close: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+        closed: Joi.boolean().default(false),
+        lunch: Joi.object({
+          open: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          close: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          available: Joi.boolean().default(true)
+        }).optional(),
+        dinner: Joi.object({
+          open: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          close: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          available: Joi.boolean().default(true)
+        }).optional()
+      }).required(),
+      sunday: Joi.object({
+        open: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+        close: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+        closed: Joi.boolean().default(false),
+        lunch: Joi.object({
+          open: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          close: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          available: Joi.boolean().default(true)
+        }).optional(),
+        dinner: Joi.object({
+          open: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          close: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+          available: Joi.boolean().default(true)
+        }).optional()
+      }).required()
+    }).required()
   })
 };
 

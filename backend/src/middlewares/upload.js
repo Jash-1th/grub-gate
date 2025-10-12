@@ -58,18 +58,22 @@ const fileFilter = (req, file, cb) => {
     } else {
       cb(new Error('Only image files are allowed for logo and images'), false);
     }
-  } else if (file.fieldname === 'documents') {
-    // Accept documents (PDF, DOC, DOCX)
+  } else if (file.fieldname === 'documents' || file.fieldname === 'businessLicenseFile') {
+    // Accept documents (PDF, DOC, DOCX) and business license files (PDF, images)
     const allowedMimes = [
       'application/pdf',
       'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/jpeg',
+      'image/jpg', 
+      'image/png',
+      'image/webp'
     ];
     
     if (allowedMimes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Only PDF, DOC, and DOCX files are allowed for documents'), false);
+      cb(new Error('Only PDF, DOC, DOCX, and image files are allowed for documents'), false);
     }
   } else {
     cb(new Error('Invalid field name'), false);
@@ -90,7 +94,7 @@ const upload = multer({
 const partnerUploads = upload.fields([
   { name: 'logo', maxCount: 1 },
   { name: 'images', maxCount: 5 },
-  { name: 'businessLicense', maxCount: 1 }
+  { name: 'businessLicenseFile', maxCount: 1 }
 ]);
 
 // Error handling middleware for multer

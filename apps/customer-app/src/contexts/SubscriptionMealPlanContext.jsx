@@ -7,7 +7,7 @@ import { getStorageItem, setStorageItem, removeStorageItem } from '../utils/ssrS
 const isClient = typeof window !== 'undefined';
 
 // API endpoints for subscription meal plans
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api/v1';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://gg0b1.netlify.app/api/v1';
 
 // Initial week plan structure
 const initialWeekPlan = {

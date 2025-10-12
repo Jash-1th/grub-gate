@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -19,7 +19,7 @@ import { useToast } from '../../contexts/ToastContext.jsx';
 const LoginPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { login, isLoading, error, clearError, getRedirectRoute } = useAuth();
+  const { login, isLoading, error, clearError, getRedirectRoute, isAuthenticated, user } = useAuth();
   const { showSuccess } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -29,6 +29,16 @@ const LoginPage = () => {
   });
   // Remove local loading state, use AuthContext loading
   const [errors, setErrors] = useState({});
+
+  // Redirect authenticated users to appropriate page
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log('🔄 LoginPage: User already authenticated, redirecting...');
+      // Use the existing redirect logic from AuthContext
+      const redirectRoute = getRedirectRoute();
+      navigate(redirectRoute);
+    }
+  }, [isAuthenticated, user, navigate, getRedirectRoute]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;

@@ -29,18 +29,35 @@ import {
 import { Button, Logo } from '@grub-gate/ui';
 import { useModal } from '../../contexts/ModalContext.jsx';
 import { useToast } from '../../contexts/ToastContext.jsx';
+import { useAuth } from '../../contexts/AuthContext.jsx';
 import PartnerOTPAuthModal from '../../components/auth/PartnerOTPAuthModal.jsx';
 
 const RegisterPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { isAuthenticated, user } = useAuth();
   const { isOTPAuthModalOpen, openOTPAuthModal, closeOTPAuthModal } = useModal();
   
-  // Auto-open OTP modal when page loads
+  // Redirect authenticated users to appropriate page
   useEffect(() => {
-    openOTPAuthModal();
-  }, [openOTPAuthModal]);
+    if (isAuthenticated && user) {
+      console.log('🔄 RegisterPage: User already authenticated, redirecting...');
+      // Redirect to onboarding or dashboard based on registration status
+      if (user.registrationComplete) {
+        navigate('/dashboard');
+      } else {
+        navigate('/onboarding/welcome');
+      }
+      return;
+    }
+    
+    // Only open OTP modal if user is not authenticated
+    if (!isAuthenticated) {
+      console.log('🔑 RegisterPage: Opening OTP modal for unauthenticated user');
+      openOTPAuthModal();
+    }
+  }, [isAuthenticated, user, navigate, openOTPAuthModal]);
   
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);

@@ -13,7 +13,7 @@ const getApiBaseUrl = () => {
     return 'https://gg0b1.netlify.app/api/v1';
   }
   
-  // For local development, use production backend for testing
+  // Use production backend
   return 'https://gg0b1.netlify.app/api/v1';
 };
 
