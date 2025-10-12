@@ -1,6 +1,6 @@
 {
   "../../node_modules/recharts/es6/index.js": {
-    "file": "assets/index-D_r6W2Lv.js",
+    "file": "assets/index-CE7jA-tz.js",
     "name": "index",
     "src": "../../node_modules/recharts/es6/index.js",
     "isDynamicEntry": true,
@@ -9,7 +9,7 @@
     ]
   },
   "index.html": {
-    "file": "assets/index-C1bEIHfe.js",
+    "file": "assets/index-BOnnzKuG.js",
     "name": "index",
     "src": "index.html",
     "isEntry": true,
@@ -17,7 +17,7 @@
       "../../node_modules/recharts/es6/index.js"
     ],
     "css": [
-      "assets/index-ujRipZJA.css"
+      "assets/index-BB2O6vWo.css"
     ]
   }
 }

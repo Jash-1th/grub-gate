@@ -80,22 +80,45 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Configure multer
+// Configure multer with memory storage for direct Cloudinary upload
 const upload = multer({
-  storage: storage,
+  storage: multer.memoryStorage(), // Use memory storage for direct Cloudinary upload
   fileFilter: fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 10 * 1024 * 1024, // 10MB limit (increased for images)
     files: 10 // Maximum 10 files
   }
 });
 
-// Middleware for partner registration uploads
-const partnerUploads = upload.fields([
-  { name: 'logo', maxCount: 1 },
-  { name: 'images', maxCount: 5 },
-  { name: 'businessLicenseFile', maxCount: 1 }
-]);
+// Middleware for partner registration uploads with debugging
+const partnerUploads = (req, res, next) => {
+  console.log('🔍 Upload middleware called - Content-Type:', req.get('Content-Type'));
+  
+  const uploadFields = upload.fields([
+    { name: 'logo', maxCount: 1 },
+    { name: 'images', maxCount: 5 },
+    { name: 'businessLicenseFile', maxCount: 1 }
+  ]);
+  
+  uploadFields(req, res, (err) => {
+    if (err) {
+      console.error('❌ Upload middleware error:', err);
+      return next(err);
+    }
+    
+    console.log('🔍 Upload middleware completed - req.files:', req.files ? Object.keys(req.files) : 'No files');
+    if (req.files) {
+      Object.keys(req.files).forEach(fieldName => {
+        console.log(`📁 Field '${fieldName}': ${req.files[fieldName].length} file(s)`);
+        req.files[fieldName].forEach((file, index) => {
+          console.log(`  📄 File ${index + 1}: ${file.originalname} (${file.size} bytes)`);
+        });
+      });
+    }
+    
+    next();
+  });
+};
 
 // Error handling middleware for multer
 const handleUploadError = (error, req, res, next) => {

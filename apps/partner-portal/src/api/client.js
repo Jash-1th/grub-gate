@@ -13,8 +13,11 @@ const getApiBaseUrl = () => {
     return 'https://gg0b1.netlify.app/api/v1';
   }
   
-  // Use production backend
+  // Use production backend for deployment
   return 'https://gg0b1.netlify.app/api/v1';
+  
+  // COMMENTED OUT: Local backend for development
+  // return 'http://localhost:5000/api/v1';
 };
 
 // Create axios instance with base configuration
@@ -45,13 +48,20 @@ setTimeout(resetInitialLoad, 5000); // Give 5 seconds for initial page load
 document.addEventListener('click', resetInitialLoad, { once: true });
 document.addEventListener('keydown', resetInitialLoad, { once: true });
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token and handle FormData
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // If sending FormData, remove Content-Type header to let browser set it with boundary
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+      console.log('🔍 FormData detected - removing Content-Type header for proper boundary');
+    }
+    
     return config;
   },
   (error) => {

@@ -1141,84 +1141,6 @@ exports.getRecentOrders = async (req, res) => {
 };
 
 /**
- * Get restaurant information for dashboard
- * GET /api/v1/analytics/restaurant-info
- */
-exports.getRestaurantInfo = async (req, res) => {
-  try {
-    const restaurantId = req.user?.restaurantId;
-    console.log('🔍 Analytics - getRestaurantInfo called for user:', req.user?._id, 'restaurantId:', restaurantId);
-
-    // Check if user has partner role
-    if (!req.user?.roles?.includes('partner')) {
-      console.log('❌ User is not a partner:', req.user?.roles);
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. Partner role required.'
-      });
-    }
-
-    // If no restaurantId, try to find restaurant by ownerId
-    let restaurant;
-    if (restaurantId) {
-      console.log('🔍 Finding restaurant by restaurantId:', restaurantId);
-      const Restaurant = require('../models/Restaurant');
-      restaurant = await Restaurant.findById(restaurantId).select('name description cuisine address businessType phone email website status');
-    } else {
-      console.log('🔍 No restaurantId found, searching by ownerId:', req.user._id);
-      const Restaurant = require('../models/Restaurant');
-      restaurant = await Restaurant.findOne({ ownerId: req.user._id }).select('name description cuisine address businessType phone email website status');
-      
-      // If found, update user's restaurantId for future requests
-      if (restaurant) {
-        console.log('✅ Found restaurant by ownerId, updating user restaurantId:', restaurant._id);
-        const User = require('../models/User');
-        await User.findByIdAndUpdate(req.user._id, { restaurantId: restaurant._id });
-      }
-    }
-
-    if (!restaurant) {
-      console.log('❌ No restaurant found for user:', req.user._id);
-      return res.status(404).json({
-        success: false,
-        message: 'Restaurant not found. Please complete your restaurant setup.'
-      });
-    }
-
-    console.log('✅ Restaurant found:', restaurant.name);
-    
-    // Format address for display
-    const formattedAddress = restaurant.address ? 
-      `${restaurant.address.street || ''}, ${restaurant.address.city || ''}, ${restaurant.address.province || ''} ${restaurant.address.postalCode || ''}`.trim().replace(/^,\s*|,\s*$/g, '') 
-      : '';
-
-    res.json({
-      success: true,
-      data: {
-        _id: restaurant._id,
-        name: restaurant.name,
-        description: restaurant.description || '',
-        cuisine: Array.isArray(restaurant.cuisine) ? restaurant.cuisine.join(', ') : restaurant.cuisine || '',
-        businessType: restaurant.businessType || '',
-        address: formattedAddress,
-        phone: restaurant.phone || '',
-        email: restaurant.email || '',
-        website: restaurant.website || '',
-        status: restaurant.status || 'pending'
-      }
-    });
-
-  } catch (error) {
-    console.error('❌ Restaurant info error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch restaurant information',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-};
-
-/**
  * Get subscription analytics overview
  * GET /api/v1/analytics/subscription-overview
  */
@@ -1601,4 +1523,62 @@ exports.getRevenueBreakdown = async (req, res) => {
       message: 'Failed to fetch revenue breakdown data'
     });
   }
+};
+
+/**
+ * @desc    Get partner statistics for welcome page
+ * @route   GET /api/v1/analytics/partner-stats
+ * @access  Public (for welcome page)
+ */
+const getPartnerStats = asyncHandler(async (req, res) => {
+  try {
+    console.log('Analytics - getPartnerStats called');
+
+    const Restaurant = require('../models/Restaurant');
+    const Order = require('../models/Order');
+
+    // Get active restaurants count
+    const activeRestaurants = await Restaurant.countDocuments({ 
+      status: 'active'
+    });
+
+    // Get monthly orders count (current month)
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+    
+    const monthlyOrders = await Order.countDocuments({
+      createdAt: { $gte: startOfMonth },
+      status: { $in: ['pending', 'confirmed', 'preparing', 'ready', 'delivered'] }
+    });
+
+    // Get average rating across all restaurants
+    const ratingStats = await Restaurant.aggregate([
+      { $match: { status: 'active', rating: { $gt: 0 } } },
+      { $group: { _id: null, averageRating: { $avg: '$rating' } } }
+    ]);
+
+    const averageRating = ratingStats.length > 0 ? ratingStats[0].averageRating : 4.5;
+
+    const stats = {
+      activeRestaurants,
+      monthlyOrders,
+      averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
+      lastUpdated: new Date()
+    };
+
+    console.log('Partner stats calculated:', stats);
+
+    successResponse(res, stats, 'Partner statistics retrieved successfully');
+  } catch (error) {
+    console.error('Error getting partner stats:', error);
+    errorResponse(res, 'Failed to get partner statistics', 500);
+  }
+});
+
+module.exports = {
+  getOverview,
+  getRecentOrders,
+  getRestaurantInfo,
+  getPartnerStats
 };

@@ -23,7 +23,6 @@ const {
 const { authMiddleware } = require('../middlewares/auth');
 const { validateRequest, userSchemas, partnerSchemas } = require('../middlewares/joiValidation');
 const { partnerUploads, handleUploadError } = require('../middlewares/upload');
-const { partnerUpload } = require('../config/cloudinary');
 
 const router = express.Router();
 
@@ -53,12 +52,14 @@ router.post('/otp/login-verify', validateRequest(userSchemas.requestOTP), verify
 // Partner OTP Authentication routes
 router.post('/partner/otp/request', validateRequest(userSchemas.requestOTP), requestPartnerOTP);
 router.post('/partner/otp/verify', 
-  partnerUpload, 
+  partnerUploads, 
+  handleUploadError,
   validateRequest(partnerSchemas.verifyPartnerOTP), 
   verifyPartnerOTP
 );
 router.post('/partner/complete-billing', 
-  partnerUpload, 
+  partnerUploads, 
+  handleUploadError,
   validateRequest(partnerSchemas.completePartnerBilling), 
   completePartnerBilling
 );

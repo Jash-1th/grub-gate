@@ -12,6 +12,7 @@ import {
 import { Button } from '@grub-gate/ui'; // Assuming this path is correct
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
+import { apiClient } from '../../api/client';
 
 /**
  * SetupWizard Component
@@ -154,23 +155,12 @@ const SetupWizard = () => {
       // Save the operating hours to the backend
       console.log('Operating Hours to save:', JSON.stringify(setupData.operatingHours, null, 2));
 
-      // Make API call to update operating hours
-      const response = await fetch('/api/v1/auth/partner/operating-hours', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.accessToken || localStorage.getItem('accessToken')}`
-        },
-        body: JSON.stringify({
-          operatingHours: setupData.operatingHours
-        })
+      // Make API call to update operating hours using apiClient
+      const response = await apiClient.put('/auth/partner/operating-hours', {
+        operatingHours: setupData.operatingHours
       });
 
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to update operating hours');
-      }
+      const result = response.data;
 
       console.log('✅ Operating hours saved successfully:', result);
 

@@ -3,19 +3,36 @@ import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Logo, Button } from '@grub-gate/ui';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faGlobe, faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { faGlobe, faChevronDown, faSignOutAlt, faUser } from '@fortawesome/free-solid-svg-icons';
 import PublicMobileBottomNav from './PublicMobileBottomNav';
+import { useAuth } from '../../contexts/AuthContext';
 
 const PublicLayout = ({ onLanguageChange }) => {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const [isResourcesOpen, setIsResourcesOpen] = React.useState(false);
+  
+  // Authentication context
+  const { isAuthenticated, user, logout } = useAuth();
 
   const handleLanguageToggle = () => {
     const newLang = i18n.language === 'en' ? 'fr' : 'en';
     i18n.changeLanguage(newLang);
     onLanguageChange?.(newLang);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  const handleDashboard = () => {
+    navigate('/dashboard');
   };
 
   // Navigation items for desktop
@@ -125,34 +142,81 @@ const PublicLayout = ({ onLanguageChange }) => {
                 </span>
               </button>
 
-              {/* Sign In Button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.location.href = '/login'}
-              >
-                {t('auth.login.signIn')}
-              </Button>
+              {/* Conditional Actions based on Authentication */}
+              {isAuthenticated ? (
+                <>
+                  {/* User Info */}
+                  <div className="flex items-center space-x-2 text-gray-700">
+                    <FontAwesomeIcon icon={faUser} className="h-4 w-4" />
+                    <span className="text-sm font-medium">
+                      {user?.firstName || 'Partner'}
+                    </span>
+                  </div>
 
-              {/* Become Partner Button */}
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => window.location.href = '/register'}
-              >
-                {t('landingPage.hero.cta')}
-              </Button>
+                  {/* Dashboard Button */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleDashboard}
+                  >
+                    Dashboard
+                  </Button>
+
+                  {/* Logout Button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="text-red-600 border-red-600 hover:bg-red-50"
+                  >
+                    <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4 mr-1" />
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  {/* Sign In Button */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => window.location.href = '/login'}
+                  >
+                    {t('auth.login.signIn')}
+                  </Button>
+
+                  {/* Become Partner Button */}
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => window.location.href = '/register'}
+                  >
+                    {t('landingPage.hero.cta')}
+                  </Button>
+                </>
+              )}
             </div>
             
-            {/* Mobile Actions - Simple Language Switcher Only */}
-            <div className="flex lg:hidden items-center">
+            {/* Mobile Actions */}
+            <div className="flex lg:hidden items-center space-x-2">
+              {/* Language Switcher */}
               <button
                 onClick={handleLanguageToggle}
-                className="p-2 text-gray-600 hover:text-grub-red transition-colors"
+                className="p-2 text-gray-600 hover:text-grub-red transition-colors touch-target"
                 title={t('common.language')}
               >
                 <FontAwesomeIcon icon={faGlobe} className="h-5 w-5" />
               </button>
+
+              {/* Mobile Auth Actions */}
+              {isAuthenticated ? (
+                <button
+                  onClick={handleLogout}
+                  className="p-2 text-red-600 hover:text-red-700 transition-colors touch-target"
+                  title="Logout"
+                >
+                  <FontAwesomeIcon icon={faSignOutAlt} className="h-5 w-5" />
+                </button>
+              ) : null}
             </div>
           </div>
         </div>
