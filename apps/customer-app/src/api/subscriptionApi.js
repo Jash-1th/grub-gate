@@ -135,6 +135,17 @@ const subscriptionApi = {
       console.error('Error creating subscription from meal plan:', error);
       throw error;
     }
+  },
+
+  // Get user's active meal plans (for subscription detection)
+  getUserMealPlans: async () => {
+    try {
+      const response = await apiClient.get('/subscription-meal-plans/me/all');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user meal plans:', error);
+      throw error;
+    }
   }
 };
 

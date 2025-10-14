@@ -8,9 +8,10 @@ import { useAuth } from '../contexts/AuthContext';
 // Removed static data import - using API data only
 import RestaurantSelectionModal from '../components/modals/RestaurantSelectionModal';
 import RestaurantSwitchModal from '../components/modals/RestaurantSwitchModal';
+import mealCalendarApi from '../api/mealCalendarApi';
 
 // Enhanced Meal Slot Component with more features
-const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postalCode, selectedRestaurant, selectedWeek = 0, onShowRestaurantSelectionModal, isAuthenticated, hasLoadedFromDatabase }) => {
+const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postalCode, selectedRestaurant, selectedWeek = 0, onShowRestaurantSelectionModal, isAuthenticated, hasLoadedFromDatabase, disabled = false }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const hasItems = actualMealItems && actualMealItems.length > 0;
@@ -18,6 +19,10 @@ const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postal
   const additionalCount = hasItems ? actualMealItems.length - 1 : 0;
 
   const handleSlotClick = () => {
+    if (disabled) {
+      return; // Don't allow clicks when disabled
+    }
+    
     if (hasItems) {
       navigate(`/meal-plan/${day}?week=${selectedWeek}`);
     } else if (selectedRestaurant) {
@@ -41,10 +46,12 @@ const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postal
     <div 
       onClick={handleSlotClick}
       className={`
-        group relative p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-300 cursor-pointer min-h-[100px] sm:min-h-[120px] flex flex-col justify-center transform hover:scale-[1.02] hover:-translate-y-1 touch-manipulation active:scale-95
-        ${hasItems 
-          ? 'border-grub-red bg-gradient-to-br from-red-50 to-orange-50 shadow-lg hover:shadow-xl hover:border-red-400' 
-          : 'border-gray-200 bg-gradient-to-br from-white to-gray-50 hover:border-grub-red/60 hover:shadow-lg hover:from-red-50/30 hover:to-orange-50/30'
+        group relative p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-300 min-h-[100px] sm:min-h-[120px] flex flex-col justify-center touch-manipulation
+        ${disabled 
+          ? 'cursor-not-allowed opacity-50 bg-gray-100 border-gray-300' 
+          : hasItems 
+            ? 'cursor-pointer border-grub-red bg-gradient-to-br from-red-50 to-orange-50 shadow-lg hover:shadow-xl hover:border-red-400 transform hover:scale-[1.02] hover:-translate-y-1 active:scale-95' 
+            : 'cursor-pointer border-gray-200 bg-gradient-to-br from-white to-gray-50 hover:border-grub-red/60 hover:shadow-lg hover:from-red-50/30 hover:to-orange-50/30 transform hover:scale-[1.02] hover:-translate-y-1 active:scale-95'
         }
       `}
     >
@@ -113,27 +120,45 @@ const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postal
           </div>
         ) : (
           <div className="text-center space-y-1 sm:space-y-3">
-            <div className="w-6 h-6 sm:w-10 sm:h-10 mx-auto bg-gray-100 group-hover:bg-red-100 rounded-full flex items-center justify-center transition-colors duration-200">
-              <svg className="w-3 h-3 sm:w-5 sm:h-5 text-gray-400 group-hover:text-red-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            </div>
-            <div className="text-xs sm:text-sm text-gray-500 group-hover:text-gray-600 transition-colors duration-200">
-              Add {mealType}
-            </div>
-            <div className="hidden sm:flex text-xs text-grub-red/70 font-medium group-hover:text-red-600 transition-colors duration-200 items-center justify-center">
-              <span>
-                {isAuthenticated && !hasLoadedFromDatabase 
-                  ? 'Loading...' 
-                  : selectedRestaurant 
-                    ? `From ${selectedRestaurant.name}` 
-                    : 'Browse restaurants'
-                }
-              </span>
-              <svg className="w-3 h-3 ml-1 group-hover:translate-x-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </div>
+            {disabled ? (
+              <>
+                <div className="w-6 h-6 sm:w-10 sm:h-10 mx-auto bg-gray-200 rounded-full flex items-center justify-center">
+                  <svg className="w-3 h-3 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+                  </svg>
+                </div>
+                <div className="text-xs sm:text-sm text-gray-400">
+                  Subscription Active
+                </div>
+                <div className="text-xs text-gray-400">
+                  Planning disabled
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="w-6 h-6 sm:w-10 sm:h-10 mx-auto bg-gray-100 group-hover:bg-red-100 rounded-full flex items-center justify-center transition-colors duration-200">
+                  <svg className="w-3 h-3 sm:w-5 sm:h-5 text-gray-400 group-hover:text-red-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </div>
+                <div className="text-xs sm:text-sm text-gray-500 group-hover:text-gray-600 transition-colors duration-200">
+                  Add {mealType}
+                </div>
+                <div className="hidden sm:flex text-xs text-grub-red/70 font-medium group-hover:text-red-600 transition-colors duration-200 items-center justify-center">
+                  <span>
+                    {isAuthenticated && !hasLoadedFromDatabase 
+                      ? 'Loading...' 
+                      : selectedRestaurant 
+                        ? `From ${selectedRestaurant.name}` 
+                        : 'Browse restaurants'
+                    }
+                  </span>
+                  <svg className="w-3 h-3 ml-1 group-hover:translate-x-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -181,6 +206,15 @@ const WeeklyMenuPage = () => {
   const { isAuthenticated, user } = useAuth();
   const [isClient, setIsClient] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState(0); // 0 = current week, 1 = next week, etc.
+  
+  // Subscription overlap state
+  const [subscriptionStatus, setSubscriptionStatus] = useState({
+    hasActiveSubscription: false,
+    hasOverlap: false,
+    overlapDetails: null,
+    activeSubscription: null,
+    loading: true
+  });
   
   // Get restaurant info from URL parameters (moved to top to avoid reference errors)
   const urlRestaurantId = searchParams.get('restaurantId');
@@ -269,6 +303,55 @@ const WeeklyMenuPage = () => {
       updateSelectedRestaurant(selectedRestaurant);
     }
   }, [selectedRestaurant, planningSelectedRestaurant, updateSelectedRestaurant]);
+
+  // Check subscription status when component mounts or user authentication changes
+  useEffect(() => {
+    const checkSubscriptionStatus = async () => {
+      if (!isAuthenticated || !user) {
+        setSubscriptionStatus({
+          hasActiveSubscription: false,
+          hasOverlap: false,
+          overlapDetails: null,
+          activeSubscription: null,
+          loading: false
+        });
+        return;
+      }
+
+      try {
+        console.log('🔍 Checking subscription status for user:', user._id);
+        
+        // Calculate date range for next 2 weeks (typical meal plan duration)
+        const today = new Date();
+        const startDate = new Date(today);
+        startDate.setDate(today.getDate() + 1); // Start from tomorrow
+        
+        const endDate = new Date(today);
+        endDate.setDate(today.getDate() + 14); // 2 weeks from now
+        
+        const response = await mealCalendarApi.getSubscriptionStatus({
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: endDate.toISOString().split('T')[0]
+        });
+
+        console.log('✅ Subscription status received:', response.data);
+        
+        setSubscriptionStatus({
+          hasActiveSubscription: response.data.hasActiveSubscription,
+          hasOverlap: response.data.hasOverlap,
+          overlapDetails: response.data.overlapDetails,
+          activeSubscription: response.data.activeSubscription,
+          loading: false
+        });
+
+      } catch (error) {
+        console.error('❌ Error checking subscription status:', error);
+        setSubscriptionStatus(prev => ({ ...prev, loading: false }));
+      }
+    };
+
+    checkSubscriptionStatus();
+  }, [isAuthenticated, user]);
 
 
   const selectedRestaurantId = selectedRestaurant?.id;
@@ -528,23 +611,90 @@ const WeeklyMenuPage = () => {
                 Your Weekly Menu
               </h1>
               <p className="text-red-100 text-base sm:text-lg">
-                Plan your perfect week with delicious meals
+                {subscriptionStatus.hasActiveSubscription 
+                  ? "Please wait until subscription end date to set your new weekly plan"
+                  : "Plan your perfect week with delicious meals"
+                }
               </p>
+              
+              {/* Subscription Status Indicator */}
+              {subscriptionStatus.hasActiveSubscription && subscriptionStatus.activeSubscription && (
+                <div className="mt-4 space-y-3">
+                  {/* Subscription Info Card */}
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      <span className="text-sm font-semibold text-white">Active Subscription</span>
+                    </div>
+                    <div className="text-xs text-red-100 space-y-1">
+                      <div>Plan Type: {subscriptionStatus.activeSubscription.subscriptionPeriod?.planType || 'N/A'}</div>
+                      <div>
+                        End Date: {subscriptionStatus.activeSubscription.subscriptionPeriod?.endDate 
+                          ? new Date(subscriptionStatus.activeSubscription.subscriptionPeriod.endDate).toLocaleDateString()
+                          : 'N/A'
+                        }
+                      </div>
+                      {subscriptionStatus.activeSubscription.remainingDays !== undefined && (
+                        <div>Remaining Days: {subscriptionStatus.activeSubscription.remainingDays}</div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Prominent View Calendar Button */}
+                  <button
+                    onClick={() => {
+                      // Navigate to meal calendar with subscription start date
+                      const subscriptionStartDate = subscriptionStatus.activeSubscription?.subscriptionPeriod?.startDate;
+                      if (subscriptionStartDate) {
+                        const startDate = new Date(subscriptionStartDate).toISOString().split('T')[0];
+                        navigate(`/meal-calendar?startDate=${startDate}`);
+                      } else {
+                        navigate('/meal-calendar');
+                      }
+                    }}
+                    className="group w-full bg-gradient-to-r from-white to-gray-50 hover:from-gray-50 hover:to-white text-grub-red font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 border-2 border-white/30 hover:border-white/50 relative overflow-hidden"
+                  >
+                    {/* Animated background effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                    
+                    <div className="relative z-10 flex items-center justify-center space-x-3">
+                      <div className="w-8 h-8 bg-grub-red/10 rounded-full flex items-center justify-center group-hover:bg-grub-red/20 transition-colors duration-300">
+                        <svg className="w-5 h-5 text-grub-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-base font-bold text-grub-red group-hover:text-red-700 transition-colors duration-300">
+                          View My Meal Calendar
+                        </div>
+                        <div className="text-xs text-red-600 group-hover:text-red-700 transition-colors duration-300">
+                          Check your scheduled meals & delivery status
+                        </div>
+                      </div>
+                      <svg className="w-5 h-5 text-grub-red group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </button>
+                </div>
+              )}
             </div>
             
-            {/* Stats Section - Mobile Optimized */}
-            <div className="grid grid-cols-2 gap-4 sm:flex sm:justify-end sm:items-center sm:gap-8">
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/20">
-                <div className="text-xs sm:text-sm text-red-100 mb-1">Total Meals</div>
-                <div className="text-xl sm:text-2xl lg:text-3xl font-bold">{totalItemsBothWeeks}</div>
-                <div className="text-xs text-red-200 mt-1">Both Weeks</div>
+            {/* Stats Section - Mobile Optimized - Hidden when subscription is active */}
+            {!subscriptionStatus.hasActiveSubscription && (
+              <div className="grid grid-cols-2 gap-4 sm:flex sm:justify-end sm:items-center sm:gap-8">
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/20">
+                  <div className="text-xs sm:text-sm text-red-100 mb-1">Total Meals</div>
+                  <div className="text-xl sm:text-2xl lg:text-3xl font-bold">{totalItemsBothWeeks}</div>
+                  <div className="text-xs text-red-200 mt-1">Both Weeks</div>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/20">
+                  <div className="text-xs sm:text-sm text-red-100 mb-1">Est. Cost</div>
+                  <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-yellow-200">${totalCostBothWeeks.toFixed(2)}</div>
+                  <div className="text-xs text-red-200 mt-1">Both Weeks</div>
+                </div>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/20">
-                <div className="text-xs sm:text-sm text-red-100 mb-1">Est. Cost</div>
-                <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-yellow-200">${totalCostBothWeeks.toFixed(2)}</div>
-                <div className="text-xs text-red-200 mt-1">Both Weeks</div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -811,6 +961,7 @@ const WeeklyMenuPage = () => {
                         onShowRestaurantSelectionModal={setShowRestaurantSelectionModal}
                         isAuthenticated={isAuthenticated}
                         hasLoadedFromDatabase={hasLoadedFromDatabase}
+                        disabled={subscriptionStatus.hasActiveSubscription}
                       />
                     </div>
                     
@@ -833,6 +984,7 @@ const WeeklyMenuPage = () => {
                         onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
                         isAuthenticated={isAuthenticated}
                         hasLoadedFromDatabase={hasLoadedFromDatabase}
+                        disabled={subscriptionStatus.hasActiveSubscription}
                       />
                     </div>
                   </div>
@@ -890,6 +1042,7 @@ const WeeklyMenuPage = () => {
                     onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
                     isAuthenticated={isAuthenticated}
                     hasLoadedFromDatabase={hasLoadedFromDatabase}
+                    disabled={subscriptionStatus.hasActiveSubscription}
                   />
                 ))}
                 
@@ -917,6 +1070,7 @@ const WeeklyMenuPage = () => {
                     onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
                     isAuthenticated={isAuthenticated}
                     hasLoadedFromDatabase={hasLoadedFromDatabase}
+                    disabled={subscriptionStatus.hasActiveSubscription}
                   />
                 ))}
               </div>
@@ -948,58 +1102,59 @@ const WeeklyMenuPage = () => {
           </div>
         </div>
 
-        {/* Weekly Summary */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900">Bi-Weekly Summary</h3>
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H9z" />
-                </svg>
+        {/* Weekly Summary - Hidden when subscription is active */}
+        {!subscriptionStatus.hasActiveSubscription && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900">Bi-Weekly Summary</h3>
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H9z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-700 font-medium">Total Meals</span>
+                    <span className="text-2xl font-bold text-gray-900">{totalItemsBothWeeks}</span>
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1">Both weeks combined</div>
+                </div>
+                
+                <div className="bg-green-50 rounded-xl p-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-700 font-medium">Estimated Cost</span>
+                    <span className="text-2xl font-bold text-green-600">${totalCostBothWeeks.toFixed(2)}</span>
+                  </div>
+                  <div className="text-sm text-green-600 mt-1">Both weeks combined</div>
+                </div>
+                
+                <div className="bg-blue-50 rounded-xl p-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-700 font-medium">Avg per Meal</span>
+                    <span className="text-2xl font-bold text-blue-600">
+                      ${totalItemsBothWeeks > 0 ? (totalCostBothWeeks / totalItemsBothWeeks).toFixed(2) : '0.00'}
+                    </span>
+                  </div>
+                  <div className="text-sm text-blue-600 mt-1">Cost efficiency</div>
+                </div>
+                
+                <div className="pt-4 border-t border-gray-200">
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                    <div className="bg-yellow-50 rounded-lg p-3">
+                      <div className="text-lg font-bold text-yellow-700">{getWeekTotalItems(0)}</div>
+                      <div className="text-xs text-yellow-600">Week 1 Meals</div>
+                    </div>
+                    <div className="bg-purple-50 rounded-lg p-3">
+                      <div className="text-lg font-bold text-purple-700">{getWeekTotalItems(1)}</div>
+                      <div className="text-xs text-purple-600">Week 2 Meals</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="space-y-4">
-              <div className="bg-gray-50 rounded-xl p-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-700 font-medium">Total Meals</span>
-                  <span className="text-2xl font-bold text-gray-900">{totalItemsBothWeeks}</span>
-                </div>
-                <div className="text-sm text-gray-500 mt-1">Both weeks combined</div>
-              </div>
-              
-              <div className="bg-green-50 rounded-xl p-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-700 font-medium">Estimated Cost</span>
-                  <span className="text-2xl font-bold text-green-600">${totalCostBothWeeks.toFixed(2)}</span>
-                </div>
-                <div className="text-sm text-green-600 mt-1">Both weeks combined</div>
-              </div>
-              
-              <div className="bg-blue-50 rounded-xl p-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-700 font-medium">Avg per Meal</span>
-                  <span className="text-2xl font-bold text-blue-600">
-                    ${totalItemsBothWeeks > 0 ? (totalCostBothWeeks / totalItemsBothWeeks).toFixed(2) : '0.00'}
-                  </span>
-                </div>
-                <div className="text-sm text-blue-600 mt-1">Cost efficiency</div>
-              </div>
-              
-              <div className="pt-4 border-t border-gray-200">
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div className="bg-yellow-50 rounded-lg p-3">
-                    <div className="text-lg font-bold text-yellow-700">{getWeekTotalItems(0)}</div>
-                    <div className="text-xs text-yellow-600">Week 1 Meals</div>
-                  </div>
-                  <div className="bg-purple-50 rounded-lg p-3">
-                    <div className="text-lg font-bold text-purple-700">{getWeekTotalItems(1)}</div>
-                    <div className="text-xs text-purple-600">Week 2 Meals</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
 
           <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
             <div className="flex items-center justify-between mb-6">
@@ -1011,35 +1166,57 @@ const WeeklyMenuPage = () => {
               </div>
             </div>
             <div className="space-y-4">
+              {/* Subscribe to Plan Button - Hidden when subscription is active */}
+              {!subscriptionStatus.hasActiveSubscription && (
+                <button
+                  onClick={() => navigate('/subscription')}
+                  className="group w-full text-left p-6 rounded-2xl bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border-2 border-red-500 relative overflow-hidden touch-manipulation"
+                >
+                  {/* Highlight badge */}
+                  <div className="absolute top-3 right-3 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse">
+                    NEXT STEP
+                  </div>
+                  
+                  {/* Animated background effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                  
+                  <div className="relative z-10">
+                    <div className="font-bold text-white flex items-center text-lg mb-2">
+                      <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                        </svg>
+                      </div>
+                      Subscribe to Plan
+                    </div>
+                    <div className="text-red-100 ml-11">Complete your meal planning journey and start enjoying delicious meals!</div>
+                  </div>
+                </button>
+              )}
+
+              {/* View Calendar Button */}
               <button
-                onClick={() => navigate('/subscription')}
-                className="group w-full text-left p-6 rounded-2xl bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border-2 border-red-500 relative overflow-hidden touch-manipulation"
+                onClick={() => navigate('/meal-calendar')}
+                className="group w-full text-left p-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 relative overflow-hidden"
               >
-                {/* Highlight badge */}
-                <div className="absolute top-3 right-3 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse">
-                  NEXT STEP
-                </div>
-                
-                {/* Animated background effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                
                 <div className="relative z-10">
-                  <div className="font-bold text-white flex items-center text-lg mb-2">
-                    <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                  <div className="font-semibold text-white flex items-center text-base mb-1">
+                    <div className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center mr-3">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 4v10m6-10v10m-6-4h6" />
                       </svg>
                     </div>
-                    Subscribe to Plan
+                    View My Calendar
                   </div>
-                  <div className="text-red-100 ml-11">Complete your meal planning journey and start enjoying delicious meals!</div>
+                  <div className="text-blue-100 ml-10 text-sm">Check your scheduled meals and delivery status</div>
                 </div>
               </button>
 
             </div>
           </div>
 
-        </div>
+          </div>
+        )}
       </div>
       
       {/* Restaurant Selection Modal */}

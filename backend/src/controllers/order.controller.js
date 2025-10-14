@@ -34,18 +34,54 @@ const getOrders = asyncHandler(async (req, res) => {
   // Build query based on user role
   let query = {};
   
-  if (req.user.role === 'customer') {
+  if (req.user?.roles?.includes('customer') || req.user?.role === 'customer') {
     query.customerId = req.user._id;
-  } else if (req.user.role === 'partner') {
-    // Get restaurants owned by this partner
-    const restaurants = await Restaurant.find({ ownerId: req.user._id }).select('_id name');
-    const restaurantIds = restaurants.map(r => r._id);
-    query.restaurantId = { $in: restaurantIds };
+  } else if (req.user?.roles?.includes('partner') || req.user?.role === 'partner') {
+    // Get the specific restaurant for this partner (not all restaurants)
+    let restaurantId = req.user.restaurantId;
+    let restaurant = null;
+    
+    // If restaurantId exists in user, validate it exists in database
+    if (restaurantId) {
+      restaurant = await Restaurant.findById(restaurantId).select('_id name ownerId');
+      
+      // If restaurant doesn't exist or partner doesn't own it, clear invalid restaurantId
+      if (!restaurant || restaurant.ownerId.toString() !== req.user._id.toString()) {
+        console.log('⚠️ Invalid restaurantId in user record:', restaurantId);
+        restaurantId = null;
+        restaurant = null;
+        
+        // Clear invalid restaurantId from user record
+        const User = require('../models/User');
+        await User.findByIdAndUpdate(req.user._id, { $unset: { restaurantId: 1 } });
+      }
+    }
+    
+    // If no valid restaurantId, find the restaurant by ownerId
+    if (!restaurantId) {
+      restaurant = await Restaurant.findOne({ ownerId: req.user._id }).select('_id name');
+      if (restaurant) {
+        restaurantId = restaurant._id;
+        // Update user's restaurantId for future requests
+        const User = require('../models/User');
+        await User.findByIdAndUpdate(req.user._id, { restaurantId: restaurant._id });
+      }
+    }
+    
+    if (!restaurantId || !restaurant) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'No restaurant found for this partner'
+      });
+    }
+    
+    // Filter by specific restaurant only
+    query.restaurantId = restaurantId;
     
     // Debug logging
     console.log('🏪 Partner orders query - Partner ID:', req.user._id);
-    console.log('🏪 Partner restaurants found:', restaurants.length);
-    console.log('🏪 Restaurant details:', restaurants.map(r => ({ id: r._id, name: r.name })));
+    console.log('🏪 Partner restaurant:', restaurant.name);
+    console.log('🏪 Specific restaurant ID:', restaurantId);
     console.log('🏪 Final query restaurantId filter:', query.restaurantId);
   }
   // Admin can see all orders (no additional query filters)
@@ -89,6 +125,25 @@ const getOrders = asyncHandler(async (req, res) => {
     }
   }
 
+  // Debug logging BEFORE query execution for partner orders
+  console.log('🚨 ALWAYS VISIBLE - User role:', req.user?.role);
+  console.log('🚨 ALWAYS VISIBLE - User roles array:', req.user?.roles);
+  console.log('🚨 ALWAYS VISIBLE - Request URL:', req.originalUrl);
+  
+  const isPartner = req.user?.roles?.includes('partner') || req.user?.role === 'partner';
+  console.log('🚨 ALWAYS VISIBLE - Is Partner:', isPartner);
+  
+  if (isPartner) {
+    console.log('🔍🔍🔍 PARTNER DEBUG START 🔍🔍🔍');
+    console.log('🔍 PRE-QUERY DEBUG - TIMESTAMP:', new Date().toISOString());
+    console.log('🔍 Partner ID:', req.user._id);
+    console.log('🔍 Expected Restaurant ID:', query.restaurantId);
+    console.log('🔍 Query that will be executed:', JSON.stringify(query, null, 2));
+    console.log('🔍 Date filter:', req.query.date);
+    console.log('🔍 Request URL:', req.originalUrl);
+    console.log('🔍🔍🔍 PARTNER DEBUG END 🔍🔍🔍');
+  }
+
   // Build sort object
   const sort = {};
   sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
@@ -96,14 +151,50 @@ const getOrders = asyncHandler(async (req, res) => {
   // Execute query with pagination
   const skip = (parseInt(page) - 1) * parseInt(limit);
   const orders = await Order.find(query)
-    .sort(sort)
     .skip(skip)
     .limit(parseInt(limit))
+    .sort(sort)
     .populate('customerId', 'firstName lastName email phone')
     .populate('restaurantId', 'name cuisine phone address')
     .populate('weeklyPlanId', 'planType startDate endDate');
 
   const total = await Order.countDocuments(query);
+
+  // Debug logging for partner orders
+  if (req.user?.roles?.includes('partner') || req.user?.role === 'partner') {
+    console.log('🔍 PARTNER ORDERS DEBUG - TIMESTAMP:', new Date().toISOString());
+    console.log('  Partner ID:', req.user._id);
+    console.log('  Expected Restaurant ID:', query.restaurantId);
+    console.log('  Query filters:', JSON.stringify(query, null, 2));
+    console.log('  Orders found:', orders.length);
+    console.log('  Date filter:', req.query.date);
+    
+    orders.forEach((order, i) => {
+      console.log('  Order ' + (i + 1) + ':');
+      console.log('    ID:', order._id);
+      console.log('    Restaurant ID:', order.restaurantId);
+      console.log('    Expected Restaurant ID:', query.restaurantId);
+      console.log('    Restaurant Match:', order.restaurantId?._id?.toString() === query.restaurantId?.toString());
+      console.log('    Scheduled Date:', order.scheduledDate?.toISOString());
+      console.log('    Status:', order.status);
+      console.log('    Type:', order.type);
+      console.log('    🚨 SECURITY CHECK: This order should NOT appear if Restaurant Match is false!');
+    });
+    
+    // Additional security check
+    const invalidOrders = orders.filter(order => 
+      order.restaurantId?._id?.toString() !== query.restaurantId?.toString()
+    );
+    
+    if (invalidOrders.length > 0) {
+      console.log('🚨🚨🚨 SECURITY BREACH DETECTED! 🚨🚨🚨');
+      console.log('  Invalid orders found:', invalidOrders.length);
+      console.log('  These orders belong to different restaurants!');
+      invalidOrders.forEach((order, i) => {
+        console.log('    Invalid Order ' + (i + 1) + ':', order._id, 'belongs to', order.restaurantId);
+      });
+    }
+  }
 
   const pagination = {
     page: parseInt(page),
@@ -112,6 +203,16 @@ const getOrders = asyncHandler(async (req, res) => {
     totalItems: total
   };
 
+  // Add cache-busting headers and timestamp for debugging
+  if (req.user?.roles?.includes('partner') || req.user?.role === 'partner') {
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'X-Debug-Timestamp': new Date().toISOString()
+    });
+  }
+  
   paginatedResponse(res, orders, pagination, 'Orders retrieved successfully');
 });
 

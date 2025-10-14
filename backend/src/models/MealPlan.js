@@ -10,6 +10,7 @@ const mealPlanSchema = new mongoose.Schema({
   weeklyPlans: {
     week0: {
       monday: {
+        date: String, // YYYY-MM-DD format - calculated delivery date
         lunch: [{
           id: String,
           planId: String,
@@ -39,6 +40,7 @@ const mealPlanSchema = new mongoose.Schema({
         }]
       },
       tuesday: {
+        date: String, // YYYY-MM-DD format - calculated delivery date
         lunch: [{
           id: String,
           planId: String,
@@ -67,54 +69,354 @@ const mealPlanSchema = new mongoose.Schema({
         }]
       },
       wednesday: {
-        lunch: [{ type: mongoose.Schema.Types.Mixed }],
-        dinner: [{ type: mongoose.Schema.Types.Mixed }]
+         date: String, // YYYY-MM-DD format - calculated delivery date
+        lunch: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }],
+        dinner: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }]
       },
       thursday: {
-        lunch: [{ type: mongoose.Schema.Types.Mixed }],
-        dinner: [{ type: mongoose.Schema.Types.Mixed }]
+         date: String, // YYYY-MM-DD format - calculated delivery date
+        lunch: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }],
+        dinner: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }]
       },
       friday: {
-        lunch: [{ type: mongoose.Schema.Types.Mixed }],
-        dinner: [{ type: mongoose.Schema.Types.Mixed }]
+         date: String, // YYYY-MM-DD format - calculated delivery date
+        lunch: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }],
+        dinner: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }]
       },
       saturday: {
-        lunch: [{ type: mongoose.Schema.Types.Mixed }],
-        dinner: [{ type: mongoose.Schema.Types.Mixed }]
+         date: String, // YYYY-MM-DD format - calculated delivery date
+        lunch: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }],
+        dinner: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }]
       },
       sunday: {
-        lunch: [{ type: mongoose.Schema.Types.Mixed }],
-        dinner: [{ type: mongoose.Schema.Types.Mixed }]
+        date: String, // YYYY-MM-DD format - calculated delivery date
+        lunch: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }],
+        dinner: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }]
       }
     },
     week1: {
       monday: {
-        lunch: [{ type: mongoose.Schema.Types.Mixed }],
-        dinner: [{ type: mongoose.Schema.Types.Mixed }]
+        date: String, // YYYY-MM-DD format - calculated delivery date
+        lunch: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }],
+        dinner: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }]
       },
       tuesday: {
-        lunch: [{ type: mongoose.Schema.Types.Mixed }],
-        dinner: [{ type: mongoose.Schema.Types.Mixed }]
+        date: String, // YYYY-MM-DD format - calculated delivery date
+        lunch: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }],
+        dinner: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }]
       },
       wednesday: {
-        lunch: [{ type: mongoose.Schema.Types.Mixed }],
-        dinner: [{ type: mongoose.Schema.Types.Mixed }]
+        date: String, // YYYY-MM-DD format - calculated delivery date
+        lunch: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }],
+        dinner: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }]
       },
       thursday: {
-        lunch: [{ type: mongoose.Schema.Types.Mixed }],
-        dinner: [{ type: mongoose.Schema.Types.Mixed }]
+         date: String, // YYYY-MM-DD format - calculated delivery date
+        lunch: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }],
+        dinner: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }]
       },
       friday: {
-        lunch: [{ type: mongoose.Schema.Types.Mixed }],
-        dinner: [{ type: mongoose.Schema.Types.Mixed }]
+         date: String, // YYYY-MM-DD format - calculated delivery date
+        lunch: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }],
+        dinner: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }]
       },
       saturday: {
-        lunch: [{ type: mongoose.Schema.Types.Mixed }],
-        dinner: [{ type: mongoose.Schema.Types.Mixed }]
+        date: String, // YYYY-MM-DD format - calculated delivery date
+        lunch: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }],
+        dinner: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }]
       },
       sunday: {
-        lunch: [{ type: mongoose.Schema.Types.Mixed }],
-        dinner: [{ type: mongoose.Schema.Types.Mixed }]
+         date: String, // YYYY-MM-DD format - calculated delivery date
+        lunch: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }],
+        dinner: [{
+          id: String,
+          planId: String,
+          name: String,
+          price: Number,
+          restaurantName: String,
+          addedAt: Date,
+          description: String,
+          image: String,
+          category: String,
+          dietaryPreferences: [String],
+          spiceLevel: Number
+        }]
       }
     }
   },
@@ -124,7 +426,8 @@ const mealPlanSchema = new mongoose.Schema({
   },
   // Restaurant selection tracking
   selectedRestaurantId: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Restaurant',
     default: null
   },
   selectedRestaurantName: {
@@ -135,6 +438,12 @@ const mealPlanSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.Mixed,
     default: null
   },
+  // Date calculation tracking
+  datesCalculatedAt: {
+    type: Date,
+    default: null
+  },
+  // Metadata
   lastUpdated: {
     type: Date,
     default: Date.now
@@ -154,22 +463,12 @@ mealPlanSchema.statics.findOrCreateForUser = async function(userId) {
   let mealPlan = await this.findOne({ userId });
   
   if (!mealPlan) {
-    // Create default empty meal plan structure
-    const defaultWeekStructure = {
-      monday: { lunch: [], dinner: [] },
-      tuesday: { lunch: [], dinner: [] },
-      wednesday: { lunch: [], dinner: [] },
-      thursday: { lunch: [], dinner: [] },
-      friday: { lunch: [], dinner: [] },
-      saturday: { lunch: [], dinner: [] },
-      sunday: { lunch: [], dinner: [] }
-    };
-
+    // Create minimal empty meal plan structure (no empty days)
     mealPlan = new this({
       userId,
       weeklyPlans: {
-        week0: defaultWeekStructure,
-        week1: defaultWeekStructure
+        week0: {},
+        week1: {}
       },
       totalItems: 0
     });

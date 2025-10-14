@@ -22,6 +22,7 @@ import DayMealPlanPage from './pages/DayMealPlanPage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import CheckoutPage from './pages/CheckoutPage';
 import AddressBookPage from './pages/AddressBookPage';
+import MealCalendarPage from './pages/MealCalendarPage';
 import MenuSelectionStep from './components/planning/MenuSelectionStep';
 import LaunchScreen from './components/common/LaunchScreen';
 import ScrollToTop from './components/common/ScrollToTop';
@@ -179,6 +180,11 @@ function App({ initialized = true }) {
                   <Route path="/addresses" element={
                     <ProtectedRoute>
                       <AddressBookPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/meal-calendar" element={
+                    <ProtectedRoute>
+                      <MealCalendarPage />
                     </ProtectedRoute>
                   } />
                   <Route path="/restaurants/weekly-menu" element={<WeeklyMenuPage />} />

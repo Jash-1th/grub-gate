@@ -38,8 +38,11 @@ export const navigateToWeeklyMenuWithRestaurant = (
   // Save restaurant to database first
   setSelectedRestaurant(restaurantId, restaurantName, restaurantData);
   
-  // Navigate without URL parameters (database will be source of truth)
-  navigate(`/weekly-menu?week=${week}`);
+  // Add a small delay to ensure database save completes before navigation
+  setTimeout(() => {
+    console.log('🔄 Navigating after restaurant save delay');
+    navigate(`/weekly-menu?week=${week}`);
+  }, 100); // 100ms delay should be enough for the database save
 };
 
 /**

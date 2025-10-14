@@ -1,6 +1,82 @@
 const { asyncHandler } = require('../middlewares/errorHandler');
 const MealPlan = require('../models/MealPlan');
 const { successResponse, errorResponse, notFoundResponse } = require('../utils/apiResponse');
+const { addDatesToMealPlan, needsDateRecalculation } = require('../utils/mealPlanDateCalculator');
+
+/**
+ * Clean individual meal items by keeping only essential fields
+ * @param {Array} mealItems - Array of meal items
+ * @returns {Array} - Cleaned meal items
+ */
+const cleanMealItems = (mealItems) => {
+  return mealItems.map(item => ({
+    _id: item._id,
+    name: item.name,
+    price: item.price,
+    image: item.image,
+    planId: item.planId,
+    restaurantName: item.restaurantName,
+    addedAt: item.addedAt
+  }));
+};
+
+/**
+ * Clean meal plan response by removing unnecessary data
+ * @param {Object} mealPlan - Meal plan object
+ * @returns {Object} - Cleaned meal plan
+ */
+const cleanMealPlanResponse = (mealPlan) => {
+  const cleaned = {
+    _id: mealPlan._id,
+    userId: mealPlan.userId,
+    weeklyPlans: {},
+    totalItems: mealPlan.totalItems || 0,
+    selectedRestaurantId: mealPlan.selectedRestaurantId,
+    selectedRestaurantName: mealPlan.selectedRestaurantName,
+    // Only include essential restaurant data
+    selectedRestaurantData: mealPlan.selectedRestaurantData ? {
+      _id: mealPlan.selectedRestaurantData._id,
+      name: mealPlan.selectedRestaurantData.name,
+      cuisine: mealPlan.selectedRestaurantData.cuisine,
+      rating: mealPlan.selectedRestaurantData.rating,
+      logo: mealPlan.selectedRestaurantData.logo
+    } : null,
+    datesCalculatedAt: mealPlan.datesCalculatedAt,
+    lastUpdated: mealPlan.lastUpdated,
+    createdAt: mealPlan.createdAt,
+    updatedAt: mealPlan.updatedAt
+  };
+
+  // Clean up weekly plans - only include days with meals
+  ['week0', 'week1'].forEach(weekKey => {
+    if (mealPlan.weeklyPlans && mealPlan.weeklyPlans[weekKey]) {
+      cleaned.weeklyPlans[weekKey] = {};
+      
+      const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      dayNames.forEach(dayName => {
+        const dayData = mealPlan.weeklyPlans[weekKey][dayName];
+        if (dayData) {
+          const hasLunchMeals = dayData.lunch && Array.isArray(dayData.lunch) && dayData.lunch.length > 0;
+          const hasDinnerMeals = dayData.dinner && Array.isArray(dayData.dinner) && dayData.dinner.length > 0;
+          
+          // Only include day if it has actual meals (strict check for non-empty arrays)
+          if (hasLunchMeals || hasDinnerMeals) {
+            console.log(`🍽️ Including ${weekKey}.${dayName}: lunch=${dayData.lunch?.length || 0}, dinner=${dayData.dinner?.length || 0}`);
+            cleaned.weeklyPlans[weekKey][dayName] = {
+              date: dayData.date,
+              lunch: cleanMealItems(dayData.lunch || []),
+              dinner: cleanMealItems(dayData.dinner || [])
+            };
+          } else {
+            console.log(`🗑️ Excluding ${weekKey}.${dayName}: no meals (lunch=${dayData.lunch?.length || 0}, dinner=${dayData.dinner?.length || 0})`);
+          }
+        }
+      });
+    }
+  });
+
+  return cleaned;
+};
 
 /**
  * @desc    Get user's meal plan
@@ -27,24 +103,8 @@ const getMealPlan = asyncHandler(async (req, res) => {
     return successResponse(res, {
       userId,
       weeklyPlans: {
-        week0: {
-          monday: { lunch: [], dinner: [] },
-          tuesday: { lunch: [], dinner: [] },
-          wednesday: { lunch: [], dinner: [] },
-          thursday: { lunch: [], dinner: [] },
-          friday: { lunch: [], dinner: [] },
-          saturday: { lunch: [], dinner: [] },
-          sunday: { lunch: [], dinner: [] }
-        },
-        week1: {
-          monday: { lunch: [], dinner: [] },
-          tuesday: { lunch: [], dinner: [] },
-          wednesday: { lunch: [], dinner: [] },
-          thursday: { lunch: [], dinner: [] },
-          friday: { lunch: [], dinner: [] },
-          saturday: { lunch: [], dinner: [] },
-          sunday: { lunch: [], dinner: [] }
-        }
+        week0: {},
+        week1: {}
       },
       totalItems: 0,
       selectedRestaurantId: null,
@@ -58,7 +118,37 @@ const getMealPlan = asyncHandler(async (req, res) => {
     restaurant: mealPlan.selectedRestaurantName
   });
 
-  successResponse(res, mealPlan, 'Meal plan retrieved successfully');
+  // Add dates to meal plan before returning (if needed)
+  let mealPlanWithDates = mealPlan.toObject();
+  console.log('🔍 Checking if date recalculation needed...');
+  if (needsDateRecalculation(mealPlanWithDates)) {
+    console.log('📅 Adding dates to meal plan and saving to database...');
+    mealPlanWithDates = addDatesToMealPlan(mealPlanWithDates);
+    
+    // Save the updated dates back to database
+    mealPlan.weeklyPlans = mealPlanWithDates.weeklyPlans;
+    mealPlan.datesCalculatedAt = mealPlanWithDates.datesCalculatedAt;
+    await mealPlan.save();
+    console.log('✅ Dates saved to database');
+    
+    // Get fresh object after save
+    mealPlanWithDates = mealPlan.toObject();
+  } else {
+    console.log('⏭️ Date recalculation not needed');
+  }
+
+  // Clean up the response - remove unnecessary data
+  const cleanedMealPlan = cleanMealPlanResponse(mealPlanWithDates);
+  
+  console.log('🧹 Cleaned meal plan response:', {
+    originalDays: Object.keys(mealPlanWithDates.weeklyPlans?.week0 || {}),
+    cleanedDays: Object.keys(cleanedMealPlan.weeklyPlans?.week0 || {}),
+    totalItems: cleanedMealPlan.totalItems,
+    originalSize: JSON.stringify(mealPlanWithDates).length,
+    cleanedSize: JSON.stringify(cleanedMealPlan).length
+  });
+
+  successResponse(res, cleanedMealPlan, 'Meal plan retrieved successfully');
 });
 
 /**
@@ -89,10 +179,25 @@ const createOrUpdateMealPlan = asyncHandler(async (req, res) => {
   // Find existing meal plan or create new one
   let mealPlan = await MealPlan.findOne({ userId });
 
+  console.log('💾 Saving meal plan to database:', { userId, totalItems });
+
+  // Add dates to meal plan data BEFORE saving to database
+  console.log('📅 Adding dates to meal plan before saving...');
+  let mealPlanWithDates = {
+    userId,
+    weeklyPlans,
+    totalItems: totalItems || 0,
+    selectedRestaurantId: selectedRestaurantId || null,
+    selectedRestaurantName: selectedRestaurantName || null,
+    selectedRestaurantData: selectedRestaurantData || null
+  };
+  mealPlanWithDates = addDatesToMealPlan(mealPlanWithDates);
+
   if (mealPlan) {
-    // Update existing meal plan
-    mealPlan.weeklyPlans = weeklyPlans;
-    mealPlan.totalItems = totalItems || 0;
+    // Update existing meal plan with dates
+    mealPlan.weeklyPlans = mealPlanWithDates.weeklyPlans;
+    mealPlan.totalItems = mealPlanWithDates.totalItems;
+    mealPlan.datesCalculatedAt = mealPlanWithDates.datesCalculatedAt;
     
     // Update restaurant selection fields
     if (selectedRestaurantId !== undefined) {
@@ -106,20 +211,35 @@ const createOrUpdateMealPlan = asyncHandler(async (req, res) => {
     }
     
     await mealPlan.save();
+    console.log('✅ Updated existing meal plan with dates in database');
   } else {
-    // Create new meal plan
+    // Create new meal plan with dates
     mealPlan = new MealPlan({
-      userId,
-      weeklyPlans,
-      totalItems: totalItems || 0,
-      selectedRestaurantId: selectedRestaurantId || null,
-      selectedRestaurantName: selectedRestaurantName || null,
-      selectedRestaurantData: selectedRestaurantData || null
+      userId: mealPlanWithDates.userId,
+      weeklyPlans: mealPlanWithDates.weeklyPlans,
+      totalItems: mealPlanWithDates.totalItems,
+      selectedRestaurantId: mealPlanWithDates.selectedRestaurantId,
+      selectedRestaurantName: mealPlanWithDates.selectedRestaurantName,
+      selectedRestaurantData: mealPlanWithDates.selectedRestaurantData,
+      datesCalculatedAt: mealPlanWithDates.datesCalculatedAt
     });
     await mealPlan.save();
+    console.log('✅ Created new meal plan with dates in database');
   }
 
-  successResponse(res, mealPlan, 'Meal plan saved successfully');
+  // Convert to object for response
+  mealPlanWithDates = mealPlan.toObject();
+
+  // Clean up the response - remove unnecessary data
+  const cleanedMealPlan = cleanMealPlanResponse(mealPlanWithDates);
+  
+  console.log('🧹 Cleaned saved meal plan:', {
+    originalDays: Object.keys(mealPlanWithDates.weeklyPlans?.week0 || {}),
+    cleanedDays: Object.keys(cleanedMealPlan.weeklyPlans?.week0 || {}),
+    totalItems: cleanedMealPlan.totalItems
+  });
+
+  successResponse(res, cleanedMealPlan, 'Meal plan saved successfully');
 });
 
 /**
@@ -170,7 +290,10 @@ const addItemToMealPlan = asyncHandler(async (req, res) => {
 
   await mealPlan.save();
 
-  successResponse(res, mealPlan, 'Item added to meal plan successfully');
+  // Clean up the response - remove unnecessary data
+  const cleanedMealPlan = cleanMealPlanResponse(mealPlan.toObject());
+
+  successResponse(res, cleanedMealPlan, 'Item added to meal plan successfully');
 });
 
 /**
@@ -215,7 +338,10 @@ const removeItemFromMealPlan = asyncHandler(async (req, res) => {
 
   await mealPlan.save();
 
-  successResponse(res, mealPlan, 'Item removed from meal plan successfully');
+  // Clean up the response - remove unnecessary data
+  const cleanedMealPlan = cleanMealPlanResponse(mealPlan.toObject());
+
+  successResponse(res, cleanedMealPlan, 'Item removed from meal plan successfully');
 });
 
 /**
@@ -269,7 +395,10 @@ const clearMealPlan = asyncHandler(async (req, res) => {
   mealPlan.totalItems = 0;
   await mealPlan.save();
 
-  successResponse(res, mealPlan, week !== undefined ? `Week ${week} cleared successfully` : 'Meal plan cleared successfully');
+  // Clean up the response - remove unnecessary data
+  const cleanedMealPlan = cleanMealPlanResponse(mealPlan.toObject());
+
+  successResponse(res, cleanedMealPlan, week !== undefined ? `Week ${week} cleared successfully` : 'Meal plan cleared successfully');
 });
 
 module.exports = {

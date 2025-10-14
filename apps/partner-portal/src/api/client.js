@@ -8,13 +8,17 @@ const getApiBaseUrl = () => {
     return import.meta.env.VITE_API_BASE_URL;
   }
   
+  // COMMENTED OUT: Production backend for deployment
   // If we're in production (on Netlify), use the backend URL
-  if (typeof window !== 'undefined' && window.location.hostname.includes('netlify.app')) {
-    return 'https://gg0b1.netlify.app/api/v1';
-  }
+  // if (typeof window !== 'undefined' && window.location.hostname.includes('netlify.app')) {
+  //   return 'https://gg0b1.netlify.app/api/v1';
+  // }
   
-  // FALLBACK: Production backend
-  return 'https://gg0b1.netlify.app/api/v1';
+  // For local development, use local backend
+  return 'http://localhost:5000/api/v1';
+  
+  // FALLBACK: Production backend (commented out for local development)
+  // return 'https://gg0b1.netlify.app/api/v1';
 };
 
 // Create axios instance with base configuration

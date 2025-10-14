@@ -3,6 +3,7 @@ import HeroSection from '../components/home/HeroSection';
 import WhyGrubGateSection from '../components/home/WhyGrubGateSection';
 import TestimonialsSection from '../components/home/TestimonialsSection';
 import RoleCards from '../components/home/RoleCards';
+import MealCalendarButton from '../components/home/MealCalendarButton';
 // import NearbyRestaurants from '../components/home/NearbyRestaurants';
 import GetStartedCTA from '../components/common/GetStartedCTA';
 
@@ -48,8 +49,8 @@ const HomePage = () => {
       {/* <NearbyRestaurants /> */}
       <GetStartedCTA />
       
-    
-     
+      {/* Floating Calendar Button - Only shows for customers with active subscriptions */}
+      <MealCalendarButton />
     </div>
   );
 };

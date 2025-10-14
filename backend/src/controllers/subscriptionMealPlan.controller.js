@@ -1,6 +1,7 @@
 const Order = require('../models/Order');
 const MealPlan = require('../models/MealPlan');
 const SubscriptionMealPlan = require('../models/SubscriptionMealPlan');
+const UserMealCalendar = require('../models/UserMealCalendar');
 const Restaurant = require('../models/Restaurant');
 const User = require('../models/User');
 const { getNextSunday, getSubscriptionStartSunday, getWeekDateRange } = require('../utils/dateHelpers');
@@ -438,7 +439,47 @@ const createSubscriptionFromMealPlan = async (req, res) => {
       });
     }
 
-    // 3. Convert MealPlan data to SubscriptionMealPlan format
+    // 3. Check for subscription overlap
+    const subscriptionStartDate = getSubscriptionStartSunday();
+    const subscriptionEndDate = new Date(subscriptionStartDate);
+    
+    // Calculate end date based on plan type
+    if (planType === 'bi-weekly') {
+      subscriptionEndDate.setDate(subscriptionStartDate.getDate() + 14); // 2 weeks
+    } else if (planType === 'monthly') {
+      subscriptionEndDate.setDate(subscriptionStartDate.getDate() + 30); // 30 days
+    } else if (planType === '3-months') {
+      subscriptionEndDate.setDate(subscriptionStartDate.getDate() + 90); // 90 days
+    }
+
+    console.log('🔍 Checking subscription overlap for period:', {
+      startDate: subscriptionStartDate,
+      endDate: subscriptionEndDate,
+      planType
+    });
+
+    const existingOverlap = await UserMealCalendar.checkSubscriptionOverlap(
+      userId, 
+      subscriptionStartDate, 
+      subscriptionEndDate
+    );
+
+    if (existingOverlap) {
+      console.log('❌ Subscription overlap detected:', existingOverlap);
+      return res.status(409).json({
+        status: 'error',
+        message: 'You already have an active subscription for this period',
+        data: {
+          conflictPeriod: existingOverlap.subscriptionPeriod,
+          conflictId: existingOverlap._id,
+          planType: existingOverlap.subscriptionPeriod.planType
+        }
+      });
+    }
+
+    console.log('✅ No subscription overlap detected - proceeding with creation');
+
+    // 4. Convert MealPlan data to SubscriptionMealPlan format
     const weeks = [];
     const today = new Date();
     
@@ -448,6 +489,8 @@ const createSubscriptionFromMealPlan = async (req, res) => {
       const weekData = userMealPlan.weeklyPlans[weekKey];
       
       if (weekData && Object.keys(weekData).length > 0) {
+        console.log(`🔍 DEBUG - Processing ${weekKey} data:`, JSON.stringify(weekData, null, 2));
+        
         // Use Sunday-based weeks starting from next Sunday (matches frontend logic)
         const { startDate: weekStartDate, endDate: weekEndDate } = getWeekDateRange(weekIndex, today);
 
@@ -464,10 +507,16 @@ const createSubscriptionFromMealPlan = async (req, res) => {
           if (weekData[day]) {
             // Convert lunch items
             if (weekData[day].lunch && Array.isArray(weekData[day].lunch)) {
-              weekMeals[day].lunch = weekData[day].lunch.map(item => ({
+              weekMeals[day].lunch = weekData[day].lunch.map(item => {
+                const menuItemId = item.menuItemId || item._id || item.id;
+                if (!menuItemId) {
+                  console.error('⚠️ Missing menuItemId for lunch item:', item);
+                  throw new Error(`Missing menuItemId for lunch item: ${item.name || 'Unknown item'}`);
+                }
+                return {
                 id: item.id || item._id?.toString() || new Date().getTime().toString(),
                 planId: item.planId || new Date().getTime().toString(),
-                menuItemId: item.id,
+                menuItemId: item.menuItemId || item._id || item.id,
                 name: item.name,
                 price: item.price,
                 restaurantName: item.restaurantName || restaurant.name,
@@ -481,15 +530,22 @@ const createSubscriptionFromMealPlan = async (req, res) => {
                 prepTime: item.prepTime,
                 servings: item.servings || 1,
                 ingredients: item.ingredients || []
-              }));
+                };
+              });
             }
             
             // Convert dinner items
             if (weekData[day].dinner && Array.isArray(weekData[day].dinner)) {
-              weekMeals[day].dinner = weekData[day].dinner.map(item => ({
+              weekMeals[day].dinner = weekData[day].dinner.map(item => {
+                const menuItemId = item.menuItemId || item._id || item.id;
+                if (!menuItemId) {
+                  console.error('⚠️ Missing menuItemId for dinner item:', item);
+                  throw new Error(`Missing menuItemId for dinner item: ${item.name || 'Unknown item'}`);
+                }
+                return {
                 id: item.id || item._id?.toString() || new Date().getTime().toString(),
                 planId: item.planId || new Date().getTime().toString(),
-                menuItemId: item.id,
+                menuItemId: item.menuItemId || item._id || item.id,
                 name: item.name,
                 price: item.price,
                 restaurantName: item.restaurantName || restaurant.name,
@@ -503,7 +559,8 @@ const createSubscriptionFromMealPlan = async (req, res) => {
                 prepTime: item.prepTime,
                 servings: item.servings || 1,
                 ingredients: item.ingredients || []
-              }));
+                };
+              });
             }
           }
         }
@@ -536,13 +593,21 @@ const createSubscriptionFromMealPlan = async (req, res) => {
     console.log('  Function Used: getSubscriptionStartSunday');
     
     // Calculate plan end date using UTC
+    // For monthly plans, we want 30 full days (Oct 19 to Nov 18 inclusive)
     const planDurationDays = planType === 'bi-weekly' ? 14 : planType === 'quarterly' ? 90 : 30;
     const planEndDate = new Date(Date.UTC(
       planStartDate.getUTCFullYear(),
       planStartDate.getUTCMonth(),
-      planStartDate.getUTCDate() + planDurationDays - 1,  // -1 because we want the last day, not the next day
+      planStartDate.getUTCDate() + planDurationDays, 
       23, 59, 59, 999
     ));
+
+    console.log('📆 Plan Duration Calculation:');
+    console.log('  Plan Type:', planType);
+    console.log('  Duration Days:', planDurationDays);
+    console.log('  Start Date:', planStartDate.toISOString().split('T')[0]);
+    console.log('  End Date:', planEndDate.toISOString().split('T')[0]);
+    console.log('  Calculation: Oct 19 + 30 days =', planEndDate.toISOString().split('T')[0]);
 
     // Calculate next billing date based on plan end date (not today)
     const nextBillingDate = new Date(planEndDate);
@@ -603,8 +668,10 @@ const createSubscriptionFromMealPlan = async (req, res) => {
     // 5. **GENERATE ALL ORDERS WITH REPETITION LOGIC**
     console.log(`🚀 Generating all orders for subscription with repetition logic...`);
     
+    let generatedOrders = []; // Declare outside try-catch so it's accessible later
+    
     try {
-      const generatedOrders = await generateAllSubscriptionOrders(subscriptionMealPlan);
+      generatedOrders = await generateAllSubscriptionOrders(subscriptionMealPlan);
       
       // Update subscription with order generation status
       subscriptionMealPlan.isOrdersGenerated = true;
@@ -618,24 +685,122 @@ const createSubscriptionFromMealPlan = async (req, res) => {
       // Don't fail the subscription creation if order generation fails
     }
 
-    // 6. **CLEANUP: Remove the user's meal plan data**
+    // 6. Create User Meal Calendar
+    console.log('📅 Creating user meal calendar...');
+    
+    try {
+      // Create calendar entries from generated orders
+      const calendarEntries = [];
+      
+      if (generatedOrders && generatedOrders.length > 0) {
+        console.log('🔍 DEBUG: First generated order structure:', JSON.stringify(generatedOrders[0], null, 2));
+        
+        for (const order of generatedOrders) {
+          console.log('🔍 DEBUG: Processing order deliveryTime:', order.deliveryTime, 'Type:', typeof order.deliveryTime);
+          
+          // Convert string deliveryTime to object format expected by schema
+          let deliveryTimeObj;
+          if (typeof order.deliveryTime === 'string') {
+            const time = order.deliveryTime;
+            const [hours, minutes] = time.split(':');
+            const startTime = `${hours}:${minutes}`;
+            const endHour = parseInt(hours) + 1; // 1 hour delivery window
+            const endTime = `${endHour.toString().padStart(2, '0')}:${minutes}`;
+            
+            deliveryTimeObj = {
+              start: startTime,
+              end: endTime
+            };
+          } else if (order.deliveryTime && typeof order.deliveryTime === 'object') {
+            // Check if it has start/end properties
+            if (order.deliveryTime.start && order.deliveryTime.end) {
+              deliveryTimeObj = order.deliveryTime;
+            } else if (order.deliveryTime.estimated) {
+              // Convert estimated time to start/end format
+              console.log('🔍 DEBUG: Converting estimated time to start/end format');
+              const estimatedDate = new Date(order.deliveryTime.estimated);
+              const startHour = estimatedDate.getUTCHours();
+              const startMinute = estimatedDate.getUTCMinutes();
+              const endHour = startHour + 1; // 1 hour delivery window
+              
+              deliveryTimeObj = {
+                start: `${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`,
+                end: `${endHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`
+              };
+              console.log('✅ DEBUG: Converted estimated time:', order.deliveryTime.estimated, '→', deliveryTimeObj);
+            } else {
+              // Object but no valid properties, use fallback
+              console.log('⚠️ DEBUG: Object deliveryTime but no valid properties, using fallback');
+              const isMorning = order.mealType === 'lunch' || order.mealType === 'breakfast';
+              deliveryTimeObj = {
+                start: isMorning ? '12:00' : '19:00',
+                end: isMorning ? '13:00' : '20:00'
+              };
+            }
+          } else {
+            // Fallback if deliveryTime is missing or invalid
+            console.log('⚠️ DEBUG: No valid deliveryTime found, using fallback based on mealType');
+            const isMorning = order.mealType === 'lunch' || order.mealType === 'breakfast';
+            deliveryTimeObj = {
+              start: isMorning ? '12:00' : '19:00',
+              end: isMorning ? '13:00' : '20:00'
+            };
+          }
+
+          calendarEntries.push({
+            date: order.scheduledDate,
+            mealType: order.mealType,
+            mealName: order.items[0]?.name || 'Meal',
+            restaurantId: order.restaurantId,
+            status: order.status,
+            deliveryTime: deliveryTimeObj,
+            orderId: order._id
+          });
+        }
+      }
+
+      // Create the meal calendar
+      const mealCalendar = new UserMealCalendar({
+        userId: userId,
+        subscriptionId: subscriptionMealPlan._id,
+        weeklyPlanId: userMealPlan._id,
+        calendarEntries: calendarEntries,
+        subscriptionPeriod: {
+          startDate: subscriptionStartDate,
+          endDate: subscriptionEndDate,
+          planType: planType
+        },
+        isActive: true,
+        metadata: {
+          totalCost: monthlyPrice || 0,
+          currency: 'USD',
+          timezone: 'UTC'
+        }
+      });
+
+      await mealCalendar.save();
+      
+      console.log(`✅ Created meal calendar successfully!`);
+      console.log(`📅 Calendar ID: ${mealCalendar._id}`);
+      console.log(`🍽️ Total entries: ${calendarEntries.length}`);
+      console.log(`📊 Subscription period: ${subscriptionStartDate} to ${subscriptionEndDate}`);
+      
+    } catch (calendarError) {
+      console.error('⚠️ Error creating meal calendar:', calendarError);
+      console.error('⚠️ Calendar error details:', calendarError.message);
+      if (calendarError.errors) {
+        console.error('⚠️ Validation errors:', calendarError.errors);
+      }
+      // Don't fail the subscription creation if calendar creation fails
+    }
+
+    // 7. **CLEANUP: Remove the user's meal plan data**
     console.log(`🧹 Cleaning up meal plan data for user ${userId} after subscription creation...`);
     
     try {
       // Option A: Complete cleanup (remove entire meal plan)
       const deleteResult = await MealPlan.deleteOne({ userId: userId });
       console.log(`✅ Deleted meal plan for user ${userId}:`, deleteResult);
-      
-      // Alternative Option B: Selective cleanup (just clear the weekly plans)
-      // await MealPlan.findOneAndUpdate(
-      //   { userId: userId },
-      //   { 
-      //     $unset: { 
-      //       'weeklyPlans.week0': 1,
-      //       'weeklyPlans.week1': 1
-      //     }
-      //   }
-      // );
       
     } catch (cleanupError) {
       console.error('⚠️ Error during meal plan cleanup:', cleanupError);

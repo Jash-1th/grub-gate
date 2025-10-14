@@ -88,13 +88,18 @@ const mealPlanReducer = (state, action) => {
     case MEAL_PLAN_ACTIONS.ADD_ITEM_TO_WEEK: {
       const { item, day, mealType, week } = action.payload;
       
+      // Ensure the day exists before accessing it
+      const currentWeek = state.weeklyPlans[`week${week}`] || {};
+      const currentDay = currentWeek[day] || { lunch: [], dinner: [] };
+      const currentMealType = currentDay[mealType] || [];
+      
       const newWeeklyPlans = {
         ...state.weeklyPlans,
         [`week${week}`]: {
-          ...state.weeklyPlans[`week${week}`],
+          ...currentWeek,
           [day]: {
-            ...state.weeklyPlans[`week${week}`][day],
-            [mealType]: [...state.weeklyPlans[`week${week}`][day][mealType], item]
+            ...currentDay,
+            [mealType]: [...currentMealType, item]
           }
         }
       };
@@ -117,13 +122,18 @@ const mealPlanReducer = (state, action) => {
     case MEAL_PLAN_ACTIONS.REMOVE_ITEM_FROM_WEEK: {
       const { planId, day, mealType, week } = action.payload;
       
+      // Ensure the day exists before accessing it
+      const currentWeek = state.weeklyPlans[`week${week}`] || {};
+      const currentDay = currentWeek[day] || { lunch: [], dinner: [] };
+      const currentMealType = currentDay[mealType] || [];
+      
       const newWeeklyPlans = {
         ...state.weeklyPlans,
         [`week${week}`]: {
-          ...state.weeklyPlans[`week${week}`],
+          ...currentWeek,
           [day]: {
-            ...state.weeklyPlans[`week${week}`][day],
-            [mealType]: state.weeklyPlans[`week${week}`][day][mealType].filter(item => item.planId !== planId)
+            ...currentDay,
+            [mealType]: currentMealType.filter(item => item.planId !== planId)
           }
         }
       };
@@ -215,9 +225,10 @@ const mealPlanReducer = (state, action) => {
       console.log('🔄 Syncing database data:', databaseData);
       
       // Convert database structure to frontend structure
+      // Merge database data with initial structure to ensure all days exist
       const syncedWeeklyPlans = {
-        week0: databaseData.weeklyPlans?.week0 || initialWeekPlan,
-        week1: databaseData.weeklyPlans?.week1 || initialWeekPlan
+        week0: { ...initialWeekPlan, ...(databaseData.weeklyPlans?.week0 || {}) },
+        week1: { ...initialWeekPlan, ...(databaseData.weeklyPlans?.week1 || {}) }
       };
       
       // Calculate total items
@@ -666,6 +677,20 @@ export const MealPlanProvider = ({ children }) => {
       type: MEAL_PLAN_ACTIONS.SET_SELECTED_RESTAURANT,
       payload: { restaurantId, restaurantName, restaurantData }
     });
+    
+    // Trigger immediate database save for restaurant selection
+    if (isAuthenticated && user) {
+      console.log('💾 Triggering immediate database save for restaurant selection');
+      setTimeout(() => {
+        saveMealPlanToDatabase({
+          weeklyPlans: state.weeklyPlans,
+          totalItems: state.totalItems,
+          selectedRestaurantId: restaurantId,
+          selectedRestaurantName: restaurantName,
+          selectedRestaurantData: restaurantData
+        });
+      }, 50); // Small delay to ensure state is updated
+    }
   };
 
   const clearSelectedRestaurant = () => {
