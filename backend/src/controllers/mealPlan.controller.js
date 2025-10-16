@@ -259,6 +259,24 @@ const createOrUpdateMealPlan = asyncHandler(async (req, res) => {
 
   // Add dates to meal plan data BEFORE saving to database
   console.log('📅 Adding dates to meal plan before saving...');
+  
+  // Sanitize selectedRestaurantData to prevent circular references
+  let sanitizedRestaurantData = null;
+  if (selectedRestaurantData) {
+    try {
+      sanitizedRestaurantData = JSON.parse(JSON.stringify(selectedRestaurantData));
+    } catch (error) {
+      console.warn('⚠️ Could not serialize selectedRestaurantData, using basic fields only');
+      sanitizedRestaurantData = {
+        id: selectedRestaurantData.id,
+        name: selectedRestaurantData.name,
+        image: selectedRestaurantData.image,
+        rating: selectedRestaurantData.rating,
+        cuisine: selectedRestaurantData.cuisine
+      };
+    }
+  }
+  
   let mealPlanWithDates = {
     userId,
     weeklyPlans: cleanedWeeklyPlans,
@@ -269,9 +287,16 @@ const createOrUpdateMealPlan = asyncHandler(async (req, res) => {
     // Legacy fields for backward compatibility
     selectedRestaurantId: selectedRestaurantId || null,
     selectedRestaurantName: selectedRestaurantName || null,
-    selectedRestaurantData: selectedRestaurantData || null
+    selectedRestaurantData: sanitizedRestaurantData
   };
-  mealPlanWithDates = addDatesToMealPlan(mealPlanWithDates);
+  
+  try {
+    mealPlanWithDates = addDatesToMealPlan(mealPlanWithDates);
+  } catch (dateError) {
+    console.error('❌ Error adding dates to meal plan:', dateError);
+    // Continue without dates if date calculation fails
+    console.log('⚠️ Continuing without date calculation...');
+  }
 
   if (mealPlan) {
     // Update existing meal plan with dates
@@ -293,7 +318,7 @@ const createOrUpdateMealPlan = asyncHandler(async (req, res) => {
       mealPlan.selectedRestaurantName = selectedRestaurantName;
     }
     if (selectedRestaurantData !== undefined) {
-      mealPlan.selectedRestaurantData = selectedRestaurantData;
+      mealPlan.selectedRestaurantData = sanitizedRestaurantData;
     }
     
     await mealPlan.save();

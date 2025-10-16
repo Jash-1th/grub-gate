@@ -74,8 +74,24 @@ const getDateForWeekDay = (weekIndex, dayName, planningDate = new Date()) => {
 const addDatesToMealPlan = (mealPlan, planningDate = new Date()) => {
   const dates = calculateMealPlanDates(planningDate);
   
-  // Create updated meal plan structure
-  const updatedMealPlan = JSON.parse(JSON.stringify(mealPlan)); // Deep clone
+  // Create updated meal plan structure with safer deep clone
+  let updatedMealPlan;
+  try {
+    updatedMealPlan = JSON.parse(JSON.stringify(mealPlan)); // Deep clone
+  } catch (error) {
+    console.error('❌ Error cloning meal plan data:', error);
+    // Fallback to shallow clone if JSON serialization fails
+    updatedMealPlan = { ...mealPlan };
+    if (mealPlan.weeklyPlans) {
+      updatedMealPlan.weeklyPlans = { ...mealPlan.weeklyPlans };
+      if (mealPlan.weeklyPlans.week0) {
+        updatedMealPlan.weeklyPlans.week0 = { ...mealPlan.weeklyPlans.week0 };
+      }
+      if (mealPlan.weeklyPlans.week1) {
+        updatedMealPlan.weeklyPlans.week1 = { ...mealPlan.weeklyPlans.week1 };
+      }
+    }
+  }
   
   // Add dates to week0 - ensure all days get dates (whether they have meals or not)
   if (updatedMealPlan.weeklyPlans && updatedMealPlan.weeklyPlans.week0) {
