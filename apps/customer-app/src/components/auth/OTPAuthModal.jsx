@@ -232,11 +232,13 @@ const OTPAuthModal = () => {
       
       if (result.status === 'success') {
         // User exists and OTP verified - complete login immediately
-        localStorage.setItem('accessToken', result.data.accessToken);
-        if (result.data.refreshToken) {
-          localStorage.setItem('refreshToken', result.data.refreshToken);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('accessToken', result.data.accessToken);
+          if (result.data.refreshToken) {
+            localStorage.setItem('refreshToken', result.data.refreshToken);
+          }
+          localStorage.setItem('user', JSON.stringify(result.data.user));
         }
-        localStorage.setItem('user', JSON.stringify(result.data.user));
         
         // Update AuthContext to automatically log in the user
         if (otpLogin) {
@@ -395,11 +397,13 @@ const OTPAuthModal = () => {
       
       if (result.status === 'success') {
         // Store auth data
-        localStorage.setItem('accessToken', result.data.accessToken);
-        if (result.data.refreshToken) {
-          localStorage.setItem('refreshToken', result.data.refreshToken);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('accessToken', result.data.accessToken);
+          if (result.data.refreshToken) {
+            localStorage.setItem('refreshToken', result.data.refreshToken);
+          }
+          localStorage.setItem('user', JSON.stringify(result.data.user));
         }
-        localStorage.setItem('user', JSON.stringify(result.data.user));
         
         // Update AuthContext to automatically log in the user
         if (otpLogin) {

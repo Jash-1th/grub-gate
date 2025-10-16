@@ -59,9 +59,13 @@ const getInitialState = () => {
           totalItems: savedWeeklyPlans.totalItems || 0,
           selectedRestaurants: savedWeeklyPlans.selectedRestaurants || [],
           maxRestaurants: savedWeeklyPlans.maxRestaurants || 2,
+          // Update legacy fields from first restaurant for backward compatibility
+          selectedRestaurantId: savedWeeklyPlans.selectedRestaurants?.[0]?.restaurantId || null,
+          selectedRestaurantName: savedWeeklyPlans.selectedRestaurants?.[0]?.restaurantName || null,
+          selectedRestaurantData: savedWeeklyPlans.selectedRestaurants?.[0]?.restaurantData || null,
           loadedFromDatabase: true
         };
-        console.log('🔄 DEBUG: Returning loaded state:', loadedState);
+        console.log('🔄 DEBUG: Returning loaded state with restaurant selection:', loadedState);
         return loadedState;
       } else if (savedMealPlan && savedMealPlan.weeklyPlan) {
         console.log('🔄 DEBUG: Loading initial state from legacy localStorage:', savedMealPlan);

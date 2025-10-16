@@ -120,7 +120,7 @@ const LoginModal = () => {
         setWelcomeBackUserName(firstName);
         
         // Only show welcome modal if there's no pending redirect
-        const pendingRedirect = localStorage.getItem('pendingRedirect');
+        const pendingRedirect = typeof window !== 'undefined' ? localStorage.getItem('pendingRedirect') : null;
         if (!pendingRedirect) {
           setShowWelcomeBackModal(true);
           setTimeout(() => {
