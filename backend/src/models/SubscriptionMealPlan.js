@@ -26,6 +26,11 @@ const mealItemSchema = new mongoose.Schema({
     required: true,
     min: [0, 'Price cannot be negative']
   },
+  restaurantId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Restaurant',
+    required: true
+  },
   restaurantName: {
     type: String,
     required: true,
@@ -142,11 +147,38 @@ const subscriptionMealPlanSchema = new mongoose.Schema({
     required: [true, 'Customer ID is required'],
     index: true
   },
-  restaurantId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Restaurant',
-    required: [true, 'Restaurant ID is required'],
-    index: true
+  // Multi-restaurant support - maximum 2 restaurants
+  restaurants: [{
+    restaurantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Restaurant',
+      required: true
+    },
+    restaurantName: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    totalMeals: {
+      type: Number,
+      default: 0,
+      min: [0, 'Total meals cannot be negative']
+    },
+    totalValue: {
+      type: Number,
+      default: 0,
+      min: [0, 'Total value cannot be negative']
+    },
+    addedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  maxRestaurants: {
+    type: Number,
+    default: 2,
+    max: [2, 'Maximum 2 restaurants allowed'],
+    min: [1, 'At least 1 restaurant required']
   },
   subscriptionId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -261,7 +293,7 @@ const subscriptionMealPlanSchema = new mongoose.Schema({
 
 // Indexes for performance
 subscriptionMealPlanSchema.index({ customerId: 1, status: 1 });
-subscriptionMealPlanSchema.index({ restaurantId: 1, status: 1 });
+subscriptionMealPlanSchema.index({ 'restaurants.restaurantId': 1, status: 1 });
 subscriptionMealPlanSchema.index({ subscriptionId: 1 });
 subscriptionMealPlanSchema.index({ planStartDate: 1, planEndDate: 1 });
 subscriptionMealPlanSchema.index({ status: 1, planStartDate: 1 });
@@ -293,10 +325,13 @@ subscriptionMealPlanSchema.virtual('planDurationDays').get(function() {
   return Math.ceil((this.planEndDate - this.planStartDate) / (1000 * 60 * 60 * 24));
 });
 
-// Pre-save middleware to calculate totals
+// Pre-save middleware to calculate totals including restaurant-specific data
 subscriptionMealPlanSchema.pre('save', function(next) {
   let totalValue = 0;
   let totalItems = 0;
+  
+  // Initialize restaurant tracking
+  const restaurantStats = new Map();
   
   // Calculate totals for each week
   this.weeks.forEach(week => {
@@ -308,12 +343,34 @@ subscriptionMealPlanSchema.pre('save', function(next) {
         dayMeals.lunch.forEach(item => {
           weekValue += item.price;
           weekItems++;
+          
+          // Track per restaurant
+          const restaurantId = item.restaurantId ? item.restaurantId.toString() : null;
+          if (restaurantId) {
+            if (!restaurantStats.has(restaurantId)) {
+              restaurantStats.set(restaurantId, { totalMeals: 0, totalValue: 0, restaurantName: item.restaurantName });
+            }
+            const stats = restaurantStats.get(restaurantId);
+            stats.totalMeals++;
+            stats.totalValue += item.price;
+          }
         });
       }
       if (dayMeals.dinner) {
         dayMeals.dinner.forEach(item => {
           weekValue += item.price;
           weekItems++;
+          
+          // Track per restaurant
+          const restaurantId = item.restaurantId ? item.restaurantId.toString() : null;
+          if (restaurantId) {
+            if (!restaurantStats.has(restaurantId)) {
+              restaurantStats.set(restaurantId, { totalMeals: 0, totalValue: 0, restaurantName: item.restaurantName });
+            }
+            const stats = restaurantStats.get(restaurantId);
+            stats.totalMeals++;
+            stats.totalValue += item.price;
+          }
         });
       }
     });
@@ -323,6 +380,17 @@ subscriptionMealPlanSchema.pre('save', function(next) {
     
     totalValue += weekValue;
     totalItems += weekItems;
+  });
+  
+  // Update restaurant statistics
+  this.restaurants.forEach(restaurant => {
+    const restaurantId = restaurant.restaurantId.toString();
+    const stats = restaurantStats.get(restaurantId);
+    if (stats) {
+      restaurant.totalMeals = stats.totalMeals;
+      restaurant.totalValue = Math.round(stats.totalValue * 100) / 100;
+      restaurant.restaurantName = stats.restaurantName;
+    }
   });
   
   this.totalPlanValue = Math.round(totalValue * 100) / 100;
@@ -384,7 +452,7 @@ subscriptionMealPlanSchema.methods.getTodaysMeals = function() {
         id: `${this._id}_${subscriptionDay}_lunch_${meal.planId}`,
         planId: this._id,
         customerId: this.customerId,
-        restaurantId: this.restaurantId,
+        restaurantId: meal.restaurantId,
         mealType: 'lunch',
         item: meal,
         deliveryTime: meal.deliveryTime,
@@ -405,7 +473,7 @@ subscriptionMealPlanSchema.methods.getTodaysMeals = function() {
         id: `${this._id}_${subscriptionDay}_dinner_${meal.planId}`,
         planId: this._id,
         customerId: this.customerId,
-        restaurantId: this.restaurantId,
+        restaurantId: meal.restaurantId,
         mealType: 'dinner',
         item: meal,
         deliveryTime: meal.deliveryTime,
@@ -423,7 +491,7 @@ subscriptionMealPlanSchema.methods.getTodaysMeals = function() {
 };
 
 // Instance method to add meal to specific week and day
-subscriptionMealPlanSchema.methods.addMeal = function(weekIndex, day, mealType, menuItem, deliveryTime) {
+subscriptionMealPlanSchema.methods.addMeal = function(weekIndex, day, mealType, menuItem, deliveryTime, restaurantId, restaurantName) {
   if (!this.weeks[weekIndex]) {
     throw new Error(`Week ${weekIndex} does not exist in this plan`);
   }
@@ -438,7 +506,8 @@ subscriptionMealPlanSchema.methods.addMeal = function(weekIndex, day, mealType, 
     menuItemId: menuItem._id,
     name: menuItem.name,
     price: menuItem.price,
-    restaurantName: this.selectedRestaurantName || 'Restaurant',
+    restaurantId: restaurantId,
+    restaurantName: restaurantName || 'Restaurant',
     addedAt: new Date(),
     deliveryTime: deliveryTime,
     description: menuItem.description,
@@ -493,7 +562,7 @@ subscriptionMealPlanSchema.methods.clearWeek = function(weekIndex) {
 };
 
 // Static method to find or create meal plan for user
-subscriptionMealPlanSchema.statics.findOrCreateForUser = async function(userId, subscriptionId, restaurantId, planType = 'bi-weekly') {
+subscriptionMealPlanSchema.statics.findOrCreateForUser = async function(userId, subscriptionId, restaurants, planType = 'bi-weekly') {
   let mealPlan = await this.findOne({ 
     customerId: userId, 
     subscriptionId: subscriptionId,
@@ -554,9 +623,24 @@ subscriptionMealPlanSchema.statics.findOrCreateForUser = async function(userId, 
     const nextBilling = new Date(endDate);
     nextBilling.setDate(endDate.getDate() + 1);
     
+    // Ensure restaurants is an array and validate max 2 restaurants
+    const restaurantsArray = Array.isArray(restaurants) ? restaurants : [restaurants];
+    if (restaurantsArray.length > 2) {
+      throw new Error('Maximum 2 restaurants allowed per meal plan');
+    }
+    
+    // Format restaurants for schema
+    const formattedRestaurants = restaurantsArray.map(restaurant => ({
+      restaurantId: restaurant.restaurantId || restaurant._id || restaurant,
+      restaurantName: restaurant.restaurantName || restaurant.name || 'Restaurant',
+      totalMeals: 0,
+      totalValue: 0,
+      addedAt: new Date()
+    }));
+    
     mealPlan = new this({
       customerId: userId,
-      restaurantId: restaurantId,
+      restaurants: formattedRestaurants,
       subscriptionId: subscriptionId,
       planType: planType,
       planStartDate: startDate,
@@ -591,7 +675,7 @@ subscriptionMealPlanSchema.statics.getActiveForCustomer = function(customerId) {
 
 // Static method to get plans for restaurant (for partner dashboard)
 subscriptionMealPlanSchema.statics.getForRestaurant = function(restaurantId, status = null) {
-  const query = { restaurantId };
+  const query = { 'restaurants.restaurantId': restaurantId };
   if (status) {
     query.status = status;
   }
@@ -599,6 +683,7 @@ subscriptionMealPlanSchema.statics.getForRestaurant = function(restaurantId, sta
   return this.find(query)
     .populate('customerId', 'firstName lastName email phone')
     .populate('subscriptionId')
+    .populate('restaurants.restaurantId', 'name cuisine')
     .sort({ planStartDate: -1 });
 };
 
@@ -610,7 +695,7 @@ subscriptionMealPlanSchema.statics.getTodaysOrdersForRestaurant = async function
   tomorrow.setDate(today.getDate() + 1);
   
   const activePlans = await this.find({
-    restaurantId,
+    'restaurants.restaurantId': restaurantId,
     status: 'active',
     planStartDate: { $lte: today },
     planEndDate: { $gte: today }
@@ -620,7 +705,11 @@ subscriptionMealPlanSchema.statics.getTodaysOrdersForRestaurant = async function
   
   activePlans.forEach(plan => {
     const todaysMeals = plan.getTodaysMeals();
-    todaysOrders.push(...todaysMeals);
+    // Filter meals for only this restaurant
+    const restaurantMeals = todaysMeals.filter(meal => 
+      meal.restaurantId.toString() === restaurantId.toString()
+    );
+    todaysOrders.push(...restaurantMeals);
   });
   
   return todaysOrders;

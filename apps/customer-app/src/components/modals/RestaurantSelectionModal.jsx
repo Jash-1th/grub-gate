@@ -1,6 +1,6 @@
 import React from 'react';
 
-const RestaurantSelectionModal = ({ isOpen, onClose, onConfirm, day, mealType, week }) => {
+const RestaurantSelectionModal = ({ isOpen, onClose, onConfirm, day, mealType, week, hasExistingRestaurant = false, existingRestaurant = null }) => {
   if (!isOpen) return null;
 
   const weekText = week === 0 ? 'This Week' : 'Next Week';
@@ -17,9 +17,14 @@ const RestaurantSelectionModal = ({ isOpen, onClose, onConfirm, day, mealType, w
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold mb-2">Select a Restaurant First</h3>
+          <h3 className="text-xl font-bold mb-2">
+            {hasExistingRestaurant ? 'Add Another Restaurant?' : 'Select a Restaurant First'}
+          </h3>
           <p className="text-blue-100 text-sm">
-            Choose from nearby restaurants to start planning your meals
+            {hasExistingRestaurant 
+              ? 'You can select up to 2 restaurants for your meal plan'
+              : 'Choose from nearby restaurants to start planning your meals'
+            }
           </p>
         </div>
 
@@ -37,10 +42,26 @@ const RestaurantSelectionModal = ({ isOpen, onClose, onConfirm, day, mealType, w
               </div>
             </div>
             
-            <p className="text-gray-600 text-sm leading-relaxed">
-              To add meals to your <strong>{weekText}</strong> plan, you need to first select a restaurant. 
-              We'll show you highly-rated restaurants in your area.
-            </p>
+            {hasExistingRestaurant ? (
+              <div className="space-y-3">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <div className="flex items-center space-x-2">
+                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-sm font-medium text-green-800">Current: {existingRestaurant?.name}</span>
+                  </div>
+                </div>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  You can add a second restaurant to your meal plan. This gives you more variety in your weekly menu.
+                </p>
+              </div>
+            ) : (
+              <p className="text-gray-600 text-sm leading-relaxed">
+                To add meals to your <strong>{weekText}</strong> plan, you need to first select a restaurant. 
+                We'll show you highly-rated restaurants in your area.
+              </p>
+            )}
           </div>
 
           {/* Action Buttons */}
@@ -55,7 +76,7 @@ const RestaurantSelectionModal = ({ isOpen, onClose, onConfirm, day, mealType, w
               onClick={onConfirm}
               className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
             >
-              Browse Restaurants
+              {hasExistingRestaurant ? 'Add Second Restaurant' : 'Browse Restaurants'}
             </button>
           </div>
         </div>

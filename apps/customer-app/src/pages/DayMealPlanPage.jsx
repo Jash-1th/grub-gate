@@ -7,40 +7,69 @@ import { useAuth } from '../contexts/AuthContext';
 import { DAYS_OF_WEEK } from '../utils/filteringAlgorithms';
 // Removed static data import - using API data only
 import ItemDetailsModal from '../components/restaurant/ItemDetailsModal';
+import RestaurantContinueModal from '../components/modals/RestaurantContinueModal';
+import RestaurantChoiceModal from '../components/modals/RestaurantChoiceModal';
 
 const DayMealPlanPage = () => {
   const { day } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const week = parseInt(searchParams.get('week')) || 0; // Default to current week
-  const { getWeekMealItems, removeItemFromPlanWeek, getRestaurantsInAllWeeks, getRestaurantsInWeekPlan, getRestaurantIdsInWeekPlan, getRestaurantIdsInAllWeeks } = useMealPlan();
+  const { getWeekMealItems, removeItemFromPlanWeek, getRestaurantsInAllWeeks, getRestaurantsInWeekPlan, getRestaurantIdsInWeekPlan, getRestaurantIdsInAllWeeks, selectedRestaurants, isLoading } = useMealPlan();
   const { showMealPlanSuccess } = useToast();
   const { postalCode, selectedRestaurant: planningSelectedRestaurant } = usePlanning();
   const { isAuthenticated, user } = useAuth();
   const [selectedMealType, setSelectedMealType] = useState('lunch');
+  const [isClient, setIsClient] = useState(false);
+  
+  // Set client-side flag
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   // State for item details modal
   const [selectedDetailItem, setSelectedDetailItem] = useState(null);
   const [showItemDetails, setShowItemDetails] = useState(false);
+  
+  // State for restaurant selection modals
+  const [showRestaurantContinueModal, setShowRestaurantContinueModal] = useState(false);
+  const [showRestaurantChoiceModal, setShowRestaurantChoiceModal] = useState(false);
+  const [continueModalData, setContinueModalData] = useState(null);
+  const [choiceModalData, setChoiceModalData] = useState(null);
 
   const dayName = DAYS_OF_WEEK.find(d => d.id === day)?.name || day;
-  const lunchItems = getWeekMealItems(day, 'lunch', week);
-  const dinnerItems = getWeekMealItems(day, 'dinner', week);
+  
+  // Only get meal items if client is ready to prevent hydration mismatch
+  const lunchItems = isClient ? getWeekMealItems(day, 'lunch', week) : [];
+  const dinnerItems = isClient ? getWeekMealItems(day, 'dinner', week) : [];
   const currentMealItems = selectedMealType === 'lunch' ? lunchItems : dinnerItems;
 
-  // Get restaurant IDs in meal plan (using actual IDs instead of names)
-  const weekRestaurantIds = getRestaurantIdsInWeekPlan(week);
-  const allWeeksRestaurantIds = getRestaurantIdsInAllWeeks();
+  // Debug logging for restaurant assignment issue
+  useEffect(() => {
+    if (isClient && currentMealItems.length > 0) {
+      console.log('🐛 DEBUG: Current meal items:', currentMealItems);
+      console.log('🐛 DEBUG: Restaurant names in items:', currentMealItems.map(item => ({ name: item.name, restaurantName: item.restaurantName, restaurantId: item.restaurantId })));
+      console.log('🐛 DEBUG: Selected restaurants from context:', selectedRestaurants);
+      
+      // Check if all items have the same restaurant name (the bug)
+      const restaurantNames = currentMealItems.map(item => item.restaurantName);
+      const uniqueRestaurantNames = [...new Set(restaurantNames)];
+      console.log('🐛 DEBUG: Unique restaurant names in items:', uniqueRestaurantNames);
+      
+      if (uniqueRestaurantNames.length === 1 && currentMealItems.length > 1) {
+        console.log('🚨 BUG DETECTED: All items assigned to same restaurant:', uniqueRestaurantNames[0]);
+      }
+    }
+  }, [isClient, currentMealItems, selectedRestaurants]);
+
+
+  // Get restaurant IDs in meal plan (using actual IDs instead of names) - only after client is ready
+  const weekRestaurantIds = isClient ? getRestaurantIdsInWeekPlan(week) : [];
+  const allWeeksRestaurantIds = isClient ? getRestaurantIdsInAllWeeks() : [];
   
-  // Debug logs for restaurant detection
-  console.log('🔍 DayMealPlanPage: weekRestaurantIds:', weekRestaurantIds);
-  console.log('🔍 DayMealPlanPage: allWeeksRestaurantIds:', allWeeksRestaurantIds);
   
   // Determine selected restaurant using planning context first, then meal plan IDs
   const selectedRestaurant = useMemo(() => {
-    console.log('🔍 DayMealPlanPage: planningSelectedRestaurant:', planningSelectedRestaurant);
-    console.log('🔍 DayMealPlanPage: allWeeksRestaurantIds:', allWeeksRestaurantIds);
-    console.log('🔍 DayMealPlanPage: weekRestaurantIds:', weekRestaurantIds);
     
     // Priority 1: Planning context restaurant (has correct MongoDB ObjectId)
     if (planningSelectedRestaurant) {
@@ -76,19 +105,37 @@ const DayMealPlanPage = () => {
     // Priority 4: Transition fallback - if we have items but no restaurant IDs (old meal plan items)
     // Use planning context restaurant if available
     if ((lunchItems.length > 0 || dinnerItems.length > 0) && planningSelectedRestaurant) {
-      console.log('🔍 DayMealPlanPage: Using planning context restaurant as fallback for items without restaurantId');
       return planningSelectedRestaurant;
     }
-    
+
     // No restaurant selected
-    console.log('🔍 DayMealPlanPage: No restaurant selected');
     return null;
   }, [planningSelectedRestaurant, allWeeksRestaurantIds, weekRestaurantIds, week, lunchItems, dinnerItems]);
 
 
-  // Group items by ID to show quantities
+  // Group items by ID AND restaurant to show quantities
   const groupedItems = currentMealItems.reduce((acc, item) => {
-    const existingGroup = acc.find(group => group.id === item.id);
+    // Use planId as unique identifier since id might be undefined
+    const itemIdentifier = item.id || item.planId;
+    // Group by both item identifier AND restaurantName to prevent cross-restaurant grouping
+    const existingGroup = acc.find(group => {
+      const groupIdentifier = group.id || group.planId;
+      return groupIdentifier === itemIdentifier && group.restaurantName === item.restaurantName;
+    });
+    
+    console.log('🔍 GROUPING DEBUG:', {
+      itemName: item.name,
+      itemId: item.id,
+      restaurantName: item.restaurantName,
+      existingGroupFound: !!existingGroup,
+      planId: item.planId
+    });
+    
+    // Check for undefined IDs which cause React key warnings
+    if (!item.id) {
+      console.log('🚨 UNDEFINED ID DETECTED:', item);
+    }
+    
     if (existingGroup) {
       existingGroup.quantity += 1;
       existingGroup.items.push(item);
@@ -117,17 +164,34 @@ const DayMealPlanPage = () => {
   };
 
   const handleAddMoreItems = () => {
-    console.log('🔍 DayMealPlanPage: selectedRestaurant:', selectedRestaurant);
+    console.log('🎯 DayMealPlanPage handleAddMoreItems called');
+    console.log('🎯 Selected restaurants count:', selectedRestaurants?.length || 0);
+    console.log('🎯 All selected restaurants:', selectedRestaurants);
     
-    if (selectedRestaurant) {
-      // Use the restaurant ID from selectedRestaurant (which now contains the actual database ID)
-      const navigationUrl = `/restaurant/${selectedRestaurant.id}?day=${day}&slot=${selectedMealType}&week=${week}&userType=normal&source=weekly-menu`;
-      console.log('🔍 DayMealPlanPage: Navigating to:', navigationUrl);
-      navigate(navigationUrl);
-    } else {
-      // Fallback: Navigate to restaurant selection if no restaurant found
+    const selectedRestaurantsCount = selectedRestaurants?.length || 0;
+    
+    if (selectedRestaurantsCount === 0) {
+      // No restaurant selected - navigate to restaurant selection
       const postalParam = postalCode ? `&postal=${postalCode}` : '';
       navigate(`/plan/restaurants?source=weekly-menu&day=${day}&slot=${selectedMealType}&week=${week}${postalParam}`);
+    } else if (selectedRestaurantsCount === 1) {
+      // User has 1 restaurant - show continue modal
+      setContinueModalData({ 
+        day, 
+        mealType: selectedMealType, 
+        week, 
+        existingRestaurant: selectedRestaurants[0] 
+      });
+      setShowRestaurantContinueModal(true);
+    } else if (selectedRestaurantsCount === 2) {
+      // User has 2 restaurants - show choice modal
+      setChoiceModalData({ 
+        day, 
+        mealType: selectedMealType, 
+        week, 
+        restaurants: selectedRestaurants 
+      });
+      setShowRestaurantChoiceModal(true);
     }
   };
 
@@ -135,6 +199,86 @@ const DayMealPlanPage = () => {
     // Show item details modal instead of navigating
     setSelectedDetailItem(item);
     setShowItemDetails(true);
+  };
+
+  // Restaurant Continue Modal handlers
+  const handleContinueWithExistingRestaurant = () => {
+    console.log('🎯 handleContinueWithExistingRestaurant called');
+    
+    // Close modal
+    setShowRestaurantContinueModal(false);
+    const modalData = continueModalData;
+    setContinueModalData(null);
+    
+    // Navigate to the selected restaurant with day/slot context
+    if (modalData && modalData.existingRestaurant) {
+      const restaurantId = modalData.existingRestaurant.restaurantId || modalData.existingRestaurant.id;
+      const navigationUrl = `/restaurant/${restaurantId}?day=${modalData.day}&slot=${modalData.mealType}&week=${modalData.week}&userType=normal&source=weekly-menu`;
+      console.log('🎯 Navigating to existing restaurant:', navigationUrl);
+      navigate(navigationUrl);
+    }
+  };
+
+  const handleAddNewRestaurant = () => {
+    console.log('🎯 handleAddNewRestaurant called');
+    
+    // Close modal
+    setShowRestaurantContinueModal(false);
+    const modalData = continueModalData;
+    setContinueModalData(null);
+    
+    // Navigate to restaurant selection with day/slot context
+    if (modalData) {
+      const postalParam = postalCode ? `&postal=${postalCode}` : '';
+      const navigationUrl = `/plan/restaurants?source=weekly-menu&day=${modalData.day}&slot=${modalData.mealType}&week=${modalData.week}${postalParam}`;
+      console.log('🎯 Navigating to add new restaurant:', navigationUrl);
+      navigate(navigationUrl);
+    }
+  };
+
+  const handleCloseRestaurantContinueModal = () => {
+    setShowRestaurantContinueModal(false);
+    setContinueModalData(null);
+  };
+
+  // Restaurant Choice Modal handlers
+  const handleChooseRestaurant = (restaurant) => {
+    console.log('🎯 handleChooseRestaurant called:', restaurant);
+    
+    // Close modal
+    setShowRestaurantChoiceModal(false);
+    const modalData = choiceModalData;
+    setChoiceModalData(null);
+    
+    // Navigate to the chosen restaurant with day/slot context
+    if (modalData && restaurant) {
+      const restaurantId = restaurant.restaurantId || restaurant.id;
+      const navigationUrl = `/restaurant/${restaurantId}?day=${modalData.day}&slot=${modalData.mealType}&week=${modalData.week}&userType=normal&source=weekly-menu`;
+      console.log('🎯 Navigating to chosen restaurant:', navigationUrl);
+      navigate(navigationUrl);
+    }
+  };
+
+  const handleAddNewRestaurantFromChoice = () => {
+    console.log('🎯 handleAddNewRestaurantFromChoice called');
+    
+    // Close modal
+    setShowRestaurantChoiceModal(false);
+    const modalData = choiceModalData;
+    setChoiceModalData(null);
+    
+    // Navigate to restaurant selection with day/slot context
+    if (modalData) {
+      const postalParam = postalCode ? `&postal=${postalCode}` : '';
+      const navigationUrl = `/plan/restaurants?source=weekly-menu&day=${modalData.day}&slot=${modalData.mealType}&week=${modalData.week}${postalParam}`;
+      console.log('🎯 Navigating to add new restaurant from choice:', navigationUrl);
+      navigate(navigationUrl);
+    }
+  };
+
+  const handleCloseRestaurantChoiceModal = () => {
+    setShowRestaurantChoiceModal(false);
+    setChoiceModalData(null);
   };
 
 
@@ -145,6 +289,18 @@ const DayMealPlanPage = () => {
   const getTotalItems = () => {
     return lunchItems.length + dinnerItems.length;
   };
+
+  // Show loading state during initial hydration
+  if (!isClient) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading meal plan...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -279,7 +435,7 @@ const DayMealPlanPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {groupedItems.map((groupedItem) => (
                 <div 
-                  key={`${groupedItem.id}-${selectedMealType}`}
+                  key={`${groupedItem.planId || groupedItem.id}-${selectedMealType}`}
                   onClick={() => handleItemClick(groupedItem)}
                   className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-200 flex flex-col h-full cursor-pointer hover:border-grub-red hover:scale-[1.02]"
                 >
@@ -438,10 +594,7 @@ const DayMealPlanPage = () => {
       <ItemDetailsModal 
         isOpen={showItemDetails}
         item={selectedDetailItem}
-        userType="normal"
-        isFromMenuSelection={false}
         hideAddButton={true}
-        isMealPlanningEnabled={false}
         onClose={() => {
           setShowItemDetails(false);
           setSelectedDetailItem(null);
@@ -451,6 +604,29 @@ const DayMealPlanPage = () => {
           setShowItemDetails(false);
           setSelectedDetailItem(null);
         }}
+      />
+
+      {/* Restaurant Continue Modal */}
+      <RestaurantContinueModal
+        isOpen={showRestaurantContinueModal}
+        existingRestaurant={continueModalData?.existingRestaurant}
+        day={continueModalData?.day}
+        mealType={continueModalData?.mealType}
+        week={continueModalData?.week}
+        onContinueExisting={handleContinueWithExistingRestaurant}
+        onAddNew={handleAddNewRestaurant}
+        onClose={handleCloseRestaurantContinueModal}
+      />
+
+      {/* Restaurant Choice Modal */}
+      <RestaurantChoiceModal
+        isOpen={showRestaurantChoiceModal}
+        restaurants={choiceModalData?.restaurants || []}
+        day={choiceModalData?.day}
+        mealType={choiceModalData?.mealType}
+        week={choiceModalData?.week}
+        onSelectRestaurant={handleChooseRestaurant}
+        onClose={handleCloseRestaurantChoiceModal}
       />
     </div>
   )

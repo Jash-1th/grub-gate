@@ -53,7 +53,7 @@ const authReducer = (state, action) => {
         user: null,
         isAuthenticated: false,
         isLoading: false,
-        error: action.payload.error
+        error: action.payload
       };
     case AUTH_ACTIONS.LOGOUT:
       return {
@@ -227,7 +227,7 @@ export const AuthProvider = ({ children }) => {
       console.log('🔐 Attempting login with apiClient...');
       console.log('🔗 API Base URL:', import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1');
       
-      const response = await apiClient.post('/auth/login', {
+      const response = await apiClient.post('/auth/partner/login', {
         identifier,
         password,
       });
@@ -281,7 +281,8 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Partner login error:', error);
-      const errorMessage = error.message || 'Network error. Please check your connection.';
+      // Extract the specific backend error message
+      const errorMessage = error.response?.data?.message || error.message || 'Network error. Please check your connection.';
       dispatch({
         type: AUTH_ACTIONS.LOGIN_FAILURE,
         payload: errorMessage

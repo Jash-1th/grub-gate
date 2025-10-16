@@ -6,6 +6,9 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import apiClient from '../../api/apiClient';
 import WelcomeBackModal from './WelcomeBackModal';
+import { validateForm, formatBackendErrors, VALIDATION_RULES } from '../../utils/validationErrorHandler';
+import ValidatedInput from '../common/ValidatedInput';
+import { ErrorList } from '../common/ErrorDisplay';
 import './modal-responsive.css';
 
 const OTPAuthModal = () => {
@@ -121,93 +124,29 @@ const OTPAuthModal = () => {
     };
   }, [otpTimer, canResend]);
 
-  // Validate identifier step
+  // Validate identifier step using Joi schema validation
   const validateIdentifierStep = () => {
-    const errors = {};
-    
-    if (!formData.identifier) {
-      errors.identifier = 'Email or phone number is required';
-    } else {
-      const isEmail = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(formData.identifier);
-      const isPhone = /^\+?[1-9]\d{1,14}$/.test(formData.identifier);
-      
-      if (!isEmail && !isPhone) {
-        errors.identifier = 'Please enter a valid email address or phone number';
-      }
-    }
-    
-    return errors;
+    return validateForm(formData, {
+      identifier: { required: true }
+    });
   };
 
-  // Validate OTP step
+  // Validate OTP step using Joi schema validation
   const validateOTPStep = () => {
-    const errors = {};
-    
-    if (!formData.otp) {
-      errors.otp = 'Verification code is required';
-    } else if (!/^\d{6}$/.test(formData.otp)) {
-      errors.otp = 'Verification code must be 6 digits';
-    }
-    
-    return errors;
+    return validateForm(formData, VALIDATION_RULES.otpVerification);
   };
 
-  // Validate user info step (for new users)
+  // Validate user info step using Joi schema validation
   const validateUserInfoStep = () => {
-    const errors = {};
-    
-    if (!formData.firstName) {
-      errors.firstName = 'First name is required';
-    } else if (formData.firstName.length < 2) {
-      errors.firstName = 'First name must be at least 2 characters';
-    }
-    
-    if (!formData.lastName) {
-      errors.lastName = 'Last name is required';
-    } else if (formData.lastName.length < 2) {
-      errors.lastName = 'Last name must be at least 2 characters';
-    }
-    
-    return errors;
+    return validateForm(formData, {
+      firstName: { required: true, minLength: 2, maxLength: 50 },
+      lastName: { required: true, minLength: 2, maxLength: 50 }
+    });
   };
 
-  // Validate signup details step (for signup mode)
+  // Validate signup details step using Joi schema validation
   const validateSignupDetailsStep = () => {
-    const errors = {};
-    
-    if (!formData.username) {
-      errors.username = 'Username is required';
-    } else if (formData.username.length < 3) {
-      errors.username = 'Username must be at least 3 characters';
-    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
-      errors.username = 'Username can only contain letters, numbers, and underscores';
-    }
-    
-    if (!formData.phoneNumber) {
-      errors.phoneNumber = 'Phone number is required';
-    } else {
-      // Clean phone number for validation (remove spaces, hyphens, parentheses)
-      const cleanPhone = formData.phoneNumber.replace(/[\s\-\(\)]/g, '');
-      if (!/^\+?[1-9]\d{7,14}$/.test(cleanPhone)) {
-        errors.phoneNumber = 'Please enter a valid phone number (e.g., +1234567890 or 1234567890)';
-      }
-    }
-    
-    if (!formData.password) {
-      errors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      errors.password = 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
-    }
-    
-    if (!formData.confirmPassword) {
-      errors.confirmPassword = 'Please confirm your password';
-    } else if (formData.password !== formData.confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match';
-    }
-    
-    return errors;
+    return validateForm(formData, VALIDATION_RULES.userRegistration);
   };
 
   // Request OTP
@@ -326,6 +265,10 @@ const OTPAuthModal = () => {
         setOtpVerified(true);
         setIsNewUser(true);
         setCurrentStep('userInfo');
+      } else if (error.response?.data?.errors) {
+        // Handle Joi validation errors from backend
+        const formattedErrors = formatBackendErrors(error.response.data.errors);
+        setFormErrors(formattedErrors);
       } else {
         const errorMessage = error.response?.data?.message || error.message || 'Failed to verify code. Please try again.';
         setFormErrors({ general: errorMessage });
@@ -345,9 +288,18 @@ const OTPAuthModal = () => {
     const errors = {};
     if (!formData.firstName.trim()) {
       errors.firstName = 'First name is required';
+    } else if (formData.firstName.trim().length < 2) {
+      errors.firstName = 'First name must be at least 2 characters long';
+    } else if (formData.firstName.trim().length > 50) {
+      errors.firstName = 'First name cannot exceed 50 characters';
     }
+    
     if (!formData.lastName.trim()) {
       errors.lastName = 'Last name is required';
+    } else if (formData.lastName.trim().length < 2) {
+      errors.lastName = 'Last name must be at least 2 characters long';
+    } else if (formData.lastName.trim().length > 50) {
+      errors.lastName = 'Last name cannot exceed 50 characters';
     }
     
     // Determine if identifier is email or phone
@@ -374,7 +326,9 @@ const OTPAuthModal = () => {
     if (!formData.password) {
       errors.password = 'Password is required';
     } else if (formData.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters';
+      errors.password = 'Password must be at least 6 characters long';
+    } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
+      errors.password = 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
     }
     if (formData.password !== formData.confirmPassword) {
       errors.confirmPassword = 'Passwords do not match';
@@ -468,11 +422,34 @@ const OTPAuthModal = () => {
         // Optional: Navigate to dashboard or home page
         // navigate('/dashboard');
       } else {
-        setFormErrors({ general: result.message || 'Registration failed. Please try again.' });
+        const errorData = result;
+        if (errorData.errors && Array.isArray(errorData.errors)) {
+          // Use enhanced error formatting for Joi validation errors
+          const formattedErrors = formatBackendErrors(errorData.errors);
+          setFormErrors(formattedErrors);
+        } else {
+          setFormErrors({ general: errorData.message || 'Registration failed. Please try again.' });
+        }
       }
     } catch (error) {
       console.error('Complete Signup Error:', error);
-      setFormErrors({ general: 'Failed to complete registration. Please try again.' });
+      console.error('Error Response Data:', error.response?.data);
+      
+      // Handle axios error responses with detailed validation errors
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        console.log('🔍 Backend validation errors:', error.response.data.errors);
+        // Use enhanced error formatting for Joi validation errors
+        const formattedErrors = formatBackendErrors(error.response.data.errors);
+        console.log('🎨 Formatted errors for display:', formattedErrors);
+        setFormErrors(formattedErrors);
+      } else if (error.response?.data?.message) {
+        // Show specific backend error message
+        console.log('📝 Backend error message:', error.response.data.message);
+        setFormErrors({ general: error.response.data.message });
+      } else {
+        // Fallback to generic message
+        setFormErrors({ general: 'Failed to complete registration. Please try again.' });
+      }
     } finally {
       setIsLocalLoading(false);
     }

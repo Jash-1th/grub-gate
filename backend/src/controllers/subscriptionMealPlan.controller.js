@@ -10,32 +10,32 @@ const Subscription = require('../models/Subscription');
 const MenuItem = require('../models/MenuItem');
 const { validationResult } = require('express-validator');
 
-// Get or create meal plan for user
+// Get or create meal plan for user (updated for multi-restaurant)
 const getMealPlan = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { subscriptionId, restaurantId, planType = 'bi-weekly' } = req.query;
+    const { subscriptionId, planType = 'bi-weekly' } = req.query;
 
     // Validate required parameters
-    if (!subscriptionId || !restaurantId) {
+    if (!subscriptionId) {
       return res.status(400).json({
         status: 'error',
-        message: 'Subscription ID and Restaurant ID are required'
+        message: 'Subscription ID is required'
       });
     }
 
-    // Find or create meal plan
+    // Find or create meal plan (multi-restaurant version)
     const mealPlan = await SubscriptionMealPlan.findOrCreateForUser(
       userId, 
       subscriptionId, 
-      restaurantId, 
+      null, // No single restaurantId - multi-restaurant support
       planType
     );
 
-    // Populate related data
+    // Populate related data (restaurants array instead of single restaurant)
     await mealPlan.populate([
       { path: 'customerId', select: 'firstName lastName email phone' },
-      { path: 'restaurantId', select: 'name cuisine rating address' },
+      { path: 'restaurants.restaurantId', select: 'name cuisine rating address' },
       { path: 'subscriptionId' }
     ]);
 
@@ -99,7 +99,7 @@ const updateMealPlan = async (req, res) => {
         }
 
         // Get menu item details
-        const menuItem = await MenuItem.findById(menuItemId);
+        const menuItem = await MenuItem.findById(menuItemId).populate('restaurantId', 'name');
         if (!menuItem) {
           return res.status(404).json({
             status: 'error',
@@ -107,7 +107,7 @@ const updateMealPlan = async (req, res) => {
           });
         }
 
-        // Add meal to plan
+        // Add meal to plan (now includes restaurantId from menu item)
         result = await mealPlan.addMeal(weekIndex, day, mealType, menuItem, deliveryTime);
         break;
 
@@ -147,7 +147,7 @@ const updateMealPlan = async (req, res) => {
     // Return updated meal plan
     await result.populate([
       { path: 'customerId', select: 'firstName lastName email phone' },
-      { path: 'restaurantId', select: 'name cuisine rating address' },
+      { path: 'restaurants.restaurantId', select: 'name cuisine rating address' },
       { path: 'subscriptionId' }
     ]);
 
@@ -180,7 +180,7 @@ const getMealPlanById = async (req, res) => {
       customerId: userId
     }).populate([
       { path: 'customerId', select: 'firstName lastName email phone' },
-      { path: 'restaurantId', select: 'name cuisine rating address' },
+      { path: 'restaurants.restaurantId', select: 'name cuisine rating address' },
       { path: 'subscriptionId' }
     ]);
 
@@ -217,7 +217,7 @@ const getUserMealPlans = async (req, res) => {
 
     // Populate related data
     await SubscriptionMealPlan.populate(mealPlans, [
-      { path: 'restaurantId', select: 'name cuisine rating address' },
+      { path: 'restaurants.restaurantId', select: 'name cuisine rating address' },
       { path: 'subscriptionId' }
     ]);
 
@@ -408,7 +408,6 @@ const createSubscriptionFromMealPlan = async (req, res) => {
 
     const userId = req.user.id;
     const { 
-      restaurantId, 
       planType = 'bi-weekly',
       deliveryAddress,
       specialInstructions,
@@ -430,14 +429,20 @@ const createSubscriptionFromMealPlan = async (req, res) => {
       });
     }
 
-    // 2. Validate restaurant exists
-    const restaurant = await Restaurant.findById(restaurantId);
-    if (!restaurant) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'Restaurant not found'
-      });
-    }
+    // 2. Collect distinct restaurants from user's meal plan items
+    // For multi-restaurant support, we will derive restaurants from meal items
+    const restaurantMap = new Map();
+    const addRestaurantIfMissing = (item) => {
+      if (item && item.restaurantId) {
+        const id = item.restaurantId._id ? item.restaurantId._id.toString() : item.restaurantId.toString();
+        if (!restaurantMap.has(id)) {
+          restaurantMap.set(id, {
+            _id: id,
+            name: item.restaurantName || (item.restaurantId.name || ''),
+          });
+        }
+      }
+    };
 
     // 3. Check for subscription overlap
     const subscriptionStartDate = getSubscriptionStartSunday();
@@ -508,28 +513,47 @@ const createSubscriptionFromMealPlan = async (req, res) => {
             // Convert lunch items
             if (weekData[day].lunch && Array.isArray(weekData[day].lunch)) {
               weekMeals[day].lunch = weekData[day].lunch.map(item => {
-                const menuItemId = item.menuItemId || item._id || item.id;
+                // Convert Mongoose document to plain object
+                const plainItem = item.toObject ? item.toObject() : item;
+                
+                console.log('🔍 DEBUG - Lunch item (plain object):', {
+                  name: plainItem.name,
+                  hasMenuItemId: !!plainItem.menuItemId,
+                  has_id: !!plainItem._id,
+                  hasId: !!plainItem.id,
+                  allKeys: Object.keys(plainItem)
+                });
+                
+                // Try multiple fields to find the menu item ID (strict - no fallbacks)
+                const menuItemId = plainItem.menuItemId || plainItem._id || plainItem.id;
+                
                 if (!menuItemId) {
-                  console.error('⚠️ Missing menuItemId for lunch item:', item);
-                  throw new Error(`Missing menuItemId for lunch item: ${item.name || 'Unknown item'}`);
+                  console.error('⚠️ Missing menuItemId for lunch item:', plainItem);
+                  console.error('💡 Run the database fix script: node fix-meal-plan-menuitemids.js');
+                  throw new Error(`Missing menuItemId for lunch item: ${plainItem.name || 'Unknown item'}. Please run the database migration script.`);
                 }
+                
+                // Add restaurant to map for multi-restaurant support
+                addRestaurantIfMissing(plainItem);
+                
                 return {
-                id: item.id || item._id?.toString() || new Date().getTime().toString(),
-                planId: item.planId || new Date().getTime().toString(),
-                menuItemId: item.menuItemId || item._id || item.id,
-                name: item.name,
-                price: item.price,
-                restaurantName: item.restaurantName || restaurant.name,
+                id: plainItem.id || plainItem._id?.toString() || new Date().getTime().toString(),
+                planId: plainItem.planId || new Date().getTime().toString(),
+                menuItemId: menuItemId, // Use the found menuItemId
+                restaurantId: plainItem.restaurantId ? (plainItem.restaurantId._id || plainItem.restaurantId) : null, // Include restaurantId
+                name: plainItem.name,
+                price: plainItem.price,
+                restaurantName: plainItem.restaurantName,
                 deliveryTime: '12:30', // Default lunch time
-                specialInstructions: item.specialInstructions || '',
-                description: item.description,
-                image: item.image,
-                category: item.category,
-                dietaryPreferences: item.dietaryPreferences || [],
-                spiceLevel: item.spiceLevel,
-                prepTime: item.prepTime,
-                servings: item.servings || 1,
-                ingredients: item.ingredients || []
+                specialInstructions: plainItem.specialInstructions || '',
+                description: plainItem.description,
+                image: plainItem.image,
+                category: plainItem.category,
+                dietaryPreferences: plainItem.dietaryPreferences || [],
+                spiceLevel: plainItem.spiceLevel,
+                prepTime: plainItem.prepTime,
+                servings: plainItem.servings || 1,
+                ingredients: plainItem.ingredients || []
                 };
               });
             }
@@ -537,28 +561,47 @@ const createSubscriptionFromMealPlan = async (req, res) => {
             // Convert dinner items
             if (weekData[day].dinner && Array.isArray(weekData[day].dinner)) {
               weekMeals[day].dinner = weekData[day].dinner.map(item => {
-                const menuItemId = item.menuItemId || item._id || item.id;
+                // Convert Mongoose document to plain object
+                const plainItem = item.toObject ? item.toObject() : item;
+                
+                console.log('🔍 DEBUG - Dinner item (plain object):', {
+                  name: plainItem.name,
+                  hasMenuItemId: !!plainItem.menuItemId,
+                  has_id: !!plainItem._id,
+                  hasId: !!plainItem.id,
+                  allKeys: Object.keys(plainItem)
+                });
+                
+                // Try multiple fields to find the menu item ID (strict - no fallbacks)
+                const menuItemId = plainItem.menuItemId || plainItem._id || plainItem.id;
+                
                 if (!menuItemId) {
-                  console.error('⚠️ Missing menuItemId for dinner item:', item);
-                  throw new Error(`Missing menuItemId for dinner item: ${item.name || 'Unknown item'}`);
+                  console.error('⚠️ Missing menuItemId for dinner item:', plainItem);
+                  console.error('💡 Run the database fix script: node fix-meal-plan-menuitemids.js');
+                  throw new Error(`Missing menuItemId for dinner item: ${plainItem.name || 'Unknown item'}. Please run the database migration script.`);
                 }
+                
+                // Add restaurant to map for multi-restaurant support
+                addRestaurantIfMissing(plainItem);
+                
                 return {
-                id: item.id || item._id?.toString() || new Date().getTime().toString(),
-                planId: item.planId || new Date().getTime().toString(),
-                menuItemId: item.menuItemId || item._id || item.id,
-                name: item.name,
-                price: item.price,
-                restaurantName: item.restaurantName || restaurant.name,
+                id: plainItem.id || plainItem._id?.toString() || new Date().getTime().toString(),
+                planId: plainItem.planId || new Date().getTime().toString(),
+                menuItemId: menuItemId, // Use the found menuItemId
+                restaurantId: plainItem.restaurantId ? (plainItem.restaurantId._id || plainItem.restaurantId) : null, // Include restaurantId
+                name: plainItem.name,
+                price: plainItem.price,
+                restaurantName: plainItem.restaurantName,
                 deliveryTime: '19:30', // Default dinner time
-                specialInstructions: item.specialInstructions || '',
-                description: item.description,
-                image: item.image,
-                category: item.category,
-                dietaryPreferences: item.dietaryPreferences || [],
-                spiceLevel: item.spiceLevel,
-                prepTime: item.prepTime,
-                servings: item.servings || 1,
-                ingredients: item.ingredients || []
+                specialInstructions: plainItem.specialInstructions || '',
+                description: plainItem.description,
+                image: plainItem.image,
+                category: plainItem.category,
+                dietaryPreferences: plainItem.dietaryPreferences || [],
+                spiceLevel: plainItem.spiceLevel,
+                prepTime: plainItem.prepTime,
+                servings: plainItem.servings || 1,
+                ingredients: plainItem.ingredients || []
                 };
               });
             }
@@ -580,6 +623,17 @@ const createSubscriptionFromMealPlan = async (req, res) => {
         message: 'No meal data found in your weekly plan. Please add some meals first.'
       });
     }
+    
+    // Validate we have at least one restaurant
+    const restaurantList = Array.from(restaurantMap.values());
+    if (restaurantList.length === 0) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'No restaurants found in your meal plan. Please ensure your meals have restaurant information.'
+      });
+    }
+    
+    console.log(`📊 Found ${restaurantList.length} restaurants in meal plan:`, restaurantList.map(r => r.name));
 
     // 4. Create SubscriptionMealPlan using UTC dates with proper planning time
     const subscriptionStartSunday = getSubscriptionStartSunday(today);  // Always gives proper notice
@@ -628,9 +682,18 @@ const createSubscriptionFromMealPlan = async (req, res) => {
       weekStartDates.push(weekStart);
     }
 
+    // Create restaurants array for the subscription
+    const restaurantsArray = restaurantList.map(restaurant => ({
+      restaurantId: restaurant._id,
+      restaurantName: restaurant.name,
+      totalMeals: 0, // Will be calculated in pre-save middleware
+      totalValue: 0, // Will be calculated in pre-save middleware
+      addedAt: new Date()
+    }));
+    
     const subscriptionMealPlan = new SubscriptionMealPlan({
       customerId: userId,
-      restaurantId: restaurantId,
+      restaurants: restaurantsArray, // Use restaurants array instead of single restaurantId
       // No separate subscriptionId - this IS the subscription
       planType: planType,
       planStartDate: planStartDate,
@@ -652,10 +715,10 @@ const createSubscriptionFromMealPlan = async (req, res) => {
       status: 'active',
       generatedOrders: [],
       isOrdersGenerated: false,
-      // Store plan details for billing
-      selectedRestaurantName: restaurant.name,
+      // Store plan details for billing (use first restaurant or combined)
+      selectedRestaurantName: restaurantList.length === 1 ? restaurantList[0].name : `${restaurantList.length} Restaurants`,
       selectedRestaurantData: {
-        name: restaurant.name,
+        name: restaurantList.length === 1 ? restaurantList[0].name : `${restaurantList.length} Restaurants`,
         planName: planName,
         monthlyPrice: monthlyPrice,
         features: features,
@@ -810,7 +873,7 @@ const createSubscriptionFromMealPlan = async (req, res) => {
     // 6. Populate and return the created subscription meal plan
     await subscriptionMealPlan.populate([
       { path: 'customerId', select: 'firstName lastName email phone' },
-      { path: 'restaurantId', select: 'name cuisine rating address' }
+      { path: 'restaurants.restaurantId', select: 'name cuisine rating address' }
     ]);
 
     res.status(201).json({
@@ -850,14 +913,14 @@ const getRestaurantMealPlans = async (req, res) => {
     const { status, page = 1, limit = 20 } = req.query;
     const skip = (page - 1) * limit;
 
-    let query = { restaurantId: { $in: restaurantIds } };
+    let query = { 'restaurants.restaurantId': { $in: restaurantIds } };
     if (status) {
       query.status = status;
     }
 
     const mealPlans = await SubscriptionMealPlan.find(query)
       .populate('customerId', 'firstName lastName email phone')
-      .populate('restaurantId', 'name cuisine')
+      .populate('restaurants.restaurantId', 'name cuisine')
       .populate('subscriptionId')
       .sort({ planStartDate: -1 })
       .skip(skip)

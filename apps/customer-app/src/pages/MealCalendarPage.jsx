@@ -48,6 +48,11 @@ const MealCalendarPage = () => {
     }
   }, [isClient, isAuthenticated, navigate]);
 
+  // Check if user has planned meals for preview mode (with safety check)
+  const hasPlannedMeals = isClient && mealPlanContext && (
+    getWeekTotalItems(0) > 0 || getWeekTotalItems(1) > 0
+  );
+
   // Initialize selected date - use startDate from URL if provided, otherwise use appropriate default
   useEffect(() => {
     if (isClient) {
@@ -67,9 +72,43 @@ const MealCalendarPage = () => {
         setSelectedDate(getDefaultStartDate());
       }
     }
-  }, [isClient, searchParams]);
+  }, [isClient, searchParams, hasPlannedMeals, isSubscribed, userMealPlans]);
 
-  // Get default start date - subscription start for subscribed users, next Sunday for preview mode, today for others
+  // Helper function to get earliest stored meal date from meal plan
+  const getEarliestStoredMealDate = () => {
+    if (!mealPlanContext || !hasPlannedMeals) return null;
+    
+    let earliestDate = null;
+    
+    // Check both weeks for stored dates
+    for (let weekIndex = 0; weekIndex < 2; weekIndex++) {
+      const weekPlan = getWeekPlan(weekIndex);
+      if (!weekPlan) continue;
+      
+      Object.entries(weekPlan).forEach(([day, dayMeals]) => {
+        if (dayMeals && dayMeals.date) {
+          const mealDate = new Date(dayMeals.date);
+          if (!earliestDate || mealDate < earliestDate) {
+            earliestDate = mealDate;
+            console.log(`📅 Found stored meal date for ${day}:`, dayMeals.date);
+          }
+        }
+      });
+    }
+    
+    if (earliestDate) {
+      // Get the Sunday of the week containing the earliest meal date
+      const dayOfWeek = earliestDate.getDay();
+      const weekStartDate = new Date(earliestDate);
+      weekStartDate.setDate(earliestDate.getDate() - dayOfWeek); // Go to Sunday of that week
+      console.log(`📅 Earliest stored meal date: ${earliestDate.toDateString()}, week starts: ${weekStartDate.toDateString()}`);
+      return weekStartDate;
+    }
+    
+    return null;
+  };
+
+  // Get default start date - subscription start for subscribed users, stored meal date for preview mode, today for others
   const getDefaultStartDate = () => {
     const today = new Date();
 
@@ -80,16 +119,23 @@ const MealCalendarPage = () => {
       return subscriptionStart.toISOString().split('T')[0];
     }
 
-    // For preview mode, start from next Sunday (same as meal planning)
+    // For preview mode, use stored meal dates if available, otherwise next Sunday
     if (hasPlannedMeals) {
-      const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
-      const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+      const storedWeekStart = getEarliestStoredMealDate();
+      if (storedWeekStart) {
+        console.log('📅 Using stored meal date as default start date:', storedWeekStart.toDateString());
+        return storedWeekStart.toISOString().split('T')[0];
+      } else {
+        // Fallback to next Sunday calculation
+        const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+        const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
 
-      const nextSunday = new Date(today);
-      nextSunday.setDate(today.getDate() + daysUntilSunday);
+        const nextSunday = new Date(today);
+        nextSunday.setDate(today.getDate() + daysUntilSunday);
 
-      console.log('📅 Using next Sunday as default start date:', nextSunday.toDateString());
-      return nextSunday.toISOString().split('T')[0];
+        console.log('📅 No stored dates, using next Sunday as default start date:', nextSunday.toDateString());
+        return nextSunday.toISOString().split('T')[0];
+      }
     }
 
     // For no subscription and no planned meals, use today
@@ -124,11 +170,6 @@ const MealCalendarPage = () => {
 
   // Calculate calendar mode: SUBSCRIPTION (has active subscription) or PREVIEW (planned meals only)
   const calendarMode = calendarData ? 'SUBSCRIPTION' : 'PREVIEW';
-  
-  // Check if user has planned meals for preview mode (with safety check)
-  const hasPlannedMeals = isClient && mealPlanContext && (
-    getWeekTotalItems(0) > 0 || getWeekTotalItems(1) > 0
-  );
 
   const fetchCalendarData = async () => {
     try {
@@ -349,9 +390,15 @@ const MealCalendarPage = () => {
       weekStartDate = new Date(currentWeekStart);
       console.log(`📅 Using current week start: ${weekStartDate.toDateString()}`);
     } else if (calendarMode === 'PREVIEW' && hasPlannedMeals) {
-      // For preview mode, use the same logic as meal planning - start from next Sunday
-      weekStartDate = getNextSunday();
-      console.log(`📅 Preview mode: Starting calendar from next Sunday (${weekStartDate.toDateString()})`);
+      // For preview mode, use stored meal dates if available, otherwise fallback to next Sunday
+      const storedWeekStart = getEarliestStoredMealDate();
+      if (storedWeekStart) {
+        weekStartDate = storedWeekStart;
+        console.log(`📅 Preview mode: Using stored meal date week start (${weekStartDate.toDateString()})`);
+      } else {
+        weekStartDate = getNextSunday();
+        console.log(`📅 Preview mode: No stored dates, using next Sunday (${weekStartDate.toDateString()})`);
+      }
     } else {
       // For subscription mode or regular calendar, use the provided startDate
       const start = new Date(startDate);
@@ -367,6 +414,7 @@ const MealCalendarPage = () => {
       dates.push(date.toISOString().split('T')[0]);
     }
     
+    console.log(`📅 Generated week dates:`, dates);
     return dates;
   };
 
@@ -384,8 +432,8 @@ const MealCalendarPage = () => {
       // Generate meals for each day of the week
       Object.entries(weekPlan).forEach(([day, dayMeals]) => {
         // Skip days without meals
-        const hasLunchMeals = dayMeals.lunch && dayMeals.lunch.length > 0;
-        const hasDinnerMeals = dayMeals.dinner && dayMeals.dinner.length > 0;
+        const hasLunchMeals = dayMeals && dayMeals.lunch && dayMeals.lunch.length > 0;
+        const hasDinnerMeals = dayMeals && dayMeals.dinner && dayMeals.dinner.length > 0;
         
         if (!hasLunchMeals && !hasDinnerMeals) {
           return; // Skip empty days
@@ -393,13 +441,13 @@ const MealCalendarPage = () => {
         
         // Use stored date if available, otherwise fallback to calculation
         let mealDate;
-        if (dayMeals.date) {
+        if (dayMeals && dayMeals.date) {
           // Use the stored date from backend
           mealDate = new Date(dayMeals.date + 'T00:00:00.000Z'); // Ensure UTC
-          console.log(`📅 Using stored date for ${day}:`, dayMeals.date);
+          console.log(`📅 Using stored date for ${day} (week ${weekIndex}):`, dayMeals.date, '→', mealDate.toDateString());
         } else {
           // Fallback to old calculation method
-          console.log(`⚠️ No stored date for ${day}, using fallback calculation`);
+          console.log(`⚠️ No stored date for ${day} (week ${weekIndex}), using fallback calculation`);
           const today = new Date();
           const weekStartDate = new Date(today);
           const daysUntilNextMonday = ((1 - today.getDay()) + 7) % 7 || 7;
@@ -408,6 +456,7 @@ const MealCalendarPage = () => {
           const dayIndex = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].indexOf(day);
           mealDate = new Date(weekStartDate);
           mealDate.setDate(weekStartDate.getDate() + dayIndex);
+          console.log(`📅 Calculated fallback date for ${day} (week ${weekIndex}):`, mealDate.toDateString());
         }
         
         // Generate lunch and dinner meals
@@ -547,6 +596,7 @@ const MealCalendarPage = () => {
       return subscriptionStart.toISOString().split('T')[0];
     } else {
       // For unsubscribed users, use selected date
+      console.log(`📅 Using selectedDate for week calculation: ${selectedDate}`);
       return selectedDate;
     }
   };
@@ -569,22 +619,22 @@ const MealCalendarPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Hero Header */}
+      {/* Enhanced Hero Header */}
       <div className="bg-gradient-to-r from-grub-red to-red-600 text-white">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="flex items-center space-x-3 mb-2">
-                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
+          <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex-1">
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-bold">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight">
                   {calendarMode === 'PREVIEW' ? 'Meal Plan Preview' : 'My Meal Calendar'}
                 </h1>
               </div>
-              <p className="text-red-100 text-sm sm:text-base">
+              <p className="text-red-100 text-sm sm:text-base leading-relaxed max-w-2xl">
                 {calendarMode === 'PREVIEW' 
                   ? 'Preview your planned meals schedule before subscribing'
                   : 'Track your scheduled meals and delivery status'
@@ -592,10 +642,10 @@ const MealCalendarPage = () => {
               </p>
             </div>
             
-            <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:flex-shrink-0">
               <button
                 onClick={() => navigate('/weekly-menu')}
-                className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-2"
+                className="bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -606,7 +656,7 @@ const MealCalendarPage = () => {
               {!subscriptionStatus?.hasActiveSubscription && (
                 <button
                   onClick={handleSubscribe}
-                  className="bg-white text-grub-red px-4 py-2 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+                  className="bg-white text-grub-red px-4 py-2.5 sm:py-2 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm sm:text-base"
                 >
                   Subscribe to Plan
                 </button>
@@ -616,18 +666,18 @@ const MealCalendarPage = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
 
-        {/* Subscription Status / Preview Card */}
+        {/* Enhanced Subscription Status / Preview Card */}
         {displayData?.calendar && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+          <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8 border border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
+              <div className="flex items-center space-x-3 flex-1 min-w-0">
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
                   calendarMode === 'PREVIEW' ? 'bg-blue-100' : 'bg-green-100'
                 }`}>
                   {calendarMode === 'PREVIEW' ? (
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
@@ -635,18 +685,18 @@ const MealCalendarPage = () => {
                     <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
                   )}
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-900 truncate">
                     {calendarMode === 'PREVIEW' ? 'Meal Plan Preview' : 'Active Subscription'}
                   </h2>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-xs sm:text-sm text-gray-500">
                     Plan Type: {displayData.calendar.subscriptionPeriod?.planType || 'Bi-Weekly'}
                   </p>
                 </div>
               </div>
               
-              <div className="text-right">
-                <div className={`text-3xl font-bold ${
+              <div className="text-center sm:text-right flex-shrink-0">
+                <div className={`text-2xl sm:text-3xl font-bold ${
                   calendarMode === 'PREVIEW' ? 'text-blue-600' : 'text-grub-red'
                 }`}>
                   {calendarMode === 'PREVIEW' ? displayData.calendar.totalMeals : displayData.calendar.progressPercentage + '%'}
@@ -657,25 +707,25 @@ const MealCalendarPage = () => {
               </div>
             </div>
             
-            {/* Subscription Period - Only show for active subscriptions */}
+            {/* Enhanced Subscription Period - Only show for active subscriptions */}
             {calendarMode === 'SUBSCRIPTION' && (
-              <div className="bg-gray-50 rounded-xl p-4 mb-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Start Date</p>
-                    <p className="font-semibold text-gray-900">
+              <div className="bg-gray-50 rounded-xl p-3 sm:p-4 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-center">
+                  <div className="bg-white rounded-lg p-3 shadow-sm">
+                    <p className="text-xs text-gray-500 mb-1 font-medium">Start Date</p>
+                    <p className="font-bold text-gray-900 text-sm sm:text-base">
                       {new Date(displayData.calendar.subscriptionPeriod.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">End Date</p>
-                    <p className="font-semibold text-gray-900">
+                  <div className="bg-white rounded-lg p-3 shadow-sm">
+                    <p className="text-xs text-gray-500 mb-1 font-medium">End Date</p>
+                    <p className="font-bold text-gray-900 text-sm sm:text-base">
                       {new Date(displayData.calendar.subscriptionPeriod.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Days Left</p>
-                    <p className="font-semibold text-grub-red">
+                  <div className="bg-white rounded-lg p-3 shadow-sm">
+                    <p className="text-xs text-gray-500 mb-1 font-medium">Days Left</p>
+                    <p className="font-bold text-grub-red text-sm sm:text-base">
                       {displayData.calendar.remainingDays}
                     </p>
                   </div>
@@ -733,19 +783,19 @@ const MealCalendarPage = () => {
           </div>
         )}
 
-        {/* Calendar Grid */}
+        {/* Enhanced Calendar Grid */}
         {displayData?.meals && (
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
-            <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 border-b border-gray-200">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900 flex items-center space-x-2">
-                    <svg className="w-5 h-5 text-grub-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 sm:p-6 border-b border-gray-200">
+              <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex-1">
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center space-x-2 mb-2">
+                    <svg className="w-5 h-5 text-grub-red flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                     <span>Weekly Meal Schedule</span>
                   </h2>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
                     {isSubscribed 
                       ? 'Click on any date within your subscription period'
                       : `Click on dates from ${getNextSunday().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} to ${new Date(getNextSunday().getTime() + 13 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} (2 weeks)`
@@ -753,9 +803,9 @@ const MealCalendarPage = () => {
                   </p>
                 </div>
                 
-                <div className="flex items-center space-x-3">
-                  <label className="text-sm font-medium text-gray-700 flex items-center space-x-1">
-                    <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                  <label className="text-xs sm:text-sm font-medium text-gray-700 flex items-center space-x-1 sm:space-x-2">
+                    <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     <span>Jump to date:</span>
@@ -787,14 +837,14 @@ const MealCalendarPage = () => {
                         alert('This date is not available for your subscription period.');
                       }
                     }}
-                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors cursor-pointer"
+                    className="border border-gray-300 rounded-lg px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors cursor-pointer bg-white"
                   />
                 </div>
               </div>
             </div>
             
-            {/* Week Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-7 divide-y md:divide-y-0 md:divide-x divide-gray-200">
+            {/* Enhanced Week Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 divide-y sm:divide-y-0 sm:divide-x lg:divide-x divide-gray-200">
               {weekDates.map((date) => {
                 const dayMeals = currentWeekMeals[date] || [];
                 const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'long' });
@@ -809,7 +859,7 @@ const MealCalendarPage = () => {
                 return (
                   <div 
                     key={date} 
-                    className={`p-4 min-h-[250px] transition-all duration-200 hover:bg-gray-50 ${
+                    className={`p-3 sm:p-4 min-h-[200px] sm:min-h-[250px] lg:min-h-[280px] transition-all duration-200 hover:bg-gray-50 ${
                       isToday ? 'bg-gradient-to-b from-grub-red/5 to-red-50' : ''
                     } ${
                       isSelected ? 'ring-2 ring-grub-red bg-red-50' : ''
@@ -903,6 +953,13 @@ const MealCalendarPage = () => {
                                 {meal.mealName}
                               </div>
                               
+                              {meal.restaurant && (
+                                <div className="text-xs text-gray-600 mb-1 flex items-center">
+                                  <span className="mr-1">🏪</span>
+                                  <span className="font-medium">{meal.restaurant}</span>
+                                </div>
+                              )}
+                              
                               <div className="text-xs opacity-75 mb-2">
                                 🕐 {meal.deliveryTime.start} - {meal.deliveryTime.end}
                               </div>
@@ -926,9 +983,9 @@ const MealCalendarPage = () => {
 
         {/* Enhanced Summary Stats */}
         {displayData?.summary && (
-          <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="mt-6 sm:mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Meal Types Card */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-200">
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                   <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -958,7 +1015,7 @@ const MealCalendarPage = () => {
             </div>
             
             {/* Status Overview Card */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-200">
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
                   <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -993,7 +1050,7 @@ const MealCalendarPage = () => {
             </div>
             
             {/* Quick Actions Card */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-200 md:col-span-2 lg:col-span-1">
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
                   <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1005,9 +1062,9 @@ const MealCalendarPage = () => {
               <div className="space-y-3">
                 <button
                   onClick={() => navigate('/weekly-menu')}
-                  className="w-full flex items-center space-x-3 p-3 text-left bg-grub-red/5 hover:bg-grub-red/10 rounded-lg transition-all duration-200 group"
+                  className="w-full flex items-center space-x-3 p-3 text-left bg-grub-red/5 hover:bg-grub-red/10 rounded-lg transition-all duration-200 group touch-manipulation"
                 >
-                  <svg className="w-4 h-4 text-grub-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-grub-red flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
                   <span className="text-sm font-medium text-grub-red group-hover:text-red-700">Plan New Meals</span>
@@ -1015,9 +1072,9 @@ const MealCalendarPage = () => {
                 
                 <button
                   onClick={fetchCalendarData}
-                  className="w-full flex items-center space-x-3 p-3 text-left bg-blue-50 hover:bg-blue-100 rounded-lg transition-all duration-200 group"
+                  className="w-full flex items-center space-x-3 p-3 text-left bg-blue-50 hover:bg-blue-100 rounded-lg transition-all duration-200 group touch-manipulation"
                 >
-                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
                   <span className="text-sm font-medium text-blue-600 group-hover:text-blue-700">Refresh Calendar</span>
@@ -1025,15 +1082,45 @@ const MealCalendarPage = () => {
                 
                 <button
                   onClick={() => navigate('/profile')}
-                  className="w-full flex items-center space-x-3 p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg transition-all duration-200 group"
+                  className="w-full flex items-center space-x-3 p-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg transition-all duration-200 group touch-manipulation"
                 >
-                  <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                   <span className="text-sm font-medium text-gray-600 group-hover:text-gray-700">Account Settings</span>
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Subscribe to Plan Button - Only for unsubscribed users */}
+        {!isSubscribed && (
+          <div className="mt-8">
+            <button
+              onClick={() => navigate('/subscription')}
+              className="group w-full text-left p-6 rounded-2xl bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border-2 border-red-500 relative overflow-hidden touch-manipulation"
+            >
+              {/* Highlight badge */}
+              <div className="absolute top-3 right-3 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse">
+                START NOW
+              </div>
+              
+              {/* Animated background effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+              
+              <div className="relative z-10">
+                <div className="font-bold text-white flex items-center text-lg mb-2">
+                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                    </svg>
+                  </div>
+                  Subscribe to Plan
+                </div>
+                <div className="text-red-100 ml-11">Ready to start your meal journey? Subscribe now to get fresh, delicious meals delivered to your door!</div>
+              </div>
+            </button>
           </div>
         )}
 

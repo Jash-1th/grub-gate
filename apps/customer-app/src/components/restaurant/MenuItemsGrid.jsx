@@ -8,6 +8,7 @@ const MenuItemsGrid = ({
   selectedMealType,
   restaurantName,
   onItemClick,
+  onAddToPlan,
   onRemoveFromPlan,
   isItemInPlan,
   getItemPlanEntries,
@@ -16,7 +17,8 @@ const MenuItemsGrid = ({
   emptyStateMessage,
   showProBadges = false,
   isFromMenuSelection = false,
-  isMealPlanningEnabled = true
+  isMealPlanningEnabled = true,
+  week = 0 // Add week parameter for week-aware meal plan checks
 }) => {
   const isPro = userType === 'pro';
 
@@ -69,8 +71,8 @@ const MenuItemsGrid = ({
         )}
       </div>
 
-      {/* Items Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4" data-items-section>
+      {/* Items Grid - Narrower cards with more columns */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3" data-items-section>
         {items.map((item) => (
           <div 
             key={`${item.id}-${selectedMealType}`} 
@@ -78,7 +80,7 @@ const MenuItemsGrid = ({
           >
             <FoodItemCard
               item={item}
-              onAddToPlan={() => onItemClick(item)}
+              onAddToPlan={onAddToPlan ? () => onAddToPlan(item) : () => onItemClick(item)}
               onRemoveFromPlan={onRemoveFromPlan}
               onItemClick={onItemClick}
               selectedDay={selectedDay}
@@ -89,6 +91,8 @@ const MenuItemsGrid = ({
               isInPlan={isItemInPlan ? isItemInPlan(item.id) : false}
               planEntries={getItemPlanEntries ? getItemPlanEntries(item.id) : []}
               isMealPlanningEnabled={isMealPlanningEnabled}
+              isFromWeeklyMenu={isFromMenuSelection}
+              week={week}
             />
             
             {/* Pro Enhancement - Match Badge */}

@@ -4,6 +4,7 @@ import { useModal } from '../../context/ModalContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import WelcomeModal from './WelcomeModal';
+import { signupModalSchema, validateFormData, validateField } from '../../utils/validation/joiSchemas';
 import './modal-responsive.css';
 
 const SignupModal = () => {
@@ -27,11 +28,15 @@ const SignupModal = () => {
   // Local loading state to prevent multiple clicks
   const [isLocalLoading, setIsLocalLoading] = useState(false);
   
+  // Real-time validation state
+  const [touchedFields, setTouchedFields] = useState({});
+  const [isFormValid, setIsFormValid] = useState(false);
+  
   // Welcome modal state
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [welcomeUserName, setWelcomeUserName] = useState('');
 
-  // Handle input changes
+  // Handle input changes with real-time validation
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -39,11 +44,20 @@ const SignupModal = () => {
       [name]: value
     }));
     
-    // Clear field-specific errors when user starts typing
-    if (formErrors[name]) {
+    // Mark field as touched
+    setTouchedFields(prev => ({
+      ...prev,
+      [name]: true
+    }));
+    
+    // Real-time field validation using Joi
+    if (touchedFields[name] || value.length > 0) {
+      console.log(`🔍 Validating field ${name} with value:`, value);
+      const fieldError = validateField(name, value, signupModalSchema);
+      console.log(`🔍 Field ${name} validation result:`, fieldError);
       setFormErrors(prev => ({
         ...prev,
-        [name]: ''
+        [name]: fieldError
       }));
     }
     
@@ -58,35 +72,28 @@ const SignupModal = () => {
     }
   };
 
-  // Validate form
+  // Validate form using Joi schema
   const validateForm = () => {
-    const errors = {};
+    const { isValid, formattedErrors } = validateFormData(formData, signupModalSchema);
+    return formattedErrors;
+  };
+  
+  // Handle field blur for validation
+  const handleFieldBlur = (e) => {
+    const { name, value } = e.target;
     
-    if (!formData.name.trim()) {
-      errors.name = 'Name is required';
-    } else if (formData.name.trim().length < 2) {
-      errors.name = 'Name must be at least 2 characters';
-    }
+    // Mark field as touched
+    setTouchedFields(prev => ({
+      ...prev,
+      [name]: true
+    }));
     
-    if (!formData.email) {
-      errors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = 'Email is invalid';
-    }
-    
-    if (!formData.password) {
-      errors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters';
-    }
-    
-    if (!formData.confirmPassword) {
-      errors.confirmPassword = 'Please confirm your password';
-    } else if (formData.password !== formData.confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match';
-    }
-    
-    return errors;
+    // Validate field on blur
+    const fieldError = validateField(name, value, signupModalSchema);
+    setFormErrors(prev => ({
+      ...prev,
+      [name]: fieldError
+    }));
   };
 
   // Handle form submission
@@ -99,12 +106,25 @@ const SignupModal = () => {
       return false;
     }
     
-    // Validate form
-    const errors = validateForm();
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
+    // Validate form using Joi
+    console.log('🔍 Validating form data:', formData);
+    const { isValid, formattedErrors } = validateFormData(formData, signupModalSchema);
+    console.log('🔍 Validation result:', { isValid, formattedErrors });
+    
+    if (!isValid) {
+      console.log('❌ Form validation failed, setting errors:', formattedErrors);
+      setFormErrors(formattedErrors);
+      // Mark all fields as touched to show errors
+      setTouchedFields({
+        name: true,
+        email: true,
+        password: true,
+        confirmPassword: true
+      });
       return;
     }
+    
+    console.log('✅ Form validation passed, proceeding with submission');
     
     // Clear any existing errors
     setFormErrors({});
@@ -186,7 +206,10 @@ const SignupModal = () => {
       }
     } catch (error) {
       console.error('Registration error:', error);
-      setFormErrors({ general: 'Registration failed. Please try again.' });
+      // Don't override validation errors, only set general error if no specific field errors
+      if (Object.keys(formErrors).length === 0) {
+        setFormErrors({ general: 'Registration failed. Please try again.' });
+      }
     } finally {
       // Always clear local loading state
       setIsLocalLoading(false);
@@ -200,7 +223,7 @@ const SignupModal = () => {
 
   // Handle close with form reset
   const handleClose = () => {
-    // 1. Reset the form state
+    // Reset the form state
     setFormData({
       name: '',
       email: '',
@@ -209,13 +232,17 @@ const SignupModal = () => {
     });
     // 2. Clear form errors
     setFormErrors({});
-    // 3. Clear auth errors
+    // 3. Clear touched fields
+    setTouchedFields({});
+    // 4. Clear auth errors
     clearError();
-    // 4. Clear success message
+    // 5. Clear success message
     setSuccessMessage('');
-    // 5. Reset local loading state
+    // 6. Reset local loading state
     setIsLocalLoading(false);
-    // 6. Close the modal
+    // 7. Reset form validity
+    setIsFormValid(false);
+    // 8. Close the modal
     closeSignupModal();
   };
 
@@ -224,6 +251,17 @@ const SignupModal = () => {
     setShowWelcomeModal(false);
     setWelcomeUserName('');
   };
+
+  // Track form validity in real-time
+  useEffect(() => {
+    const { isValid } = validateFormData(formData, signupModalSchema);
+    setIsFormValid(isValid);
+  }, [formData]);
+  
+  // Debug form errors
+  useEffect(() => {
+    console.log('🔍 Current form errors:', formErrors);
+  }, [formErrors]);
 
   // Handle ESC key to close modal with form reset
   useEffect(() => {
@@ -241,6 +279,49 @@ const SignupModal = () => {
       document.removeEventListener('keydown', handleEscapeKey);
     };
   }, [isSignupModalOpen]);
+
+  // Helper function to get field styling
+  const getFieldStyling = (fieldName) => {
+    const hasError = formErrors[fieldName];
+    const isTouched = touchedFields[fieldName];
+    const hasValue = formData[fieldName] && formData[fieldName].length > 0;
+    const isValid = isTouched && hasValue && !hasError;
+    
+    if (hasError) {
+      return 'border-red-300 bg-red-50 focus:ring-red-500 focus:border-red-500';
+    } else if (isValid) {
+      return 'border-green-300 bg-green-50 focus:ring-green-500 focus:border-green-500';
+    } else {
+      return 'border-gray-300 focus:ring-grub-red focus:border-grub-red';
+    }
+  };
+
+  // Helper function to show validation icon
+  const getValidationIcon = (fieldName) => {
+    const hasError = formErrors[fieldName];
+    const isTouched = touchedFields[fieldName];
+    const hasValue = formData[fieldName] && formData[fieldName].length > 0;
+    const isValid = isTouched && hasValue && !hasError;
+    
+    if (hasError) {
+      return (
+        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+          <svg className="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+        </div>
+      );
+    } else if (isValid) {
+      return (
+        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+          <svg className="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+        </div>
+      );
+    }
+    return null;
+  };
 
   if (!isSignupModalOpen) {
     return null;
@@ -287,10 +368,17 @@ const SignupModal = () => {
               </div>
             )}
             
-            {/* Global Error Message */}
+            {/* Global Error Message from Auth Context */}
             {error && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+            
+            {/* Form Validation Errors */}
+            {formErrors.general && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{formErrors.general}</p>
               </div>
             )}
             
@@ -301,21 +389,30 @@ const SignupModal = () => {
                 <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
                   Full Name
                 </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Enter your full name"
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
-                    formErrors.name ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
-                  required
-                  disabled={isLoading || isLocalLoading}
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    onBlur={handleFieldBlur}
+                    placeholder="Enter your full name"
+                    className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
+                      getFieldStyling('name')
+                    }`}
+                    required
+                    disabled={isLoading || isLocalLoading}
+                  />
+                  {getValidationIcon('name')}
+                </div>
                 {formErrors.name && (
-                  <p className="mt-1 text-sm text-red-600">{formErrors.name}</p>
+                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {formErrors.name}
+                  </p>
                 )}
               </div>
 
@@ -324,21 +421,30 @@ const SignupModal = () => {
                 <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
                   Email Address
                 </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="Enter your email address"
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
-                    formErrors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
-                  required
-                  disabled={isLoading || isLocalLoading}
-                />
+                <div className="relative">
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    onBlur={handleFieldBlur}
+                    placeholder="Enter your email address"
+                    className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
+                      getFieldStyling('email')
+                    }`}
+                    required
+                    disabled={isLoading || isLocalLoading}
+                  />
+                  {getValidationIcon('email')}
+                </div>
                 {formErrors.email && (
-                  <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
+                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {formErrors.email}
+                  </p>
                 )}
               </div>
 
@@ -347,21 +453,30 @@ const SignupModal = () => {
                 <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
                   Password
                 </label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  placeholder="Create a password (min. 6 characters)"
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
-                    formErrors.password ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
-                  required
-                  disabled={isLoading || isLocalLoading}
-                />
+                <div className="relative">
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    onBlur={handleFieldBlur}
+                    placeholder="Create a password (min. 6 characters)"
+                    className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
+                      getFieldStyling('password')
+                    }`}
+                    required
+                    disabled={isLoading || isLocalLoading}
+                  />
+                  {getValidationIcon('password')}
+                </div>
                 {formErrors.password && (
-                  <p className="mt-1 text-sm text-red-600">{formErrors.password}</p>
+                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {formErrors.password}
+                  </p>
                 )}
               </div>
 
@@ -370,21 +485,30 @@ const SignupModal = () => {
                 <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
                   Confirm Password
                 </label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  placeholder="Confirm your password"
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
-                    formErrors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
-                  required
-                  disabled={isLoading || isLocalLoading}
-                />
+                <div className="relative">
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    onBlur={handleFieldBlur}
+                    placeholder="Confirm your password"
+                    className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
+                      getFieldStyling('confirmPassword')
+                    }`}
+                    required
+                    disabled={isLoading || isLocalLoading}
+                  />
+                  {getValidationIcon('confirmPassword')}
+                </div>
                 {formErrors.confirmPassword && (
-                  <p className="mt-1 text-sm text-red-600">{formErrors.confirmPassword}</p>
+                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {formErrors.confirmPassword}
+                  </p>
                 )}
               </div>
 

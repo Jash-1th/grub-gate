@@ -28,10 +28,26 @@ const { asyncHandler } = require('../middlewares/errorHandler');
 const register = asyncHandler(async (req, res) => {
   const { firstName, lastName, email, password, phone, phoneNumber, role = 'customer' } = req.body;
 
-  // Check if user already exists
-  const existingUser = await User.findOne({ email });
+  // Ensure only customer registration is allowed through this endpoint
+  if (role !== 'customer') {
+    return errorResponse(res, 'This endpoint only supports customer registration', 400);
+  }
+
+  // Check if user already exists by email or phone
+  const phoneToCheck = phoneNumber || phone;
+  const existingUser = await User.findOne({ 
+    $or: [
+      { email },
+      { phoneNumber: phoneToCheck }
+    ]
+  });
+  
   if (existingUser) {
-    return conflictResponse(res, 'User with this email already exists');
+    if (existingUser.email === email) {
+      return conflictResponse(res, 'User with this email already exists');
+    } else if (existingUser.phoneNumber === phoneToCheck) {
+      return conflictResponse(res, 'User with this phone number already exists');
+    }
   }
 
   // Create user
@@ -120,6 +136,11 @@ const login = asyncHandler(async (req, res) => {
     return unauthorizedResponse(res, 'Your account has been deactivated. Please contact support.');
   }
 
+  // Check if user has customer role (for customer app login)
+  if (!user.roles || !user.roles.includes('customer')) {
+    return unauthorizedResponse(res, 'Access denied. Customer account required.');
+  }
+
   // Update last login
   user.lastLoginAt = new Date();
   await user.save();
@@ -165,6 +186,110 @@ const login = asyncHandler(async (req, res) => {
     user: userData,
     ...tokens
   }, 'Login successful');
+});
+
+/**
+ * @desc      Login partner with email/phone + password
+ * @route     POST /api/v1/auth/partner/login
+ * @access    Public
+ */
+const partnerLogin = asyncHandler(async (req, res) => {
+  const { identifier, password } = req.body;
+
+  if (!identifier || !password) {
+    return errorResponse(res, 'Email/phone and password are required', 400);
+  }
+
+  // Determine if identifier is email or phone
+  const isEmail = emailService.validateEmail(identifier);
+  const isPhone = smsService.validatePhoneNumber(identifier);
+
+  if (!isEmail && !isPhone) {
+    return errorResponse(res, 'Please provide a valid email address or phone number', 400);
+  }
+
+  // Format identifier
+  let formattedIdentifier = identifier.toLowerCase().trim();
+  if (isPhone) {
+    formattedIdentifier = smsService.formatPhoneNumber(identifier);
+  }
+
+  // Find user by email or phone
+  const searchQuery = isEmail
+    ? { email: formattedIdentifier }
+    : { phoneNumber: formattedIdentifier };
+
+  const user = await User.findOne(searchQuery).select('+passwordHash');
+
+  if (!user) {
+    return unauthorizedResponse(res, 'Wrong email or phone number. Please check your credentials and try again.');
+  }
+
+  // Check if user has a password (some users might be OTP-only)
+  if (!user.passwordHash) {
+    return errorResponse(res, 'Please use OTP login for this account', 400);
+  }
+
+  // Check if password matches
+  const isPasswordMatch = await user.matchPassword(password);
+
+  if (!isPasswordMatch) {
+    return unauthorizedResponse(res, 'Wrong password. Please check your password and try again.');
+  }
+
+  // Check if user is active
+  if (user.status !== 'active') {
+    return unauthorizedResponse(res, 'Your account has been deactivated. Please contact support.');
+  }
+
+  // Check if user has partner role (for partner portal login)
+  if (!user.roles || !user.roles.includes('partner')) {
+    return unauthorizedResponse(res, 'Access denied. Partner account required.');
+  }
+
+  // Update last login
+  user.lastLoginAt = new Date();
+  await user.save();
+
+  // For partners, fetch restaurant information
+  let restaurantInfo = null;
+  try {
+    restaurantInfo = await Restaurant.findOne({ ownerId: user._id }).select('registrationComplete registrationStage status');
+  } catch (error) {
+    console.error('Error fetching restaurant info during partner login:', error);
+  }
+
+  // Generate JWT tokens
+  const tokens = generateTokenPair(user._id, user.roles || [user.role]);
+
+  // Remove password from response
+  user.passwordHash = undefined;
+
+  const userData = {
+    _id: user._id,
+    email: user.email,
+    phoneNumber: user.phoneNumber,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    roles: user.roles,
+    role: user.role, // Legacy field
+    status: user.status,
+    emailVerified: user.emailVerified,
+    phoneVerified: user.phoneVerified
+  };
+
+  // Add restaurant info if available
+  if (restaurantInfo) {
+    userData.restaurantId = restaurantInfo._id;
+    userData.registrationComplete = restaurantInfo.registrationComplete;
+    userData.registrationStage = restaurantInfo.registrationStage;
+    userData.restaurantStatus = restaurantInfo.status;
+  }
+
+  successResponse(res, {
+    user: userData,
+    ...tokens
+  }, 'Partner login successful');
 });
 
 /**
@@ -350,9 +475,8 @@ const requestCustomerOTP = asyncHandler(async (req, res) => {
   const searchQuery = isEmail ? { email: formattedIdentifier } : { phoneNumber: formattedIdentifier };
   const existingUser = await User.findOne(searchQuery);
 
-  if (existingUser) {
-    return conflictResponse(res, 'An account with this identifier already exists. Please login instead.');
-  }
+  // Allow existing users to proceed with OTP (role addition will be handled in verification step)
+  // No need to block existing users anymore
 
   try {
     const { otp } = await OTP.generateOTP(formattedIdentifier);
@@ -363,7 +487,7 @@ const requestCustomerOTP = asyncHandler(async (req, res) => {
       await smsService.sendOTP(formattedIdentifier, otp);
     }
 
-    successResponse(res, { userExists: false }, 'OTP sent successfully for signup.');
+    successResponse(res, { userExists: !!existingUser }, 'OTP sent successfully for customer registration.');
   } catch (error) {
     console.error('Request Customer OTP Error:', error);
     return errorResponse(res, 'Failed to send OTP. Please try again.', 500);
@@ -513,10 +637,36 @@ const verifyCustomerOTP = asyncHandler(async (req, res) => {
     
     const isEmail = emailService.validateEmail(formattedIdentifier);
     const searchQuery = isEmail ? { email: formattedIdentifier } : { phoneNumber: formattedIdentifier };
-    const existingUser = await User.findOne(searchQuery);
+    let existingUser = await User.findOne(searchQuery);
+    let isNewUser = false;
 
+    // Handle existing user with partner role - add customer role instead of blocking
     if (existingUser) {
-      return conflictResponse(res, 'User with this identifier already exists.');
+      if (!existingUser.roles.includes('customer')) {
+        existingUser.roles.push('customer');
+        await existingUser.save();
+        
+        // Ensure user now has customer role
+        if (!existingUser.roles.includes('customer')) {
+          return errorResponse(res, 'Failed to add customer role to existing account', 500);
+        }
+        
+        const tokens = generateTokenPair(existingUser._id, existingUser.roles);
+        
+        return successResponse(res, {
+          user: {
+            _id: existingUser._id,
+            email: existingUser.email,
+            phoneNumber: existingUser.phoneNumber,
+            firstName: existingUser.firstName,
+            lastName: existingUser.lastName,
+            roles: existingUser.roles
+          },
+          ...tokens
+        }, 'Customer role added to existing account successfully');
+      } else {
+        return conflictResponse(res, 'A customer account with this identifier already exists.');
+      }
     }
 
     const userData = {
@@ -536,6 +686,12 @@ const verifyCustomerOTP = asyncHandler(async (req, res) => {
     }
 
     const user = await User.create(userData);
+    
+    // Ensure user has customer role before generating tokens
+    if (!user.roles.includes('customer')) {
+      return errorResponse(res, 'Failed to create customer account', 500);
+    }
+    
     const tokens = generateTokenPair(user._id, user.roles);
 
     createdResponse(res, {
@@ -601,9 +757,8 @@ const requestPartnerOTP = asyncHandler(async (req, res) => {
     const searchQuery = isEmail ? { email: formattedIdentifier } : { phoneNumber: formattedIdentifier };
     const existingUser = await User.findOne(searchQuery);
 
-    if (existingUser && existingUser.roles.includes('partner')) {
-      return conflictResponse(res, 'A partner account with this identifier already exists.');
-    }
+    // Allow existing users (both customer and partner) to proceed with OTP
+    // Role addition will be handled in the verification step
 
     const { otp } = await OTP.generateOTP(formattedIdentifier);
 
@@ -799,6 +954,11 @@ const verifyPartnerOTP = asyncHandler(async (req, res) => {
       if (!user.roles.includes('partner')) {
         user.roles.push('partner');
         await user.save();
+      } else {
+        // Check if partner already has a restaurant
+        if (user.restaurantId) {
+          return conflictResponse(res, 'Partner already has a restaurant registered. Only one restaurant per partner is allowed.');
+        }
       }
     }
 
@@ -838,8 +998,8 @@ const verifyPartnerOTP = asyncHandler(async (req, res) => {
       businessLicenseText: businessLicenseText || '',
       taxId: taxId || '',
       status: 'pending', // New restaurants should be pending approval
-      registrationComplete: false,
-      registrationStage: 2,
+      registrationComplete: true,
+      registrationStage: 3,
       isVerified: false,
       rating: 0,
       reviewCount: 0,
@@ -1028,6 +1188,7 @@ module.exports = {
   verifyCustomerOTP,
   
   // Partner authentication
+  partnerLogin,
   registerPartner, // Note: Deprecated but kept for reference
   requestPartnerOTP,
   verifyPartnerOTP,

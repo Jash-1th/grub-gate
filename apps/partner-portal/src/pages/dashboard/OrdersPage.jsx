@@ -271,7 +271,7 @@ const OrdersPage = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
           {[
             { 
               label: 'Pending', 
@@ -305,14 +305,14 @@ const OrdersPage = () => {
             const Icon = stat.icon;
             return (
               <Card key={index} className="hover:shadow-lg transition-all duration-200">
-                <CardContent className="p-3 sm:p-4 lg:p-6">
+                <CardContent className="p-3 sm:p-4 lg:p-5">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">{stat.label}</p>
-                      <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{stat.count}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 truncate">{stat.label}</p>
+                      <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900">{stat.count}</p>
                     </div>
-                    <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center ${stat.bgColor}`}>
-                      <FontAwesomeIcon icon={Icon} className={`h-5 w-5 sm:h-6 sm:w-6 ${stat.color.replace('bg-', 'text-')}`} />
+                    <div className={`h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 rounded-full flex items-center justify-center flex-shrink-0 ml-2 ${stat.bgColor}`}>
+                      <FontAwesomeIcon icon={Icon} className={`h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 ${stat.color.replace('bg-', 'text-')}`} />
                     </div>
                   </div>
                 </CardContent>
@@ -324,7 +324,7 @@ const OrdersPage = () => {
         {/* Filters */}
         <Card>
           <CardContent className="p-3 sm:p-4 lg:p-6">
-            <div className="flex flex-col gap-3 sm:gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <div className="flex-1">
                 <div className="relative">
                   <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -332,15 +332,15 @@ const OrdersPage = () => {
                     placeholder="Search orders by customer name..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 text-sm sm:text-base"
+                    className="pl-10 text-sm sm:text-base w-full"
                   />
                 </div>
               </div>
-              <div className="w-full sm:w-48">
+              <div className="w-full sm:w-48 lg:w-56">
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red"
+                  className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red bg-white"
                 >
                   {statuses.map(status => (
                     <option key={status.value} value={status.value}>
@@ -384,38 +384,38 @@ const OrdersPage = () => {
                 <Card>
                   <CardContent className="p-0">
                     <div className="overflow-x-auto">
-                      <table className="w-full">
+                      <table className="w-full min-w-[1000px]">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="text-left py-4 px-6 font-semibold text-gray-900">Order ID</th>
-                            <th className="text-left py-4 px-6 font-semibold text-gray-900">Customer</th>
-                            <th className="text-left py-4 px-6 font-semibold text-gray-900">Items</th>
-                            <th className="text-left py-4 px-6 font-semibold text-gray-900">Meal Type</th>
-                            <th className="text-left py-4 px-6 font-semibold text-gray-900">Total</th>
-                            <th className="text-left py-4 px-6 font-semibold text-gray-900">Status</th>
-                            <th className="text-left py-4 px-6 font-semibold text-gray-900">Delivery Time</th>
-                            <th className="text-left py-4 px-6 font-semibold text-gray-900">Actions</th>
+                            <th className="text-left py-3 px-4 xl:py-4 xl:px-6 font-semibold text-gray-900 text-sm xl:text-base">Order ID</th>
+                            <th className="text-left py-3 px-4 xl:py-4 xl:px-6 font-semibold text-gray-900 text-sm xl:text-base">Customer</th>
+                            <th className="text-left py-3 px-4 xl:py-4 xl:px-6 font-semibold text-gray-900 text-sm xl:text-base">Items</th>
+                            <th className="text-left py-3 px-4 xl:py-4 xl:px-6 font-semibold text-gray-900 text-sm xl:text-base">Meal Type</th>
+                            <th className="text-left py-3 px-4 xl:py-4 xl:px-6 font-semibold text-gray-900 text-sm xl:text-base">Total</th>
+                            <th className="text-left py-3 px-4 xl:py-4 xl:px-6 font-semibold text-gray-900 text-sm xl:text-base">Status</th>
+                            <th className="text-left py-3 px-4 xl:py-4 xl:px-6 font-semibold text-gray-900 text-sm xl:text-base">Delivery Time</th>
+                            <th className="text-left py-3 px-4 xl:py-4 xl:px-6 font-semibold text-gray-900 text-sm xl:text-base">Actions</th>
                           </tr>
                         </thead>
                         <tbody>
                           {filteredOrders.map((order) => (
                             <tr key={order._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                              <td className="py-4 px-6">
-                                <span className="font-semibold text-gray-900">#{order.orderNumber}</span>
+                              <td className="py-3 px-4 xl:py-4 xl:px-6">
+                                <span className="font-semibold text-gray-900 text-sm xl:text-base">#{order.orderNumber}</span>
                               </td>
-                              <td className="py-4 px-6">
-                                <div>
-                                  <div className="font-medium text-gray-900">
+                              <td className="py-3 px-4 xl:py-4 xl:px-6">
+                                <div className="min-w-0">
+                                  <div className="font-medium text-gray-900 text-sm xl:text-base truncate">
                                     {order.customerId?.firstName} {order.customerId?.lastName}
                                   </div>
-                                  <div className="text-sm text-gray-500">{order.customerId?.email}</div>
+                                  <div className="text-xs xl:text-sm text-gray-500 truncate">{order.customerId?.email}</div>
                                 </div>
                               </td>
-                              <td className="py-4 px-6">
-                                <span className="text-gray-900">{order.items?.length || 0} items</span>
+                              <td className="py-3 px-4 xl:py-4 xl:px-6">
+                                <span className="text-gray-900 text-sm xl:text-base">{order.items?.length || 0} items</span>
                               </td>
-                              <td className="py-4 px-6">
-                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              <td className="py-3 px-4 xl:py-4 xl:px-6">
+                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
                                   order.mealType === 'lunch' 
                                     ? 'bg-yellow-100 text-yellow-800' 
                                     : order.mealType === 'dinner'
@@ -427,17 +427,17 @@ const OrdersPage = () => {
                                    '🍽️ Order'}
                                 </span>
                               </td>
-                              <td className="py-4 px-6">
-                                <span className="font-bold text-lg text-grub-red">${order.total?.toFixed(2)}</span>
+                              <td className="py-3 px-4 xl:py-4 xl:px-6">
+                                <span className="font-bold text-base xl:text-lg text-grub-red">${order.total?.toFixed(2)}</span>
                               </td>
-                              <td className="py-4 px-6">
-                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+                              <td className="py-3 px-4 xl:py-4 xl:px-6">
+                                <span className={`inline-flex items-center px-2 xl:px-3 py-1 rounded-full text-xs xl:text-sm font-medium whitespace-nowrap ${getStatusColor(order.status)}`}>
                                   {getStatusIcon(order.status)}
-                                  <span className="ml-2 capitalize">{order.status}</span>
+                                  <span className="ml-1 xl:ml-2 capitalize">{order.status}</span>
                                 </span>
                               </td>
-                              <td className="py-4 px-6">
-                                <span className="text-gray-900">
+                              <td className="py-3 px-4 xl:py-4 xl:px-6">
+                                <span className="text-gray-900 text-sm xl:text-base whitespace-nowrap">
                                   {order.deliveryTime?.estimated ? 
                                     new Date(order.deliveryTime.estimated).toLocaleTimeString('en-US', {
                                       hour: '2-digit',
@@ -447,7 +447,7 @@ const OrdersPage = () => {
                                   }
                                 </span>
                               </td>
-                              <td className="py-4 px-6">
+                              <td className="py-3 px-4 xl:py-4 xl:px-6">
                                 <div className="flex items-center space-x-2">
                                   <button
                                     onClick={() => handleViewOrder(order)}
@@ -517,49 +517,51 @@ const OrdersPage = () => {
                 </Card>
               </div>
 
-              {/* Mobile Card View */}
-              <div className="lg:hidden space-y-3">
+              {/* Mobile and Tablet Card View */}
+              <div className="lg:hidden space-y-3 sm:space-y-4">
                 {filteredOrders.map((order) => (
                   <Card key={order._id} className="hover:shadow-lg transition-all duration-200">
-                    <CardContent className="p-3">
-                      <div className="space-y-3">
+                    <CardContent className="p-3 sm:p-4">
+                      <div className="space-y-3 sm:space-y-4">
                         {/* Header Row */}
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center space-x-2">
-                            <span className="font-bold text-gray-900 text-sm">#{order.orderNumber}</span>
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                              {getStatusIcon(order.status)}
-                              <span className="ml-1 capitalize">{order.status}</span>
-                            </span>
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                              order.mealType === 'lunch' 
-                                ? 'bg-yellow-100 text-yellow-800' 
-                                : order.mealType === 'dinner'
-                                ? 'bg-purple-100 text-purple-800'
-                                : 'bg-gray-100 text-gray-800'
-                            }`}>
-                              {order.mealType === 'lunch' ? '🍽️ Lunch' : 
-                               order.mealType === 'dinner' ? '🍽️ Dinner' : 
-                               '🍽️ Order'}
-                            </span>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                            <span className="font-bold text-gray-900 text-sm sm:text-base">#{order.orderNumber}</span>
+                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                                {getStatusIcon(order.status)}
+                                <span className="ml-1 capitalize">{order.status}</span>
+                              </span>
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                order.mealType === 'lunch' 
+                                  ? 'bg-yellow-100 text-yellow-800' 
+                                  : order.mealType === 'dinner'
+                                  ? 'bg-purple-100 text-purple-800'
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}>
+                                {order.mealType === 'lunch' ? '🍽️ Lunch' : 
+                                 order.mealType === 'dinner' ? '🍽️ Dinner' : 
+                                 '🍽️ Order'}
+                              </span>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <div className="font-bold text-lg text-grub-red">${order.total?.toFixed(2)}</div>
-                            <div className="text-xs text-gray-500">{order.items?.length || 0} items</div>
+                          <div className="text-right flex-shrink-0">
+                            <div className="font-bold text-lg sm:text-xl text-grub-red">${order.total?.toFixed(2)}</div>
+                            <div className="text-xs sm:text-sm text-gray-500">{order.items?.length || 0} items</div>
                           </div>
                         </div>
 
-                        {/* Customer Info - Compact */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2 flex-1 min-w-0">
-                            <div className="bg-blue-100 rounded-full p-1.5">
-                              <FontAwesomeIcon icon={faUser} className="h-3 w-3 text-blue-600" />
+                        {/* Customer Info - Enhanced */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          <div className="flex items-center space-x-3 flex-1 min-w-0">
+                            <div className="bg-blue-100 rounded-full p-2 flex-shrink-0">
+                              <FontAwesomeIcon icon={faUser} className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="font-medium text-gray-900 text-sm truncate">
+                              <div className="font-medium text-gray-900 text-sm sm:text-base truncate">
                                 {order.customerId?.firstName} {order.customerId?.lastName}
                               </div>
-                              <div className="text-xs text-gray-500">
+                              <div className="text-xs sm:text-sm text-gray-500">
                                 Delivery: {order.deliveryTime?.estimated ? 
                                   new Date(order.deliveryTime.estimated).toLocaleTimeString('en-US', {
                                     hour: '2-digit',
@@ -572,10 +574,10 @@ const OrdersPage = () => {
                           </div>
                           
                           {/* Quick Actions */}
-                          <div className="flex items-center space-x-1">
+                          <div className="flex items-center space-x-2 flex-shrink-0">
                             <button
                               onClick={() => handleViewOrder(order)}
-                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                             >
                               <FontAwesomeIcon icon={faEye} className="h-4 w-4" />
                             </button>
@@ -584,7 +586,7 @@ const OrdersPage = () => {
                                 size="sm"
                                 onClick={() => handleUpdateStatus(order._id, 'confirmed')}
                                 disabled={updateStatusLoading === order._id}
-                                className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1 disabled:opacity-50"
+                                className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm px-3 py-1.5 disabled:opacity-50 whitespace-nowrap"
                               >
                                 {updateStatusLoading === order._id ? (
                                   <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
@@ -599,7 +601,7 @@ const OrdersPage = () => {
                                 size="sm"
                                 onClick={() => handleUpdateStatus(order._id, 'preparing')}
                                 disabled={updateStatusLoading === order._id}
-                                className="bg-orange-600 hover:bg-orange-700 text-white text-xs px-2 py-1 disabled:opacity-50"
+                                className="bg-orange-600 hover:bg-orange-700 text-white text-xs sm:text-sm px-3 py-1.5 disabled:opacity-50 whitespace-nowrap"
                               >
                                 {updateStatusLoading === order._id ? (
                                   <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
@@ -614,7 +616,7 @@ const OrdersPage = () => {
                                 size="sm"
                                 onClick={() => handleUpdateStatus(order._id, 'ready')}
                                 disabled={updateStatusLoading === order._id}
-                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 disabled:opacity-50"
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm px-3 py-1.5 disabled:opacity-50 whitespace-nowrap"
                               >
                                 {updateStatusLoading === order._id ? (
                                   <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />

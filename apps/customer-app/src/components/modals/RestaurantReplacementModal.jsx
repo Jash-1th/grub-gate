@@ -1,0 +1,338 @@
+import React, { useState } from 'react';
+
+const RestaurantReplacementModal = ({ 
+  isOpen, 
+  onClose, 
+  onConfirm, 
+  selectedRestaurants = [],
+  newRestaurant,
+  getItemCountForRestaurant
+}) => {
+  const [modalStep, setModalStep] = useState('remove'); // 'remove' or 'add'
+  const [selectedRestaurantsToRemove, setSelectedRestaurantsToRemove] = useState([]);
+  const [removedRestaurants, setRemovedRestaurants] = useState([]);
+
+  // Reset selection when modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      setSelectedRestaurantsToRemove([]);
+        setRemovedRestaurants([]);
+      setModalStep('remove'); // Always start with remove step
+    }
+  }, [isOpen]);
+
+  // Handle restaurant removal and move to add step
+  const handleRemoveRestaurants = () => {
+    if (selectedRestaurantsToRemove.length > 0) {
+      // Track removed restaurants
+      setRemovedRestaurants(selectedRestaurantsToRemove);
+      // Remove restaurants from the list
+      onConfirm(selectedRestaurantsToRemove, null); // Pass null for newRestaurant in remove step
+      // Move to add step
+      setModalStep('add');
+      setSelectedRestaurantsToRemove([]); // Clear selection for next step
+    }
+  };
+
+
+  if (!isOpen || selectedRestaurants.length !== 2) return null;
+
+
+  const toggleRestaurantSelection = (restaurant) => {
+    const restaurantId = restaurant.restaurantId || restaurant.id;
+    setSelectedRestaurantsToRemove(prev => {
+      const isCurrentlySelected = prev.some(r => (r.restaurantId || r.id) === restaurantId);
+      if (isCurrentlySelected) {
+        // Remove from selection
+        return prev.filter(r => (r.restaurantId || r.id) !== restaurantId);
+      } else {
+        // Add to selection
+        return [...prev, restaurant];
+      }
+    });
+  };
+
+  const getItemCount = (restaurant) => {
+    if (getItemCountForRestaurant) {
+      const restaurantId = restaurant.restaurantId || restaurant.id;
+      return getItemCountForRestaurant(restaurantId);
+    }
+    return 0;
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-4 overflow-hidden max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white p-6 text-center">
+          <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold mb-2">
+            {modalStep === 'remove' ? 'Remove Restaurant' : 'Add New Restaurant'}
+          </h3>
+          <p className="text-orange-100 text-sm">
+            {modalStep === 'remove' 
+              ? 'Step 1: Select restaurants to remove from your meal plan'
+              : 'Step 2: Choose a new restaurant to add to your meal plan'
+            }
+          </p>
+        </div>
+
+        {/* Content */}
+        <div className="p-6">
+          {modalStep === 'remove' ? (
+            // REMOVE STEP
+            <>
+              <div className="text-center mb-6">
+                <p className="text-gray-800 text-base font-medium mb-2">
+                  You have reached the maximum of 2 restaurants.
+                </p>
+                <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                  ☑️ <strong>Check the restaurants below</strong> that you want to remove:
+                </p>
+                <div className="flex items-center justify-center space-x-6 text-xs">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-gray-400 bg-white rounded-sm"></div>
+                    <span className="text-gray-500">Not selected</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-red-500 bg-red-500 rounded-sm flex items-center justify-center">
+                      <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <span className="text-red-600 font-medium">Selected for removal</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Current Restaurants - Side by Side */}
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Current Restaurants:</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {selectedRestaurants.map((restaurant, index) => {
+              const itemCount = getItemCount(restaurant);
+              const restaurantId = restaurant.restaurantId || restaurant.id;
+              const isSelected = selectedRestaurantsToRemove.some(r => (r.restaurantId || r.id) === restaurantId);
+              
+              
+              return (
+                <div
+                  key={restaurant.restaurantId || restaurant.id}
+                  onClick={() => toggleRestaurantSelection(restaurant)}
+                  className={`relative p-3 border-2 rounded-lg cursor-pointer transition-all duration-300 ${
+                    isSelected 
+                      ? 'border-red-500 bg-gradient-to-r from-red-50 to-orange-50 shadow-lg ring-2 ring-red-200' 
+                      : 'border-gray-300 bg-gray-50 hover:border-blue-300 hover:bg-blue-50 hover:shadow-sm'
+                  }`}
+                >
+                  {/* Selection Indicator */}
+                  {isSelected && (
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center shadow-lg">
+                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      {/* Checkbox */}
+                      <div className={`w-5 h-5 rounded-sm border-2 flex items-center justify-center transition-all duration-200 ${
+                        isSelected 
+                          ? 'border-red-500 bg-red-500 shadow-md' 
+                          : 'border-gray-400 bg-white hover:border-blue-400'
+                      }`}>
+                        {isSelected && (
+                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                      
+                      {/* Restaurant Info */}
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <h4 className={`font-bold transition-colors duration-200 ${
+                            isSelected ? 'text-red-700' : 'text-gray-900'
+                          }`}>
+                            {restaurant.restaurantName || restaurant.name}
+                          </h4>
+                          {isSelected && (
+                            <span className="px-2 py-1 text-xs font-bold bg-red-600 text-white rounded-full animate-pulse">
+                              TO REMOVE
+                            </span>
+                          )}
+                        </div>
+                        {restaurant.cuisine && (
+                          <p className={`text-sm mt-1 transition-colors duration-200 ${
+                            isSelected ? 'text-red-600' : 'text-gray-500'
+                          }`}>
+                            {Array.isArray(restaurant.cuisine) ? restaurant.cuisine.join(', ') : restaurant.cuisine}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Item Count */}
+                    <div className="text-right">
+                      <div className={`px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 ${
+                        itemCount > 0 
+                          ? isSelected 
+                            ? 'bg-red-600 text-white shadow-md' 
+                            : 'bg-red-100 text-red-700'
+                          : isSelected
+                            ? 'bg-gray-600 text-white'
+                            : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {itemCount} meal{itemCount !== 1 ? 's' : ''}
+                      </div>
+                      {itemCount > 0 && isSelected && (
+                        <p className="text-xs mt-1 font-medium text-red-700 transition-colors duration-200">
+                          ⚠️ Will be deleted
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Selected Restaurant Highlight */}
+                  {isSelected && (
+                    <div className="absolute inset-0 border-2 border-red-400 rounded-xl pointer-events-none opacity-30 animate-pulse"></div>
+                  )}
+                </div>
+              );
+                })}
+                </div>
+              </div>
+            </>
+          ) : (
+            // ADD STEP
+            <>
+              <div className="text-center mb-6">
+                <p className="text-gray-800 text-base font-medium mb-2">
+                  Perfect! Restaurant removed successfully.
+                </p>
+                <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                  🍽️ <strong>Click below</strong> to browse and add a new restaurant to your meal plan:
+                </p>
+              </div>
+
+              {/* Add Restaurant Button */}
+              <div className="mb-6">
+                <div 
+                  onClick={() => {
+                    // Close modal and navigate to restaurant selection
+                    onClose();
+                    const postalParam = window.location.search.includes('postal=') ? window.location.search.split('postal=')[1]?.split('&')[0] : '';
+                    window.location.href = `/plan/restaurants?source=plan${postalParam ? `&postal=${postalParam}` : ''}`;
+                  }}
+                  className="w-full p-6 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg cursor-pointer hover:from-green-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <div className="flex items-center justify-center space-x-4">
+                    <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </div>
+                    <div className="text-center">
+                      <h4 className="text-xl font-bold mb-1">Browse Restaurants</h4>
+                      <p className="text-green-100 text-sm">Click to explore and add a new restaurant</p>
+                    </div>
+                    <div className="text-white">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Current Selected Restaurants Display */}
+              {(() => {
+                // Calculate remaining restaurants by filtering out removed ones
+                const remainingRestaurants = selectedRestaurants.filter(restaurant => {
+                  const restaurantId = restaurant.restaurantId || restaurant.id;
+                  return !removedRestaurants.some(removed => (removed.restaurantId || removed.id) === restaurantId);
+                });
+                
+                return remainingRestaurants && remainingRestaurants.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">
+                      {remainingRestaurants.length === 1 ? 'Your Remaining Restaurant:' : 'Your Remaining Restaurants:'}
+                    </h4>
+                    <div className="grid grid-cols-1 gap-4">
+                      {remainingRestaurants.map((restaurant, index) => (
+                      <div key={restaurant.restaurantId || restaurant.id} className="p-4 bg-green-50 border-2 border-green-200 rounded-lg">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <h5 className="font-bold text-green-800 text-lg">{restaurant.restaurantName || restaurant.name}</h5>
+                            {restaurant.cuisine && (
+                              <p className="text-sm text-green-600 mt-1">
+                                {Array.isArray(restaurant.cuisine) ? restaurant.cuisine.join(', ') : restaurant.cuisine}
+                              </p>
+                            )}
+                            <div className="flex items-center mt-2">
+                              <span className="px-2 py-1 text-xs font-medium bg-green-200 text-green-800 rounded-full">
+                                ✅ Active in your plan
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+            </>
+          )}
+
+        </div>
+
+        {/* Actions */}
+        <div className="px-6 pb-4 flex space-x-3">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors duration-200"
+          >
+            Cancel
+          </button>
+          
+          {modalStep === 'remove' ? (
+            <button
+              onClick={handleRemoveRestaurants}
+              disabled={selectedRestaurantsToRemove.length === 0}
+              className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                selectedRestaurantsToRemove.length > 0
+                  ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white hover:from-orange-600 hover:to-red-700 shadow-lg'
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              {selectedRestaurantsToRemove.length > 0
+                ? `Remove ${selectedRestaurantsToRemove.length} Restaurant${selectedRestaurantsToRemove.length > 1 ? 's' : ''}`
+                : 'Select to Remove'
+              }
+            </button>
+          ) : (
+            <button
+              onClick={onClose}
+              className="flex-1 px-4 py-2 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-blue-700 transition-all duration-200 shadow-lg"
+            >
+              Done
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default RestaurantReplacementModal;

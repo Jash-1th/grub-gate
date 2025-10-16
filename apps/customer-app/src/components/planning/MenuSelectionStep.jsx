@@ -1,67 +1,50 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePlanning } from '../../contexts/PlanningContext';
 import { useMealPlan } from '../../contexts/MealPlanContext_SSR_FIXED';
-import { getAllFoodItemsForDayAndSlot, getAllFoodItemsForDay, capitalizeFirst, groupItemsByCategory } from '../../utils/combinedMenuHelpers';
-import { getRestaurantsByPostalCode } from '../../services/restaurantService';
-import FoodItemCard from '../restaurant/FoodItemCard';
 import RestaurantCard from './RestaurantCard';
+import { getRestaurantsByPostalCode, getRestaurants } from '../../services/restaurantService';
 
 const MenuSelectionStep = ({ onNext, onBack }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { postalCode, selectedPreferences, isClient } = usePlanning();
-  const { addItemToPlan, removeItemFromPlan, getMealItems } = useMealPlan();
+  const { addItemToPlan, removeItemFromPlan, getMealItems, isRestaurantSelected, getSelectedRestaurants } = useMealPlan();
+  
+  // Debug selected restaurants
+  const selectedRestaurants = getSelectedRestaurants();
+  console.log('🎯 Current selected restaurants:', selectedRestaurants);
+  console.log('🎯 Selected restaurants length:', selectedRestaurants.length);
+  console.log('🎯 Selected restaurant IDs:', selectedRestaurants.map(r => r.restaurantId));
   
   // Get URL parameters
   const day = searchParams.get('day') || 'monday';
   const slot = searchParams.get('slot') || 'lunch';
-  const week = searchParams.get('week') || '0'; // Default to current week
+  const week = searchParams.get('week') || '0';
   const urlPostalCode = searchParams.get('postal');
-  const source = searchParams.get('source'); // 'plan' or 'weekly-menu'
+  const source = searchParams.get('source');
   
   // Use postal code from URL if available, otherwise use context postal code
   const effectivePostalCode = urlPostalCode || postalCode;
   
-  // Determine what to show based on source
-  const isFromPlan = source === 'plan' || (!source && urlPostalCode && !searchParams.get('day'));
-  const isFromWeeklyMenu = source === 'weekly-menu' || (!source && searchParams.get('day'));
+  // Determine context
+  const isFromWeeklyMenu = source === 'weekly-menu';
+  const isFromPlan = source === 'plan';
   
-  // User type toggle state
-  const [userType, setUserType] = useState('normal');
-  
-  // Modal detection state
+  // Modal state for preventing action bar interference
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // Effect to detect when modals are open
+  // Handle modal events
   useEffect(() => {
-    const checkForModals = () => {
-      // Check for common modal indicators
-      const hasModal = document.querySelector('.fixed.inset-0') !== null ||
-                      document.querySelector('[role="dialog"]') !== null ||
-                      document.querySelector('.modal') !== null ||
-                      document.querySelector('[data-modal]') !== null ||
-                      document.body.classList.contains('modal-open') ||
-                      document.body.style.overflow === 'hidden';
-      setIsModalOpen(hasModal);
-    };
-    
-    // Check initially
-    checkForModals();
-    
-    // Set up mutation observer to watch for modal changes
-    const observer = new MutationObserver(checkForModals);
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['class', 'style']
-    });
-    
-    // Also listen for specific modal events if they exist
     const handleModalOpen = () => setIsModalOpen(true);
     const handleModalClose = () => setIsModalOpen(false);
     
+    // Create intersection observer for modal detection
+    const observer = new IntersectionObserver((entries) => {
+      // Modal detection logic can be added here if needed
+    });
+    
+    // Listen for modal events
     document.addEventListener('modal:open', handleModalOpen);
     document.addEventListener('modal:close', handleModalClose);
     
@@ -72,10 +55,14 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
     };
   }, []);
 
-
   // State for nearby restaurants
   const [nearbyRestaurants, setNearbyRestaurants] = useState([]);
   const [restaurantsLoading, setRestaurantsLoading] = useState(false);
+
+  // Debug nearby restaurants state (after state declaration)
+  console.log('🏪 Nearby restaurants count:', nearbyRestaurants?.length || 0);
+  console.log('🏪 Nearby restaurants loading:', restaurantsLoading);
+  console.log('🏪 Effective postal code:', effectivePostalCode);
 
   // Fetch nearby restaurants
   useEffect(() => {
@@ -85,26 +72,20 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
       setRestaurantsLoading(true);
       
       try {
-        let restaurants;
+        let result;
         if (effectivePostalCode && effectivePostalCode.length >= 3) {
-          // Only use API data - no static fallback
-          const result = await getRestaurantsByPostalCode(effectivePostalCode, { limit: 8 });
-          
-          if (result.success && result.data.length > 0) {
-            restaurants = result.data;
-          } else {
-            // No restaurants found - set empty array
-            restaurants = [];
-          }
+          console.log('🔍 Fetching restaurants for postal code:', effectivePostalCode);
+          result = await getRestaurantsByPostalCode(effectivePostalCode);
         } else {
-          // No postal code - set empty array
-          restaurants = [];
+          console.log('🔍 Fetching all restaurants (no postal code)');
+          result = await getRestaurants();
         }
         
-        setNearbyRestaurants(restaurants);
+        const restaurants = result.success ? result.data : [];
+        console.log('✅ Restaurants fetched:', restaurants?.length || 0);
+        setNearbyRestaurants(restaurants || []);
       } catch (error) {
-        console.error('Error fetching nearby restaurants:', error);
-        // No fallback - set empty array on error
+        console.error('❌ Error fetching restaurants:', error);
         setNearbyRestaurants([]);
       } finally {
         setRestaurantsLoading(false);
@@ -114,54 +95,24 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
     fetchNearbyRestaurants();
   }, [effectivePostalCode, isClient]);
 
-  // Fetch data based on user type
-  const menuData = useMemo(() => {
-    if (!isClient) return { lunch: [], dinner: [] };
-    
-    if (userType === 'normal') {
-      const items = getAllFoodItemsForDayAndSlot(day, slot, selectedPreferences);
-      return { [slot]: items };
-    } else {
-      // Pro user gets both lunch and dinner
-      return getAllFoodItemsForDay(day, selectedPreferences);
-    }
-  }, [day, slot, selectedPreferences, userType, isClient]);
-
-  // Group items by category for better organization
-  const groupedMenuData = useMemo(() => {
-    const result = {};
-    Object.keys(menuData).forEach(mealType => {
-      result[mealType] = groupItemsByCategory(menuData[mealType]);
-    });
-    return result;
-  }, [menuData]);
-
-  // Handle item click - add to plan
-  const handleItemClick = (item) => {
-    addItemToPlan(item, day, slot);
+  // Utility function to capitalize first letter
+  const capitalizeFirst = (str) => {
+    return str.charAt(0).toUpperCase() + str.slice(1);
   };
 
-  // Handle remove from plan
-  const handleRemoveFromPlan = (item) => {
-    // Find the meal plan item with matching item id
-    const mealItems = getMealItems(day, slot);
-    const mealPlanItem = mealItems.find(mealItem => mealItem.id === item.id);
-    
-    if (mealPlanItem && mealPlanItem.planId) {
-      removeItemFromPlan(mealPlanItem.planId, day, slot);
-    } else {
-      console.warn('Could not find meal plan item to remove:', item.id);
-    }
-  };
-
-  // Handle restaurant card click - navigate to restaurant detail with context
+  // Handle restaurant click
   const handleRestaurantClick = (restaurant) => {
     const searchParams = new URLSearchParams();
     
-    // Add day and slot parameters
-    searchParams.set('day', day);
-    searchParams.set('slot', slot);
-    searchParams.set('userType', userType);
+    // Add context parameters based on source
+    if (isFromWeeklyMenu) {
+      searchParams.set('day', day);
+      searchParams.set('slot', slot);
+      searchParams.set('week', week);
+      searchParams.set('source', 'weekly-menu');
+    } else if (isFromPlan) {
+      searchParams.set('source', 'plan');
+    }
     
     // Add preferences if they exist
     if (selectedPreferences && selectedPreferences.length > 0) {
@@ -170,24 +121,6 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
     
     const url = `/restaurant/${restaurant.id}?${searchParams.toString()}`;
     navigate(url);
-  };
-
-  // Get section title based on user type
-  const getSectionTitle = (mealType) => {
-    if (userType === 'normal') {
-      return `Build Your ${capitalizeFirst(day)} ${capitalizeFirst(mealType)} Plan`;
-    } else {
-      return `${capitalizeFirst(mealType)} Menu`;
-    }
-  };
-
-  // Get main page title
-  const getPageTitle = () => {
-    if (userType === 'normal') {
-      return `Top-rated meals for ${capitalizeFirst(day)}'s ${capitalizeFirst(slot)}${effectivePostalCode ? ` near ${effectivePostalCode}` : ''}`;
-    } else {
-      return `Build Your Full Day Plan for ${capitalizeFirst(day)}`;
-    }
   };
 
   // Render nearby restaurants section
@@ -225,10 +158,14 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
       );
     }
 
-    if (nearbyRestaurants.length === 0) return null;
+    if (nearbyRestaurants.length === 0) {
+      console.log('🏪 No nearby restaurants found, returning null');
+      return null;
+    }
 
     // All restaurants are available now (no restrictions)
     const availableRestaurants = nearbyRestaurants;
+    console.log('🏪 Rendering restaurants grid with', availableRestaurants.length, 'restaurants');
 
     return (
       <div className="mb-12">
@@ -247,84 +184,28 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
         
         {/* Restaurant Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
-          {availableRestaurants.map((restaurant) => (
-            <RestaurantCard 
-              key={restaurant.id}
-              restaurant={restaurant}
-              selectedPreferences={selectedPreferences}
-              onExplore={handleRestaurantClick}
-            />
-          ))}
+          {availableRestaurants.map((restaurant) => {
+            const isSelected = isRestaurantSelected(restaurant.id);
+            console.log('🔍 MenuSelectionStep Debug:', {
+              restaurantId: restaurant.id,
+              restaurantName: restaurant.name,
+              isSelected: isSelected,
+              isSelectedType: typeof isSelected,
+              selectedRestaurantIds: selectedRestaurants.map(r => r.restaurantId),
+              isRestaurantSelectedFunction: typeof isRestaurantSelected
+            });
+            
+            return (
+              <RestaurantCard 
+                key={restaurant.id}
+                restaurant={restaurant}
+                selectedPreferences={selectedPreferences}
+                onExplore={handleRestaurantClick}
+                isSelected={isSelected}
+              />
+            );
+          })}
         </div>
-      </div>
-    );
-  };
-
-  // Render user type toggle
- 
-  // Render items grid for a specific meal type
-  const renderItemsGrid = (mealType, categories) => {
-    const totalItems = Object.values(categories).flat().length;
-    
-    if (totalItems === 0) {
-      return (
-        <div className="text-center py-12">
-          <div className="text-gray-400 mb-4">
-            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No items available</h3>
-          <p className="text-gray-500">
-            No restaurants have {mealType} items available for {capitalizeFirst(day)}.
-          </p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-8">
-        {Object.entries(categories).map(([category, items]) => (
-          <div key={category}>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b border-gray-200 pb-2">
-              {category} ({items.length} items)
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-              {items.map((item) => (
-                <FoodItemCard
-                  key={`${item.restaurantId}-${item.id}`}
-                  item={item}
-                  onAddToPlan={() => handleItemClick(item)}
-                  onRemoveFromPlan={() => handleRemoveFromPlan(item)}
-                  selectedDay={day}
-                  selectedMealType={mealType}
-                  restaurantName={item.restaurantName}
-                  hideAddButton={false}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  // Render meal section
-  const renderMealSection = (mealType) => {
-    const categories = groupedMenuData[mealType] || {};
-    const totalItems = Object.values(categories).flat().length;
-
-    return (
-      <div key={mealType} className="mb-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {getSectionTitle(mealType)}
-          </h2>
-          <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-            {totalItems} items
-          </span>
-        </div>
-        {renderItemsGrid(mealType, categories)}
       </div>
     );
   };
@@ -357,40 +238,28 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
   }
 
   return (
-      <div className="min-h-screen bg-gray-50 pb-32 sm:pb-40">
+    <div className="min-h-screen bg-gray-50 pb-32 sm:pb-40">
       {/* Header */}
       <div className="bg-gradient-to-r from-grub-red to-red-600 text-white">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
           <div className="text-center">
             <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4 leading-tight px-2 sm:px-0">
-              {isFromPlan 
-                ? (
-                    <>
-                      <span className="block sm:inline">Restaurants near</span>
-                      <span className="block sm:inline font-black text-red-200"> {effectivePostalCode?.toUpperCase() || 'you'}</span>
-                    </>
-                  )
-                : userType === 'normal' 
-                  ? (
-                      <>
-                        <span className="block text-base sm:text-2xl">Top meals for</span>
-                        <span className="block text-lg sm:text-3xl font-black">{capitalizeFirst(day)}'s {capitalizeFirst(slot)}</span>
-                      </>
-                    )
-                  : (
-                      <>
-                        <span className="block text-base sm:text-2xl">Full Day Plan</span>
-                        <span className="block text-lg sm:text-3xl font-black">{capitalizeFirst(day)}</span>
-                      </>
-                    )
-              }
+              {isFromPlan ? (
+                <>
+                  <span className="block sm:inline">Restaurants near</span>
+                  <span className="block sm:inline font-black text-red-200"> {effectivePostalCode?.toUpperCase() || 'you'}</span>
+                </>
+              ) : (
+                <>
+                  <span className="block text-base sm:text-2xl">Top meals for</span>
+                  <span className="block text-lg sm:text-3xl font-black">{capitalizeFirst(day)}'s {capitalizeFirst(slot)}</span>
+                </>
+              )}
             </h1>
             <p className="text-red-100 text-xs sm:text-base lg:text-lg mb-4 sm:mb-8 px-4 sm:px-0 max-w-lg mx-auto">
               {isFromPlan 
                 ? `Highly-rated restaurants in your area`
-                : userType === 'normal' 
-                  ? `Best ${slot} options available`
-                  : `Full day meal planning`
+                : `Best ${slot} options available`
               }
             </p>
             
@@ -457,218 +326,83 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
 
       {/* Main Content Area */}
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        {/* Show Restaurant Grid for both cases, but with different titles and context */}
-        <div>
-            {/* Restaurant Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-              {nearbyRestaurants.map((restaurant) => (
-                <div
-                  key={restaurant.id}
-                  onClick={() => {
-                    // Include day, slot, and week parameters when coming from weekly menu
-                    const params = new URLSearchParams();
-                    if (isFromWeeklyMenu) {
-                      params.set('day', day);
-                      params.set('slot', slot);
-                      params.set('week', week);
-                      params.set('source', 'weekly-menu');
-                    } else if (isFromPlan) {
-                      params.set('source', 'plan');
-                    }
-                    const queryString = params.toString();
-                    const url = queryString ? `/restaurant/${restaurant.id}?${queryString}` : `/restaurant/${restaurant.id}`;
-                    navigate(url);
-                  }}
-                  className="group bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:scale-105 border border-gray-100 touch-manipulation active:scale-95"
-                >
-                  <div className="relative h-32 sm:h-48 overflow-hidden">
-                    <img
-                      src={restaurant.image || '/images/grub-gate-default-img.jpg'}
-                      alt={restaurant.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      onError={(e) => {
-                        e.target.src = '/images/grub-gate-default-img.jpg';
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                    
-                    {/* Rating Badge */}
-                    <div className="absolute top-4 right-4 bg-white bg-opacity-95 backdrop-blur-sm rounded-full px-3 py-1.5 flex items-center space-x-1 shadow-lg">
-                      <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      <span className="text-sm font-bold text-gray-900">{restaurant.rating}</span>
-                    </div>
+        {/* Show Restaurant Grid using RestaurantCard components */}
+        {renderNearbyRestaurants()}
+      </div>
 
-                    {/* Popular Badge */}
-                    {restaurant.isPopular && (
-                      <div className="absolute top-4 left-4 bg-grub-red text-white px-3 py-1 rounded-full text-xs font-semibold">
-                        Popular
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="p-3 sm:p-6">
-                    <div className="flex items-start justify-between mb-2 sm:mb-3">
-                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-grub-red transition-colors duration-200 line-clamp-1">
-                        {restaurant.name}
-                      </h3>
-                      {restaurant.isTopRated && (
-                        <div className="flex-shrink-0 ml-2">
-                          <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <p className="text-gray-600 text-xs sm:text-sm mb-2 sm:mb-4 line-clamp-1 sm:line-clamp-2 leading-relaxed">
-                      {restaurant.description || restaurant.cuisine || 'Delicious food awaits you'}
-                    </p>
+      {/* Bottom Action Bar - Hidden when modals are open */}
+      {!isModalOpen && (
+        <div className="bg-white border-t shadow-lg fixed bottom-16 sm:bottom-0 left-0 right-0 z-10 pb-safe">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-3">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              {/* Left side - Optional summary or info */}
+              <div className="hidden lg:flex items-center text-sm text-gray-600">
+                <svg className="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Ready to continue your meal planning journey</span>
+              </div>
 
-                    {/* Tags - Hidden on mobile */}
-                    {restaurant.tags && restaurant.tags.length > 0 && (
-                      <div className="hidden sm:flex flex-wrap gap-1 mb-4">
-                        {restaurant.tags.slice(0, 2).map((tag, index) => (
-                          <span
-                            key={index}
-                            className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs font-medium"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                        {restaurant.tags.length > 2 && (
-                          <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs font-medium">
-                            +{restaurant.tags.length - 2}
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-center text-xs sm:text-sm text-gray-500 mb-3 sm:mb-6">
-                      <span className="flex items-center space-x-1">
-                        <svg className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <span className="font-medium">{restaurant.distance && restaurant.distance !== '0 km' ? restaurant.distance + ' away' : '5 km away'}</span>
-                      </span>
-                    </div>
-
-                    <button className="w-full bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white py-2 sm:py-3 px-3 sm:px-4 rounded-lg font-semibold transition-all duration-200 transform group-hover:scale-105 shadow-lg hover:shadow-xl text-sm sm:text-base">
-                      <span className="sm:hidden">View Menu</span>
-                      <span className="hidden sm:inline">View Menu</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Call to Action Section */}
-            {/* <div className="mt-16 bg-gradient-to-r from-grub-red to-red-600 rounded-2xl p-8 text-white text-center">
-              <div className="max-w-2xl mx-auto">
-                <h3 className="text-2xl font-bold mb-4">
-                  Ready to Start Your Meal Planning Journey?
-                </h3>
-                <p className="text-red-100 mb-6">
-                  Choose from these amazing restaurants and create your perfect weekly meal plan. 
-                  Get started with our subscription plans and never worry about "what's for dinner" again!
-                </p>
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 lg:gap-4 w-full sm:w-auto">
+                {/* Back Button */}
                 <button
-                  onClick={onNext}
-                  className="inline-flex items-center bg-white text-grub-red px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-200 shadow-lg"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (isFromWeeklyMenu) {
+                      navigate(`/weekly-menu?week=${week}`);
+                    } else {
+                      navigate('/plan');
+                    }
+                  }}
+                  className="group px-4 sm:px-6 lg:px-8 py-2 lg:py-2.5 border-2 border-gray-300 text-gray-700 font-medium rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base lg:min-w-[160px] shadow-sm hover:shadow-md"
                 >
-                  Continue to Subscription Plans
-                  <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <svg className="w-4 h-4 lg:w-5 lg:h-5 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                  <span className="font-semibold">
+                    {isFromWeeklyMenu ? 'Back to Weekly Menu' : 'Change Location'}
+                  </span>
+                </button>
+
+                {/* Continue Button */}
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (isFromWeeklyMenu) {
+                      navigate(`/weekly-menu?week=${week}`);
+                    } else {
+                      navigate('/weekly-menu');
+                    }
+                  }}
+                  className="group relative px-6 sm:px-8 lg:px-10 py-2 lg:py-2.5 bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-700 hover:via-red-700 hover:to-red-800 text-white font-bold rounded-xl transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 text-sm sm:text-base lg:min-w-[220px] overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700 hidden lg:block"></div>
+                  
+                  <span className="relative z-10">
+                    {isFromWeeklyMenu ? (
+                      <>
+                        <span className="hidden sm:inline">Back to Weekly Menu</span>
+                        <span className="sm:hidden">Back to Menu</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="hidden sm:inline">Continue to Weekly Menu</span>
+                        <span className="sm:hidden">Continue</span>
+                      </>
+                    )}
+                  </span>
+                  <svg className="relative z-10 w-4 h-4 lg:w-5 lg:h-5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m0-7H3" />
                   </svg>
                 </button>
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Bottom Action Bar - Hidden when modals are open */}
-      {!isModalOpen && (
-        <div className="bg-white border-t shadow-lg fixed bottom-16 sm:bottom-0 left-0 right-0 z-10 pb-safe">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-3">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            {/* Left side - Optional summary or info */}
-            <div className="hidden lg:flex items-center text-sm text-gray-600">
-              <svg className="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>Ready to continue your meal planning journey</span>
-            </div>
-
-            {/* Action Buttons - Enhanced desktop layout */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 lg:gap-4 w-full sm:w-auto">
-              {/* Back Button - Changes based on source */}
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (isFromWeeklyMenu) {
-                    // Navigate back to weekly menu with week parameter
-                    navigate(`/weekly-menu?week=${week}`);
-                  } else {
-                    // Navigate back to location selection
-                    navigate('/plan');
-                  }
-                }}
-                className="group px-4 sm:px-6 lg:px-8 py-2 lg:py-2.5 border-2 border-gray-300 text-gray-700 font-medium rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base lg:min-w-[160px] shadow-sm hover:shadow-md"
-              >
-                <svg className="w-4 h-4 lg:w-5 lg:h-5 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                <span className="font-semibold">
-                  {isFromWeeklyMenu ? 'Back to Weekly Menu' : 'Change Location'}
-                </span>
-              </button>
-
-              {/* Continue Button - Changes based on source */}
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (isFromWeeklyMenu) {
-                    // Navigate back to weekly menu with week parameter
-                    navigate(`/weekly-menu?week=${week}`);
-                  } else {
-                    // Navigate to weekly menu after restaurant selection
-                    navigate('/weekly-menu');
-                  }
-                }}
-                className="group relative px-6 sm:px-8 lg:px-10 py-2 lg:py-2.5 bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-700 hover:via-red-700 hover:to-red-800 text-white font-bold rounded-xl transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 text-sm sm:text-base lg:min-w-[220px] overflow-hidden"
-              >
-                {/* Subtle shine effect for desktop */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700 hidden lg:block"></div>
-                
-                <span className="relative z-10">
-                  {isFromWeeklyMenu ? (
-                    <>
-                      <span className="hidden sm:inline">Back to Weekly Menu</span>
-                      <span className="sm:hidden">Back to Menu</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="hidden sm:inline">Continue to Weekly Menu</span>
-                      <span className="sm:hidden">Continue</span>
-                    </>
-                  )}
-                </span>
-                <svg className="relative z-10 w-4 h-4 lg:w-5 lg:h-5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m0-7H3" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
       )}
-    </div>
-    </div>
     </div>
   );
 };

@@ -28,7 +28,8 @@ const updateProfile = asyncHandler(async (req, res) => {
     'firstName', 
     'lastName', 
     'phone', 
-    'preferences'
+    'preferences',
+    'selectedRestaurants'
   ];
   
   const updates = {};
@@ -240,6 +241,11 @@ const getUserStats = asyncHandler(async (req, res) => {
     recentUsers
   }, 'User statistics retrieved successfully');
 });
+
+// Restaurant selection functionality moved to meal-plan controller
+
+// Note: All restaurant selection functionality moved to meal-plan controller
+// Restaurant selection is now stored in MealPlan schema for proper lifecycle management
 
 module.exports = {
   getProfile,

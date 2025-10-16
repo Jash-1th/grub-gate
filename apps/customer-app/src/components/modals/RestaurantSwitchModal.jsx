@@ -71,23 +71,6 @@ const RestaurantSwitchModal = ({
             </div>
           </div>
 
-          {/* Warning */}
-          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div className="flex items-start">
-              <div className="text-yellow-600 mr-3 mt-0.5">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm text-yellow-800 font-medium">Normal User Restriction</p>
-                <p className="text-xs text-yellow-700 mt-1">
-                  Normal users can only select items from one restaurant. 
-                  <span className="font-medium"> Upgrade to Pro</span> to mix restaurants freely.
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Actions */}
@@ -102,7 +85,7 @@ const RestaurantSwitchModal = ({
             onClick={onConfirm}
             className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg font-medium hover:from-orange-600 hover:to-red-700 transition-all duration-200"
           >
-            Clear & Switch Restaurant
+            Switch Restaurant
           </button>
         </div>
       </div>

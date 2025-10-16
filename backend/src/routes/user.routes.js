@@ -11,6 +11,7 @@ const {
   setDefaultAddress,
   getUserStats
 } = require('../controllers/user.controller');
+// Note: Restaurant selection functions moved to meal-plan routes
 const { authMiddleware, roleMiddleware } = require('../middlewares/auth');
 const { userValidations, commonValidations } = require('../middlewares/validation');
 
@@ -30,6 +31,8 @@ router.post('/addresses', addAddress);
 router.patch('/addresses/:id', commonValidations.mongoId, updateAddress);
 router.delete('/addresses/:id', commonValidations.mongoId, deleteAddress);
 router.patch('/addresses/:id/default', commonValidations.mongoId, setDefaultAddress);
+
+// Note: Restaurant selection routes moved to /api/v1/meal-plans/selected-restaurants
 
 // Admin only routes
 router.get('/stats', roleMiddleware('admin'), getUserStats);

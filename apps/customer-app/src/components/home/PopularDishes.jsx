@@ -73,10 +73,10 @@ const PopularDishes = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-              Popular Dishes
+              Last Week's Most Ordered
             </h2>
             <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
-              Discover our most loved dishes from top restaurants
+              Discover what everyone was ordering last week from our top restaurants
             </p>
           </div>
           
@@ -93,13 +93,13 @@ const PopularDishes = () => {
                 </div>
                 <div className="p-8 md:w-1/2 flex flex-col justify-center">
                   <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-2xl font-bold text-gray-900">Popular Dishes</h3>
+                    <h3 className="text-2xl font-bold text-gray-900">Last Week's Most Ordered</h3>
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                       🔥 Most Ordered
                     </span>
                   </div>
                   
-                  <p className="text-gray-600 mb-4">Discover our most loved dishes from top restaurants</p>
+                  <p className="text-gray-600 mb-4">Discover what everyone was ordering last week from our top restaurants</p>
                   
                   {/* Restaurant info placeholder */}
                   <div className="flex items-center mb-4">
@@ -163,10 +163,10 @@ const PopularDishes = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            Popular Dishes
+            Last Week's Most Ordered
           </h2>
           <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
-            Discover our most loved dishes from top restaurants
+            Discover what everyone was ordering last week from our top restaurants
           </p>
         </div>
         
@@ -197,7 +197,7 @@ const PopularDishes = () => {
                         <h3 className="text-2xl font-bold text-gray-900">{dish.name}</h3>
                         {dish.totalOrders > 0 && (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                            🔥 {dish.totalOrders} orders
+                            🔥 {dish.totalOrders} orders last week
                           </span>
                         )}
                       </div>
@@ -257,8 +257,8 @@ const PopularDishes = () => {
           {!loading && dataSource && (
             <div className="text-center mt-4">
               <p className="text-sm text-gray-500">
-                {dataSource === 'order_analytics' && '📊 Based on actual order data'}
-                {dataSource === 'random_sample' && '🎲 Sample dishes from our restaurants'}
+                {dataSource === 'order_analytics' && '📊 Based on last week\'s order data'}
+                {dataSource === 'random_sample' && '🎲 No orders from last week, showing sample dishes'}
                 {dataSource === 'fallback' && '⚠️ Using sample data'}
               </p>
             </div>

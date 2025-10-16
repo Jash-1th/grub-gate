@@ -10,6 +10,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import EnhancedAddressForm from '../../address/EnhancedAddressForm.jsx';
 import { apiClient } from '../../../api/client.js';
+import { validateFormWithSchema, formatBackendErrors, VALIDATION_RULES } from '../../../utils/validationErrorHandler.js';
 
 /**
  * BusinessDetailsStep Component
@@ -70,8 +71,12 @@ const BusinessDetailsStep = ({
   const [files, setFiles] = useState({
     logo: null,
     images: [],
-    businessLicense: null
+    businessLicense: null,
+    taxDocument: null
   });
+  
+  // Test function to trigger validation errors (for development)
+ 
   
   // Password visibility
   const [showPassword, setShowPassword] = useState(false);
@@ -132,6 +137,8 @@ const BusinessDetailsStep = ({
           ...prev, 
           images: `Cannot add ${selectedFiles.length} more images. You can only have 5 images total (currently have ${currentCount}).` 
         }));
+        // Scroll to top to show error message
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
       
@@ -142,6 +149,8 @@ const BusinessDetailsStep = ({
           ...prev, 
           images: `Invalid file type(s): ${invalidFiles.map(f => f.name).join(', ')}. Please upload only JPEG, PNG, or WebP images.` 
         }));
+        // Scroll to top to show error message
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
       
@@ -164,6 +173,8 @@ const BusinessDetailsStep = ({
           ...prev, 
           [fileType]: `Invalid file type: ${file.name}. Please upload ${allowedExtensions} files only.` 
         }));
+        // Scroll to top to show error message
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
       
@@ -198,27 +209,18 @@ const BusinessDetailsStep = ({
       return;
     }
     
-    // Basic validation
-    const validationErrors = {};
-    if (!formData.firstName.trim()) validationErrors.firstName = 'First name is required';
-    if (!formData.lastName.trim()) validationErrors.lastName = 'Last name is required';
-    if (!formData.password) validationErrors.password = 'Password is required';
-    if (formData.password !== formData.confirmPassword) validationErrors.confirmPassword = 'Passwords do not match';
-    if (!formData.restaurantName.trim()) validationErrors.restaurantName = 'Restaurant name is required';
-    if (!formData.cuisine) validationErrors.cuisine = 'Cuisine type is required';
-    if (!formData.street.trim()) validationErrors.street = 'Street address is required';
-    if (!formData.city.trim()) validationErrors.city = 'City is required';
-    if (!formData.province.trim()) validationErrors.province = 'Province is required';
-    if (!formData.postalCode.trim()) validationErrors.postalCode = 'Postal code is required';
-    if (!formData.businessPhone.trim()) validationErrors.businessPhone = 'Business phone is required';
+    // Enhanced validation using Joi schemas
+    const validationErrors = validateFormWithSchema(formData, 'businessDetails');
     
-    // Delivery settings validation
-    if (!formData.deliveryRadius || formData.deliveryRadius < 1 || formData.deliveryRadius > 50) {
-      validationErrors.deliveryRadius = 'Delivery radius must be between 1 and 50 km';
+    // Additional custom validation for password confirmation
+    if (formData.password !== formData.confirmPassword) {
+      validationErrors.confirmPassword = 'Passwords do not match';
     }
     
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      // Scroll to top to show validation errors
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
     setIsLoading(true);
@@ -303,7 +305,25 @@ const BusinessDetailsStep = ({
       
       // Use the configured API client (respects local/production backend settings)
       // Note: Don't set Content-Type manually for FormData - let Axios handle the boundary
-      const response = await apiClient.post('/auth/partner/otp/verify', submitData);
+      console.log('🚀 Making API request to:', '/auth/partner/otp/verify');
+      console.log('🔍 API Base URL:', apiClient.defaults.baseURL);
+      console.log('🔍 Full URL will be:', `${apiClient.defaults.baseURL}/auth/partner/otp/verify`);
+      
+      let response;
+      try {
+        console.log('📡 Sending request...');
+        response = await apiClient.post('/auth/partner/otp/verify', submitData);
+        console.log('✅ Request successful!');
+      } catch (requestError) {
+        console.error('❌ Request failed:', requestError);
+        console.error('❌ Request error details:', {
+          message: requestError.message,
+          code: requestError.code,
+          response: requestError.response,
+          request: requestError.request
+        });
+        throw requestError; // Re-throw to be caught by outer try-catch
+      }
       
       const result = response.data;
       
@@ -329,8 +349,12 @@ const BusinessDetailsStep = ({
             errorObj[error.field] = error.message;
           });
           setErrors(errorObj);
+          // Scroll to top to show validation errors
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
           setErrors({ general: result.message || 'Registration failed. Please try again.' });
+          // Scroll to top to show error message
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }
       }
     } catch (error) {
@@ -341,17 +365,21 @@ const BusinessDetailsStep = ({
         // Server responded with error status
         const errorData = error.response.data;
         if (errorData.errors && Array.isArray(errorData.errors)) {
-          const errorObj = {};
-          errorData.errors.forEach(err => {
-            errorObj[err.field] = err.message;
-          });
-          setErrors(errorObj);
+          // Use enhanced error formatting for Joi validation errors
+          const formattedErrors = formatBackendErrors(errorData.errors);
+          setErrors(formattedErrors);
+          // Scroll to top to show validation errors
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
           setErrors({ general: errorData.message || 'Registration failed. Please try again.' });
+          // Scroll to top to show error message
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }
       } else {
         // Network error or other issue
         setErrors({ general: 'Network error. Please check your connection and try again.' });
+        // Scroll to top to show error message
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     } finally {
       setIsLoading(false);
@@ -609,7 +637,7 @@ const BusinessDetailsStep = ({
 
         <div>
           <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-            Description
+            Description <span className="text-red-500">*</span>
           </label>
           <textarea
             id="description"
@@ -617,10 +645,21 @@ const BusinessDetailsStep = ({
             value={formData.description}
             onChange={handleInputChange}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors"
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+              errors.description ? 'border-red-300 bg-red-50' : 'border-gray-300'
+            }`}
             placeholder="Tell us about your restaurant..."
             disabled={isLoading}
+            required
           />
+          {errors.description && (
+            <p className="mt-1 text-sm text-red-600 flex items-center">
+              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {errors.description}
+            </p>
+          )}
         </div>
       </div>
       {/* Address Information */}
@@ -933,6 +972,19 @@ const BusinessDetailsStep = ({
         </div>
       </div>
 
+      {/* Test Validation Button (Development Only) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="pt-4">
+          <button
+            type="button"
+            onClick={testValidation}
+            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+          >
+            🧪 Test Validation Errors
+          </button>
+        </div>
+      )}
+      
       {/* Action Buttons */}
       <div className="flex space-x-3 pt-4">
         <button

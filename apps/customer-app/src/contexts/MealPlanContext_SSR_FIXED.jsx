@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect, useRef, useSta
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
 import apiClient from '../api/apiClient';
+import restaurantSelectionApi from '../api/restaurantSelectionApi';
 import { getStorageItem, setStorageItem, removeStorageItem } from '../utils/ssrSafeStorage';
 
 // Initial week plan structure
@@ -15,20 +16,79 @@ const initialWeekPlan = {
   sunday: { lunch: [], dinner: [] }
 };
 
-// Initial state for the meal plan (supports multiple weeks)
-const initialState = {
-  weeklyPlans: {
-    week0: { ...initialWeekPlan },
-    week1: { ...initialWeekPlan }
-  },
-  weeklyPlan: { ...initialWeekPlan },
-  totalItems: 0,
-  selectedRestaurant: null,
-  selectedRestaurantId: null,
-  selectedRestaurantName: null,
-  selectedRestaurantData: null,
-  loadedFromDatabase: false
+// Function to get initial state with localStorage data (client-side only)
+const getInitialState = () => {
+  console.log('🚀 DEBUG: getInitialState called');
+  console.log('🚀 DEBUG: typeof window:', typeof window);
+  
+  const baseState = {
+    weeklyPlans: {
+      week0: { ...initialWeekPlan },
+      week1: { ...initialWeekPlan }
+    },
+    weeklyPlan: { ...initialWeekPlan },
+    totalItems: 0,
+    // Multi-restaurant support (max 2 restaurants)
+    selectedRestaurants: [],
+    maxRestaurants: 2,
+    // Legacy fields for backward compatibility
+    selectedRestaurant: null,
+    selectedRestaurantId: null,
+    selectedRestaurantName: null,
+    selectedRestaurantData: null,
+    loadedFromDatabase: false
+  };
+
+  console.log('🚀 DEBUG: baseState created:', baseState);
+
+  // Only load from localStorage on client-side to prevent SSR mismatch
+  if (typeof window !== 'undefined') {
+    console.log('🚀 DEBUG: Window is available, checking localStorage');
+    try {
+      const savedWeeklyPlans = getStorageItem('weeklyPlans');
+      const savedMealPlan = getStorageItem('mealPlan');
+      
+      console.log('🚀 DEBUG: savedWeeklyPlans:', savedWeeklyPlans);
+      console.log('🚀 DEBUG: savedMealPlan:', savedMealPlan);
+      
+      if (savedWeeklyPlans && savedWeeklyPlans.weeklyPlans) {
+        console.log('🔄 DEBUG: Loading initial state from localStorage weeklyPlans:', savedWeeklyPlans);
+        const loadedState = {
+          ...baseState,
+          weeklyPlans: savedWeeklyPlans.weeklyPlans,
+          totalItems: savedWeeklyPlans.totalItems || 0,
+          selectedRestaurants: savedWeeklyPlans.selectedRestaurants || [],
+          maxRestaurants: savedWeeklyPlans.maxRestaurants || 2,
+          loadedFromDatabase: true
+        };
+        console.log('🔄 DEBUG: Returning loaded state:', loadedState);
+        return loadedState;
+      } else if (savedMealPlan && savedMealPlan.weeklyPlan) {
+        console.log('🔄 DEBUG: Loading initial state from legacy localStorage:', savedMealPlan);
+        const legacyState = {
+          ...baseState,
+          weeklyPlans: { week0: savedMealPlan.weeklyPlan, week1: { ...initialWeekPlan } },
+          totalItems: savedMealPlan.totalItems || 0,
+          loadedFromDatabase: true
+        };
+        console.log('🔄 DEBUG: Returning legacy state:', legacyState);
+        return legacyState;
+      } else {
+        console.log('🚀 DEBUG: No localStorage data found');
+      }
+    } catch (error) {
+      console.error('🚀 DEBUG: Error loading initial state from localStorage:', error);
+    }
+  } else {
+    console.log('🚀 DEBUG: Window not available (SSR)');
+  }
+
+  console.log('🚀 DEBUG: Returning baseState:', baseState);
+  return baseState;
 };
+
+// Initial state for the meal plan (supports multiple weeks and restaurants)
+const initialState = getInitialState();
 
 // Action types
 const MEAL_PLAN_ACTIONS = {
@@ -36,10 +96,16 @@ const MEAL_PLAN_ACTIONS = {
   REMOVE_ITEM: 'REMOVE_ITEM',
   CLEAR_DAY: 'CLEAR_DAY',
   CLEAR_ALL: 'CLEAR_ALL',
+  CLEAR_ALL_WEEKS: 'CLEAR_ALL_WEEKS',
   ADD_ITEM_TO_WEEK: 'ADD_ITEM_TO_WEEK',
   REMOVE_ITEM_FROM_WEEK: 'REMOVE_ITEM_FROM_WEEK',
   CLEAR_WEEK: 'CLEAR_WEEK',
   SET_LOADED_FROM_DATABASE: 'SET_LOADED_FROM_DATABASE',
+  // Multi-restaurant actions
+  ADD_SELECTED_RESTAURANT: 'ADD_SELECTED_RESTAURANT',
+  REMOVE_SELECTED_RESTAURANT: 'REMOVE_SELECTED_RESTAURANT',
+  CLEAR_SELECTED_RESTAURANTS: 'CLEAR_SELECTED_RESTAURANTS',
+  // Legacy actions for backward compatibility
   SET_SELECTED_RESTAURANT: 'SET_SELECTED_RESTAURANT',
   CLEAR_SELECTED_RESTAURANT: 'CLEAR_SELECTED_RESTAURANT',
   LOAD_FROM_DATABASE: 'LOAD_FROM_DATABASE',
@@ -48,6 +114,9 @@ const MEAL_PLAN_ACTIONS = {
 
 // SSR-Safe reducer (no localStorage operations)
 const mealPlanReducer = (state, action) => {
+  console.log('🔄 DEBUG: Reducer called with action:', action.type);
+  console.log('🔄 DEBUG: Current state before action:', state);
+  
   switch (action.type) {
     case MEAL_PLAN_ACTIONS.ADD_ITEM: {
       const { item, day, mealType } = action.payload;
@@ -180,6 +249,19 @@ const mealPlanReducer = (state, action) => {
       return { ...initialState };
     }
 
+    case MEAL_PLAN_ACTIONS.CLEAR_ALL_WEEKS: {
+      console.log('🔄 CLEAR_ALL_WEEKS - clearing all weekly plans');
+      
+      return {
+        ...state,
+        weeklyPlans: {
+          week0: { ...initialWeekPlan },
+          week1: { ...initialWeekPlan }
+        },
+        totalItems: 0
+      };
+    }
+
     case MEAL_PLAN_ACTIONS.SET_LOADED_FROM_DATABASE: {
       return {
         ...state,
@@ -220,6 +302,71 @@ const mealPlanReducer = (state, action) => {
       };
     }
 
+    case MEAL_PLAN_ACTIONS.ADD_SELECTED_RESTAURANT: {
+      const { restaurantId, restaurantName, restaurantData } = action.payload;
+      console.log('🔄 ADD_SELECTED_RESTAURANT:', { restaurantId, restaurantName });
+      
+      // Check if restaurant already exists
+      const existingIndex = state.selectedRestaurants.findIndex(r => r.restaurantId === restaurantId);
+      if (existingIndex !== -1) {
+        console.log('⚠️ Restaurant already selected');
+        return state;
+      }
+      
+      // Check max restaurants limit
+      if (state.selectedRestaurants.length >= state.maxRestaurants) {
+        console.log('⚠️ Maximum restaurants limit reached');
+        return state;
+      }
+      
+      const newRestaurant = {
+        restaurantId,
+        restaurantName,
+        restaurantData,
+        addedAt: new Date()
+      };
+      
+      const updatedRestaurants = [...state.selectedRestaurants, newRestaurant];
+      
+      return {
+        ...state,
+        selectedRestaurants: updatedRestaurants,
+        // Update legacy fields for backward compatibility (use first restaurant)
+        selectedRestaurantId: updatedRestaurants[0]?.restaurantId || null,
+        selectedRestaurantName: updatedRestaurants[0]?.restaurantName || null,
+        selectedRestaurantData: updatedRestaurants[0]?.restaurantData || null
+      };
+    }
+
+    case MEAL_PLAN_ACTIONS.REMOVE_SELECTED_RESTAURANT: {
+      const { restaurantId } = action.payload;
+      console.log('🔄 REMOVE_SELECTED_RESTAURANT:', restaurantId);
+      
+      const updatedRestaurants = state.selectedRestaurants.filter(r => r.restaurantId !== restaurantId);
+      
+      return {
+        ...state,
+        selectedRestaurants: updatedRestaurants,
+        // Update legacy fields for backward compatibility (use first restaurant)
+        selectedRestaurantId: updatedRestaurants[0]?.restaurantId || null,
+        selectedRestaurantName: updatedRestaurants[0]?.restaurantName || null,
+        selectedRestaurantData: updatedRestaurants[0]?.restaurantData || null
+      };
+    }
+
+    case MEAL_PLAN_ACTIONS.CLEAR_SELECTED_RESTAURANTS: {
+      console.log('🔄 CLEAR_SELECTED_RESTAURANTS');
+      
+      return {
+        ...state,
+        selectedRestaurants: [],
+        // Clear legacy fields
+        selectedRestaurantId: null,
+        selectedRestaurantName: null,
+        selectedRestaurantData: null
+      };
+    }
+
     case MEAL_PLAN_ACTIONS.SYNC_DATABASE_DATA: {
       const { databaseData } = action.payload;
       console.log('🔄 Syncing database data:', databaseData);
@@ -231,19 +378,73 @@ const mealPlanReducer = (state, action) => {
         week1: { ...initialWeekPlan, ...(databaseData.weeklyPlans?.week1 || {}) }
       };
       
+      // Fix missing restaurantId in meal items
+      const fixedWeeklyPlans = {};
+      Object.keys(syncedWeeklyPlans).forEach(weekKey => {
+        const week = syncedWeeklyPlans[weekKey];
+        fixedWeeklyPlans[weekKey] = {};
+        
+        Object.keys(week).forEach(dayKey => {
+          const day = week[dayKey];
+          fixedWeeklyPlans[weekKey][dayKey] = {
+            date: day.date, // Preserve the date field from database
+            lunch: (day.lunch || []).map(item => {
+              // Ensure menuItemId is preserved from database
+              const processedItem = {
+                ...item,
+                menuItemId: item.id || item._id || item.menuItemId // Preserve the database ID as menuItemId
+              };
+              
+              // If item doesn't have restaurantId, try to get it from selectedRestaurants
+              if (!processedItem.restaurantId && databaseData.selectedRestaurants) {
+                const matchingRestaurant = databaseData.selectedRestaurants.find(r => 
+                  r.restaurantName === item.restaurantName || r.name === item.restaurantName
+                );
+                if (matchingRestaurant) {
+                  return { ...processedItem, restaurantId: matchingRestaurant.restaurantId };
+                }
+              }
+              return processedItem;
+            }),
+            dinner: (day.dinner || []).map(item => {
+              // Ensure menuItemId is preserved from database
+              const processedItem = {
+                ...item,
+                menuItemId: item.id || item._id || item.menuItemId // Preserve the database ID as menuItemId
+              };
+              
+              // If item doesn't have restaurantId, try to get it from selectedRestaurants
+              if (!processedItem.restaurantId && databaseData.selectedRestaurants) {
+                const matchingRestaurant = databaseData.selectedRestaurants.find(r => 
+                  r.restaurantName === item.restaurantName || r.name === item.restaurantName
+                );
+                if (matchingRestaurant) {
+                  return { ...processedItem, restaurantId: matchingRestaurant.restaurantId };
+                }
+              }
+              return processedItem;
+            })
+          };
+        });
+      });
+      
       // Calculate total items
-      const totalItems = Object.values(syncedWeeklyPlans).reduce((total, week) => {
+      const totalItems = Object.values(fixedWeeklyPlans).reduce((total, week) => {
         return total + Object.values(week).reduce((weekTotal, day) => {
           return weekTotal + (day.lunch?.length || 0) + (day.dinner?.length || 0);
         }, 0);
       }, 0);
       
-      console.log('✅ Synced meal plan data:', { syncedWeeklyPlans, totalItems });
+      console.log('✅ Synced meal plan data with fixed restaurantIds:', { fixedWeeklyPlans, totalItems });
       
       return {
         ...state,
-        weeklyPlans: syncedWeeklyPlans,
+        weeklyPlans: fixedWeeklyPlans,
         totalItems: totalItems,
+        // Multi-restaurant support
+        selectedRestaurants: databaseData.selectedRestaurants || [],
+        maxRestaurants: databaseData.maxRestaurants || 2,
+        // Legacy fields for backward compatibility
         selectedRestaurantId: databaseData.selectedRestaurantId || null,
         selectedRestaurantName: databaseData.selectedRestaurantName || null,
         selectedRestaurantData: databaseData.selectedRestaurantData || null,
@@ -268,81 +469,61 @@ export const useMealPlan = () => {
 };
 
 export const MealPlanProvider = ({ children }) => {
+  console.log('🎯 DEBUG: MealPlanProvider render started');
+  console.log('🎯 DEBUG: initialState at provider creation:', initialState);
+  
   const [state, dispatch] = useReducer(mealPlanReducer, initialState);
   const [isClient, setIsClient] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  // Set initial loading state based on whether we have data
+  const [isLoading, setIsLoading] = useState(!initialState.loadedFromDatabase);
   const saveTimeoutRef = useRef(null);
   const { isAuthenticated, user } = useAuth();
   const { showToast } = useToast();
+
+  console.log('🎯 DEBUG: MealPlanProvider state:', state);
+  console.log('🎯 DEBUG: isClient:', isClient);
+  console.log('🎯 DEBUG: isLoading:', isLoading);
+  console.log('🎯 DEBUG: isAuthenticated:', isAuthenticated);
 
   // SSR Safety - only run on client side
   useEffect(() => {
     setIsClient(true);
     
-    const loadMealPlanData = async () => {
+    const syncWithDatabase = async () => {
       try {
+        // localStorage data is already loaded in initialState
+        // Only sync with database if authenticated
         if (isAuthenticated && user) {
-          // Try to load from database first
           try {
             const response = await apiClient.get('/meal-plans/me');
             if (response.data?.status === 'success' && response.data?.data) {
-              console.log('📋 Loading meal plan from database:', response.data.data);
+              console.log('📋 Syncing meal plan from database:', response.data.data);
               dispatch({
                 type: MEAL_PLAN_ACTIONS.SYNC_DATABASE_DATA,
                 payload: { databaseData: response.data.data }
               });
-              return; // Exit early on success
-            }
-          } catch (error) {
-            console.log('Could not load from database, falling back to localStorage:', error.message);
-          }
-        }
-        
-        // Try to load from the 'mealplans' collection directly
-        if (isAuthenticated && user) {
-          try {
-            const response = await apiClient.get('/meal-plans/me');
-            if (response.data?.weeklyPlans) {
-              console.log('📋 Loading meal plan from database:', response.data);
+            } else if (response.data?.weeklyPlans) {
+              console.log('📋 Syncing meal plan from database (direct format):', response.data);
               dispatch({
                 type: MEAL_PLAN_ACTIONS.SYNC_DATABASE_DATA,
                 payload: { databaseData: response.data }
               });
-              return;
             }
           } catch (error) {
-            console.log('Could not load meal plan from database:', error.message);
+            console.log('Could not sync with database:', error.message);
+            // Continue with localStorage data that's already loaded
           }
         }
         
-        // Fallback to localStorage (for both authenticated and non-authenticated users)
-        const savedWeeklyPlans = getStorageItem('weeklyPlans');
-        const savedMealPlan = getStorageItem('mealPlan');
-        
-        if (savedWeeklyPlans) {
-          dispatch({
-            type: MEAL_PLAN_ACTIONS.LOAD_FROM_DATABASE,
-            payload: { weeklyPlans: savedWeeklyPlans, totalItems: savedWeeklyPlans.totalItems || 0 }
-          });
-        } else if (savedMealPlan) {
-          // Handle legacy meal plan format
-          dispatch({
-            type: MEAL_PLAN_ACTIONS.LOAD_FROM_DATABASE,
-            payload: { weeklyPlans: { week0: savedMealPlan.weeklyPlan }, totalItems: savedMealPlan.totalItems || 0 }
-          });
-        }
-        // If no data exists, state remains at initialState (empty meal plan)
-        
       } catch (error) {
-        console.error('Error loading meal plan data:', error);
-        // On error, use initial state (empty meal plan)
+        console.error('Error syncing meal plan data:', error);
       } finally {
-        // ALWAYS stop loading, regardless of success/failure/no data
+        // Stop loading state
         setIsLoading(false);
       }
     };
 
-    loadMealPlanData();
+    syncWithDatabase();
   }, []); // ✅ Remove dependencies to prevent re-runs
 
   // Handle authentication changes separately (load user data when they log in)
@@ -352,13 +533,52 @@ export const MealPlanProvider = ({ children }) => {
     const loadUserData = async () => {
       if (isAuthenticated && user) {
         try {
-          const response = await apiClient.get('/meal-plans/me');
-          if (response.data?.status === 'success' && response.data?.data) {
-            console.log('🔄 Syncing user data after login:', response.data.data);
+          // Load meal plan data
+          const mealPlanResponse = await apiClient.get('/meal-plans/me');
+          if (mealPlanResponse.data?.status === 'success' && mealPlanResponse.data?.data) {
+            console.log('🔄 Syncing meal plan data after login:', mealPlanResponse.data.data);
             dispatch({
               type: MEAL_PLAN_ACTIONS.SYNC_DATABASE_DATA,
-              payload: { databaseData: response.data.data }
+              payload: { databaseData: mealPlanResponse.data.data }
             });
+          }
+          
+          // Load restaurant selection data
+          try {
+            console.log('🎯 Attempting to load restaurant selection from database...');
+            const restaurantResponse = await restaurantSelectionApi.getSelectedRestaurants();
+            console.log('🎯 Restaurant API response:', restaurantResponse);
+            
+            if (restaurantResponse.status === 'success' && restaurantResponse.data?.selectedRestaurants?.length > 0) {
+              console.log('🎯 Loading selected restaurants from database:', restaurantResponse.data.selectedRestaurants);
+              const firstRestaurant = restaurantResponse.data.selectedRestaurants[0];
+              
+              // Update both legacy and new restaurant state
+              dispatch({
+                type: MEAL_PLAN_ACTIONS.SET_SELECTED_RESTAURANT,
+                payload: {
+                  restaurantId: firstRestaurant.id,
+                  restaurantName: firstRestaurant.name,
+                  restaurantData: firstRestaurant
+                }
+              });
+              
+              // Also update the selectedRestaurants array
+              dispatch({
+                type: MEAL_PLAN_ACTIONS.ADD_SELECTED_RESTAURANT,
+                payload: {
+                  restaurantId: firstRestaurant.id,
+                  restaurantName: firstRestaurant.name,
+                  restaurantData: firstRestaurant
+                }
+              });
+              
+              console.log('✅ Restaurant selection loaded and set in context');
+            } else {
+              console.log('🔍 No restaurants found in database or invalid response');
+            }
+          } catch (restaurantError) {
+            console.error('❌ Error loading restaurant selection from database:', restaurantError);
           }
         } catch (error) {
           console.log('Could not sync with database after login:', error.message);
@@ -394,14 +614,18 @@ export const MealPlanProvider = ({ children }) => {
       // Save to localStorage
       setStorageItem('weeklyPlans', {
         weeklyPlans: state.weeklyPlans,
-        totalItems: calculatedTotalItems
+        totalItems: calculatedTotalItems,
+        selectedRestaurants: state.selectedRestaurants,
+        maxRestaurants: state.maxRestaurants
       });
 
       // Save to database if authenticated
       if (isAuthenticated && user) {
         saveMealPlanToDatabase({
           weeklyPlans: state.weeklyPlans,
-          totalItems: calculatedTotalItems
+          totalItems: calculatedTotalItems,
+          selectedRestaurants: state.selectedRestaurants,
+          maxRestaurants: state.maxRestaurants
         });
       }
     }, 1000);
@@ -412,7 +636,7 @@ export const MealPlanProvider = ({ children }) => {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [JSON.stringify(state.weeklyPlans), state.totalItems, isAuthenticated, user, isClient, isLoading]);
+  }, [JSON.stringify(state.weeklyPlans), state.totalItems, JSON.stringify(state.selectedRestaurants), isAuthenticated, user, isClient, isLoading]);
 
   // Database save function
   const saveMealPlanToDatabase = async (mealPlanData) => {
@@ -424,6 +648,8 @@ export const MealPlanProvider = ({ children }) => {
         userId: user._id,
         weeklyPlans: mealPlanData.weeklyPlans || state.weeklyPlans,
         totalItems: mealPlanData.totalItems || state.totalItems,
+        selectedRestaurants: mealPlanData.selectedRestaurants !== undefined ? mealPlanData.selectedRestaurants : state.selectedRestaurants,
+        maxRestaurants: mealPlanData.maxRestaurants || state.maxRestaurants,
         selectedRestaurantId: state.selectedRestaurantId,
         selectedRestaurantName: state.selectedRestaurantName,
         selectedRestaurantData: state.selectedRestaurantData
@@ -437,7 +663,7 @@ export const MealPlanProvider = ({ children }) => {
   };
 
   // Action creators with authentication checks
-  const addItemToPlan = async (item, day, mealType, restaurantName, userType, forceReplace = false) => {
+  const addItemToPlan = async (item, day, mealType, restaurantName, userType, forceReplace = false, restaurantId = null) => {
     if (!isAuthenticated) {
       if (typeof window !== 'undefined') {
         setStorageItem('redirectAfterLogin', window.location.pathname + window.location.search);
@@ -449,6 +675,7 @@ export const MealPlanProvider = ({ children }) => {
       ...item,
       planId: `${Date.now()}-${Math.random()}`,
       restaurantName,
+      restaurantId: restaurantId || item.restaurantId, // Include restaurantId for validation
       addedAt: new Date().toISOString()
     };
 
@@ -460,7 +687,7 @@ export const MealPlanProvider = ({ children }) => {
     return { success: true };
   };
 
-  const addItemToPlanWeek = async (item, day, mealType, restaurantName, week, userType, forceReplace = false) => {
+  const addItemToPlanWeek = async (item, day, mealType, restaurantName, week, userType, forceReplace = false, restaurantId = null) => {
     if (!isAuthenticated) {
       if (typeof window !== 'undefined') {
         setStorageItem('redirectAfterLogin', window.location.pathname + window.location.search);
@@ -471,9 +698,12 @@ export const MealPlanProvider = ({ children }) => {
     const itemWithPlan = {
       ...item,
       planId: `${Date.now()}-${Math.random()}`,
+      menuItemId: item._id || item.id || item.menuItemId, // Ensure menuItemId is included
       restaurantName,
+      restaurantId: restaurantId || item.restaurantId, // Include restaurantId for validation
       addedAt: new Date().toISOString()
     };
+
 
     dispatch({
       type: MEAL_PLAN_ACTIONS.ADD_ITEM_TO_WEEK,
@@ -671,33 +901,93 @@ export const MealPlanProvider = ({ children }) => {
   };
 
   // Restaurant selection actions
-  const setSelectedRestaurant = (restaurantId, restaurantName, restaurantData = null) => {
-    console.log('🎯 setSelectedRestaurant called:', { restaurantId, restaurantName });
+  const setSelectedRestaurant = async (restaurantData) => {
+    console.log('🎯 setSelectedRestaurant called with:', restaurantData);
+    console.log('🎯 Type of restaurantData:', typeof restaurantData);
+    console.log('🎯 restaurantData.id:', restaurantData?.id);
+    console.log('🎯 restaurantData.name:', restaurantData?.name);
+    
+    // Validate restaurantData
+    if (!restaurantData || typeof restaurantData !== 'object') {
+      console.error('❌ Invalid restaurant data - expected object, got:', typeof restaurantData);
+      return;
+    }
+    
+    if (!restaurantData.id || !restaurantData.name) {
+      console.error('❌ Invalid restaurant data - missing id or name:', restaurantData);
+      return;
+    }
+    
+    // Update local state
     dispatch({
       type: MEAL_PLAN_ACTIONS.SET_SELECTED_RESTAURANT,
-      payload: { restaurantId, restaurantName, restaurantData }
+      payload: { 
+        restaurantId: restaurantData.id, 
+        restaurantName: restaurantData.name, 
+        restaurantData 
+      }
     });
     
-    // Trigger immediate database save for restaurant selection
+    // Save to database via restaurant selection API
     if (isAuthenticated && user) {
-      console.log('💾 Triggering immediate database save for restaurant selection');
-      setTimeout(() => {
-        saveMealPlanToDatabase({
-          weeklyPlans: state.weeklyPlans,
-          totalItems: state.totalItems,
-          selectedRestaurantId: restaurantId,
-          selectedRestaurantName: restaurantName,
-          selectedRestaurantData: restaurantData
-        });
-      }, 50); // Small delay to ensure state is updated
+      try {
+        // Sanitize restaurant data to only include fields expected by the schema
+        const sanitizedRestaurant = {
+          id: restaurantData.id || restaurantData._id,
+          name: restaurantData.name,
+          image: restaurantData.image,
+          rating: restaurantData.rating,
+          cuisine: Array.isArray(restaurantData.cuisine) ? restaurantData.cuisine.join(', ') : restaurantData.cuisine,
+          distance: restaurantData.distance,
+          deliveryTime: restaurantData.deliveryTime,
+          isApiRestaurant: true
+        };
+        
+        console.log('💾 Saving restaurant selection to database with sanitized data:', sanitizedRestaurant);
+        await restaurantSelectionApi.addSelectedRestaurant(sanitizedRestaurant);
+        console.log('✅ Restaurant selection saved successfully');
+        
+        // Also save to meal plan database for backward compatibility
+        setTimeout(() => {
+          saveMealPlanToDatabase({
+            weeklyPlans: state.weeklyPlans,
+            totalItems: state.totalItems,
+            selectedRestaurantId: restaurantData.id,
+            selectedRestaurantName: restaurantData.name,
+            selectedRestaurantData: restaurantData
+          });
+        }, 50);
+      } catch (error) {
+        console.error('❌ Error saving restaurant selection:', error);
+        console.error('❌ Error details:', error.response?.data);
+        // Note: showError is not available in this context
+        console.error('❌ Failed to save restaurant selection to database');
+      }
     }
   };
 
-  const clearSelectedRestaurant = () => {
+  const clearSelectedRestaurant = async () => {
+    console.log(' clearSelectedRestaurant called');
     console.log('🎯 clearSelectedRestaurant called');
+    
+    const currentRestaurantId = state.selectedRestaurantId;
+    
+    // Update local state
     dispatch({
       type: MEAL_PLAN_ACTIONS.CLEAR_SELECTED_RESTAURANT
     });
+    
+    // Remove from database
+    if (isAuthenticated && user && currentRestaurantId) {
+      try {
+        console.log('💾 Removing restaurant selection from database');
+        await restaurantSelectionApi.removeSelectedRestaurant(currentRestaurantId);
+        console.log('✅ Restaurant selection removed successfully');
+      } catch (error) {
+        console.error('❌ Error removing restaurant selection:', error);
+        showError?.('Failed to remove restaurant selection');
+      }
+    }
   };
 
   // Clear all meal plan data and restaurant selection (for restaurant switching)
@@ -706,17 +996,12 @@ export const MealPlanProvider = ({ children }) => {
     
     // Clear both weeks
     dispatch({
-      type: MEAL_PLAN_ACTIONS.CLEAR_WEEK,
-      payload: { week: 0 }
-    });
-    dispatch({
-      type: MEAL_PLAN_ACTIONS.CLEAR_WEEK,
-      payload: { week: 1 }
+      type: MEAL_PLAN_ACTIONS.CLEAR_ALL_WEEKS
     });
     
-    // Clear selected restaurant
+    // Clear restaurant selection
     dispatch({
-      type: MEAL_PLAN_ACTIONS.CLEAR_SELECTED_RESTAURANT
+      type: MEAL_PLAN_ACTIONS.CLEAR_SELECTED_RESTAURANTS
     });
     
     // Clear planning context localStorage data as well
@@ -726,6 +1011,157 @@ export const MealPlanProvider = ({ children }) => {
       removeStorageItem('weeklyPlans'); // Also clear old meal plan data
       removeStorageItem('mealPlan'); // Clear legacy meal plan data
     }
+    
+    // Save empty meal plan to database
+    if (isAuthenticated && user) {
+      console.log('💾 Saving cleared meal plan to database');
+      const clearedData = {
+        weeklyPlans: {
+          week0: {
+            monday: { lunch: [], dinner: [] },
+            tuesday: { lunch: [], dinner: [] },
+            wednesday: { lunch: [], dinner: [] },
+            thursday: { lunch: [], dinner: [] },
+            friday: { lunch: [], dinner: [] },
+            saturday: { lunch: [], dinner: [] },
+            sunday: { lunch: [], dinner: [] }
+          },
+          week1: {
+            monday: { lunch: [], dinner: [] },
+            tuesday: { lunch: [], dinner: [] },
+            wednesday: { lunch: [], dinner: [] },
+            thursday: { lunch: [], dinner: [] },
+            friday: { lunch: [], dinner: [] },
+            saturday: { lunch: [], dinner: [] },
+            sunday: { lunch: [], dinner: [] }
+          }
+        },
+        totalItems: 0,
+        selectedRestaurants: [],
+        maxRestaurants: state.maxRestaurants
+      };
+      console.log('🧹 Cleared data to save:', clearedData);
+      setTimeout(() => {
+        saveMealPlanToDatabase(clearedData);
+      }, 100);
+    }
+  };
+
+  // Clear items from a specific restaurant
+  const clearItemsByRestaurant = async (restaurantId) => {
+    console.log('🎯 clearItemsByRestaurant called for restaurant:', restaurantId);
+    
+    try {
+      // Call backend API to clear items
+      const response = await apiClient.delete(`/meal-plans/${user._id}/clear-restaurant/${restaurantId}`);
+      
+      if (response.data?.status === 'success') {
+        console.log('✅ Items cleared from restaurant successfully');
+        
+        // Update local state with the cleaned meal plan
+        const cleanedMealPlan = response.data.data;
+        dispatch({
+          type: MEAL_PLAN_ACTIONS.SYNC_DATABASE_DATA,
+          payload: { databaseData: cleanedMealPlan }
+        });
+        
+        return response.data.data.itemsRemoved || 0;
+      }
+    } catch (error) {
+      console.error('❌ Error clearing items by restaurant:', error);
+      throw error;
+    }
+  };
+
+  // Multi-restaurant functions
+  const addSelectedRestaurant = (restaurantId, restaurantName, restaurantData = null) => {
+    console.log('🎯 addSelectedRestaurant called:', { restaurantId, restaurantName });
+    
+    // Check if restaurant already exists
+    const existingRestaurant = state.selectedRestaurants.find(r => r.restaurantId === restaurantId);
+    if (existingRestaurant) {
+      console.log('⚠️ Restaurant already selected');
+      return false;
+    }
+    
+    // Check max restaurants limit
+    if (state.selectedRestaurants.length >= state.maxRestaurants) {
+      console.log('⚠️ Maximum restaurants limit reached');
+      return false;
+    }
+    
+    dispatch({
+      type: MEAL_PLAN_ACTIONS.ADD_SELECTED_RESTAURANT,
+      payload: { restaurantId, restaurantName, restaurantData }
+    });
+    
+    // Trigger immediate database save
+    if (isAuthenticated && user) {
+      console.log('💾 Triggering immediate database save for restaurant addition');
+      setTimeout(() => {
+        const updatedRestaurants = [...state.selectedRestaurants, { restaurantId, restaurantName, restaurantData, addedAt: new Date() }];
+        saveMealPlanToDatabase({
+          weeklyPlans: state.weeklyPlans,
+          totalItems: state.totalItems,
+          selectedRestaurants: updatedRestaurants,
+          maxRestaurants: state.maxRestaurants
+        });
+      }, 50);
+    }
+    
+    return true;
+  };
+
+  const removeSelectedRestaurant = async (restaurantId) => {
+    console.log('🎯 removeSelectedRestaurant called:', restaurantId);
+    
+    try {
+      // Call backend API to remove restaurant
+      if (isAuthenticated && user) {
+        console.log('💾 Removing restaurant from database via API');
+        await restaurantSelectionApi.removeSelectedRestaurant(restaurantId);
+        console.log('✅ Restaurant removed from database successfully');
+      }
+      
+      // Update local state
+      dispatch({
+        type: MEAL_PLAN_ACTIONS.REMOVE_SELECTED_RESTAURANT,
+        payload: { restaurantId }
+      });
+      
+    } catch (error) {
+      console.error('❌ Error removing selected restaurant:', error);
+      throw error;
+    }
+  };
+
+  const clearSelectedRestaurants = () => {
+    console.log('🎯 clearSelectedRestaurants called');
+    dispatch({
+      type: MEAL_PLAN_ACTIONS.CLEAR_SELECTED_RESTAURANTS
+    });
+  };
+
+  const canAddRestaurant = () => {
+    return state.selectedRestaurants.length < state.maxRestaurants;
+  };
+
+  const isRestaurantSelected = (restaurantId) => {
+    const result = state.selectedRestaurants.some(r => r.restaurantId === restaurantId);
+    console.log('🔍 isRestaurantSelected check:', {
+      restaurantId,
+      selectedRestaurants: state.selectedRestaurants,
+      result
+    });
+    return result;
+  };
+
+  const getSelectedRestaurantCount = () => {
+    return state.selectedRestaurants.length;
+  };
+
+  const getSelectedRestaurants = () => {
+    return state.selectedRestaurants;
   };
 
   // Legacy compatibility functions
@@ -746,15 +1182,67 @@ export const MealPlanProvider = ({ children }) => {
     return state.totalItems;
   };
 
-  // Show loading state during SSR and initial client hydration
-  if (!isClient || isLoading) {
+  // Don't show loading screen during SSR to prevent hydration mismatch
+  // Instead, render children with initial state and let useEffect handle data loading
+  if (!isClient) {
+    // During SSR, provide initial empty state to prevent hydration mismatch
+    const ssrValue = {
+      // State
+      ...initialState,
+      isClient: false,
+      isLoadingFromDatabase: true,
+      hasLoadedFromDatabase: false,
+      // Legacy state compatibility
+      mealPlan: initialState.weeklyPlan,
+      weeklyPlan: initialState.weeklyPlan,
+      
+      // Actions (no-op functions during SSR)
+      addItemToPlan: () => Promise.resolve({ success: false }),
+      addItemToPlanWeek: () => Promise.resolve({ success: false }),
+      removeItemFromPlan: () => {},
+      removeItemFromPlanWeek: () => {},
+      clearWeek: () => {},
+      clearAll: () => {},
+      
+      // Restaurant selection actions (legacy)
+      setSelectedRestaurant: () => {},
+      clearSelectedRestaurant: () => {},
+      clearAllMealPlanData: () => {},
+      clearItemsByRestaurant: () => Promise.resolve(0),
+      
+      // Multi-restaurant actions
+      addSelectedRestaurant: () => false,
+      removeSelectedRestaurant: () => Promise.resolve(),
+      clearSelectedRestaurants: () => {},
+      canAddRestaurant: () => true,
+      isRestaurantSelected: () => false,
+      getSelectedRestaurantCount: () => 0,
+      getSelectedRestaurants: () => [],
+      
+      // Helpers
+      getWeekPlan: () => initialWeekPlan,
+      getWeekMealItems: () => [],
+      getWeekTotalItems: () => 0,
+      getWeekTotalCost: () => 0,
+      getRestaurantsInWeekPlan: () => [],
+      getRestaurantsInAllWeeks: () => [],
+      getRestaurantsInPlan: () => [],
+      getRestaurantIdsInWeekPlan: () => [],
+      getRestaurantIdsInAllWeeks: () => [],
+      getWeeklyPlanSummary: () => ({ totalItems: 0, totalCost: '0.00', restaurants: [], restaurantCount: 0 }),
+      getItemQuantityInPlan: () => 0,
+      isItemInPlan: () => false,
+      // Legacy compatibility
+      getDayItems: () => ({ lunch: [], dinner: [] }),
+      getDayItemsCount: () => 0,
+      getMealItems: () => [],
+      getTotalItemsCount: () => 0
+    };
+
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-grub-red mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading meal plan...</p>
-        </div>
-      </div>
+      <MealPlanContext.Provider value={ssrValue}>
+        {children}
+      </MealPlanContext.Provider>
     );
   }
 
@@ -776,10 +1264,20 @@ export const MealPlanProvider = ({ children }) => {
     clearWeek,
     clearAll,
     
-    // Restaurant selection actions
+    // Restaurant selection actions (legacy)
     setSelectedRestaurant,
     clearSelectedRestaurant,
     clearAllMealPlanData,
+    clearItemsByRestaurant,
+    
+    // Multi-restaurant actions
+    addSelectedRestaurant,
+    removeSelectedRestaurant,
+    clearSelectedRestaurants,
+    canAddRestaurant,
+    isRestaurantSelected,
+    getSelectedRestaurantCount,
+    getSelectedRestaurants,
     
     // Helpers
     getWeekPlan,

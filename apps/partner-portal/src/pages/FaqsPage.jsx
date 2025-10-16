@@ -275,14 +275,14 @@ const FaqsPage = () => {
               <p className="text-gray-700">You can reach us through multiple channels:</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                  <Phone className="h-5 w-5 text-grub-red" />
+                  <FontAwesomeIcon icon={faPhone} className="h-5 w-5 text-grub-red" />
                   <div>
                     <div className="font-medium">Phone</div>
                     <div className="text-sm text-gray-600">+1 (514) 123-4567</div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                  <Mail className="h-5 w-5 text-grub-red" />
+                  <FontAwesomeIcon icon={faEnvelope} className="h-5 w-5 text-grub-red" />
                   <div>
                     <div className="font-medium">Email</div>
                     <div className="text-sm text-gray-600">partners@grubgate.app</div>

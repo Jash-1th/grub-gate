@@ -3,6 +3,7 @@ const express = require('express');
 const {
   register,
   login,
+  partnerLogin,
   logout,
   getMe,
   refreshToken,
@@ -35,6 +36,7 @@ router.post('/register-partner',
   registerPartner
 );
 router.post('/login', validateRequest(userSchemas.login), login);
+router.post('/partner/login', validateRequest(userSchemas.login), partnerLogin);
 router.post('/refresh', refreshToken);
 router.post('/verify-email', verifyEmail);
 router.post('/forgot-password', forgotPassword);

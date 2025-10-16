@@ -263,10 +263,27 @@ const createPartnerMenuItem = asyncHandler(async (req, res) => {
   }
 
   console.log('📥 Final data before creating menu item:', req.body);
-  const menuItem = await MenuItem.create(req.body);
-  console.log('📥 Created menu item with availability:', menuItem.availability);
-
-  createdResponse(res, { menuItem }, 'Menu item created successfully');
+  
+  try {
+    const menuItem = await MenuItem.create(req.body);
+    console.log('📥 Created menu item with availability:', menuItem.availability);
+    createdResponse(res, { menuItem }, 'Menu item created successfully');
+  } catch (error) {
+    console.error('❌ MenuItem creation error:', error);
+    console.error('❌ Error details:', error.message);
+    
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => ({
+        field: err.path,
+        message: err.message,
+        value: err.value
+      }));
+      console.error('❌ Validation errors:', validationErrors);
+      return errorResponse(res, 'Validation failed', 400, validationErrors);
+    }
+    
+    throw error; // Re-throw if not a validation error
+  }
 });
 
 /**

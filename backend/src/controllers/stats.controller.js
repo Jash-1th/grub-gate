@@ -168,7 +168,7 @@ const getRestaurantStats = asyncHandler(async (req, res) => {
 });
 
 /**
- * @desc    Get popular dishes (most ordered menu items)
+ * @desc    Get popular dishes from last week (most ordered menu items)
  * @route   GET /api/v1/stats/popular-dishes
  * @access  Public
  */
@@ -176,10 +176,28 @@ const getPopularDishes = asyncHandler(async (req, res) => {
   try {
     const { limit = 6 } = req.query;
 
-    // Get most ordered menu items by aggregating order data
+    // Calculate last week's date range
+    const now = new Date();
+    const lastWeekEnd = new Date(now.getTime() - (now.getDay() * 24 * 60 * 60 * 1000)); // Start of this week
+    const lastWeekStart = new Date(lastWeekEnd.getTime() - (7 * 24 * 60 * 60 * 1000)); // Start of last week
+    
+    console.log('🗓️ Last week date range:', {
+      start: lastWeekStart.toISOString(),
+      end: lastWeekEnd.toISOString()
+    });
+
+    // Get most ordered menu items from last week by aggregating order data
     const popularDishes = await Order.aggregate([
-      // Match non-cancelled orders
-      { $match: { status: { $ne: 'cancelled' } } },
+      // Match non-cancelled orders from last week only
+      { 
+        $match: { 
+          status: { $ne: 'cancelled' },
+          createdAt: {
+            $gte: lastWeekStart,
+            $lt: lastWeekEnd
+          }
+        } 
+      },
       
       // Unwind the items array to work with individual items
       { $unwind: '$items' },
@@ -292,13 +310,19 @@ const getPopularDishes = asyncHandler(async (req, res) => {
             image: 1,
             category: 1,
             dietaryInfo: 1,
-            totalOrders: 0,
-            totalRevenue: 0,
             restaurant: {
               _id: '$restaurant._id',
               name: '$restaurant.name',
               cuisine: '$restaurant.cuisine'
-            },
+            }
+          }
+        },
+        
+        // Add computed fields
+        {
+          $addFields: {
+            totalOrders: 0,
+            totalRevenue: 0,
             popularityScore: 0
           }
         }
@@ -308,7 +332,7 @@ const getPopularDishes = asyncHandler(async (req, res) => {
         dishes: fallbackDishes,
         total: fallbackDishes.length,
         dataSource: 'random_sample',
-        message: 'No order data available, showing sample dishes'
+        message: 'No order data from last week, showing sample dishes'
       }, 'Popular dishes retrieved successfully (sample data)');
     }
 
@@ -316,8 +340,12 @@ const getPopularDishes = asyncHandler(async (req, res) => {
       dishes: popularDishes,
       total: popularDishes.length,
       dataSource: 'order_analytics',
-      message: 'Based on actual order data'
-    }, 'Popular dishes retrieved successfully');
+      message: 'Based on last week\'s order data',
+      dateRange: {
+        start: lastWeekStart.toISOString(),
+        end: lastWeekEnd.toISOString()
+      }
+    }, 'Last week\'s most ordered dishes retrieved successfully');
 
   } catch (error) {
     console.error('Error fetching popular dishes:', error);

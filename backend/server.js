@@ -156,6 +156,7 @@ app.use('/api/v1/orders/generate', orderGenerationRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/geocoding', geocodingRoutes);
 app.use('/api/v1/meal-calendar', require('./src/routes/mealCalendar.routes'));
+app.use('/api/v1/restaurant-validation', require('./src/routes/restaurantValidation.routes'));
 
 // 404 handler
 app.use('*', (req, res) => {

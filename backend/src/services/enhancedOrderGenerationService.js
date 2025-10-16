@@ -212,28 +212,32 @@ const generateOrdersForWeek = async (week, subscriptionPlan) => {
     }
     
     if (dayMeals) {
-      // Generate lunch order
+      // Generate lunch orders (can be multiple orders if multiple restaurants)
       if (dayMeals.lunch && dayMeals.lunch.length > 0) {
-        const lunchOrder = await createScheduledOrder(
+        const lunchOrders = await createScheduledOrder(
           subscriptionPlan, 
           orderDate, 
           'lunch', 
           dayMeals.lunch,
           week
         );
-        if (lunchOrder) orders.push(lunchOrder);
+        if (lunchOrders && lunchOrders.length > 0) {
+          orders.push(...lunchOrders); // Spread array since createScheduledOrder now returns array
+        }
       }
       
-      // Generate dinner order
+      // Generate dinner orders (can be multiple orders if multiple restaurants)
       if (dayMeals.dinner && dayMeals.dinner.length > 0) {
-        const dinnerOrder = await createScheduledOrder(
+        const dinnerOrders = await createScheduledOrder(
           subscriptionPlan, 
           orderDate, 
           'dinner', 
           dayMeals.dinner,
           week
         );
-        if (dinnerOrder) orders.push(dinnerOrder);
+        if (dinnerOrders && dinnerOrders.length > 0) {
+          orders.push(...dinnerOrders); // Spread array since createScheduledOrder now returns array
+        }
       }
     }
   }
@@ -243,6 +247,7 @@ const generateOrdersForWeek = async (week, subscriptionPlan) => {
 
 /**
  * Create a scheduled order with proper status
+ * Now supports multiple restaurants by grouping meals by restaurant
  */
 const createScheduledOrder = async (subscriptionPlan, orderDate, mealType, meals, week) => {
   try {
@@ -250,104 +255,137 @@ const createScheduledOrder = async (subscriptionPlan, orderDate, mealType, meals
     
     console.log(`   🎯 Order status determined: ${status} for ${formatDateForLog(orderDate)}`);
     
-    // Generate unique order number with more entropy
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substr(2, 4);
-    const orderNumber = `GG${orderDate.getFullYear()}${String(orderDate.getMonth() + 1).padStart(2, '0')}${String(orderDate.getDate()).padStart(2, '0')}${timestamp.toString().slice(-4)}${random}`;
-    // Calculate totals and create enhanced order items
-    let subtotal = 0;
-    const orderItems = [];
+    // Group meals by restaurant since each meal has its own restaurantId
+    const mealsByRestaurant = {};
     
     for (const meal of meals) {
-      subtotal += meal.price || 0;
-      
-      // Fetch detailed menu item information from database
-      let menuItemDetails = null;
-      try {
-        if (meal.menuItemId) {
-          menuItemDetails = await MenuItem.findById(meal.menuItemId);
-        }
-      } catch (error) {
-        console.warn(`Could not fetch menu item details for ${meal.menuItemId}:`, error.message);
+      const restaurantId = meal.restaurantId;
+      if (!restaurantId) {
+        console.error(`❌ Meal ${meal.name} is missing restaurantId:`, meal);
+        continue;
       }
       
-      // Create enhanced order item with all available details
-      const orderItem = {
-        menuItemId: meal.menuItemId || meal.id,
-        name: meal.name,
-        price: meal.price || 0,
-        quantity: 1,
-        specialInstructions: meal.specialInstructions || ''
-      };
-      
-      // Add detailed information from menu item if available
-      if (menuItemDetails) {
-        orderItem.description = menuItemDetails.description;
-        orderItem.category = menuItemDetails.category;
-        orderItem.prepTime = menuItemDetails.prepTime;
-        orderItem.spiceLevel = menuItemDetails.spiceLevel;
-        orderItem.dietaryTags = menuItemDetails.dietaryTags || [];
-        orderItem.ingredients = menuItemDetails.ingredients || [];
-        orderItem.allergens = menuItemDetails.allergens || [];
-        orderItem.nutritionalInfo = menuItemDetails.nutritionalInfo;
-        orderItem.isVegetarian = menuItemDetails.isVegetarian;
-        orderItem.isVegan = menuItemDetails.isVegan;
-        orderItem.isGlutenFree = menuItemDetails.isGlutenFree;
-        orderItem.isDairyFree = menuItemDetails.isDairyFree;
-        orderItem.servingSize = menuItemDetails.servingSize;
-        orderItem.temperature = menuItemDetails.temperature;
-        orderItem.cookingNotes = menuItemDetails.cookingNotes;
-      } else {
-        // Fallback: use any details available in the meal object itself
-        orderItem.description = meal.description || `Delicious ${meal.name}`;
-        orderItem.category = meal.category || 'Main Course';
-        orderItem.prepTime = meal.prepTime || 30;
-        orderItem.spiceLevel = meal.spiceLevel || 2;
-        orderItem.dietaryTags = meal.dietaryTags || [];
-        orderItem.ingredients = meal.ingredients || [];
-        orderItem.allergens = meal.allergens || [];
+      if (!mealsByRestaurant[restaurantId]) {
+        mealsByRestaurant[restaurantId] = {
+          restaurantId: restaurantId,
+          restaurantName: meal.restaurantName,
+          meals: []
+        };
       }
       
-      orderItems.push(orderItem);
+      mealsByRestaurant[restaurantId].meals.push(meal);
     }
     
-    const deliveryFee = 3.99;
-    const taxRate = 0.13; // 13% tax
-    const tax = Math.round((subtotal + deliveryFee) * taxRate * 100) / 100;
-    const total = Math.round((subtotal + deliveryFee + tax) * 100) / 100;
+    // Create separate orders for each restaurant
+    const orders = [];
     
-    // Use smart calculator for delivery time
-    const deliveryTime = calculateDeliveryTime(orderDate, mealType);
+    for (const [restaurantId, restaurantData] of Object.entries(mealsByRestaurant)) {
+      console.log(`   🏪 Creating order for restaurant: ${restaurantData.restaurantName} (${restaurantData.meals.length} meals)`);
+      
+      // Generate unique order number with more entropy
+      const timestamp = Date.now();
+      const random = Math.random().toString(36).substr(2, 4);
+      const orderNumber = `GG${orderDate.getFullYear()}${String(orderDate.getMonth() + 1).padStart(2, '0')}${String(orderDate.getDate()).padStart(2, '0')}${timestamp.toString().slice(-4)}${random}`;
+      
+      // Calculate totals and create enhanced order items for this restaurant
+      let subtotal = 0;
+      const orderItems = [];
+      
+      for (const meal of restaurantData.meals) {
+        subtotal += meal.price || 0;
+        
+        // Fetch detailed menu item information from database
+        let menuItemDetails = null;
+        try {
+          if (meal.menuItemId || meal.id) {
+            menuItemDetails = await MenuItem.findById(meal.menuItemId || meal.id);
+          }
+        } catch (error) {
+          console.warn(`Could not fetch menu item details for ${meal.menuItemId || meal.id}:`, error.message);
+        }
+        
+        // Create enhanced order item with all available details
+        const orderItem = {
+          menuItemId: meal.menuItemId || meal.id,
+          name: meal.name,
+          price: meal.price || 0,
+          quantity: 1,
+          specialInstructions: meal.specialInstructions || ''
+        };
+        
+        // Add detailed information from menu item if available
+        if (menuItemDetails) {
+          orderItem.description = menuItemDetails.description;
+          orderItem.category = menuItemDetails.category;
+          orderItem.prepTime = menuItemDetails.prepTime;
+          orderItem.spiceLevel = menuItemDetails.spiceLevel;
+          orderItem.dietaryTags = menuItemDetails.dietaryTags || [];
+          orderItem.ingredients = menuItemDetails.ingredients || [];
+          orderItem.allergens = menuItemDetails.allergens || [];
+          orderItem.nutritionalInfo = menuItemDetails.nutritionalInfo;
+          orderItem.isVegetarian = menuItemDetails.isVegetarian;
+          orderItem.isVegan = menuItemDetails.isVegan;
+          orderItem.isGlutenFree = menuItemDetails.isGlutenFree;
+          orderItem.isDairyFree = menuItemDetails.isDairyFree;
+          orderItem.servingSize = menuItemDetails.servingSize;
+          orderItem.temperature = menuItemDetails.temperature;
+          orderItem.cookingNotes = menuItemDetails.cookingNotes;
+        } else {
+          // Fallback: use any details available in the meal object itself
+          orderItem.description = meal.description || `Delicious ${meal.name}`;
+          orderItem.category = meal.category || 'Main Course';
+          orderItem.prepTime = meal.prepTime || 30;
+          orderItem.spiceLevel = meal.spiceLevel || 2;
+          orderItem.dietaryTags = meal.dietaryTags || [];
+          orderItem.ingredients = meal.ingredients || [];
+          orderItem.allergens = meal.allergens || [];
+        }
+        
+        orderItems.push(orderItem);
+      }
+      
+      const deliveryFee = 3.99;
+      const taxRate = 0.13; // 13% tax
+      const tax = Math.round((subtotal + deliveryFee) * taxRate * 100) / 100;
+      const total = Math.round((subtotal + deliveryFee + tax) * 100) / 100;
+      
+      // Use smart calculator for delivery time
+      const deliveryTime = calculateDeliveryTime(orderDate, mealType);
+      
+      const order = {
+        orderNumber: orderNumber,
+        customerId: subscriptionPlan.customerId,
+        restaurantId: restaurantId, // Use the specific restaurant ID from meals
+        type: 'weekly-plan',
+        mealType: mealType,
+        isSubscriptionOrder: true,
+        isScheduledOrder: true,
+        weeklyPlanId: subscriptionPlan._id,
+        items: orderItems,
+        subtotal: subtotal,
+        deliveryFee: deliveryFee,
+        tax: tax,
+        total: total,
+        status: status,
+        paymentStatus: 'paid',
+        scheduledDate: orderDate,
+        activationDate: orderDate,
+        deliveryAddress: subscriptionPlan.deliveryAddress,
+        deliveryTime: {
+          estimated: deliveryTime
+        },
+        specialInstructions: subscriptionPlan.specialInstructions || '',
+        notes: `Generated from Week ${week.weekNumber} (${week.isRepeated ? 'repeated' : 'original'} Week ${week.originalWeekIndex}) - Restaurant: ${restaurantData.restaurantName}`
+      };
+      
+      orders.push(order);
+    }
     
-    return {
-      orderNumber: orderNumber,
-      customerId: subscriptionPlan.customerId,
-      restaurantId: subscriptionPlan.restaurantId,
-      type: 'weekly-plan',
-      mealType: mealType,
-      isSubscriptionOrder: true,
-      isScheduledOrder: true,
-      weeklyPlanId: subscriptionPlan._id,
-      items: orderItems,
-      subtotal: subtotal,
-      deliveryFee: deliveryFee,
-      tax: tax,
-      total: total,
-      status: status,
-      paymentStatus: 'paid',
-      scheduledDate: orderDate,
-      activationDate: orderDate,
-      deliveryAddress: subscriptionPlan.deliveryAddress,
-      deliveryTime: {
-        estimated: deliveryTime
-      },
-      specialInstructions: subscriptionPlan.specialInstructions || '',
-      notes: `Generated from Week ${week.weekNumber} (${week.isRepeated ? 'repeated' : 'original'} Week ${week.originalWeekIndex})`
-    };
+    return orders; // Return array of orders (one per restaurant)
     
   } catch (error) {
     console.error(`Error creating order for ${orderDate.toDateString()} ${mealType}:`, error);
-    return null;
+    return [];
   }
 };
 

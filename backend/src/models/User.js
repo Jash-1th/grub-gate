@@ -167,6 +167,8 @@ const userSchema = new mongoose.Schema({
       default: false
     }
   }],
+  // Note: selectedRestaurants moved to MealPlan schema
+  // This ensures restaurant selection is deleted with meal plan after subscription
   
   // Subscription preferences for meal planning
   subscriptionPreferences: {

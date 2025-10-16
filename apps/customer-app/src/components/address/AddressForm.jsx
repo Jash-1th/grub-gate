@@ -12,6 +12,9 @@ import {
 import CurrentLocationButton from '../location/CurrentLocationButton';
 import addressValidationService from '../../services/addressValidationService';
 import { useToast } from '../../contexts/ToastContext';
+import { validateForm, VALIDATION_RULES } from '../../utils/validationErrorHandler';
+import ValidatedInput, { ValidatedSelect, ValidatedTextarea } from '../common/ValidatedInput';
+import { ErrorList } from '../common/ErrorDisplay';
 
 /**
  * Enhanced Address Form Component
@@ -252,57 +255,23 @@ const AddressForm = ({
   }, [showError]);
 
 
-  // Validate form
-  const validateForm = useCallback(() => {
-    const newErrors = {};
-    const rules = addressValidationService.getValidationRules(formData.country);
-
-    // Debug: Always log validation attempt in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔍 === ADDRESS VALIDATION DEBUG START ===');
-      console.log('📝 Form data:', JSON.stringify(formData, null, 2));
-      console.log('📋 Validation rules:', JSON.stringify(rules, null, 2));
-      console.log('🌍 Country:', formData.country);
+  // Validate form using enhanced validation system
+  const validateAddressForm = useCallback(() => {
+    // Use enhanced validation with Joi schema rules
+    const validationRules = {
+      ...VALIDATION_RULES.address,
+      country: { required: true }
+    };
+    
+    // Add country-specific postal code validation
+    if (formData.country) {
+      validationRules.postalCode = { 
+        required: true, 
+        country: formData.country 
+      };
     }
-
-    // Required field validation
-    Object.keys(rules).forEach(field => {
-      const rule = rules[field];
-      const value = formData[field];
-
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`🔍 Validating field "${field}":`, {
-          value: value,
-          valueLength: value ? value.length : 0,
-          trimmedLength: value ? value.trim().length : 0,
-          rule: rule
-        });
-      }
-
-      if (rule.required && (!value || value.trim().length === 0)) {
-        newErrors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`❌ Field "${field}" failed: required but empty`);
-        }
-      } else if (value && rule.minLength && value.length < rule.minLength) {
-        newErrors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} must be at least ${rule.minLength} characters`;
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`❌ Field "${field}" failed: length ${value.length} < ${rule.minLength}`);
-        }
-      } else if (value && rule.maxLength && value.length > rule.maxLength) {
-        newErrors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} cannot exceed ${rule.maxLength} characters`;
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`❌ Field "${field}" failed: length ${value.length} > ${rule.maxLength}`);
-        }
-      } else if (value && rule.pattern && !rule.pattern.test(value)) {
-        newErrors[field] = `Please enter a valid ${field}`;
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`❌ Field "${field}" failed: pattern test failed`, rule.pattern);
-        }
-      } else if (process.env.NODE_ENV === 'development') {
-        console.log(`✅ Field "${field}" passed validation`);
-      }
-    });
+    
+    const newErrors = validateForm(formData, validationRules);
 
     // Custom validation - only check if street is not empty
     if (formData.street && formData.street.trim().length < 2) {
@@ -390,14 +359,14 @@ const AddressForm = ({
 
     // Debug: Log validation results in development
     if (process.env.NODE_ENV === 'development') {
-      console.log('🔍 === ADDRESS VALIDATION DEBUG END ===');
+      console.log('🔍 === ADDRESS VALIDATION DEBUG ===');
+      console.log('📝 Form data:', JSON.stringify(formData, null, 2));
       console.log('❌ Validation errors found:', Object.keys(newErrors).length);
       if (Object.keys(newErrors).length > 0) {
         console.log('📋 All validation errors:', JSON.stringify(newErrors, null, 2));
       } else {
         console.log('✅ All validation passed!');
       }
-      console.log('🔍 === ADDRESS VALIDATION DEBUG COMPLETE ===');
     }
     
     setErrors(newErrors);
@@ -408,7 +377,7 @@ const AddressForm = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    if (!validateAddressForm()) {
       showError('Validation Error', 'Please fix the errors in the form');
       return;
     }

@@ -135,26 +135,26 @@ const SubscriptionPlans = () => {
       ],
       popular: true,
       color: 'grub-red'
-    },
-    {
-      id: 'quarterly',
-      name: '3 Months Plan',
-      price: '$59.99',
-      period: 'every 3 months',
-      description: 'Maximum savings for committed users',
-      features: [
-        'Everything in Monthly',
-        '90 days of meal planning',
-        'Personal meal consultant',
-        'Custom meal plans',
-        'Restaurant partnerships',
-        '24/7 phone support',
-        'Early access to new features',
-        '25% savings vs bi-weekly'
-      ],
-      popular: false,
-      color: 'purple'
     }
+    // {
+    //   id: 'quarterly',
+    //   name: '3 Months Plan',
+    //   price: '$59.99',
+    //   period: 'every 3 months',
+    //   description: 'Maximum savings for committed users',
+    //   features: [
+    //     'Everything in Monthly',
+    //     '90 days of meal planning',
+    //     'Personal meal consultant',
+    //     'Custom meal plans',
+    //     'Restaurant partnerships',
+    //     '24/7 phone support',
+    //     'Early access to new features',
+    //     '25% savings vs bi-weekly'
+    //   ],
+    //   popular: false,
+    //   color: 'purple'
+    // }
   ];
 
   const getColorClasses = (color, isPopular = false) => {

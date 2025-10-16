@@ -4,20 +4,85 @@ const { successResponse, errorResponse, notFoundResponse } = require('../utils/a
 const { addDatesToMealPlan, needsDateRecalculation } = require('../utils/mealPlanDateCalculator');
 
 /**
- * Clean individual meal items by keeping only essential fields
+ * Clean individual meal items by keeping all necessary fields
  * @param {Array} mealItems - Array of meal items
  * @returns {Array} - Cleaned meal items
  */
 const cleanMealItems = (mealItems) => {
   return mealItems.map(item => ({
-    _id: item._id,
-    name: item.name,
-    price: item.price,
-    image: item.image,
-    planId: item.planId,
-    restaurantName: item.restaurantName,
-    addedAt: item.addedAt
+    id: item.id,                           // Original menu item ID
+    name: item.name,                       // Meal name
+    price: item.price,                     // Price
+    image: item.image,                     // Image URL
+    description: item.description,         // Meal description
+    category: item.category,               // Meal category (appetizer, main, etc.)
+    dietaryPreferences: item.dietaryPreferences || [], // Dietary preferences array
+    spiceLevel: item.spiceLevel,           // Spice level (0-5)
+    restaurantId: item.restaurantId,       // Restaurant ID
+    restaurantName: item.restaurantName,   // Restaurant name
+    planId: item.planId,                   // Unique plan item ID
+    addedAt: item.addedAt                  // When added to plan
   }));
+};
+
+/**
+ * Clean meal plan data to ensure all meal items have proper restaurantId
+ * @param {Object} weeklyPlans - Weekly plans object
+ * @param {String} defaultRestaurantId - Default restaurant ID to use if missing
+ * @returns {Object} - Cleaned weekly plans
+ */
+const cleanMealPlanData = (weeklyPlans, defaultRestaurantId) => {
+  if (!weeklyPlans) return {};
+  
+  const cleanedPlans = {};
+  
+  ['week0', 'week1'].forEach(weekKey => {
+    if (weeklyPlans[weekKey]) {
+      cleanedPlans[weekKey] = {};
+      
+      const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      dayNames.forEach(dayName => {
+        const dayData = weeklyPlans[weekKey][dayName];
+        if (dayData) {
+          cleanedPlans[weekKey][dayName] = {
+            date: dayData.date,
+            lunch: cleanMealItemsData(dayData.lunch || [], defaultRestaurantId),
+            dinner: cleanMealItemsData(dayData.dinner || [], defaultRestaurantId)
+          };
+        }
+      });
+    }
+  });
+  
+  return cleanedPlans;
+};
+
+/**
+ * Clean meal items data to ensure proper restaurantId
+ * @param {Array} mealItems - Array of meal items
+ * @param {String} defaultRestaurantId - Default restaurant ID to use if missing
+ * @returns {Array} - Cleaned meal items
+ */
+const cleanMealItemsData = (mealItems, defaultRestaurantId) => {
+  if (!Array.isArray(mealItems)) return [];
+  
+  return mealItems.map(item => {
+    const cleanedItem = { ...item };
+    
+    // Ensure restaurantId is set (use default if missing or invalid)
+    if (!cleanedItem.restaurantId || cleanedItem.restaurantId === 'undefined') {
+      if (defaultRestaurantId) {
+        cleanedItem.restaurantId = defaultRestaurantId;
+        console.log(`🔧 Fixed missing restaurantId for item: ${item.name}`);
+      } else {
+        // If no default, remove the restaurantId field entirely
+        delete cleanedItem.restaurantId;
+        console.log(`⚠️ Removed invalid restaurantId for item: ${item.name}`);
+      }
+    }
+    
+    return cleanedItem;
+  });
 };
 
 /**
@@ -31,15 +96,16 @@ const cleanMealPlanResponse = (mealPlan) => {
     userId: mealPlan.userId,
     weeklyPlans: {},
     totalItems: mealPlan.totalItems || 0,
-    selectedRestaurantId: mealPlan.selectedRestaurantId,
-    selectedRestaurantName: mealPlan.selectedRestaurantName,
-    // Only include essential restaurant data
-    selectedRestaurantData: mealPlan.selectedRestaurantData ? {
-      _id: mealPlan.selectedRestaurantData._id,
-      name: mealPlan.selectedRestaurantData.name,
-      cuisine: mealPlan.selectedRestaurantData.cuisine,
-      rating: mealPlan.selectedRestaurantData.rating,
-      logo: mealPlan.selectedRestaurantData.logo
+    // Multi-restaurant support
+    selectedRestaurants: mealPlan.selectedRestaurants || [],
+    maxRestaurants: mealPlan.maxRestaurants || 2,
+    // Legacy fields for backward compatibility
+    selectedRestaurantId: mealPlan.selectedRestaurants?.[0]?.restaurantId || null,
+    selectedRestaurantName: mealPlan.selectedRestaurants?.[0]?.restaurantName || null,
+    selectedRestaurantData: mealPlan.selectedRestaurants?.[0] ? {
+      _id: mealPlan.selectedRestaurants[0].restaurantId,
+      name: mealPlan.selectedRestaurants[0].restaurantName,
+      addedAt: mealPlan.selectedRestaurants[0].addedAt
     } : null,
     datesCalculatedAt: mealPlan.datesCalculatedAt,
     lastUpdated: mealPlan.lastUpdated,
@@ -107,6 +173,9 @@ const getMealPlan = asyncHandler(async (req, res) => {
         week1: {}
       },
       totalItems: 0,
+      selectedRestaurants: [],
+      maxRestaurants: 2,
+      // Legacy fields for backward compatibility
       selectedRestaurantId: null,
       selectedRestaurantName: null,
       selectedRestaurantData: null
@@ -161,6 +230,10 @@ const createOrUpdateMealPlan = asyncHandler(async (req, res) => {
     userId, 
     weeklyPlans, 
     totalItems, 
+    // Multi-restaurant support
+    selectedRestaurants,
+    maxRestaurants = 2,
+    // Legacy fields for backward compatibility
     selectedRestaurantId, 
     selectedRestaurantName, 
     selectedRestaurantData 
@@ -179,14 +252,21 @@ const createOrUpdateMealPlan = asyncHandler(async (req, res) => {
   // Find existing meal plan or create new one
   let mealPlan = await MealPlan.findOne({ userId });
 
-  console.log('💾 Saving meal plan to database:', { userId, totalItems });
+  console.log('💾 Saving meal plan to database:', { userId, totalItems, selectedRestaurants });
+
+  // Clean meal plan data to ensure restaurantId is properly set
+  const cleanedWeeklyPlans = cleanMealPlanData(weeklyPlans, selectedRestaurantId);
 
   // Add dates to meal plan data BEFORE saving to database
   console.log('📅 Adding dates to meal plan before saving...');
   let mealPlanWithDates = {
     userId,
-    weeklyPlans,
+    weeklyPlans: cleanedWeeklyPlans,
     totalItems: totalItems || 0,
+    // Multi-restaurant support
+    selectedRestaurants: selectedRestaurants || [],
+    maxRestaurants: maxRestaurants || 2,
+    // Legacy fields for backward compatibility
     selectedRestaurantId: selectedRestaurantId || null,
     selectedRestaurantName: selectedRestaurantName || null,
     selectedRestaurantData: selectedRestaurantData || null
@@ -200,6 +280,12 @@ const createOrUpdateMealPlan = asyncHandler(async (req, res) => {
     mealPlan.datesCalculatedAt = mealPlanWithDates.datesCalculatedAt;
     
     // Update restaurant selection fields
+    if (selectedRestaurants !== undefined) {
+      mealPlan.selectedRestaurants = selectedRestaurants;
+    }
+    if (maxRestaurants !== undefined) {
+      mealPlan.maxRestaurants = maxRestaurants;
+    }
     if (selectedRestaurantId !== undefined) {
       mealPlan.selectedRestaurantId = selectedRestaurantId;
     }
@@ -218,6 +304,8 @@ const createOrUpdateMealPlan = asyncHandler(async (req, res) => {
       userId: mealPlanWithDates.userId,
       weeklyPlans: mealPlanWithDates.weeklyPlans,
       totalItems: mealPlanWithDates.totalItems,
+      selectedRestaurants: mealPlanWithDates.selectedRestaurants,
+      maxRestaurants: mealPlanWithDates.maxRestaurants,
       selectedRestaurantId: mealPlanWithDates.selectedRestaurantId,
       selectedRestaurantName: mealPlanWithDates.selectedRestaurantName,
       selectedRestaurantData: mealPlanWithDates.selectedRestaurantData,
@@ -401,10 +489,271 @@ const clearMealPlan = asyncHandler(async (req, res) => {
   successResponse(res, cleanedMealPlan, week !== undefined ? `Week ${week} cleared successfully` : 'Meal plan cleared successfully');
 });
 
+/**
+ * @desc    Get user's selected restaurants from meal plan
+ * @route   GET /api/v1/meal-plans/selected-restaurants
+ * @access  Private
+ */
+const getSelectedRestaurants = asyncHandler(async (req, res) => {
+  try {
+    console.log('🔍 getSelectedRestaurants: Starting...');
+    console.log('🔍 getSelectedRestaurants: req.user =', req.user);
+    
+    const userId = req.user._id || req.user.id;
+    console.log('🔍 getSelectedRestaurants: userId =', userId);
+    
+    if (!userId) {
+      console.log('❌ getSelectedRestaurants: No userId found');
+      return res.status(400).json({
+        success: false,
+        message: 'User ID not found'
+      });
+    }
+    
+    const mealPlan = await MealPlan.findOne({ userId });
+    console.log('🔍 getSelectedRestaurants: mealPlan found =', !!mealPlan);
+    
+    if (!mealPlan) {
+      console.log('🔍 getSelectedRestaurants: No meal plan found, returning empty array');
+      return successResponse(res, {
+        selectedRestaurants: []
+      }, 'No meal plan found - empty restaurant list');
+    }
+    
+    console.log('🔍 getSelectedRestaurants: selectedRestaurants =', mealPlan.selectedRestaurants);
+    return successResponse(res, {
+      selectedRestaurants: mealPlan.selectedRestaurants || []
+    }, 'Selected restaurants retrieved successfully');
+  } catch (error) {
+    console.log('❌ getSelectedRestaurants: Error =', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @desc    Add a restaurant to user's meal plan selected restaurants
+ * @route   POST /api/v1/meal-plans/selected-restaurants
+ * @access  Private
+ */
+const addSelectedRestaurant = asyncHandler(async (req, res) => {
+  console.log('💾 Backend: addSelectedRestaurant called (MealPlan)');
+  console.log('💾 Backend: req.body:', JSON.stringify(req.body, null, 2));
+  
+  const { restaurant } = req.body;
+  
+  console.log('💾 Backend: extracted restaurant:', JSON.stringify(restaurant, null, 2));
+  console.log('💾 Backend: restaurant.id:', restaurant?.id);
+  console.log('💾 Backend: restaurant.name:', restaurant?.name);
+  
+  if (!restaurant || !restaurant.id || !restaurant.name) {
+    console.log('❌ Backend: Validation failed - missing restaurant data');
+    return errorResponse(res, 'Restaurant data is required (id and name)', 400);
+  }
+  
+  console.log('✅ Backend: Validation passed, proceeding with save');
+  
+  // Find or create meal plan
+  const userId = req.user._id || req.user.id;
+  let mealPlan = await MealPlan.findOne({ userId });
+  
+  if (!mealPlan) {
+    // Create new meal plan if it doesn't exist
+    mealPlan = new MealPlan({
+      userId,
+      weeklyPlans: {
+        week0: {
+          monday: { lunch: [], dinner: [] },
+          tuesday: { lunch: [], dinner: [] },
+          wednesday: { lunch: [], dinner: [] },
+          thursday: { lunch: [], dinner: [] },
+          friday: { lunch: [], dinner: [] },
+          saturday: { lunch: [], dinner: [] },
+          sunday: { lunch: [], dinner: [] }
+        },
+        week1: {
+          monday: { lunch: [], dinner: [] },
+          tuesday: { lunch: [], dinner: [] },
+          wednesday: { lunch: [], dinner: [] },
+          thursday: { lunch: [], dinner: [] },
+          friday: { lunch: [], dinner: [] },
+          saturday: { lunch: [], dinner: [] },
+          sunday: { lunch: [], dinner: [] }
+        }
+      },
+      totalItems: 0,
+      selectedRestaurants: [],
+      maxRestaurants: 2
+    });
+  }
+  
+  // Initialize selectedRestaurants if it doesn't exist
+  if (!mealPlan.selectedRestaurants) {
+    mealPlan.selectedRestaurants = [];
+  }
+  
+  // Check if restaurant already exists
+  const existingIndex = mealPlan.selectedRestaurants.findIndex(
+    r => r.restaurantId.toString() === restaurant.id
+  );
+  
+  if (existingIndex !== -1) {
+    // Update existing restaurant
+    mealPlan.selectedRestaurants[existingIndex] = {
+      restaurantId: restaurant.id,
+      restaurantName: restaurant.name,
+      addedAt: new Date()
+    };
+  } else {
+    // Check max limit
+    if (mealPlan.selectedRestaurants.length >= 2) {
+      return errorResponse(res, 'Maximum 2 restaurants can be selected', 400);
+    }
+    // Add new restaurant
+    mealPlan.selectedRestaurants.push({
+      restaurantId: restaurant.id,
+      restaurantName: restaurant.name,
+      addedAt: new Date()
+    });
+  }
+  
+  mealPlan.lastUpdated = new Date();
+  await mealPlan.save();
+  
+  console.log('✅ Backend: Restaurant saved to meal plan successfully');
+  
+  return successResponse(res, {
+    selectedRestaurants: mealPlan.selectedRestaurants
+  }, 'Restaurant added successfully');
+});
+
+/**
+ * @desc    Remove a restaurant from user's meal plan selected restaurants
+ * @route   DELETE /api/v1/meal-plans/selected-restaurants/:restaurantId
+ * @access  Private
+ */
+const removeSelectedRestaurant = asyncHandler(async (req, res) => {
+  const { restaurantId } = req.params;
+  
+  const userId = req.user._id || req.user.id;
+  console.log('🗑️ Backend: Removing restaurant', restaurantId, 'for user', userId);
+  
+  const mealPlan = await MealPlan.findOne({ userId });
+  
+  if (!mealPlan) {
+    return notFoundResponse(res, 'Meal plan not found');
+  }
+  
+  if (!mealPlan.selectedRestaurants) {
+    mealPlan.selectedRestaurants = [];
+  }
+  
+  console.log('🗑️ Backend: Before removal - selectedRestaurants:', mealPlan.selectedRestaurants);
+  
+  // Remove restaurant
+  mealPlan.selectedRestaurants = mealPlan.selectedRestaurants.filter(
+    r => r.restaurantId.toString() !== restaurantId
+  );
+  
+  console.log('🗑️ Backend: After removal - selectedRestaurants:', mealPlan.selectedRestaurants);
+  
+  mealPlan.lastUpdated = new Date();
+  await mealPlan.save();
+  
+  console.log('✅ Backend: Restaurant removed and saved successfully');
+  
+  return successResponse(res, {
+    selectedRestaurants: mealPlan.selectedRestaurants
+  }, 'Restaurant removed successfully');
+});
+
+/**
+ * @desc    Clear all items from a specific restaurant
+ * @route   DELETE /api/v1/meal-plans/:userId/clear-restaurant/:restaurantId
+ * @access  Private
+ */
+const clearItemsByRestaurant = asyncHandler(async (req, res) => {
+  const { userId, restaurantId } = req.params;
+  
+  // Ensure user can only clear their own meal plan
+  if (req.user.id !== userId) {
+    return errorResponse(res, 'Access denied', 403);
+  }
+  
+  const mealPlan = await MealPlan.findOne({ userId });
+  if (!mealPlan) {
+    return notFoundResponse(res, 'Meal plan not found');
+  }
+  
+  let itemsRemoved = 0;
+  
+  // Clear items from both weeks
+  ['week0', 'week1'].forEach(weekKey => {
+    if (mealPlan.weeklyPlans[weekKey]) {
+      Object.keys(mealPlan.weeklyPlans[weekKey]).forEach(day => {
+        ['lunch', 'dinner'].forEach(mealType => {
+          if (mealPlan.weeklyPlans[weekKey][day][mealType]) {
+            const originalLength = mealPlan.weeklyPlans[weekKey][day][mealType].length;
+            
+            // Log items before filtering for debugging
+            if (mealPlan.weeklyPlans[weekKey][day][mealType].length > 0) {
+              console.log(`🔍 ${weekKey}.${day}.${mealType} has ${originalLength} items:`, 
+                mealPlan.weeklyPlans[weekKey][day][mealType].map(item => ({
+                  name: item.name,
+                  restaurantId: item.restaurantId?.toString(),
+                  restaurantName: item.restaurantName,
+                  matchesId: item.restaurantId?.toString() === restaurantId,
+                  matchesName: item.restaurantName === restaurantId
+                }))
+              );
+            }
+            
+            // Filter out items from the specific restaurant
+            mealPlan.weeklyPlans[weekKey][day][mealType] = mealPlan.weeklyPlans[weekKey][day][mealType].filter(
+              item => item.restaurantId?.toString() !== restaurantId && item.restaurantName !== restaurantId
+            );
+            
+            // Log items after filtering
+            if (originalLength !== mealPlan.weeklyPlans[weekKey][day][mealType].length) {
+              console.log(`🔍 ${weekKey}.${day}.${mealType} after filtering: ${mealPlan.weeklyPlans[weekKey][day][mealType].length} items remaining`);
+            }
+            
+            const newLength = mealPlan.weeklyPlans[weekKey][day][mealType].length;
+            itemsRemoved += (originalLength - newLength);
+          }
+        });
+      });
+    }
+  });
+  
+  // Update total items count
+  mealPlan.totalItems = Math.max(0, mealPlan.totalItems - itemsRemoved);
+  mealPlan.lastUpdated = new Date();
+  
+  console.log(`🔍 Final result: ${itemsRemoved} items removed from restaurant ${restaurantId}, new total: ${mealPlan.totalItems}`);
+  
+  await mealPlan.save();
+  
+  // Clean up the response
+  const cleanedMealPlan = cleanMealPlanResponse(mealPlan.toObject());
+  
+  return successResponse(res, {
+    ...cleanedMealPlan,
+    itemsRemoved
+  }, `Cleared ${itemsRemoved} items from restaurant`);
+});
+
 module.exports = {
   getMealPlan,
   createOrUpdateMealPlan,
   addItemToMealPlan,
   removeItemFromMealPlan,
-  clearMealPlan
+  clearMealPlan,
+  clearItemsByRestaurant,
+  getSelectedRestaurants,
+  addSelectedRestaurant,
+  removeSelectedRestaurant
 };

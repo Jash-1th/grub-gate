@@ -27,6 +27,7 @@ import {
   createMenuItemFormData 
 } from '../../api/menuApi';
 import { useToast } from '../../contexts/ToastContext';
+import { validateFormWithSchema, formatBackendErrors } from '../../utils/validationErrorHandler';
 
 const MenuPage = () => {
   const { t } = useTranslation();
@@ -78,6 +79,30 @@ const MenuPage = () => {
   });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  
+  // Form validation state
+  const [formErrors, setFormErrors] = useState({});
+  
+  // Test function to trigger validation errors (for development)
+  const testValidation = () => {
+    const testErrors = {
+      name: 'Menu item name must be at least 2 characters long',
+      description: 'Description must be at least 10 characters long',
+      price: 'Price must be at least $0.01',
+      category: 'Please select a valid category',
+      cuisine: 'Cuisine type must be at least 2 characters long',
+      ingredients: 'Please add at least one ingredient',
+      image: 'Please upload an image for the menu item'
+    };
+    setFormErrors(testErrors);
+    
+    // Switch to basics tab since most errors are there
+    setActiveTab('basics');
+    console.log('🔄 Switched to basics tab for test validation');
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    console.log('🧪 Test validation errors set:', testErrors);
+  };
 
   const categories = [
     { value: 'all', label: 'All Categories' },
@@ -159,6 +184,22 @@ const MenuPage = () => {
       ...prev,
       [field]: value
     }));
+    
+    // Clear field-specific error when user starts typing
+    if (formErrors[field]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }));
+    }
+    
+    // Clear general error when user makes any change
+    if (formErrors.general) {
+      setFormErrors(prev => ({
+        ...prev,
+        general: ''
+      }));
+    }
   };
 
   // Handle image file selection
@@ -169,40 +210,105 @@ const MenuPage = () => {
       const reader = new FileReader();
       reader.onload = (e) => setImagePreview(e.target.result);
       reader.readAsDataURL(file);
+      
+      // Clear image error when user selects a file
+      if (formErrors.image) {
+        setFormErrors(prev => ({
+          ...prev,
+          image: ''
+        }));
+      }
     }
   };
 
-  // Handle form submission
+  // Handle form submission with comprehensive validation
   const handleSubmit = async () => {
     if (!restaurant?.id) return;
     
     try {
       setSubmitting(true);
+      setFormErrors({}); // Clear previous errors
       
-      // Debug: Log form data before submission
-      console.log('🚀 Submitting form data:', formData);
-      console.log('🚀 Availability structure:', JSON.stringify(formData.availability, null, 2));
+      // Prepare form data for validation
+      const validationData = { ...formData };
       
-      // Create clean form data without display-only fields
-      const cleanFormData = { ...formData };
-      delete cleanFormData.ingredientsText; // Remove display-only field
+      // Convert price to number for validation
+      if (validationData.price) {
+        validationData.price = parseFloat(validationData.price);
+      }
       
-      // Create FormData
+      // Convert prepTime to number for validation
+      if (validationData.prepTime) {
+        validationData.prepTime = parseInt(validationData.prepTime);
+      }
+      
+      // Convert servings to number for validation
+      if (validationData.servings) {
+        validationData.servings = parseInt(validationData.servings);
+      }
+      
+      // Convert spiceLevel to number for validation
+      if (validationData.spiceLevel) {
+        validationData.spiceLevel = parseInt(validationData.spiceLevel);
+      }
+      
+      // Parse ingredients from text if provided
+      if (validationData.ingredientsText && validationData.ingredientsText.trim()) {
+        validationData.ingredients = validationData.ingredientsText
+          .split(',')
+          .map(ingredient => ingredient.trim())
+          .filter(ingredient => ingredient.length > 0);
+      }
+      
+      // Remove display-only field
+      delete validationData.ingredientsText;
+      
+      console.log('🔍 Validating form data:', validationData);
+      
+      // Frontend validation using Joi schema
+      console.log('🔍 About to validate with schema: completeMenuItem');
+      const validationErrors = validateFormWithSchema(validationData, 'completeMenuItem');
+      console.log('🔍 Validation result:', validationErrors);
+      
+      // Additional custom validation
+      if (!imageFile && !editingItem?.image) {
+        validationErrors.image = 'Please upload an image for the menu item';
+      }
+      
+      if (Object.keys(validationErrors).length > 0) {
+        console.log('❌ Validation errors:', validationErrors);
+        setFormErrors(validationErrors);
+        
+        // Determine which tab contains the first error and switch to it
+        const errorFields = Object.keys(validationErrors);
+        const basicsFields = ['name', 'description', 'category', 'cuisine', 'price', 'prepTime', 'servings', 'spiceLevel', 'image'];
+        const ingredientsFields = ['dietaryPreferences', 'ingredients', 'allergens'];
+        const availabilityFields = ['status', 'availability'];
+        
+        // Find the first error and switch to appropriate tab
+        if (errorFields.some(field => basicsFields.includes(field))) {
+          setActiveTab('basics');
+          console.log('🔄 Switched to basics tab due to validation errors');
+        } else if (errorFields.some(field => ingredientsFields.includes(field))) {
+          setActiveTab('ingredients');
+          console.log('🔄 Switched to ingredients tab due to validation errors');
+        } else if (errorFields.some(field => availabilityFields.includes(field))) {
+          setActiveTab('availability');
+          console.log('🔄 Switched to availability tab due to validation errors');
+        }
+        
+        // Scroll to top to show validation errors
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      
+      // Create clean form data for submission
+      const cleanFormData = { ...validationData };
+      
+      // Create FormData for backend
       const submitData = createMenuItemFormData(cleanFormData, imageFile);
       
-      // Debug: Log what's being sent to backend
-      console.log('🚀 FormData created, checking availability...');
-      for (let [key, value] of submitData.entries()) {
-        if (key === 'availability') {
-          console.log('🚀 FormData availability:', value);
-          try {
-            const parsed = JSON.parse(value);
-            console.log('🚀 Parsed availability:', parsed);
-          } catch (e) {
-            console.error('🚀 Error parsing availability:', e);
-          }
-        }
-      }
+      console.log('🚀 Submitting validated form data...');
       
       if (editingItem) {
         // Update existing item
@@ -218,8 +324,52 @@ const MenuPage = () => {
       await fetchMenuItems();
       setShowAddModal(false);
       resetForm();
+      
     } catch (err) {
-      showToast(err.message || 'Failed to save menu item', 'error');
+      console.error('Menu item submission error:', err);
+      console.error('Error Response Data:', err.response?.data);
+      
+      // Handle axios error responses with detailed validation errors
+      if (err.response?.data?.errors && Array.isArray(err.response.data.errors)) {
+        console.log('🔍 Backend validation errors:', err.response.data.errors);
+        // Use enhanced error formatting for Joi validation errors
+        const formattedErrors = formatBackendErrors(err.response.data.errors);
+        console.log('🎨 Formatted errors for display:', formattedErrors);
+        setFormErrors(formattedErrors);
+        
+        // Switch to appropriate tab for backend errors too
+        const errorFields = Object.keys(formattedErrors);
+        const basicsFields = ['name', 'description', 'category', 'cuisine', 'price', 'prepTime', 'servings', 'spiceLevel', 'image'];
+        const ingredientsFields = ['dietaryPreferences', 'ingredients', 'allergens'];
+        const availabilityFields = ['status', 'availability'];
+        
+        if (errorFields.some(field => basicsFields.includes(field))) {
+          setActiveTab('basics');
+          console.log('🔄 Switched to basics tab due to backend validation errors');
+        } else if (errorFields.some(field => ingredientsFields.includes(field))) {
+          setActiveTab('ingredients');
+          console.log('🔄 Switched to ingredients tab due to backend validation errors');
+        } else if (errorFields.some(field => availabilityFields.includes(field))) {
+          setActiveTab('availability');
+          console.log('🔄 Switched to availability tab due to backend validation errors');
+        }
+        
+        // Scroll to top to show validation errors
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (err.response?.data?.message) {
+        // Show specific backend error message
+        console.log('📝 Backend error message:', err.response.data.message);
+        setFormErrors({ general: err.response.data.message });
+        // Scroll to top to show error message
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // Fallback to generic message
+        const errorMessage = err.message || 'Failed to save menu item. Please try again.';
+        setFormErrors({ general: errorMessage });
+        showToast(errorMessage, 'error');
+        // Scroll to top to show error message
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     } finally {
       setSubmitting(false);
     }
@@ -629,29 +779,56 @@ const MenuPage = () => {
                   </div>
                 </div>
               </div>
+              {/* General Error Message */}
+              {formErrors.general && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600 flex items-center">
+                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {formErrors.general}
+                  </p>
+                </div>
+              )}
+
               {/* Item name */}
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">Item Name</label>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">
+                  Item Name <span className="text-red-500">*</span>
+                </label>
                 <input 
                   type="text" 
-                  placeholder="Enter item name" 
+                  placeholder="Enter item name (e.g., Grilled Chicken Caesar Salad)" 
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  className="w-full px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm"
+                  className={`w-full px-3 py-1.5 sm:py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm transition-colors ${
+                    formErrors.name ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {formErrors.name && (
+                  <p className="mt-1 text-xs text-red-600 flex items-center">
+                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {formErrors.name}
+                  </p>
+                )}
               </div>
 
               {/* Price + Category (2 cols on mobile, 3 on desktop) */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">Price</label>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">
+                    Price <span className="text-red-500">*</span>
+                  </label>
                   <div className="relative">
                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500 text-xs sm:text-sm">$</span>
                     <input 
                       type="number" 
                       step="0.01" 
-                      min="0"
+                      min="0.01"
+                      max="999.99"
                       value={formData.price}
                       onChange={(e) => {
                         console.log('💰 Price changed to:', e.target.value);
@@ -662,22 +839,44 @@ const MenuPage = () => {
                         }
                       }}
                       placeholder="0.00" 
-                      className="w-full pl-6 sm:pl-7 pr-2 sm:pr-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm" 
+                      className={`w-full pl-6 sm:pl-7 pr-2 sm:pr-3 py-1.5 sm:py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm transition-colors ${
+                        formErrors.price ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
                       required
                     />
                   </div>
+                  {formErrors.price && (
+                    <p className="mt-1 text-xs text-red-600 flex items-center">
+                      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {formErrors.price}
+                    </p>
+                  )}
                 </div>
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">Category</label>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">
+                    Category <span className="text-red-500">*</span>
+                  </label>
                   <select 
                     value={formData.category}
                     onChange={(e) => handleInputChange('category', e.target.value)}
-                    className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm"
+                    className={`w-full px-2 sm:px-3 py-1.5 sm:py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm transition-colors ${
+                      formErrors.category ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
                   >
                     {categories.slice(1).map(category => (
                       <option key={category.value} value={category.value}>{category.label}</option>
                     ))}
                   </select>
+                  {formErrors.category && (
+                    <p className="mt-1 text-xs text-red-600 flex items-center">
+                      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {formErrors.category}
+                    </p>
+                  )}
                 </div>
                 <div className="col-span-2 sm:col-span-1">
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">Status</label>
@@ -695,27 +894,39 @@ const MenuPage = () => {
               {/* Prep time + Servings (2 cols on mobile, 2 on desktop) */}
               <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">Prep Time</label>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">
+                    Prep Time <span className="text-red-500">*</span>
+                  </label>
                   <div className="relative">
                     <input 
                       type="number" 
-                      min="1"
-                      max="300"
+                      min="5"
+                      max="180"
                       placeholder="30" 
                       value={formData.prepTime}
                       onChange={(e) => {
                         console.log('⏱️ Prep time changed to:', e.target.value);
                         const value = e.target.value;
                         // Allow empty string for clearing, otherwise ensure it's a valid number
-                        if (value === '' || (!isNaN(value) && parseInt(value) >= 1 && parseInt(value) <= 300)) {
+                        if (value === '' || (!isNaN(value) && parseInt(value) >= 1 && parseInt(value) <= 180)) {
                           handleInputChange('prepTime', value);
                         }
                       }}
-                      className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm"
+                      className={`w-full px-2 sm:px-3 py-1.5 sm:py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm transition-colors ${
+                        formErrors.prepTime ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
                       required
                     />
                     <span className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">min</span>
                   </div>
+                  {formErrors.prepTime && (
+                    <p className="mt-1 text-xs text-red-600 flex items-center">
+                      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {formErrors.prepTime}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">Servings</label>
@@ -746,30 +957,53 @@ const MenuPage = () => {
               {/* Cuisine Field */}
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">
-                  Cuisine <span className="text-gray-400">(auto-filled from restaurant)</span>
+                  Cuisine <span className="text-red-500">*</span>
                 </label>
                 <input 
                   type="text" 
                   value={formData.cuisine}
                   onChange={(e) => handleInputChange('cuisine', e.target.value)}
                   placeholder="e.g., French, Italian, American" 
-                  className="w-full px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm"
+                  className={`w-full px-3 py-1.5 sm:py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm transition-colors ${
+                    formErrors.cuisine ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {formErrors.cuisine && (
+                  <p className="mt-1 text-xs text-red-600 flex items-center">
+                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {formErrors.cuisine}
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">
+                  Auto-filled from your restaurant profile, but you can customize it
+                </p>
               </div>
 
               {/* Image Upload */}
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">
-                  Item Image <span className="text-gray-400">(optional)</span>
+                  Item Image <span className="text-red-500">*</span>
                 </label>
                 <div className="space-y-2">
                   <input 
                     type="file" 
                     accept="image/*"
                     onChange={handleImageChange}
-                    className="w-full px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm"
+                    className={`w-full px-3 py-1.5 sm:py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm transition-colors ${
+                      formErrors.image ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
                   />
+                  {formErrors.image && (
+                    <p className="mt-1 text-xs text-red-600 flex items-center">
+                      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {formErrors.image}
+                    </p>
+                  )}
                   {imagePreview && (
                     <div className="relative">
                       <img 
@@ -789,20 +1023,38 @@ const MenuPage = () => {
                       </button>
                     </div>
                   )}
+                  <p className="text-xs text-gray-500">
+                    Upload a high-quality image of your menu item (JPG, PNG, WebP)
+                  </p>
                 </div>
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">Description</label>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">
+                  Description <span className="text-red-500">*</span>
+                </label>
                 <textarea 
-                  rows={2} 
+                  rows={3} 
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="Describe your menu item..." 
-                  className="w-full px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm resize-none"
+                  placeholder="Describe your menu item in detail (e.g., Fresh grilled chicken breast served with crispy romaine lettuce, parmesan cheese, and our signature Caesar dressing)" 
+                  className={`w-full px-3 py-1.5 sm:py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm resize-none transition-colors ${
+                    formErrors.description ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {formErrors.description && (
+                  <p className="mt-1 text-xs text-red-600 flex items-center">
+                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {formErrors.description}
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">
+                  {formData.description.length}/500 characters (minimum 10 required)
+                </p>
               </div>
             </div>
           )}
@@ -1184,6 +1436,17 @@ const MenuPage = () => {
                         {editingItem ? '💾 Save Changes' : '✨ Add Menu Item'}
                       </>
                     )}
+                  </Button>
+                )}
+                
+                {/* Test Validation Button (Development Only) */}
+                {process.env.NODE_ENV === 'development' && (
+                  <Button
+                    variant="secondary"
+                    className="w-full bg-yellow-500 hover:bg-yellow-600 text-white text-sm py-2.5 mt-2"
+                    onClick={testValidation}
+                  >
+                    🧪 Test Validation Errors
                   </Button>
                 )}
               </div>

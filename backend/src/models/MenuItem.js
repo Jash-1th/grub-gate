@@ -59,7 +59,7 @@ const menuItemSchema = new mongoose.Schema({
   prepTime: {
     type: Number,
     required: [true, 'Preparation time is required'],
-    min: [5, 'Preparation time must be at least 5 minutes'],
+    min: [1, 'Preparation time must be at least 1 minute'],
     max: [180, 'Preparation time cannot exceed 180 minutes']
   },
   servings: {

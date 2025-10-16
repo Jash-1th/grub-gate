@@ -231,6 +231,13 @@ const DashboardHome = () => {
             restaurantInfo?.description || 'Manage your restaurant operations and track performance'
           )}
         </p>
+        {restaurantInfo?.status === 'active' && (
+          <div className="mt-3 bg-green-500 bg-opacity-20 border border-green-300 rounded-lg p-3">
+            <p className="text-green-100 text-sm">
+              ✅ Your restaurant is active and ready to receive orders!
+            </p>
+          </div>
+        )}
         {restaurantInfo?.status === 'pending' && (
           <div className="mt-3 bg-yellow-500 bg-opacity-20 border border-yellow-300 rounded-lg p-3">
             <p className="text-yellow-100 text-sm">

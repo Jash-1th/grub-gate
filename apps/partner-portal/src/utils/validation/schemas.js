@@ -17,7 +17,7 @@ const customMessages = {
 
 // Common patterns
 const patterns = {
-  phone: /^\+?[\d\s\-\(\)]+$/,
+  phone: /^\+?[1-9]\d{1,14}$/,
   email: /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
   postalCode: /^[A-Z]\d[A-Z] \d[A-Z]\d$/,
   indianPostalCode: /^\d{6}$/,
@@ -758,12 +758,80 @@ export const registrationSchemas = {
   // Business details step
   businessDetails: Joi.object({
     // Personal info
-    ...userSchemas.personalInfo.describe().keys,
-    ...userSchemas.password.describe().keys,
+    firstName: Joi.string()
+      .trim()
+      .min(2)
+      .max(50)
+      .required()
+      .label('First name')
+      .messages({
+        ...customMessages,
+        'string.min': 'First name must be at least 2 characters long'
+      }),
+    
+    lastName: Joi.string()
+      .trim()
+      .min(2)
+      .max(50)
+      .required()
+      .label('Last name')
+      .messages({
+        ...customMessages,
+        'string.min': 'Last name must be at least 2 characters long'
+      }),
+    
+    email: Joi.string()
+      .email({ tlds: { allow: false } })
+      .lowercase()
+      .trim()
+      .required()
+      .label('Email')
+      .messages({
+        ...customMessages,
+        'string.email': 'Please enter a valid email address (e.g., user@example.com)'
+      }),
+    
+    phoneNumber: Joi.string()
+      .pattern(patterns.phone)
+      .trim()
+      .required()
+      .label('Phone number')
+      .messages({
+        ...customMessages,
+        'string.pattern.base': 'Please enter a valid phone number (e.g., +1-234-567-8900)'
+      }),
+    
+    password: Joi.string()
+      .min(8)
+      .max(128)
+      .required()
+      .label('Password')
+      .messages({
+        ...customMessages,
+        'string.min': 'Password must be at least 8 characters long'
+      }),
+    
+    confirmPassword: Joi.string()
+      .valid(Joi.ref('password'))
+      .required()
+      .label('Confirm password')
+      .messages({
+        ...customMessages,
+        'any.only': 'Passwords do not match'
+      }),
     
     // Restaurant basic info
     restaurantName: restaurantSchemas.basicInfo.extract('name').required(),
-    description: restaurantSchemas.basicInfo.extract('description'),
+    description: Joi.string()
+      .trim()
+      .min(10)
+      .max(500)
+      .required()
+      .label('Description')
+      .messages({
+        ...customMessages,
+        'string.min': 'Description must be at least 10 characters long'
+      }),
     cuisine: Joi.string().required().label('Cuisine type').messages(customMessages),
     businessType: restaurantSchemas.basicInfo.extract('businessType'),
     
@@ -822,6 +890,545 @@ export const registrationSchemas = {
     
     // Payment method
     paymentMethod: Joi.string().valid('bank_transfer', 'direct_deposit', 'check').default('bank_transfer').label('Payment method').messages(customMessages)
+  }),
+
+  // Complete menu item schema (combines all menu item schemas)
+  completeMenuItem: Joi.object({
+    // Basic info
+    name: Joi.string()
+      .trim()
+      .min(2)
+      .max(100)
+      .required()
+      .label('Menu item name')
+      .messages({
+        ...customMessages,
+        'string.min': 'Menu item name must be at least 2 characters long'
+      }),
+    
+    description: Joi.string()
+      .trim()
+      .min(10)
+      .max(500)
+      .required()
+      .label('Description')
+      .messages({
+        ...customMessages,
+        'string.min': 'Description must be at least 10 characters long'
+      }),
+    
+    category: Joi.string()
+      .valid(
+        'appetizer', 'main', 'dessert', 'beverage', 'salad', 'soup',
+        'pasta', 'pizza', 'burger', 'sandwich', 'seafood', 'vegetarian',
+        'always-available', 'special'
+      )
+      .required()
+      .label('Category')
+      .messages({
+        ...customMessages,
+        'any.only': 'Please select a valid category'
+      }),
+    
+    cuisine: Joi.string()
+      .trim()
+      .min(2)
+      .max(50)
+      .required()
+      .label('Cuisine type')
+      .messages({
+        ...customMessages,
+        'string.min': 'Cuisine type must be at least 2 characters long'
+      }),
+    
+    price: Joi.number()
+      .min(0.01)
+      .max(999.99)
+      .precision(2)
+      .required()
+      .label('Price')
+      .messages({
+        ...customMessages,
+        'number.min': 'Price must be at least $0.01',
+        'number.max': 'Price cannot exceed $999.99'
+      }),
+    
+    prepTime: Joi.number()
+      .integer()
+      .min(5)
+      .max(180)
+      .required()
+      .label('Preparation time')
+      .messages({
+        ...customMessages,
+        'number.min': 'Preparation time must be at least 5 minutes',
+        'number.max': 'Preparation time cannot exceed 180 minutes (3 hours)'
+      }),
+    
+    servings: Joi.number()
+      .integer()
+      .min(1)
+      .max(20)
+      .default(1)
+      .label('Servings')
+      .messages({
+        ...customMessages,
+        'number.min': 'Servings must be at least 1',
+        'number.max': 'Servings cannot exceed 20'
+      }),
+    
+    spiceLevel: Joi.number()
+      .integer()
+      .min(0)
+      .max(5)
+      .default(0)
+      .label('Spice level')
+      .messages({
+        ...customMessages,
+        'number.min': 'Spice level must be between 0 and 5',
+        'number.max': 'Spice level must be between 0 and 5'
+      }),
+    
+    // Dietary preferences
+    dietaryPreferences: Joi.array()
+      .items(
+        Joi.string().valid(
+          'vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'spicy',
+          'keto', 'low-carb', 'halal', 'kosher'
+        )
+      )
+      .unique()
+      .default([])
+      .label('Dietary preferences')
+      .messages({
+        ...customMessages,
+        'array.unique': 'Please remove duplicate dietary preferences',
+        'any.only': 'Please select valid dietary preferences'
+      }),
+    
+    // Ingredients
+    ingredients: Joi.array()
+      .items(
+        Joi.string()
+          .trim()
+          .min(1)
+          .max(50)
+          .messages({
+            ...customMessages,
+            'string.min': 'Ingredient name cannot be empty',
+            'string.max': 'Each ingredient name cannot exceed 50 characters'
+          })
+      )
+      .min(1)
+      .default([])
+      .label('Ingredients')
+      .messages({
+        ...customMessages,
+        'array.min': 'Please add at least one ingredient'
+      }),
+    
+    // Allergens
+    allergens: Joi.array()
+      .items(
+        Joi.string().valid(
+          'gluten', 'dairy', 'eggs', 'fish', 'shellfish', 'nuts',
+          'peanuts', 'soy', 'sesame', 'alcohol', 'sulfites'
+        )
+      )
+      .unique()
+      .default([])
+      .label('Allergens')
+      .messages({
+        ...customMessages,
+        'array.unique': 'Please remove duplicate allergens',
+        'any.only': 'Please select valid allergens'
+      }),
+    
+    // Status
+    status: Joi.string()
+      .valid('available', 'unavailable', 'out-of-stock')
+      .default('available')
+      .label('Status')
+      .messages({
+        ...customMessages,
+        'any.only': 'Please select a valid status'
+      }),
+    
+    // Availability (optional - can be set later)
+    availability: Joi.object({
+      monday: Joi.object({
+        lunch: Joi.boolean().default(true),
+        dinner: Joi.boolean().default(true)
+      }).default({ lunch: true, dinner: true }),
+      tuesday: Joi.object({
+        lunch: Joi.boolean().default(true),
+        dinner: Joi.boolean().default(true)
+      }).default({ lunch: true, dinner: true }),
+      wednesday: Joi.object({
+        lunch: Joi.boolean().default(true),
+        dinner: Joi.boolean().default(true)
+      }).default({ lunch: true, dinner: true }),
+      thursday: Joi.object({
+        lunch: Joi.boolean().default(true),
+        dinner: Joi.boolean().default(true)
+      }).default({ lunch: true, dinner: true }),
+      friday: Joi.object({
+        lunch: Joi.boolean().default(true),
+        dinner: Joi.boolean().default(true)
+      }).default({ lunch: true, dinner: true }),
+      saturday: Joi.object({
+        lunch: Joi.boolean().default(true),
+        dinner: Joi.boolean().default(true)
+      }).default({ lunch: true, dinner: true }),
+      sunday: Joi.object({
+        lunch: Joi.boolean().default(true),
+        dinner: Joi.boolean().default(true)
+      }).default({ lunch: true, dinner: true })
+    }).default({
+      monday: { lunch: true, dinner: true },
+      tuesday: { lunch: true, dinner: true },
+      wednesday: { lunch: true, dinner: true },
+      thursday: { lunch: true, dinner: true },
+      friday: { lunch: true, dinner: true },
+      saturday: { lunch: true, dinner: true },
+      sunday: { lunch: true, dinner: true }
+    })
+  }),
+
+  // Settings schemas for different tabs
+  profileSettings: Joi.object({
+    name: Joi.string()
+      .trim()
+      .min(2)
+      .max(100)
+      .required()
+      .label('Restaurant name')
+      .messages({
+        ...customMessages,
+        'string.min': 'Restaurant name must be at least 2 characters long'
+      }),
+    
+    cuisine: Joi.string()
+      .trim()
+      .min(2)
+      .max(100)
+      .required()
+      .label('Cuisine type')
+      .messages({
+        ...customMessages,
+        'string.min': 'Cuisine type must be at least 2 characters long'
+      }),
+    
+    description: Joi.string()
+      .trim()
+      .min(10)
+      .max(500)
+      .required()
+      .label('Description')
+      .messages({
+        ...customMessages,
+        'string.min': 'Description must be at least 10 characters long'
+      }),
+    
+    phone: Joi.string()
+      .pattern(patterns.phone)
+      .required()
+      .label('Phone number')
+      .messages({
+        ...customMessages,
+        'string.pattern.base': 'Please enter a valid phone number (e.g., +1-234-567-8900)'
+      }),
+    
+    email: Joi.string()
+      .email({ tlds: { allow: false } })
+      .lowercase()
+      .trim()
+      .required()
+      .label('Email address')
+      .messages({
+        ...customMessages,
+        'string.email': 'Please enter a valid email address (e.g., user@example.com)'
+      }),
+    
+    website: Joi.string()
+      .pattern(patterns.url)
+      .allow('')
+      .label('Website URL')
+      .messages({
+        ...customMessages,
+        'string.pattern.base': 'Please enter a valid website URL (e.g., https://www.example.com)'
+      }),
+    
+    // Enhanced address fields
+    street: Joi.string()
+      .trim()
+      .min(1)
+      .max(200)
+      .when('address', {
+        is: Joi.exist().not(''),
+        then: Joi.optional(),
+        otherwise: Joi.required()
+      })
+      .label('Street address')
+      .messages(customMessages),
+    
+    city: Joi.string()
+      .trim()
+      .min(1)
+      .max(100)
+      .when('address', {
+        is: Joi.exist().not(''),
+        then: Joi.optional(),
+        otherwise: Joi.required()
+      })
+      .label('City')
+      .messages(customMessages),
+    
+    province: Joi.string()
+      .trim()
+      .min(1)
+      .max(100)
+      .when('address', {
+        is: Joi.exist().not(''),
+        then: Joi.optional(),
+        otherwise: Joi.required()
+      })
+      .label('Province/State')
+      .messages(customMessages),
+    
+    postalCode: Joi.alternatives()
+      .try(
+        Joi.string().pattern(patterns.postalCode),
+        Joi.string().pattern(patterns.indianPostalCode)
+      )
+      .when('address', {
+        is: Joi.exist().not(''),
+        then: Joi.optional(),
+        otherwise: Joi.required()
+      })
+      .label('Postal code')
+      .messages({
+        ...customMessages,
+        'alternatives.match': 'Please enter a valid postal code'
+      }),
+    
+    country: Joi.string()
+      .trim()
+      .min(2)
+      .max(100)
+      .when('address', {
+        is: Joi.exist().not(''),
+        then: Joi.optional(),
+        otherwise: Joi.required()
+      })
+      .label('Country')
+      .messages(customMessages),
+    
+    // Legacy address field (optional if enhanced address is provided)
+    address: Joi.string()
+      .trim()
+      .min(1)
+      .max(500)
+      .allow('')
+      .label('Address')
+      .messages(customMessages)
+  }),
+
+  deliverySettings: Joi.object({
+    deliveryRadius: Joi.number()
+      .min(0.1)
+      .max(100)
+      .required()
+      .label('Delivery radius')
+      .messages({
+        ...customMessages,
+        'number.min': 'Delivery radius must be at least 0.1 km',
+        'number.max': 'Delivery radius cannot exceed 100 km'
+      }),
+    
+    deliveryFee: Joi.number()
+      .min(0)
+      .max(50)
+      .precision(2)
+      .required()
+      .label('Delivery fee')
+      .messages({
+        ...customMessages,
+        'number.min': 'Delivery fee cannot be negative',
+        'number.max': 'Delivery fee cannot exceed $50.00'
+      }),
+    
+    minOrderAmount: Joi.number()
+      .min(0)
+      .max(500)
+      .precision(2)
+      .required()
+      .label('Minimum order amount')
+      .messages({
+        ...customMessages,
+        'number.min': 'Minimum order amount cannot be negative',
+        'number.max': 'Minimum order amount cannot exceed $500.00'
+      }),
+    
+    avgDeliveryTime: Joi.number()
+      .integer()
+      .min(5)
+      .max(180)
+      .required()
+      .label('Average delivery time')
+      .messages({
+        ...customMessages,
+        'number.min': 'Average delivery time must be at least 5 minutes',
+        'number.max': 'Average delivery time cannot exceed 180 minutes (3 hours)'
+      })
+  }),
+
+  notificationSettings: Joi.object({
+    emailNotifications: Joi.boolean().default(true),
+    smsNotifications: Joi.boolean().default(true),
+    orderAlerts: Joi.boolean().default(true),
+    customerMessages: Joi.boolean().default(true),
+    systemUpdates: Joi.boolean().default(true)
+  }),
+
+  billingSettings: Joi.object({
+    businessName: Joi.string()
+      .trim()
+      .min(2)
+      .max(100)
+      .required()
+      .label('Business name')
+      .messages({
+        ...customMessages,
+        'string.min': 'Business name must be at least 2 characters long'
+      }),
+    
+    paymentMethod: Joi.string()
+      .valid('bank_transfer', 'direct_deposit', 'check')
+      .required()
+      .label('Payment method')
+      .messages({
+        ...customMessages,
+        'any.only': 'Please select a valid payment method'
+      }),
+    
+    // Billing address
+    billingStreet: Joi.string()
+      .trim()
+      .min(1)
+      .max(200)
+      .required()
+      .label('Billing street address')
+      .messages(customMessages),
+    
+    billingCity: Joi.string()
+      .trim()
+      .min(1)
+      .max(100)
+      .required()
+      .label('Billing city')
+      .messages(customMessages),
+    
+    billingProvince: Joi.string()
+      .trim()
+      .min(1)
+      .max(100)
+      .required()
+      .label('Billing province/state')
+      .messages(customMessages),
+    
+    billingPostalCode: Joi.alternatives()
+      .try(
+        Joi.string().pattern(patterns.postalCode),
+        Joi.string().pattern(patterns.indianPostalCode)
+      )
+      .required()
+      .label('Billing postal code')
+      .messages({
+        ...customMessages,
+        'alternatives.match': 'Please enter a valid postal code'
+      }),
+    
+    billingCountry: Joi.string()
+      .trim()
+      .min(2)
+      .max(100)
+      .default('Canada')
+      .label('Billing country')
+      .messages(customMessages),
+    
+    // Bank account info
+    bankName: Joi.string()
+      .trim()
+      .min(2)
+      .max(100)
+      .required()
+      .label('Bank name')
+      .messages({
+        ...customMessages,
+        'string.min': 'Bank name must be at least 2 characters long'
+      }),
+    
+    accountType: Joi.string()
+      .valid('checking', 'savings', 'business')
+      .required()
+      .label('Account type')
+      .messages({
+        ...customMessages,
+        'any.only': 'Please select a valid account type'
+      }),
+    
+    routingNumber: Joi.string()
+      .pattern(patterns.routingNumber)
+      .required()
+      .label('Routing number')
+      .messages({
+        ...customMessages,
+        'string.pattern.base': 'Routing number must be 9 digits'
+      }),
+    
+    accountNumber: Joi.string()
+      .pattern(patterns.accountNumber)
+      .required()
+      .label('Account number')
+      .messages({
+        ...customMessages,
+        'string.pattern.base': 'Account number must be 8-17 digits'
+      }),
+    
+    // Tax info (optional)
+    businessNumber: Joi.alternatives()
+      .try(
+        Joi.string().pattern(patterns.businessNumber),
+        Joi.string().allow('')
+      )
+      .label('Business number')
+      .messages({
+        ...customMessages,
+        'string.pattern.base': 'Please enter a valid Canadian business number (e.g., 123456789RP0001)'
+      }),
+    
+    gstHstNumber: Joi.alternatives()
+      .try(
+        Joi.string().pattern(patterns.gstHstNumber),
+        Joi.string().allow('')
+      )
+      .label('GST/HST number')
+      .messages({
+        ...customMessages,
+        'string.pattern.base': 'Please enter a valid GST/HST number (e.g., 123456789RT0001)'
+      }),
+    
+    qstNumber: Joi.alternatives()
+      .try(
+        Joi.string().pattern(patterns.qstNumber),
+        Joi.string().allow('')
+      )
+      .label('QST number')
+      .messages({
+        ...customMessages,
+        'string.pattern.base': 'Please enter a valid QST number (e.g., 1234567890TQ0001)'
+      })
   })
 };
 

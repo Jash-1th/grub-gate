@@ -62,16 +62,16 @@ const LoginPage = () => {
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email address is required';
+    } else if (!/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address (e.g., user@example.com)';
     }
     
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = 'Password must be at least 6 characters long';
     }
     
     setErrors(newErrors);
@@ -102,11 +102,30 @@ const LoginPage = () => {
         navigate(redirectRoute);
         console.log('📍 Navigation called to:', redirectRoute);
       } else {
-        setErrors({ general: result.error || 'Login failed. Please try again.' });
+        // Error is already set in AuthContext, no need for local state
+        console.log('🚨 Login failed - using AuthContext error');
       }
     } catch (error) {
       console.error('Login error:', error);
-      setErrors({ general: 'Login failed. Please try again.' });
+      console.error('Error Response Data:', error.response?.data);
+      
+      // Handle axios error responses with detailed validation errors
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        console.log('🔍 Backend validation errors:', error.response.data.errors);
+        // Format backend validation errors for display
+        const formattedErrors = {};
+        error.response.data.errors.forEach(err => {
+          formattedErrors[err.field] = err.message;
+        });
+        setErrors(formattedErrors);
+      } else if (error.response?.data?.message) {
+        // Show specific backend error message
+        console.log('📝 Backend error message:', error.response.data.message);
+        setErrors({ general: error.response.data.message });
+      } else {
+        // Fallback to generic message
+        setErrors({ general: 'Login failed. Please try again.' });
+      }
     }
   };
 
@@ -314,10 +333,10 @@ const LoginPage = () => {
                 </Button>
                 
                 {/* Error Display */}
-                {(errors.general || error) && (
+                {error && (
                   <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
                     <p className="text-sm text-red-600">
-                      {errors.general || error}
+                      {error}
                     </p>
                   </div>
                 )}

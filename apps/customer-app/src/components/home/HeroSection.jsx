@@ -64,18 +64,8 @@ const HeroSection = () => {
               {/* Animated background shimmer */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
               
-              {/* Next Step Badge */}
-              <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-black shadow-lg animate-bounce">
-                NEXT STEP
-              </div>
-              
               {/* Button content */}
-              <div className="relative flex items-center space-x-3">
-                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </div>
+              <div className="relative flex items-center justify-center">
                 <span className="text-xl font-bold tracking-wide">
                   {isAuthenticated ? 'Start Planning' : t('hero.getStarted')}
                 </span>

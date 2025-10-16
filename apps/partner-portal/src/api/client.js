@@ -8,17 +8,17 @@ const getApiBaseUrl = () => {
     return import.meta.env.VITE_API_BASE_URL;
   }
   
-  // COMMENTED OUT: Production backend for deployment
+  // Using deployed backend for production
   // If we're in production (on Netlify), use the backend URL
-  // if (typeof window !== 'undefined' && window.location.hostname.includes('netlify.app')) {
-  //   return 'https://gg0b1.netlify.app/api/v1';
-  // }
+  if (typeof window !== 'undefined' && window.location.hostname.includes('netlify.app')) {
+    return 'https://gg0b1.netlify.app/api/v1';
+  }
   
-  // For local development, use local backend
-  return 'http://localhost:5000/api/v1';
+  // COMMENTED OUT: For local development, use local backend
+  // return 'http://localhost:5000/api/v1';
   
-  // FALLBACK: Production backend (commented out for local development)
-  // return 'https://gg0b1.netlify.app/api/v1';
+  // FALLBACK: Production backend (using deployed backend)
+  return 'https://gg0b1.netlify.app/api/v1';
 };
 
 // Create axios instance with base configuration
@@ -96,16 +96,15 @@ apiClient.interceptors.response.use(
       }
     }
     
-    // Return a more user-friendly error object
-    const errorMessage = error.response?.data?.message || error.message || 'An error occurred';
-    const errorDetails = error.response?.data?.errors || [];
-    
-    return Promise.reject({
-      message: errorMessage,
-      details: errorDetails,
+    // Log the error for debugging but preserve the original axios error structure
+    console.error('🚨 API Error:', {
       status: error.response?.status,
-      originalError: error
+      message: error.response?.data?.message || error.message,
+      details: error.response?.data?.errors || []
     });
+    
+    // Return the original error to maintain axios error structure
+    return Promise.reject(error);
   }
 );
 

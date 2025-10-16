@@ -4,7 +4,11 @@ const {
   createOrUpdateMealPlan,
   addItemToMealPlan,
   removeItemFromMealPlan,
-  clearMealPlan
+  clearMealPlan,
+  clearItemsByRestaurant,
+  getSelectedRestaurants,
+  addSelectedRestaurant,
+  removeSelectedRestaurant
 } = require('../controllers/mealPlan.controller');
 const { authMiddleware } = require('../middlewares/auth');
 const { body, param, query } = require('express-validator');
@@ -94,5 +98,11 @@ router.post('/', mealPlanValidation, handleValidationErrors, createOrUpdateMealP
 router.post('/:userId/add-item', addItemValidation, handleValidationErrors, addItemToMealPlan);
 router.delete('/:userId/remove-item', removeItemValidation, handleValidationErrors, removeItemFromMealPlan);
 router.delete('/:userId/clear', clearMealPlanValidation, handleValidationErrors, clearMealPlan);
+router.delete('/:userId/clear-restaurant/:restaurantId', userIdValidation, handleValidationErrors, clearItemsByRestaurant);
+
+// Restaurant selection routes
+router.get('/selected-restaurants', getSelectedRestaurants);
+router.post('/selected-restaurants', addSelectedRestaurant);
+router.delete('/selected-restaurants/:restaurantId', removeSelectedRestaurant);
 
 module.exports = router;

@@ -36,7 +36,12 @@ export const navigateToWeeklyMenuWithRestaurant = (
   console.log('🔄 Restaurant:', restaurantId, restaurantName);
   
   // Save restaurant to database first
-  setSelectedRestaurant(restaurantId, restaurantName, restaurantData);
+  const restaurantObject = restaurantData || {
+    id: restaurantId,
+    name: restaurantName,
+    isApiRestaurant: true
+  };
+  setSelectedRestaurant(restaurantObject);
   
   // Add a small delay to ensure database save completes before navigation
   setTimeout(() => {

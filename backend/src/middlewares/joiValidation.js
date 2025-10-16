@@ -87,9 +87,9 @@ const userSchemas = {
       .email()
       .required()
       .messages({
-        'string.empty': 'Email is required',
-        'string.email': 'Please provide a valid email address',
-        'any.required': 'Email is required'
+        'string.empty': 'Email address is required',
+        'string.email': 'Please enter a valid email address (e.g., user@example.com)',
+        'any.required': 'Email address is required'
       }),
     
     password: Joi.string()
@@ -108,7 +108,7 @@ const userSchemas = {
       .required()
       .messages({
         'string.empty': 'Phone number is required',
-        'string.pattern.base': 'Please provide a valid phone number',
+        'string.pattern.base': 'Please enter a valid phone number (e.g., +1-234-567-8900)',
         'any.required': 'Phone number is required'
       }),
     
@@ -123,7 +123,7 @@ const userSchemas = {
       .valid('customer', 'partner')
       .default('customer')
       .messages({
-        'any.only': 'Role must be either customer or partner'
+        'any.only': 'Please select a valid account type (customer or partner)'
       })
   }),
 
@@ -181,7 +181,7 @@ const userSchemas = {
       .required()
       .messages({
         'string.empty': 'Channel is required',
-        'any.only': 'Channel must be either email or sms',
+        'any.only': 'Please select either email or SMS for verification',
         'any.required': 'Channel is required'
       })
   }),
@@ -313,7 +313,7 @@ const userSchemas = {
       .messages({
         'string.empty': 'Email or phone number is required',
         'any.required': 'Email or phone number is required',
-        'identifier.invalid': 'Please provide a valid email address or phone number'
+        'identifier.invalid': 'Please enter a valid email address (e.g., user@example.com) or phone number (e.g., +1-234-567-8900)'
       }),
     
     otp: Joi.string()
@@ -321,17 +321,17 @@ const userSchemas = {
       .pattern(/^\d{6}$/)
       .required()
       .messages({
-        'string.empty': 'OTP is required',
-        'string.length': 'OTP must be exactly 6 digits',
-        'string.pattern.base': 'OTP must contain only numbers',
-        'any.required': 'OTP is required'
+        'string.empty': 'Verification code is required',
+        'string.length': 'Verification code must be exactly 6 digits',
+        'string.pattern.base': 'Verification code must contain only numbers (0-9)',
+        'any.required': 'Verification code is required'
       }),
     
     userType: Joi.string()
       .valid('customer', 'partner')
       .optional()
       .messages({
-        'any.only': 'User type must be either customer or partner'
+        'any.only': 'Please select a valid account type (customer or partner)'
       })
   }),
 

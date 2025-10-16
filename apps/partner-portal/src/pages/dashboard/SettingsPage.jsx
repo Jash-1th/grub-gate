@@ -14,6 +14,7 @@ import { Button, Input, Card, CardContent, CardHeader, CardTitle } from '@grub-g
 import { useRestaurant } from '../../hooks/useRestaurant';
 import { useToast } from '../../contexts/ToastContext';
 import EnhancedAddressForm from '../../components/address/EnhancedAddressForm';
+import { validateFormWithSchema, formatBackendErrors } from '../../utils/validationErrorHandler';
 import {
   getRestaurantSettings,
   updateRestaurantSettings,
@@ -35,6 +36,21 @@ const SettingsPage = () => {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [errors, setErrors] = useState({});
+  
+  // Test function to trigger validation errors (for development)
+  const testValidation = () => {
+    const testErrors = {
+      name: 'Restaurant name must be at least 2 characters long',
+      email: 'Please enter a valid email address (e.g., user@example.com)',
+      phone: 'Please enter a valid phone number (e.g., +1-234-567-8900)',
+      description: 'Description must be at least 10 characters long',
+      deliveryRadius: 'Delivery radius must be at least 0.1 km',
+      general: 'Please fix the validation errors below'
+    };
+    setErrors(testErrors);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    console.log('🧪 Test validation errors set for settings:', testErrors);
+  };
   
   // Form data state
   const [formData, setFormData] = useState({
@@ -235,47 +251,87 @@ const SettingsPage = () => {
     loadSettings();
   }, [restaurant?.id]);
 
-  // Form validation
+  // Enhanced form validation using Joi schemas
   const validateForm = () => {
-    const newErrors = {};
+    let schemaType = '';
+    let validationData = {};
     
-    if (activeTab === 'profile') {
-      if (!formData.name.trim()) newErrors.name = 'Restaurant name is required';
-      if (!formData.cuisine.trim()) newErrors.cuisine = 'Cuisine is required';
-      if (!formData.description.trim()) newErrors.description = 'Description is required';
-      
-      // Enhanced address validation
-      const hasEnhancedAddress = formData.street || formData.city || formData.country;
-      const hasLegacyAddress = formData.address && formData.address.trim();
-      
-      if (hasEnhancedAddress) {
-        // Validate enhanced address fields
-        if (!formData.street.trim()) newErrors.street = 'Street address is required';
-        if (!formData.city.trim()) newErrors.city = 'City is required';
-        if (!formData.province.trim()) newErrors.province = 'Province/State is required';
-        if (!formData.postalCode.trim()) newErrors.postalCode = 'Postal code is required';
-        if (!formData.country.trim()) newErrors.country = 'Country is required';
-      } else if (!hasLegacyAddress) {
-        // Require at least legacy address if no enhanced address
-        newErrors.address = 'Address is required';
-      }
-      
-      if (!formData.phone.trim()) newErrors.phone = 'Phone is required';
-      else if (!validatePhone(formData.phone)) newErrors.phone = 'Invalid phone format';
-      if (!formData.email.trim()) newErrors.email = 'Email is required';
-      else if (!validateEmail(formData.email)) newErrors.email = 'Invalid email format';
-      if (formData.website && !validateURL(formData.website)) newErrors.website = 'Invalid website URL';
+    // Determine which schema to use based on active tab
+    switch (activeTab) {
+      case 'profile':
+        schemaType = 'profileSettings';
+        validationData = {
+          name: formData.name,
+          cuisine: formData.cuisine,
+          description: formData.description,
+          phone: formData.phone,
+          email: formData.email,
+          website: formData.website,
+          street: formData.street,
+          city: formData.city,
+          province: formData.province,
+          postalCode: formData.postalCode,
+          country: formData.country,
+          address: formData.address
+        };
+        break;
+      case 'delivery':
+        schemaType = 'deliverySettings';
+        validationData = {
+          deliveryRadius: parseFloat(formData.deliveryRadius) || 0,
+          deliveryFee: parseFloat(formData.deliveryFee) || 0,
+          minOrderAmount: parseFloat(formData.minOrderAmount) || 0,
+          avgDeliveryTime: parseInt(formData.avgDeliveryTime) || 0
+        };
+        break;
+      case 'notifications':
+        schemaType = 'notificationSettings';
+        validationData = {
+          emailNotifications: formData.emailNotifications,
+          smsNotifications: formData.smsNotifications,
+          orderAlerts: formData.orderAlerts,
+          customerMessages: formData.customerMessages,
+          systemUpdates: formData.systemUpdates
+        };
+        break;
+      case 'billing':
+        schemaType = 'billingSettings';
+        validationData = {
+          businessName: formData.businessName || '',
+          paymentMethod: formData.paymentMethod || '',
+          billingStreet: formData.billingStreet || '',
+          billingCity: formData.billingCity || '',
+          billingProvince: formData.billingProvince || '',
+          billingPostalCode: formData.billingPostalCode || '',
+          billingCountry: formData.billingCountry || '',
+          bankName: formData.bankName || '',
+          accountType: formData.accountType || '',
+          routingNumber: formData.routingNumber || '',
+          accountNumber: formData.accountNumber || '',
+          businessNumber: formData.businessNumber || '',
+          gstHstNumber: formData.gstHstNumber || '',
+          qstNumber: formData.qstNumber || ''
+        };
+        break;
+      default:
+        return true; // No validation for unknown tabs
     }
     
-    if (activeTab === 'delivery') {
-      if (formData.deliveryRadius <= 0) newErrors.deliveryRadius = 'Delivery radius must be greater than 0';
-      if (formData.deliveryFee < 0) newErrors.deliveryFee = 'Delivery fee cannot be negative';
-      if (formData.minOrderAmount < 0) newErrors.minOrderAmount = 'Minimum order amount cannot be negative';
-      if (formData.avgDeliveryTime <= 0) newErrors.avgDeliveryTime = 'Delivery time must be greater than 0';
+    console.log('🔍 Validating settings form:', { activeTab, schemaType, validationData });
+    
+    // Use Joi validation
+    const validationErrors = validateFormWithSchema(validationData, schemaType);
+    console.log('🔍 Settings validation result:', validationErrors);
+    
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      // Scroll to top to show validation errors
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return false;
     }
     
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors({});
+    return true;
   };
 
   // Handle form input changes
@@ -285,11 +341,19 @@ const SettingsPage = () => {
       [field]: value
     }));
     
-    // Clear error for this field when user starts typing
+    // Clear field-specific error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
-        [field]: undefined
+        [field]: ''
+      }));
+    }
+    
+    // Clear general error when user makes any change
+    if (errors.general) {
+      setErrors(prev => ({
+        ...prev,
+        general: ''
       }));
     }
   };
@@ -462,8 +526,33 @@ const SettingsPage = () => {
       
       showToast('Settings saved successfully!', 'success');
     } catch (error) {
-      console.error('Error saving settings:', error);
-      showToast(error.response?.data?.message || 'Failed to save settings', 'error');
+      console.error('Settings save error:', error);
+      console.error('Error Response Data:', error.response?.data);
+      
+      // Handle axios error responses with detailed validation errors
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        console.log('🔍 Backend validation errors:', error.response.data.errors);
+        // Use enhanced error formatting for Joi validation errors
+        const formattedErrors = formatBackendErrors(error.response.data.errors);
+        console.log('🎨 Formatted errors for display:', formattedErrors);
+        setErrors(formattedErrors);
+        // Scroll to top to show validation errors
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (error.response?.data?.message) {
+        // Show specific backend error message
+        console.log('📝 Backend error message:', error.response.data.message);
+        setErrors({ general: error.response.data.message });
+        showToast(error.response.data.message, 'error');
+        // Scroll to top to show error message
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // Fallback to generic message
+        const errorMessage = error.message || 'Failed to save settings. Please try again.';
+        setErrors({ general: errorMessage });
+        showToast(errorMessage, 'error');
+        // Scroll to top to show error message
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     } finally {
       setLoading(false);
     }

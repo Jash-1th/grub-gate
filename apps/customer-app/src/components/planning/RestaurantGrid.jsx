@@ -6,10 +6,23 @@ import { useMealPlan } from '../../contexts/MealPlanContext_SSR_FIXED';
 const RestaurantGrid = ({ restaurants = [], postalCode = '' }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { getWeekTotalCost, getWeekTotalItems } = useMealPlan();
+  const { getWeekTotalCost, getWeekTotalItems, setSelectedRestaurant } = useMealPlan();
 
   const handleRestaurantClick = (restaurant) => {
-    navigate(`/restaurant/${restaurant.id}`);
+    // Store restaurant selection in context and database
+    setSelectedRestaurant({
+      id: restaurant.id,
+      name: restaurant.name,
+      image: restaurant.image,
+      rating: restaurant.rating,
+      cuisine: restaurant.cuisine,
+      distance: restaurant.distance,
+      deliveryTime: restaurant.deliveryTime,
+      isApiRestaurant: true
+    });
+    
+    // Navigate to weekly menu page with selected restaurant
+    navigate('/weekly-menu');
   };
 
   // Calculate costs based on current meal plan
@@ -164,12 +177,6 @@ const RestaurantGrid = ({ restaurants = [], postalCode = '' }) => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                     <span>{restaurant.distance || 'Calculating...'}</span>
-                  </span>
-                  <span className="flex items-center space-x-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>{restaurant.deliveryTime || '25-35 min'}</span>
                   </span>
                 </div>
 

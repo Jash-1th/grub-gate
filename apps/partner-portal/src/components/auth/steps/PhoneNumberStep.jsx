@@ -114,9 +114,33 @@ const PhoneNumberStep = ({
       }
     } catch (error) {
       console.error('OTP request error:', error);
-      setErrors({ 
-        identifier: 'Network error. Please check your connection and try again.' 
-      });
+      console.error('Error Response Data:', error.response?.data);
+      
+      // Handle axios error responses with detailed validation errors
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        console.log('🔍 Backend validation errors:', error.response.data.errors);
+        // Format backend validation errors for display
+        const formattedErrors = {};
+        error.response.data.errors.forEach(err => {
+          formattedErrors[err.field] = err.message;
+        });
+        setErrors(formattedErrors);
+        // Scroll to top to show validation errors
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (error.response?.data?.message) {
+        // Show specific backend error message
+        console.log('📝 Backend error message:', error.response.data.message);
+        setErrors({ identifier: error.response.data.message });
+        // Scroll to top to show error message
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // Fallback to generic message
+        setErrors({ 
+          identifier: 'Network error. Please check your connection and try again.' 
+        });
+        // Scroll to top to show error message
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     } finally {
       setIsLoading(false);
     }
