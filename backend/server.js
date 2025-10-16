@@ -38,12 +38,34 @@ const geocodingRoutes = require('./src/routes/geocoding.routes');
 
 const app = express();
 
-// Connect to MongoDB
-connectDB();
-
-// Start order activation service
-const { startOrderActivationCron } = require('./src/services/orderActivationService');
-startOrderActivationCron();
+// Connect to MongoDB (only if not in serverless environment)
+if (require.main === module) {
+  connectDB();
+  
+  // Start order activation service (only for standalone server)
+  const { startOrderActivationCron } = require('./src/services/orderActivationService');
+  startOrderActivationCron();
+} else {
+  // For serverless, connect to DB on first request
+  let dbConnected = false;
+  const ensureDbConnection = async () => {
+    if (!dbConnected) {
+      await connectDB();
+      dbConnected = true;
+    }
+  };
+  
+  // Add middleware to ensure DB connection
+  app.use(async (req, res, next) => {
+    try {
+      await ensureDbConnection();
+      next();
+    } catch (error) {
+      console.error('❌ Database connection failed:', error);
+      res.status(500).json({ message: 'Database connection error' });
+    }
+  });
+}
 
 // Security middleware
 app.use(helmet());
