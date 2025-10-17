@@ -475,8 +475,10 @@ const requestCustomerOTP = asyncHandler(async (req, res) => {
   const searchQuery = isEmail ? { email: formattedIdentifier } : { phoneNumber: formattedIdentifier };
   const existingUser = await User.findOne(searchQuery);
 
-  // Allow existing users to proceed with OTP (role addition will be handled in verification step)
-  // No need to block existing users anymore
+  // Block existing users from signup OTP flow - they should use login instead
+  if (existingUser) {
+    return errorResponse(res, 'User already exists with this email/phone. Please use the login form to sign in.', 409);
+  }
 
   try {
     const { otp } = await OTP.generateOTP(formattedIdentifier);
@@ -487,7 +489,7 @@ const requestCustomerOTP = asyncHandler(async (req, res) => {
       await smsService.sendOTP(formattedIdentifier, otp);
     }
 
-    successResponse(res, { userExists: !!existingUser }, 'OTP sent successfully for customer registration.');
+    successResponse(res, { userExists: false }, 'OTP sent successfully for customer registration.');
   } catch (error) {
     console.error('Request Customer OTP Error:', error);
     return errorResponse(res, 'Failed to send OTP. Please try again.', 500);

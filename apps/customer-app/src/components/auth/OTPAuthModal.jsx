@@ -14,7 +14,7 @@ import './modal-responsive.css';
 const OTPAuthModal = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { isOTPAuthModalOpen, closeOTPAuthModal } = useModal();
+  const { isOTPAuthModalOpen, closeOTPAuthModal, openLoginModal } = useModal();
   const { otpLogin, isLoading, error, clearError } = useAuth();
   const { showSuccess, showError } = useToast();
   
@@ -190,9 +190,27 @@ const OTPAuthModal = () => {
     } catch (error) {
       console.error('Request OTP Error:', error);
       
-      // Handle axios error responses
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to send verification code. Please try again.';
-      setFormErrors({ general: errorMessage });
+      // Handle axios error responses - check for various user exists conditions
+      if (error.response?.status === 409 || 
+          (error.response?.data?.message && (
+            error.response.data.message.includes('already exists') ||
+            error.response.data.message.includes('User already registered') ||
+            error.response.data.message.includes('already registered')
+          ))) {
+        // User already exists - redirect to login modal
+        closeOTPAuthModal();
+        showError(
+          'Account Already Exists',
+          'This email/phone is already registered. Please use the login form to sign in with your password.'
+        );
+        // Open login modal after a short delay
+        setTimeout(() => {
+          openLoginModal();
+        }, 2000);
+      } else {
+        const errorMessage = error.response?.data?.message || error.message || 'Failed to send verification code. Please try again.';
+        setFormErrors({ general: errorMessage });
+      }
     } finally {
       setIsLocalLoading(false);
     }
@@ -605,7 +623,7 @@ const OTPAuthModal = () => {
               {currentStep === 'signupDetails' && 'Create Your Account'}
             </h1>
             <p className="text-base text-gray-600 mb-4">
-              {currentStep === 'identifier' && 'Create your account to get started with meal planning'}
+              {currentStep === 'identifier' && 'Create your new account to get started with meal planning. If you already have an account, please use the login form.'}
               {currentStep === 'verification' && `We sent a code to your ${formData.channel === 'email' ? 'email' : 'phone number'}`}
               {currentStep === 'userInfo' && 'Tell us a bit about yourself to create your account'}
               {currentStep === 'signupDetails' && 'Set up your username, phone, and password'}
@@ -695,6 +713,23 @@ const OTPAuthModal = () => {
                     authMode === 'login' ? 'Send Login Code' : 'Send Verification Code'
                   )}
                 </button>
+                
+                {/* Already have an account link */}
+                <div className="text-center mt-4">
+                  <p className="text-sm text-gray-600">
+                    Already have an account?{' '}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        closeOTPAuthModal();
+                        setTimeout(() => openLoginModal(), 100);
+                      }}
+                      className="text-grub-red hover:text-red-700 font-medium transition-colors duration-200"
+                    >
+                      Sign in here
+                    </button>
+                  </p>
+                </div>
               </form>
             )}
 
