@@ -168,10 +168,10 @@ const LoginPage = () => {
         <div className="max-w-lg">
           <div className="mb-16">
             <Logo size="xl" className="mb-12" />
-            <h1 className="text-4xl xl:text-5xl font-bold text-gray-900 mb-8 leading-tight">
+            <h1 className="text-4xl xl:text-5xl font-bold text-gray-900 mb-8 leading-tight drop-shadow-sm">
               Welcome to GrubGate Partner Portal
             </h1>
-            <p className="text-xl xl:text-2xl text-gray-600 leading-relaxed mb-12">
+            <p className="text-xl xl:text-2xl text-gray-700 leading-relaxed mb-12 drop-shadow-sm">
               Join Montreal's leading restaurant network and grow your business with predictable revenue.
             </p>
             <div className="flex items-center space-x-3 text-grub-red">
@@ -187,8 +187,8 @@ const LoginPage = () => {
                   <FontAwesomeIcon icon={feature.icon} className="w-7 h-7 text-grub-red" />
                 </div>
                 <div className="pt-1">
-                  <h3 className="font-semibold text-gray-900 mb-2 text-lg group-hover:text-grub-red transition-colors duration-300">{feature.title}</h3>
-                  <p className="text-gray-600 text-base leading-relaxed">{feature.description}</p>
+                  <h3 className="font-semibold text-gray-900 mb-2 text-lg group-hover:text-grub-red transition-colors duration-300 drop-shadow-sm">{feature.title}</h3>
+                  <p className="text-gray-700 text-base leading-relaxed drop-shadow-sm">{feature.description}</p>
                 </div>
               </div>
             ))}
@@ -202,10 +202,10 @@ const LoginPage = () => {
           {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-6 px-4">
             <Logo size="lg" className="mx-auto mb-4" />
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 drop-shadow-sm">
               Partner Portal
             </h1>
-            <p className="text-gray-600 text-sm sm:text-base">
+            <p className="text-gray-700 text-sm sm:text-base drop-shadow-sm">
               Sign in to manage your restaurant
             </p>
           </div>
@@ -215,10 +215,10 @@ const LoginPage = () => {
             <div className="relative">
               <div className="absolute -top-6 -left-6 w-24 h-24 bg-grub-red/5 rounded-full blur-xl"></div>
               <div className="relative">
-                <h2 className="text-4xl xl:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+                <h2 className="text-4xl xl:text-5xl font-bold text-gray-900 mb-6 leading-tight drop-shadow-sm">
                   Sign in to your account
                 </h2>
-                <p className="text-lg xl:text-xl text-gray-600 mb-8 leading-relaxed">
+                <p className="text-lg xl:text-xl text-gray-700 mb-8 leading-relaxed drop-shadow-sm">
                   Welcome back! Ready to manage your restaurant?
                 </p>
                 <div className="flex items-center space-x-4 text-sm text-gray-500">
@@ -241,7 +241,7 @@ const LoginPage = () => {
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Email Field */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-3">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-800 mb-3 drop-shadow-sm">
                   Email address
                 </label>
                 <div className="relative">
@@ -271,7 +271,7 @@ const LoginPage = () => {
 
               {/* Password Field */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-3">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-800 mb-3 drop-shadow-sm">
                   Password
                 </label>
                 <div className="relative">
@@ -321,7 +321,7 @@ const LoginPage = () => {
                     onChange={handleInputChange}
                     className="h-4 w-4 text-grub-red focus:ring-grub-red border-gray-300 rounded transition-colors"
                   />
-                  <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700">
+                  <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-800 drop-shadow-sm">
                     Remember me
                   </label>
                 </div>
@@ -368,7 +368,7 @@ const LoginPage = () => {
 
               {/* Sign Up Link */}
               <div className="text-center pt-6 border-t border-gray-100">
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-700 drop-shadow-sm">
                   Don't have an account?{' '}
                   <Link
                     to="/register"
@@ -393,8 +393,8 @@ const LoginPage = () => {
                   <div className="feature-icon w-10 h-10 bg-gradient-to-br from-grub-red/10 to-grub-red/20 rounded-lg flex items-center justify-center mx-auto mb-3">
                     <FontAwesomeIcon icon={feature.icon} className="w-5 h-5 text-grub-red" />
                   </div>
-                  <h4 className="font-semibold text-gray-900 text-sm mb-2">{feature.title}</h4>
-                  <p className="text-xs text-gray-600 leading-relaxed">{feature.description}</p>
+                  <h4 className="font-semibold text-gray-900 text-sm mb-2 drop-shadow-sm">{feature.title}</h4>
+                  <p className="text-xs text-gray-700 leading-relaxed drop-shadow-sm">{feature.description}</p>
                 </div>
               ))}
             </div>

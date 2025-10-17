@@ -361,9 +361,9 @@ const RegisterPage = () => {
 
       {/* Right Side - Registration Form */}
       <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-8 lg:max-w-2xl xl:max-w-3xl relative z-10 min-h-screen py-8">
-        <div className="w-full max-w-md mx-auto lg:max-w-lg">
+        <div className="w-full max-w-lg mx-auto">
           {!isOTPAuthModalOpen && (
-            <div className="glass-card rounded-3xl p-8 lg:p-10 relative overflow-hidden">
+            <div className="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-grub-red/10 to-transparent rounded-full -translate-y-14 translate-x-14"></div>
               <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-blue-500/5 to-transparent rounded-full translate-y-10 -translate-x-10"></div>
               <div className="relative">
@@ -373,7 +373,7 @@ const RegisterPage = () => {
                 <p className="text-gray-600 text-sm sm:text-base px-2">Create your partner account to manage your restaurant</p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               {/* Form Header - Desktop Only */}
               <div className="hidden lg:block pb-6 border-b border-gray-100">
                 <h3 className="text-2xl font-semibold text-gray-900 mb-2">
@@ -443,7 +443,7 @@ const RegisterPage = () => {
               </div>
 
               {/* Email & Phone Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
+              <div className="space-y-4 sm:grid sm:grid-cols-2 sm:gap-4 lg:gap-6 sm:space-y-0">
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                     Email
@@ -459,7 +459,7 @@ const RegisterPage = () => {
                       value={formData.email}
                       onChange={handleInputChange}
                       placeholder="your@email.com"
-                      className={`block w-full pl-10 pr-3 py-3 lg:py-4 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 text-base lg:text-lg ${
+                      className={`block w-full pl-10 pr-3 py-3 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 text-base ${
                         errors.email 
                           ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
                           : 'border-gray-300 focus:border-grub-red focus:ring-grub-red hover:border-gray-400'
@@ -486,7 +486,7 @@ const RegisterPage = () => {
                       value={formData.phone}
                       onChange={handleInputChange}
                       placeholder="+1 (555) 123-4567"
-                      className={`block w-full pl-10 pr-3 py-3 lg:py-4 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 text-base lg:text-lg ${
+                      className={`block w-full pl-10 pr-3 py-3 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 text-base ${
                         errors.phone 
                           ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
                           : 'border-gray-300 focus:border-grub-red focus:ring-grub-red hover:border-gray-400'
@@ -500,7 +500,7 @@ const RegisterPage = () => {
               </div>
 
               {/* Password Fields */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
+              <div className="space-y-4 sm:grid sm:grid-cols-2 sm:gap-4 lg:gap-6 sm:space-y-0">
                 <div>
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                     Password
@@ -516,7 +516,7 @@ const RegisterPage = () => {
                       value={formData.password}
                       onChange={handleInputChange}
                       placeholder="Create password"
-                      className={`block w-full pl-10 pr-12 py-3 lg:py-4 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 text-base lg:text-lg ${
+                      className={`block w-full pl-10 pr-12 py-3 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 text-base ${
                         errors.password 
                           ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
                           : 'border-gray-300 focus:border-grub-red focus:ring-grub-red hover:border-gray-400'
@@ -554,7 +554,7 @@ const RegisterPage = () => {
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
                       placeholder="Confirm password"
-                      className={`block w-full pl-10 pr-12 py-3 lg:py-4 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 text-base lg:text-lg ${
+                      className={`block w-full pl-10 pr-12 py-3 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 text-base ${
                         errors.confirmPassword 
                           ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
                           : 'border-gray-300 focus:border-grub-red focus:ring-grub-red hover:border-gray-400'
@@ -579,7 +579,7 @@ const RegisterPage = () => {
               </div>
 
               {/* Terms Agreement */}
-              <div className="flex items-start space-x-3">
+              <div className="flex items-start space-x-3 pt-2">
                 <input
                   id="agreeTerms"
                   name="agreeTerms"
@@ -604,11 +604,12 @@ const RegisterPage = () => {
               )}
 
               {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="auth-button w-full py-4 px-6 bg-gradient-to-r from-grub-red to-red-600 text-white text-base font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
-              >
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="auth-button w-full py-4 px-6 bg-gradient-to-r from-grub-red to-red-600 text-white text-base font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
+                >
                 {loading ? (
                   <div className="flex items-center justify-center">
                     <div className="auth-spinner mr-3"></div>
@@ -617,7 +618,8 @@ const RegisterPage = () => {
                 ) : (
                   'Create Partner Account'
                 )}
-              </button>
+                </button>
+              </div>
 
               {/* Sign In Link */}
               <div className="text-center pt-4 border-t border-gray-100">
@@ -637,11 +639,11 @@ const RegisterPage = () => {
           )}
 
           {/* Mobile Benefits */}
-          <div className="lg:hidden mt-6 px-4">
+          <div className="lg:hidden mt-6 px-2">
             <div className="text-center text-sm text-gray-600 mb-4 font-medium">
               Why join GrubGate?
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               {benefits.map((benefit, index) => (
                 <div key={index} className="feature-card text-center p-4 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
                   <div className="feature-icon w-10 h-10 bg-gradient-to-br from-grub-red/10 to-grub-red/20 rounded-lg flex items-center justify-center mx-auto mb-3">

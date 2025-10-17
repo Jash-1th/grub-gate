@@ -103,17 +103,17 @@ const StatisticsSection = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-white p-6 rounded-xl shadow-md text-center hover:shadow-lg transition-shadow duration-300">
-              <div className="text-4xl md:text-5xl font-bold text-grub-red">10,000+</div>
+              <div className="text-4xl md:text-5xl font-bold text-grub-red">0</div>
               <h3 className="text-xl font-semibold mt-2 text-gray-800">Happy Customers</h3>
               <p className="text-gray-600 mt-2">and counting</p>
             </div>
             <div className="bg-white p-6 rounded-xl shadow-md text-center hover:shadow-lg transition-shadow duration-300">
-              <div className="text-4xl md:text-5xl font-bold text-grub-red">500+</div>
+              <div className="text-4xl md:text-5xl font-bold text-grub-red">0</div>
               <h3 className="text-xl font-semibold mt-2 text-gray-800">Partner Restaurants</h3>
               <p className="text-gray-600 mt-2">and growing</p>
             </div>
             <div className="bg-white p-6 rounded-xl shadow-md text-center hover:shadow-lg transition-shadow duration-300">
-              <div className="text-4xl md:text-5xl font-bold text-grub-red">50,000+</div>
+              <div className="text-4xl md:text-5xl font-bold text-grub-red">0</div>
               <h3 className="text-xl font-semibold mt-2 text-gray-800">Meals Served</h3>
               <p className="text-gray-600 mt-2">and many more to come</p>
             </div>
@@ -137,17 +137,17 @@ const StatisticsSection = () => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <StatCard 
-            value={stats.totalCustomers || 10000} 
+            value={stats.totalCustomers || 0} 
             title="Happy Customers" 
             description={loading ? "Loading..." : "and counting"}
           />
           <StatCard 
-            value={stats.totalRestaurants || 500} 
+            value={stats.totalRestaurants || 0} 
             title="Partner Restaurants" 
             description={loading ? "Loading..." : "and growing"}
           />
           <StatCard 
-            value={stats.totalOrders || 50000} 
+            value={stats.totalOrders || 0} 
             title="Meals Served" 
             description={loading ? "Loading..." : "and many more to come"}
           />

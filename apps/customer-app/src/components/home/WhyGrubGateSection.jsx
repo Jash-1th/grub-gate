@@ -59,7 +59,7 @@ const SpecialFeatureCard = ({ feature }) => {
 
 const WhyGrubGateSection = () => {
   const { t } = useTranslation();
-  const [restaurantCount, setRestaurantCount] = useState(500); // Default fallback
+  const [restaurantCount, setRestaurantCount] = useState(0); // Default fallback
   const [loading, setLoading] = useState(true);
 
   // Fetch restaurant stats from backend
@@ -94,7 +94,7 @@ const WhyGrubGateSection = () => {
     { id: '1', stat: 'stress free' },
     { 
       id: '2', 
-      stat: loading ? '500+ restaurants' : `${restaurantCount}+ restaurants`,
+      stat: loading ? '0+ restaurants' : `${restaurantCount}+ restaurants`,
       isLoading: loading 
     },
     { id: '3', stat: '24/7 available' },
