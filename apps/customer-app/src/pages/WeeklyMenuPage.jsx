@@ -526,20 +526,12 @@ const WeeklyMenuPage = () => {
     console.log('🔍 Determined user type:', userType);
     
     if (userType === 'normal') {
-      if (selectedRestaurantsCount === 1) {
-        // User has 1 restaurant - show switch modal (replace the only restaurant)
-        console.log('🚨 User has 1 restaurant - showing switch modal');
-        
-        const totalItemsWeek0 = getWeekTotalItems(0);
-        const totalItemsWeek1 = getWeekTotalItems(1);
-        const totalItems = totalItemsWeek0 + totalItemsWeek1;
-        
-        setSwitchModalData({
-          existingRestaurant: mealPlanSelectedRestaurantName,
-          newRestaurant: 'New Restaurant',
-          itemCount: totalItems
-        });
-        setShowRestaurantSwitchModal(true);
+      if (selectedRestaurantsCount < 2) {
+        // User has 0 or 1 restaurant - go directly to restaurants page (no modal)
+        console.log('✅ User has < 2 restaurants - navigating directly to restaurants page');
+        const postalParam = postalCode ? `&postal=${postalCode}` : '';
+        console.log('🔍 Navigating to:', `/plan/restaurants?source=plan${postalParam}`);
+        navigate(`/plan/restaurants?source=plan${postalParam}`);
         return;
       } else if (selectedRestaurantsCount === 2) {
         // User has 2 restaurants - show replacement modal (choose which to replace)
@@ -554,7 +546,7 @@ const WeeklyMenuPage = () => {
       }
     }
     
-    // No restaurants selected or Pro user, navigate directly
+    // Pro user or fallback, navigate directly
     const postalParam = postalCode ? `&postal=${postalCode}` : '';
     console.log('🔍 Navigating to:', `/plan/restaurants?source=plan${postalParam}`);
     navigate(`/plan/restaurants?source=plan${postalParam}`);

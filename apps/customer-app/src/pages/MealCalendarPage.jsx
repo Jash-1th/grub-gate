@@ -254,9 +254,21 @@ const MealCalendarPage = () => {
       console.log('🔄 MealCalendar: hasLoadedFromDatabase:', hasLoadedFromDatabase);
       console.log('🔄 MealCalendar: Total items now:', getWeekTotalItems(0) + getWeekTotalItems(1));
       
-      console.log('✅ MealCalendar: Database sync complete, forcing re-render...');
-      // Force a re-render by updating a state that triggers preview data regeneration
-      setSelectedDate(prev => prev); // This triggers a re-render without changing the actual date
+      // Check if we have actual meal data
+      const previewData = getPreviewCalendarData();
+      console.log('🔄 MealCalendar: Preview data meals count:', previewData?.meals?.length || 0);
+      
+      if (previewData?.meals?.length > 0) {
+        console.log('✅ MealCalendar: Preview data ready with meals, forcing re-render...');
+        // Force a re-render by updating a state that triggers preview data regeneration
+        setSelectedDate(prev => prev); // This triggers a re-render without changing the actual date
+      } else {
+        console.log('⏳ MealCalendar: Preview data not ready yet, will retry...');
+        // Retry after a short delay
+        setTimeout(() => {
+          setSelectedDate(prev => prev);
+        }, 100);
+      }
     }
   }, [isClient, isAuthenticated, loading, calendarMode, hasPlannedMeals, hasLoadedFromDatabase, isLoadingFromDatabase, mealPlan]);
 
@@ -668,7 +680,7 @@ const MealCalendarPage = () => {
     );
   }
 
-  // Loading state - also wait for meal plan data and meal dates to load
+  // Loading state - also wait for meal plan data and preview data to be ready
   if (loading || isMealPlanLoading || isMealDatesLoading) {
     let loadingText = "Loading your meal calendar...";
     if (isMealDatesLoading) {
@@ -735,6 +747,26 @@ const MealCalendarPage = () => {
 
   // Use either subscription data or preview data
   const displayData = calendarData || getPreviewCalendarData();
+  
+  // Debug logging for displayData
+  console.log('🔍 MealCalendar displayData calculation:');
+  console.log('🔍 calendarData:', calendarData);
+  console.log('🔍 hasPlannedMeals:', hasPlannedMeals);
+  console.log('🔍 hasLoadedFromDatabase:', hasLoadedFromDatabase);
+  console.log('🔍 displayData:', displayData);
+  console.log('🔍 displayData?.meals length:', displayData?.meals?.length || 0);
+  
+  // Additional check for preview mode - ensure we have meals before rendering
+  if (calendarMode === 'PREVIEW' && hasPlannedMeals && hasLoadedFromDatabase && (!displayData?.meals || displayData.meals.length === 0)) {
+    console.log('⚠️ MealCalendar: Preview mode but no meals in displayData, showing loading...');
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
+          <Loading text="Loading meal plan data..." />
+        </div>
+      </div>
+    );
+  }
 
   // For subscribed users, calculate week dates based on subscription start date
   const getWeekStartDate = () => {
