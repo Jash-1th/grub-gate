@@ -32,7 +32,9 @@ const MealCalendarPage = () => {
     getWeekPlan, 
     getWeekMealItems, 
     getWeekTotalItems, 
-    getWeekTotalCost 
+    getWeekTotalCost,
+    isLoadingFromDatabase,
+    hasLoadedFromDatabase
   } = mealPlanContext;
 
   // SSR safety check
@@ -53,13 +55,16 @@ const MealCalendarPage = () => {
     getWeekTotalItems(0) > 0 || getWeekTotalItems(1) > 0
   );
 
-  // Redirect users without planned meals and no active subscription
+  // Check if meal plan data is still loading
+  const isMealPlanLoading = isLoadingFromDatabase && !hasLoadedFromDatabase;
+
+  // Redirect users without planned meals and no active subscription (but wait for meal plan to load)
   useEffect(() => {
-    if (isClient && isAuthenticated && !loading && !calendarData && !hasPlannedMeals) {
+    if (isClient && isAuthenticated && !loading && !isMealPlanLoading && !calendarData && !hasPlannedMeals) {
       console.log('🚫 MealCalendar: No planned meals and no active subscription, redirecting to weekly menu');
       navigate('/weekly-menu');
     }
-  }, [isClient, isAuthenticated, loading, calendarData, hasPlannedMeals, navigate]);
+  }, [isClient, isAuthenticated, loading, isMealPlanLoading, calendarData, hasPlannedMeals, navigate]);
 
   // Consolidated initialization function to fix timing issues
   const initializeCalendarData = async () => {
@@ -197,6 +202,18 @@ const MealCalendarPage = () => {
       initializeCalendarData();
     }
   }, [isClient, isAuthenticated, searchParams]);
+
+  // Additional effect to refresh preview data when meal plan context changes
+  useEffect(() => {
+    if (isClient && isAuthenticated && !loading && calendarMode === 'PREVIEW' && hasPlannedMeals && hasLoadedFromDatabase) {
+      console.log('🔄 MealCalendar: Meal plan context fully loaded, refreshing preview data...');
+      console.log('🔄 MealCalendar: isLoadingFromDatabase:', isLoadingFromDatabase);
+      console.log('🔄 MealCalendar: hasLoadedFromDatabase:', hasLoadedFromDatabase);
+      console.log('🔄 MealCalendar: Total items now:', getWeekTotalItems(0) + getWeekTotalItems(1));
+      // Force a re-render by updating a state that triggers preview data regeneration
+      setSelectedDate(prev => prev); // This triggers a re-render without changing the actual date
+    }
+  }, [isClient, isAuthenticated, loading, calendarMode, hasPlannedMeals, hasLoadedFromDatabase, isLoadingFromDatabase]);
 
   // Note: URL parameter handling is now done in initializeCalendarData() to fix timing issues
 
@@ -472,13 +489,21 @@ const MealCalendarPage = () => {
 
   // Generate preview meals from planned meal data using stored dates
   const generatePreviewMeals = () => {
-    if (!isClient || !hasPlannedMeals) return [];
+    if (!isClient || !hasPlannedMeals) {
+      console.log('🚫 generatePreviewMeals: Not generating - isClient:', isClient, 'hasPlannedMeals:', hasPlannedMeals);
+      return [];
+    }
+    
+    console.log('🔄 generatePreviewMeals: Starting generation...');
+    console.log('🔄 generatePreviewMeals: Week 0 total items:', getWeekTotalItems(0));
+    console.log('🔄 generatePreviewMeals: Week 1 total items:', getWeekTotalItems(1));
     
     const previewMeals = [];
     
     // Generate meals for both weeks using stored dates
     for (let weekIndex = 0; weekIndex < 2; weekIndex++) {
       const weekPlan = getWeekPlan(weekIndex);
+      console.log(`🔄 generatePreviewMeals: Week ${weekIndex} plan:`, weekPlan);
       if (!weekPlan) continue;
       
       // Generate meals for each day of the week
@@ -486,6 +511,8 @@ const MealCalendarPage = () => {
         // Skip days without meals
         const hasLunchMeals = dayMeals && dayMeals.lunch && dayMeals.lunch.length > 0;
         const hasDinnerMeals = dayMeals && dayMeals.dinner && dayMeals.dinner.length > 0;
+        
+        console.log(`🔄 generatePreviewMeals: ${day} (week ${weekIndex}) - Lunch: ${hasLunchMeals ? dayMeals.lunch.length : 0}, Dinner: ${hasDinnerMeals ? dayMeals.dinner.length : 0}`);
         
         if (!hasLunchMeals && !hasDinnerMeals) {
           return; // Skip empty days
@@ -592,12 +619,17 @@ const MealCalendarPage = () => {
     );
   }
 
-  // Loading state
-  if (loading) {
+  // Loading state - also wait for meal plan data to load
+  if (loading || isMealPlanLoading) {
+    const loadingText = loading ? "Loading your meal calendar..." : "Loading meal plan data...";
+    console.log('🔄 MealCalendar: Showing loading state -', loadingText);
+    console.log('🔄 MealCalendar: loading:', loading, 'isMealPlanLoading:', isMealPlanLoading);
+    console.log('🔄 MealCalendar: isLoadingFromDatabase:', isLoadingFromDatabase, 'hasLoadedFromDatabase:', hasLoadedFromDatabase);
+    
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
-          <Loading text="Loading your meal calendar..." />
+          <Loading text={loadingText} />
         </div>
       </div>
     );
