@@ -80,7 +80,8 @@ const SubscriptionPlans = () => {
   const handleEnhancedFlowComplete = (subscriptionData) => {
     setShowEnhancedFlow(false);
     // Toast already shown in EnhancedSubscriptionFlow, no need to show again
-    navigate('/weekly-menu');
+    // Navigate to meal calendar to show the newly created subscription
+    navigate('/meal-calendar');
   };
 
   // Handle enhanced flow cancellation
@@ -96,8 +97,8 @@ const SubscriptionPlans = () => {
   // Handle successful subscription creation
   const handleSubscriptionSuccess = () => {
     // Toast already shown in BillingFormModal, no need to show again
-    // Navigate to weekly menu or dashboard
-    navigate('/weekly-menu');
+    // Navigate to meal calendar to show the newly created subscription
+    navigate('/meal-calendar');
   };
 
   const plans = [

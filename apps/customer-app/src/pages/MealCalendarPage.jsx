@@ -53,26 +53,45 @@ const MealCalendarPage = () => {
     getWeekTotalItems(0) > 0 || getWeekTotalItems(1) > 0
   );
 
-  // Initialize selected date - use startDate from URL if provided, otherwise use appropriate default
-  useEffect(() => {
-    if (isClient) {
-      const urlStartDate = searchParams.get('startDate');
-      if (urlStartDate) {
-        // Validate the date format and use it
-        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (dateRegex.test(urlStartDate)) {
-          console.log('🗓️ MealCalendar: Using subscription start date from URL:', urlStartDate);
-          setSelectedDate(urlStartDate);
-        } else {
-          console.log('🗓️ MealCalendar: Invalid date format in URL, using default');
-          setSelectedDate(getDefaultStartDate());
-        }
-      } else {
-        console.log('🗓️ MealCalendar: No start date in URL, using default');
-        setSelectedDate(getDefaultStartDate());
+  // Consolidated initialization function to fix timing issues
+  const initializeCalendarData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('🔄 MealCalendar: Step 1 - Fetching user meal plans...');
+      
+      // Step 1: Fetch user meal plans first
+      await fetchUserMealPlans();
+      
+      console.log('🔄 MealCalendar: Step 2 - Fetching subscription status...');
+      
+      // Step 2: Fetch subscription status
+      await fetchSubscriptionStatus();
+      
+      console.log('🔄 MealCalendar: Step 3 - Setting default date if needed...');
+      
+      // Step 3: Set default date if not already set from URL
+      if (!selectedDate && !searchParams.get('startDate')) {
+        const defaultDate = getDefaultStartDate();
+        console.log('🗓️ MealCalendar: Setting default date:', defaultDate);
+        setSelectedDate(defaultDate);
       }
+      
+      console.log('🔄 MealCalendar: Step 4 - Fetching calendar data...');
+      
+      // Step 4: Fetch calendar data
+      await fetchCalendarData();
+      
+      console.log('✅ MealCalendar: Initialization complete!');
+      
+    } catch (error) {
+      console.error('❌ MealCalendar: Initialization error:', error);
+      setError('Failed to load meal calendar data');
+    } finally {
+      setLoading(false);
     }
-  }, [isClient, searchParams, hasPlannedMeals, isSubscribed, userMealPlans]);
+  };
 
   // Helper function to get earliest stored meal date from meal plan
   const getEarliestStoredMealDate = () => {
@@ -143,39 +162,49 @@ const MealCalendarPage = () => {
     return today.toISOString().split('T')[0];
   };
 
-  // Fetch subscription data and determine user type
+  // Consolidated data fetching effect - this fixes the timing issue
   useEffect(() => {
     if (isClient && isAuthenticated) {
-      fetchUserMealPlans();
-      fetchSubscriptionStatus();
+      console.log('🔄 MealCalendar: Starting consolidated data fetch...');
+      initializeCalendarData();
     }
   }, [isClient, isAuthenticated]);
 
-  // Update selectedDate when subscription data is loaded
+  // Separate effect for URL parameter handling
   useEffect(() => {
-    if (isClient && isSubscribed && userMealPlans?.mealPlans?.length > 0 && !searchParams.get('startDate')) {
-      // Only update if no URL startDate parameter and user is subscribed
-      const subscriptionStartDate = getDefaultStartDate();
-      console.log('\ud83d\udcc5 Updating selectedDate to subscription start:', subscriptionStartDate);
-      setSelectedDate(subscriptionStartDate);
+    if (isClient && !selectedDate) {
+      const urlStartDate = searchParams.get('startDate');
+      if (urlStartDate) {
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (dateRegex.test(urlStartDate)) {
+          console.log('🗓️ MealCalendar: Using subscription start date from URL:', urlStartDate);
+          setSelectedDate(urlStartDate);
+        } else {
+          console.log('🗓️ MealCalendar: Invalid date format in URL, using default');
+          setSelectedDate(getDefaultStartDate());
+        }
+      } else {
+        console.log('🗓️ MealCalendar: No start date in URL, using default');
+        setSelectedDate(getDefaultStartDate());
+      }
     }
-  }, [isClient, isSubscribed, userMealPlans]);
+  }, [isClient, searchParams]);
 
-  // Determine calendar mode and fetch appropriate data
+  // Effect to refresh calendar data when date changes (for manual date selection)
   useEffect(() => {
-    if (isClient && isAuthenticated && selectedDate) {
-      fetchCalendarData();
+    if (isClient && isAuthenticated && selectedDate && calendarData) {
+      console.log('🔄 MealCalendar: Date changed, refreshing calendar data...');
+      fetchCalendarData().catch(err => {
+        console.error('❌ MealCalendar: Error refreshing calendar data:', err);
+      });
     }
-  }, [isClient, isAuthenticated, selectedDate]);
+  }, [selectedDate]);
 
   // Calculate calendar mode: SUBSCRIPTION (has active subscription) or PREVIEW (planned meals only)
   const calendarMode = calendarData ? 'SUBSCRIPTION' : 'PREVIEW';
 
   const fetchCalendarData = async () => {
     try {
-      setLoading(true);
-      setError(null);
-
       console.log('📅 MealCalendarPage: Fetching calendar data...');
       
       const response = await mealCalendarApi.getMealCalendar();
@@ -183,16 +212,17 @@ const MealCalendarPage = () => {
       console.log('✅ MealCalendarPage: Calendar data received:', response);
       setCalendarData(response.data);
       
+      return response.data; // Return data for consolidated function
+      
     } catch (err) {
       // Only log error if it's not a 404 (which is expected for non-subscribers)
       if (err.response?.status !== 404) {
         console.error('❌ MealCalendarPage: Error fetching calendar:', err);
-        setError(err.response?.data?.message || 'Failed to load meal calendar');
+        throw err; // Re-throw for consolidated error handling
       } else {
         console.log('📅 No active subscription found, using preview mode');
+        return null; // Return null for preview mode
       }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -225,9 +255,12 @@ const MealCalendarPage = () => {
         });
       }
       
+      return response.data; // Return data for consolidated function
+      
     } catch (err) {
       console.error('❌ MealCalendarPage: Error fetching user meal plans:', err);
       setIsSubscribed(false);
+      throw err; // Re-throw for consolidated error handling
     }
   };
 
@@ -240,8 +273,12 @@ const MealCalendarPage = () => {
       console.log('✅ MealCalendarPage: Subscription status received:', response);
       setSubscriptionStatus(response.data);
       
+      return response.data; // Return data for consolidated function
+      
     } catch (err) {
       console.error('❌ MealCalendarPage: Error checking subscription status:', err);
+      // Don't throw here as subscription status is optional
+      return null;
     }
   };
 
@@ -1071,7 +1108,10 @@ const MealCalendarPage = () => {
                 </button>
                 
                 <button
-                  onClick={fetchCalendarData}
+                  onClick={() => {
+                    console.log('🔄 Manual refresh triggered');
+                    initializeCalendarData();
+                  }}
                   className="w-full flex items-center space-x-3 p-3 text-left bg-blue-50 hover:bg-blue-100 rounded-lg transition-all duration-200 group touch-manipulation"
                 >
                   <svg className="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -96,7 +96,7 @@ const FoodItemCard = ({
 
   return (
     <div 
-      className="group relative bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border border-gray-100 h-full flex flex-col cursor-pointer"
+      className="group relative bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-[1.02] overflow-hidden border border-gray-200 h-full flex flex-col cursor-pointer"
       onClick={handleCardClick}
     >
       {/* Popular Badge */}
@@ -162,92 +162,81 @@ const FoodItemCard = ({
         </div>
       )}
       
-      {/* Food Image - Reduced height for narrower cards */}
-      <div className="relative h-32 sm:h-36 overflow-hidden">
+      {/* Food Image - Modern responsive design */}
+      <div className="relative h-40 sm:h-44 md:h-48 overflow-hidden rounded-t-2xl">
         <img
           src={item.image}
           alt={item.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           onError={(e) => {
             e.target.src = '/images/grub-gate-default-img.jpg';
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       </div>
       
-      {/* Food Info - Enhanced with more details */}
-      <div className="p-2 sm:p-3 flex-1 flex flex-col">
-        <div className="mb-2">
-          <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-1 group-hover:text-red-600 transition-colors duration-300 line-clamp-1">
+      {/* Food Info - Clean and modern */}
+      <div className="p-3 sm:p-4 flex-1 flex flex-col">
+        <div className="mb-3">
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2 group-hover:text-red-600 transition-colors duration-300 line-clamp-2 leading-tight">
             {item.name}
           </h3>
-          <div className="flex items-center justify-between text-xs text-gray-500">
-            <span className="font-medium capitalize truncate">{item.category}</span>
+          <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+            <span className="font-medium capitalize truncate bg-gray-100 px-2 py-1 rounded-full">{item.category}</span>
             {item.cuisine && (
-              <span className="font-medium capitalize truncate ml-2">• {item.cuisine}</span>
+              <span className="font-medium capitalize truncate bg-blue-100 text-blue-700 px-2 py-1 rounded-full">{item.cuisine}</span>
             )}
           </div>
           {item.totalOrders > 0 && (
-            <div className="flex items-center text-xs text-gray-500 mt-1">
-              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex items-center text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded-lg">
+              <svg className="w-3 h-3 mr-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
-              <span>{item.totalOrders} orders</span>
-              {item.isPopular && (
-                <span className="ml-2 px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-xs font-medium">
-                  Popular
-                </span>
-              )}
+              <span className="font-medium">{item.totalOrders} orders</span>
             </div>
           )}
         </div>
         
         {/* Rating, Reviews, and Price */}
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-3 bg-gradient-to-r from-gray-50 to-gray-100 p-2 rounded-lg">
           <div className="flex items-center gap-1">
             <div className="flex">
               {renderStars(item.rating)}
             </div>
-            <span className="text-xs font-semibold text-gray-700">
+            <span className="text-xs font-bold text-gray-800">
               {item.rating}
             </span>
             {item.reviewCount > 0 && (
               <span className="text-xs text-gray-500">({item.reviewCount})</span>
             )}
           </div>
-          <span className="text-sm sm:text-base font-bold text-red-600">
-            ${item.price}
-          </span>
+          <div className="bg-red-500 text-white px-3 py-1 rounded-full">
+            <span className="text-sm sm:text-base font-bold">
+              ${item.price}
+            </span>
+          </div>
         </div>
 
-        {/* Prep Time, Servings, and Spice Level */}
-        <div className="flex items-center justify-between mb-2 text-xs text-gray-600">
-          <div className="flex items-center space-x-2">
-            {item.prepTime && (
-              <span className="flex items-center">
-                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {item.prepTime}min
-              </span>
-            )}
+        {/* Servings and Spice Level */}
+        {(item.servings || item.spiceLevel > 0) && (
+          <div className="flex items-center justify-between mb-3">
             {item.servings && (
-              <span className="flex items-center">
+              <div className="flex items-center bg-blue-50 text-blue-700 px-2 py-1 rounded-full text-xs font-medium">
                 <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
-                {item.servings}
-              </span>
+                Serves {item.servings}
+              </div>
+            )}
+            {item.spiceLevel > 0 && (
+              <div className="flex items-center bg-red-50 px-2 py-1 rounded-full">
+                {Array.from({ length: item.spiceLevel }, (_, i) => (
+                  <span key={i} className="text-red-500 text-sm">🌶️</span>
+                ))}
+              </div>
             )}
           </div>
-          {item.spiceLevel > 0 && (
-            <div className="flex items-center">
-              {Array.from({ length: item.spiceLevel }, (_, i) => (
-                <span key={i} className="text-red-500">🌶️</span>
-              ))}
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Calories and Nutrition Info */}
         {item.nutritionInfo?.calories && (
@@ -270,98 +259,28 @@ const FoodItemCard = ({
           </div>
         )}
 
-        {/* Description - Show both short and long if available */}
-        <div className="mb-2">
-          <p className="text-gray-600 text-xs mb-1 line-clamp-2 leading-relaxed">
-            {item.description}
-          </p>
-          {item.longDescription && item.longDescription !== item.description && (
-            <p className="text-gray-500 text-xs line-clamp-2 leading-relaxed italic">
-              {item.longDescription}
-            </p>
-          )}
-        </div>
         
-        {/* Dietary Preferences and Allergens - Compact */}
-        <div className="mb-2">
-          {/* Dietary Preferences */}
-          {(item.dietaryPreferences || item.preferences || []).length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-1">
-              {(item.dietaryPreferences || item.preferences || []).slice(0, 3).map((preference, index) => (
+        {/* Dietary Preferences - Simplified */}
+        {(item.dietaryPreferences || item.preferences || []).length > 0 && (
+          <div className="mb-3">
+            <div className="flex flex-wrap gap-1">
+              {(item.dietaryPreferences || item.preferences || []).slice(0, 2).map((preference, index) => (
                 <span
                   key={index}
-                  className="px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded capitalize"
+                  className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium capitalize"
                 >
                   {preference.replace('-', ' ')}
                 </span>
               ))}
-              {(item.dietaryPreferences || item.preferences || []).length > 3 && (
-                <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">
-                  +{(item.dietaryPreferences || item.preferences || []).length - 3}
+              {(item.dietaryPreferences || item.preferences || []).length > 2 && (
+                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
+                  +{(item.dietaryPreferences || item.preferences || []).length - 2} more
                 </span>
               )}
             </div>
-          )}
-          
-          {/* Allergens Warning */}
-          {item.allergens && item.allergens.length > 0 && (
-            <div className="flex items-center text-xs text-blue-600">
-              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="truncate">
-                Contains: {item.allergens.slice(0, 2).join(', ')}
-                {item.allergens.length > 2 && ` +${item.allergens.length - 2}`}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Ingredients - Show key ingredients */}
-        {item.ingredients && item.ingredients.length > 0 && (
-          <div className="mb-2">
-            <div className="flex items-start text-xs text-gray-600">
-              <svg className="w-3 h-3 mr-1 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <div className="flex-1">
-                <span className="font-medium">Ingredients: </span>
-                <span className="line-clamp-2">
-                  {item.ingredients.slice(0, 6).join(', ')}
-                  {item.ingredients.length > 6 && ` +${item.ingredients.length - 6} more`}
-                </span>
-              </div>
-            </div>
           </div>
         )}
 
-        {/* Detailed Nutrition Info - Expanded */}
-        {item.nutritionInfo && (Object.keys(item.nutritionInfo).length > 1 || item.nutritionInfo.calories) && (
-          <div className="mb-2">
-            <div className="bg-gray-50 rounded-lg p-2">
-              <div className="flex items-center mb-1">
-                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                <span className="text-xs font-medium text-gray-700">Nutrition Facts</span>
-              </div>
-              <div className="grid grid-cols-2 gap-1 text-xs text-gray-600">
-                {item.nutritionInfo.calories && (
-                  <div>Calories: <span className="font-medium">{item.nutritionInfo.calories}</span></div>
-                )}
-                {item.nutritionInfo.protein && (
-                  <div>Protein: <span className="font-medium">{item.nutritionInfo.protein}</span></div>
-                )}
-                {item.nutritionInfo.carbs && (
-                  <div>Carbs: <span className="font-medium">{item.nutritionInfo.carbs}</span></div>
-                )}
-                {item.nutritionInfo.fat && (
-                  <div>Fat: <span className="font-medium">{item.nutritionInfo.fat}</span></div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Availability Status */}
         {item.status && item.status !== 'available' && (

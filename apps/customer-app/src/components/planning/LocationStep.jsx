@@ -15,7 +15,7 @@ const LocationStep = ({ onNext }) => {
   const { openLoginModal, openSignupModal } = useModal();
   const { updatePostalCode, updatePreferences } = usePlanning();
   const { isAuthenticated } = useAuth();
-  const { showSuccess, showError } = useToast();
+  const { showSuccess, showError, showInfo } = useToast();
   const [postalCode, setPostalCode] = useState('');
   const [isSearching, setIsSearching] = useState(false);
 
@@ -32,7 +32,7 @@ const LocationStep = ({ onNext }) => {
         
         if (result.success) {
           if (result.data.length === 0) {
-            showError(
+            showInfo(
               'No Restaurants Found',
               `Sorry, we don't have any restaurants available in ${postalCode.toUpperCase()} yet. Please try a different postal code.`
             );
