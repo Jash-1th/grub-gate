@@ -55,11 +55,51 @@ const MealCalendarPage = () => {
     getWeekTotalItems(0) > 0 || getWeekTotalItems(1) > 0
   );
 
+  // Check if meal data has stored dates (indicates full database sync)
+  const hasMealDatesLoaded = () => {
+    if (!hasPlannedMeals) return false;
+    
+    // Check if any meal in week 0 has a stored date
+    const weekPlan = getWeekPlan(0);
+    if (!weekPlan) return false;
+    
+    let hasMealsWithoutDates = false;
+    let hasMealsWithDates = false;
+    
+    for (const [day, dayMeals] of Object.entries(weekPlan)) {
+      if (dayMeals && (dayMeals.lunch?.length > 0 || dayMeals.dinner?.length > 0)) {
+        if (dayMeals.date) {
+          hasMealsWithDates = true;
+          console.log(`✅ hasMealDatesLoaded: ${day} has stored date: ${dayMeals.date}`);
+        } else {
+          hasMealsWithoutDates = true;
+          console.log(`🔍 hasMealDatesLoaded: ${day} has meals but no date`);
+        }
+      }
+    }
+    
+    // If we have some meals with dates, consider it loaded (mixed state is ok)
+    // If no meals have dates after database sync, fall back to calculated dates
+    if (hasMealsWithDates) {
+      console.log('✅ hasMealDatesLoaded: Some meals have dates - using stored dates');
+      return true;
+    } else if (hasLoadedFromDatabase && !hasMealsWithDates) {
+      console.log('⚠️ hasMealDatesLoaded: Database sync complete but no stored dates - using calculated dates');
+      return true; // Allow fallback to calculated dates
+    }
+    
+    console.log('⏳ hasMealDatesLoaded: Still waiting for database sync...');
+    return false;
+  };
+
   // Check if meal plan data is still loading
   const isMealPlanLoading = isLoadingFromDatabase && !hasLoadedFromDatabase;
 
   // Calculate calendar mode: SUBSCRIPTION (has active subscription) or PREVIEW (planned meals only)
   const calendarMode = calendarData ? 'SUBSCRIPTION' : 'PREVIEW';
+  
+  // Check if meal dates are still loading (for preview mode) - only if database hasn't loaded yet
+  const isMealDatesLoading = calendarMode === 'PREVIEW' && hasPlannedMeals && !hasLoadedFromDatabase;
 
   // Redirect users without planned meals and no active subscription (but wait for meal plan to load)
   useEffect(() => {
@@ -213,10 +253,12 @@ const MealCalendarPage = () => {
       console.log('🔄 MealCalendar: isLoadingFromDatabase:', isLoadingFromDatabase);
       console.log('🔄 MealCalendar: hasLoadedFromDatabase:', hasLoadedFromDatabase);
       console.log('🔄 MealCalendar: Total items now:', getWeekTotalItems(0) + getWeekTotalItems(1));
+      
+      console.log('✅ MealCalendar: Database sync complete, forcing re-render...');
       // Force a re-render by updating a state that triggers preview data regeneration
       setSelectedDate(prev => prev); // This triggers a re-render without changing the actual date
     }
-  }, [isClient, isAuthenticated, loading, calendarMode, hasPlannedMeals, hasLoadedFromDatabase, isLoadingFromDatabase]);
+  }, [isClient, isAuthenticated, loading, calendarMode, hasPlannedMeals, hasLoadedFromDatabase, isLoadingFromDatabase, mealPlan]);
 
   // Note: URL parameter handling is now done in initializeCalendarData() to fix timing issues
 
@@ -494,6 +536,12 @@ const MealCalendarPage = () => {
       return [];
     }
     
+    // Wait for database sync to complete
+    if (!hasLoadedFromDatabase) {
+      console.log('🚫 generatePreviewMeals: Waiting for database sync to complete...');
+      return [];
+    }
+    
     console.log('🔄 generatePreviewMeals: Starting generation...');
     console.log('🔄 generatePreviewMeals: Week 0 total items:', getWeekTotalItems(0));
     console.log('🔄 generatePreviewMeals: Week 1 total items:', getWeekTotalItems(1));
@@ -525,9 +573,10 @@ const MealCalendarPage = () => {
           mealDate = new Date(dayMeals.date + 'T00:00:00.000Z'); // Ensure UTC
           console.log(`📅 Using stored date for ${day} (week ${weekIndex}):`, dayMeals.date, '→', mealDate.toDateString());
         } else {
-          // Use consistent calculation based on next Sunday
+          // Use consistent calculation based on next Sunday (same logic as stored dates)
           console.log(`⚠️ No stored date for ${day} (week ${weekIndex}), using consistent Sunday-based calculation`);
           
+          // Calculate next Sunday from today (same logic that would be used for storing dates)
           const today = new Date();
           const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
           
@@ -536,7 +585,7 @@ const MealCalendarPage = () => {
           const nextSunday = new Date(today);
           nextSunday.setDate(today.getDate() + daysUntilSunday);
           
-          // Calculate the week start (Sunday) for this week index
+          // Calculate the week start for this week index
           const weekStartDate = new Date(nextSunday);
           weekStartDate.setDate(nextSunday.getDate() + (weekIndex * 7));
           
@@ -545,7 +594,7 @@ const MealCalendarPage = () => {
           mealDate = new Date(weekStartDate);
           mealDate.setDate(weekStartDate.getDate() + dayIndex);
           
-          console.log(`📅 Calculated consistent date for ${day} (week ${weekIndex}):`, mealDate.toDateString());
+          console.log(`📅 Calculated date for ${day} (week ${weekIndex}) using next Sunday logic:`, mealDate.toDateString());
         }
         
         // Generate lunch and dinner meals
@@ -619,11 +668,17 @@ const MealCalendarPage = () => {
     );
   }
 
-  // Loading state - also wait for meal plan data to load
-  if (loading || isMealPlanLoading) {
-    const loadingText = loading ? "Loading your meal calendar..." : "Loading meal plan data...";
+  // Loading state - also wait for meal plan data and meal dates to load
+  if (loading || isMealPlanLoading || isMealDatesLoading) {
+    let loadingText = "Loading your meal calendar...";
+    if (isMealDatesLoading) {
+      loadingText = "Loading meal dates...";
+    } else if (isMealPlanLoading) {
+      loadingText = "Loading meal plan data...";
+    }
+    
     console.log('🔄 MealCalendar: Showing loading state -', loadingText);
-    console.log('🔄 MealCalendar: loading:', loading, 'isMealPlanLoading:', isMealPlanLoading);
+    console.log('🔄 MealCalendar: loading:', loading, 'isMealPlanLoading:', isMealPlanLoading, 'isMealDatesLoading:', isMealDatesLoading);
     console.log('🔄 MealCalendar: isLoadingFromDatabase:', isLoadingFromDatabase, 'hasLoadedFromDatabase:', hasLoadedFromDatabase);
     
     return (
