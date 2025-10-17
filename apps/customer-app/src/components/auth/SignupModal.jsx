@@ -17,6 +17,7 @@ const SignupModal = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phoneNumber: '',
     password: '',
     confirmPassword: ''
   });
@@ -118,6 +119,7 @@ const SignupModal = () => {
       setTouchedFields({
         name: true,
         email: true,
+        phoneNumber: true,
         password: true,
         confirmPassword: true
       });
@@ -143,6 +145,7 @@ const SignupModal = () => {
       firstName: firstName,
       lastName: lastName,
       email: formData.email,
+      phoneNumber: formData.phoneNumber,
       password: formData.password,
       role: 'customer' // Default role for customer app
     };
@@ -156,6 +159,7 @@ const SignupModal = () => {
         setFormData({
           name: '',
           email: '',
+          phoneNumber: '',
           password: '',
           confirmPassword: ''
         });
@@ -227,6 +231,7 @@ const SignupModal = () => {
     setFormData({
       name: '',
       email: '',
+      phoneNumber: '',
       password: '',
       confirmPassword: ''
     });
@@ -444,6 +449,38 @@ const SignupModal = () => {
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                     </svg>
                     {formErrors.email}
+                  </p>
+                )}
+              </div>
+
+              {/* Phone Number Field */}
+              <div>
+                <label htmlFor="phoneNumber" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Phone Number
+                </label>
+                <div className="relative">
+                  <input
+                    type="tel"
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleInputChange}
+                    onBlur={handleFieldBlur}
+                    placeholder="Enter your phone number (e.g., +1-234-567-8900)"
+                    className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
+                      getFieldStyling('phoneNumber')
+                    }`}
+                    required
+                    disabled={isLoading || isLocalLoading}
+                  />
+                  {getValidationIcon('phoneNumber')}
+                </div>
+                {formErrors.phoneNumber && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {formErrors.phoneNumber}
                   </p>
                 )}
               </div>

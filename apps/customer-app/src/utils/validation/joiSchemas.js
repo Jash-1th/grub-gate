@@ -121,6 +121,16 @@ export const signupModalSchema = Joi.object({
       'any.required': 'Email address is required'
     }),
     
+  phoneNumber: Joi.string()
+    .trim()
+    .pattern(VALIDATION_PATTERNS.phoneNumber)
+    .required()
+    .messages({
+      'string.empty': 'Phone number is required',
+      'string.pattern.base': 'Please enter a valid phone number (e.g., +1-234-567-8900)',
+      'any.required': 'Phone number is required'
+    }),
+    
   password: Joi.string()
     .min(6)
     .required()
