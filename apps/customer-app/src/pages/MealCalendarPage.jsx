@@ -58,6 +58,9 @@ const MealCalendarPage = () => {
   // Check if meal plan data is still loading
   const isMealPlanLoading = isLoadingFromDatabase && !hasLoadedFromDatabase;
 
+  // Calculate calendar mode: SUBSCRIPTION (has active subscription) or PREVIEW (planned meals only)
+  const calendarMode = calendarData ? 'SUBSCRIPTION' : 'PREVIEW';
+
   // Redirect users without planned meals and no active subscription (but wait for meal plan to load)
   useEffect(() => {
     if (isClient && isAuthenticated && !loading && !isMealPlanLoading && !calendarData && !hasPlannedMeals) {
@@ -226,9 +229,6 @@ const MealCalendarPage = () => {
       });
     }
   }, [selectedDate]);
-
-  // Calculate calendar mode: SUBSCRIPTION (has active subscription) or PREVIEW (planned meals only)
-  const calendarMode = calendarData ? 'SUBSCRIPTION' : 'PREVIEW';
 
   // Fetch calendar data from API
   const fetchCalendarData = async () => {
