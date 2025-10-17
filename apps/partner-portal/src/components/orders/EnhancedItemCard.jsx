@@ -67,45 +67,49 @@ const EnhancedItemCard = ({ item, index }) => {
   };
 
   return (
-    <div className="border border-gray-200 rounded-lg p-3 bg-white hover:shadow-sm transition-shadow">
+    <div className="border border-gray-200 rounded-2xl p-4 bg-white hover:shadow-md transition-all duration-200 hover:border-gray-300">
       {/* Item Header */}
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex items-start justify-between mb-4">
         <div className="flex-1 min-w-0">
-          <h4 className="font-semibold text-gray-900 text-sm truncate">{item.name}</h4>
+          <h4 className="font-bold text-gray-900 text-lg mb-1">{item.name}</h4>
           {item.description && (
-            <p className="text-xs text-gray-600 mt-1 line-clamp-2">{item.description}</p>
+            <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">{item.description}</p>
           )}
         </div>
-        <div className="text-right ml-3 flex-shrink-0">
-          <div className="font-bold text-grub-red text-sm">${item.price?.toFixed(2)}</div>
-          <div className="text-xs text-gray-500">× {item.quantity}</div>
-          <div className="font-bold text-gray-900 text-sm mt-1">
+        <div className="text-right ml-4 flex-shrink-0">
+          <div className="bg-grub-red text-white px-3 py-1 rounded-full text-sm font-bold">
+            ${item.price?.toFixed(2)}
+          </div>
+          <div className="text-sm text-gray-500 mt-1">× {item.quantity}</div>
+          <div className="font-bold text-gray-900 text-lg mt-2 bg-gray-100 px-3 py-1 rounded-full">
             ${((item.price || 0) * (item.quantity || 1)).toFixed(2)}
           </div>
         </div>
       </div>
 
       {/* Quick Info Grid */}
-      <div className="grid grid-cols-2 gap-3 mb-3">
+      <div className="grid grid-cols-2 gap-4 mb-4">
         {/* Preparation Time */}
-        <div className="flex items-center">
-          <FontAwesomeIcon icon={faClock} className="h-3 w-3 text-blue-500 mr-1" />
-          <span className="text-xs text-gray-600">
-            {item.prepTime || 15} min prep
-          </span>
+        <div className="bg-blue-50 rounded-xl p-3 flex items-center">
+          <FontAwesomeIcon icon={faClock} className="h-4 w-4 text-blue-600 mr-2" />
+          <div>
+            <div className="text-xs text-blue-600 font-medium uppercase tracking-wide">Prep Time</div>
+            <div className="text-sm font-bold text-gray-900">{item.prepTime || 15} min</div>
+          </div>
         </div>
         
         {/* Category */}
-        <div className="flex items-center">
-          <FontAwesomeIcon icon={faUtensils} className="h-3 w-3 text-purple-500 mr-1" />
-          <span className="text-xs text-gray-600">
-            {item.category || 'Main Course'}
-          </span>
+        <div className="bg-purple-50 rounded-xl p-3 flex items-center">
+          <FontAwesomeIcon icon={faUtensils} className="h-4 w-4 text-purple-600 mr-2" />
+          <div>
+            <div className="text-xs text-purple-600 font-medium uppercase tracking-wide">Category</div>
+            <div className="text-sm font-bold text-gray-900">{item.category || 'Main Course'}</div>
+          </div>
         </div>
         
         {/* Spice Level */}
         {item.spiceLevel && (
-          <div className="col-span-2">
+          <div className="col-span-2 bg-red-50 rounded-xl p-3">
             {renderSpiceLevel(item.spiceLevel)}
           </div>
         )}
@@ -138,10 +142,17 @@ const EnhancedItemCard = ({ item, index }) => {
 
       {/* Special Instructions - Highlighted */}
       {item.specialInstructions && (
-        <div className="mb-3 pt-2 border-t border-gray-100">
-          <span className="font-medium text-orange-700 text-xs">📝 Special Instructions:</span>
-          <div className="text-xs text-gray-800 mt-1 bg-yellow-50 border-l-3 border-yellow-400 p-2 rounded">
-            <span className="font-medium">{item.specialInstructions}</span>
+        <div className="mb-4">
+          <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <div className="bg-orange-100 rounded-full p-2 flex-shrink-0">
+                <span className="text-orange-600 text-lg">📝</span>
+              </div>
+              <div className="flex-1">
+                <h5 className="font-bold text-orange-800 text-sm mb-2">Special Instructions</h5>
+                <p className="text-gray-800 text-sm leading-relaxed font-medium">{item.specialInstructions}</p>
+              </div>
+            </div>
           </div>
         </div>
       )}

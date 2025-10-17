@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import '../styles/dashboard-loading.css';
 import { 
   faArrowTrendUp, 
   faShoppingBag, 
@@ -170,22 +171,109 @@ const DashboardHome = () => {
       }))
     : []; // Show empty state when no data available
 
-  // SSR Loading State
-  if (!isClient) {
-    return (
-      <div className="space-y-4 lg:space-y-6">
-        <div className="bg-gradient-to-r from-grub-red to-grub-red-light rounded-lg p-4 lg:p-6 text-white">
-          <h1 className="text-xl lg:text-2xl font-bold mb-2">Loading Dashboard...</h1>
+  // Beautiful Loading State Component
+  const LoadingSkeleton = () => (
+    <div className="space-y-4 lg:space-y-6 animate-pulse">
+      {/* Hero Section Skeleton */}
+      <div className="bg-gradient-to-r from-grub-red to-red-600 rounded-2xl p-6 lg:p-8 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent animate-shimmer"></div>
+        <div className="relative z-10">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <div className="h-8 bg-white/20 rounded-lg w-64 mb-2"></div>
+              <div className="h-4 bg-white/15 rounded w-48"></div>
+            </div>
+            <div className="h-10 w-10 bg-white/20 rounded-lg"></div>
+          </div>
+          <div className="h-4 bg-white/15 rounded w-80 mb-3"></div>
+          <div className="h-12 bg-white/10 rounded-lg w-full"></div>
         </div>
       </div>
-    );
+
+      {/* Stats Grid Skeleton */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-50 to-transparent animate-shimmer"></div>
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="h-4 bg-gray-200 rounded w-24"></div>
+                <div className="h-6 bg-gray-200 rounded w-16"></div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="h-8 bg-gray-200 rounded w-20"></div>
+                <div className="h-10 w-10 bg-gray-200 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Cards Grid Skeleton */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+        {Array.from({ length: 2 }).map((_, index) => (
+          <div key={index} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-50 to-transparent animate-shimmer"></div>
+            <div className="relative z-10">
+              <div className="flex justify-between items-center mb-6">
+                <div className="h-6 bg-gray-200 rounded w-32"></div>
+                <div className="h-4 bg-gray-200 rounded w-16"></div>
+              </div>
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, itemIndex) => (
+                  <div key={itemIndex} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                    <div className="flex items-center space-x-3">
+                      <div className="h-10 w-10 bg-gray-200 rounded-full"></div>
+                      <div>
+                        <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-16"></div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="h-4 bg-gray-200 rounded w-16 mb-2"></div>
+                      <div className="h-3 bg-gray-200 rounded w-12"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Quick Actions Skeleton */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-50 to-transparent animate-shimmer"></div>
+        <div className="relative z-10">
+          <div className="h-6 bg-gray-200 rounded w-32 mb-6"></div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="p-4 border border-gray-200 rounded-xl">
+                <div className="flex items-center space-x-3">
+                  <div className="h-10 w-10 bg-gray-200 rounded-lg"></div>
+                  <div>
+                    <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-20"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // SSR Loading State
+  if (!isClient || loading) {
+    return <LoadingSkeleton />;
   }
 
   return (
     <div className="space-y-4 lg:space-y-6">
       {/* Notification */}
       {notification && (
-        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 ${
+        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 animate-slideInLeft ${
           notification.type === 'success' 
             ? 'bg-green-500 text-white' 
             : 'bg-red-500 text-white'
@@ -194,7 +282,7 @@ const DashboardHome = () => {
         </div>
       )}
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-grub-red to-grub-red-light rounded-lg p-4 lg:p-6 text-white">
+      <div className="bg-gradient-to-r from-grub-red to-red-600 rounded-2xl p-6 lg:p-8 text-white animate-fadeInUp shadow-lg">
         <div className="flex justify-between items-start mb-2">
           <h1 className="text-xl lg:text-2xl font-bold">
             {loading ? (
@@ -252,8 +340,9 @@ const DashboardHome = () => {
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           const isPositive = stat.change > 0;
+          const animationDelay = `animate-delay-${(index + 1) * 100}`;
           return (
-            <Card key={index} className="hover:shadow-md transition-shadow">
+            <Card key={index} className={`hover:shadow-lg transition-all duration-300 hover:scale-105 animate-scaleIn ${animationDelay} shadow-sm border-0 bg-white`}>
               <CardContent className="p-4 lg:p-6">
                 <div className="flex flex-col space-y-3">
                   {/* Header Row */}
@@ -292,10 +381,10 @@ const DashboardHome = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         {/* Recent Orders */}
-        <Card>
+        <Card className="animate-fadeInUp animate-delay-200 shadow-sm border-0 bg-white hover:shadow-lg transition-all duration-300">
           <CardHeader className="pb-3 lg:pb-4">
             <div className="flex justify-between items-center">
-              <CardTitle className="text-lg lg:text-xl">Recent Orders</CardTitle>
+              <CardTitle className="text-lg lg:text-xl font-bold text-gray-900">Recent Orders</CardTitle>
               <button 
                 onClick={() => navigate('/dashboard/orders')}
                 className="text-sm text-grub-red hover:text-grub-red-light font-medium transition-colors"
@@ -378,9 +467,9 @@ const DashboardHome = () => {
         </Card>
 
         {/* Top Menu Items */}
-        <Card>
+        <Card className="animate-fadeInUp animate-delay-300 shadow-sm border-0 bg-white hover:shadow-lg transition-all duration-300">
           <CardHeader className="pb-3 lg:pb-4">
-            <CardTitle className="text-lg lg:text-xl">Top Selling Items</CardTitle>
+            <CardTitle className="text-lg lg:text-xl font-bold text-gray-900">Top Selling Items</CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-3 lg:space-y-4">
@@ -436,9 +525,9 @@ const DashboardHome = () => {
       </div>
 
       {/* Quick Actions */}
-      <Card>
+      <Card className="animate-fadeInUp animate-delay-400 shadow-sm border-0 bg-white hover:shadow-lg transition-all duration-300">
         <CardHeader className="pb-3 lg:pb-4">
-          <CardTitle className="text-lg lg:text-xl">Quick Actions</CardTitle>
+          <CardTitle className="text-lg lg:text-xl font-bold text-gray-900">Quick Actions</CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-4">

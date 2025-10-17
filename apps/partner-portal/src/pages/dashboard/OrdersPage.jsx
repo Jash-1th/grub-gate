@@ -639,7 +639,7 @@ const OrdersPage = () => {
         )}
       </div>
 
-      {/* Order Details Modal */}
+      {/* Order Details Modal - Redesigned */}
       <Modal
         isOpen={showOrderModal}
         onClose={() => {
@@ -648,227 +648,286 @@ const OrdersPage = () => {
         }}
         title=""
         size="xl"
-        className="max-w-4xl"
+        className="max-w-5xl"
       >
         {selectedOrder && (
-          <div className="flex flex-col h-full">
-            {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-grub-red to-red-600 text-white rounded-lg p-2.5 sm:p-3 -mx-2 sm:-mx-4 -mt-2 sm:-mt-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-3">
-                  <div>
-                    <h2 className="text-base sm:text-lg font-bold">
-                      Order #{selectedOrder.orderNumber}
-                    </h2>
-                    <p className="text-red-100 text-xs">
-                      {selectedOrder.type === 'weekly-plan' ? 'Weekly Plan' : 'Single Order'} - 
-                      Delivery: {selectedOrder.deliveryTime?.estimated ? 
-                        new Date(selectedOrder.deliveryTime.estimated).toLocaleTimeString('en-US', {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        }) : 
-                        'TBD'
-                      }
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg sm:text-xl font-bold">${selectedOrder.total?.toFixed(2)}</div>
-                    <div className="text-red-100 text-xs">
-                      {selectedOrder.items?.length || 0} items
-                      {selectedOrder.mealType && (
-                        <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          selectedOrder.mealType === 'lunch' 
-                            ? 'bg-yellow-100 text-yellow-800' 
-                            : selectedOrder.mealType === 'dinner'
-                            ? 'bg-purple-100 text-purple-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {selectedOrder.mealType === 'lunch' ? '🍽️ Lunch' : 
-                           selectedOrder.mealType === 'dinner' ? '🍽️ Dinner' : 
-                           '🍽️ Order'}
-                        </span>
-                      )}
+          <div className="flex flex-col h-full bg-gray-50">
+            {/* Modern Header with Gradient */}
+            <div className="bg-gradient-to-br from-grub-red via-red-600 to-red-700 text-white p-6 -m-6 mb-6 rounded-t-2xl">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-full p-2">
+                      <FontAwesomeIcon icon={faBox} className="h-5 w-5" />
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2.5 sm:space-y-3">
-              {/* Status and Actions */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-2.5 sm:p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs sm:text-sm font-medium ${getStatusColor(selectedOrder.status)}`}>
-                    {getStatusIcon(selectedOrder.status)}
-                    <span className="ml-1 capitalize">{selectedOrder.status.replace('_', ' ')}</span>
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {selectedOrder.status === 'pending' && (
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        handleUpdateStatus(selectedOrder._id, 'confirmed');
-                        setShowOrderModal(false);
-                        setSelectedOrder(null);
-                      }}
-                      disabled={updateStatusLoading === selectedOrder._id}
-                      className="bg-green-600 hover:bg-green-700 text-white text-xs disabled:opacity-50"
-                    >
-                      {updateStatusLoading === selectedOrder._id ? (
-                        <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
-                      ) : (
-                        <FontAwesomeIcon icon={faCheckCircle} className="h-3 w-3 mr-1" />
-                      )}
-                      {updateStatusLoading === selectedOrder._id ? 'Confirming...' : 'Confirm'}
-                    </Button>
-                  )}
-                  {selectedOrder.status === 'confirmed' && (
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        handleUpdateStatus(selectedOrder._id, 'preparing');
-                        setShowOrderModal(false);
-                        setSelectedOrder(null);
-                      }}
-                      disabled={updateStatusLoading === selectedOrder._id}
-                      className="bg-orange-600 hover:bg-orange-700 text-white text-xs disabled:opacity-50"
-                    >
-                      {updateStatusLoading === selectedOrder._id ? (
-                        <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
-                      ) : (
-                        <FontAwesomeIcon icon={faClock} className="h-3 w-3 mr-1" />
-                      )}
-                      {updateStatusLoading === selectedOrder._id ? 'Starting...' : 'Start Prep'}
-                    </Button>
-                  )}
-                  {selectedOrder.status === 'preparing' && (
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        handleUpdateStatus(selectedOrder._id, 'ready');
-                        setShowOrderModal(false);
-                        setSelectedOrder(null);
-                      }}
-                      disabled={updateStatusLoading === selectedOrder._id}
-                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs disabled:opacity-50"
-                    >
-                      {updateStatusLoading === selectedOrder._id ? (
-                        <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
-                      ) : (
-                        <FontAwesomeIcon icon={faCheckCircle} className="h-3 w-3 mr-1" />
-                      )}
-                      Ready
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              {/* Customer & Items Combined */}
-              <div className="grid grid-cols-1 gap-2.5">
-                {/* Customer Information - Compact */}
-                <div className="bg-white border border-gray-200 rounded-lg p-2.5 sm:p-3">
-                  <div className="flex items-center mb-2">
-                    <div className="bg-blue-100 rounded-full p-1 mr-2">
-                      <FontAwesomeIcon icon={faUser} className="h-3 w-3 text-blue-600" />
+                    <div>
+                      <h2 className="text-2xl font-bold">
+                        Order #{selectedOrder.orderNumber}
+                      </h2>
+                      <p className="text-red-100 text-sm">
+                        {selectedOrder.type === 'weekly-plan' ? 'Weekly Plan Order' : 'Single Order'}
+                      </p>
                     </div>
-                    <h3 className="text-xs sm:text-sm font-semibold text-gray-900">Customer & Delivery</h3>
                   </div>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div className="space-y-1.5">
-                      <div className="font-medium text-gray-900 text-xs sm:text-sm">
-                        {selectedOrder.customerId?.firstName} {selectedOrder.customerId?.lastName}
-                      </div>
-                      <div className="flex items-center text-gray-600">
-                        <FontAwesomeIcon icon={faEnvelope} className="h-2.5 w-2.5 mr-1 text-blue-500" />
-                        <span className="text-xs break-all">{selectedOrder.customerId?.email}</span>
-                      </div>
-                      <div className="flex items-center text-gray-600">
-                        <FontAwesomeIcon icon={faPhone} className="h-2.5 w-2.5 mr-1 text-blue-500" />
-                        <span className="text-xs">{selectedOrder.customerId?.phone}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-start text-gray-600">
-                      <FontAwesomeIcon icon={faMapMarkerAlt} className="h-2.5 w-2.5 mr-1 mt-0.5 text-blue-500 flex-shrink-0" />
-                      <span className="text-xs break-words">
-                        {selectedOrder.deliveryAddress ? (
-                          `${selectedOrder.deliveryAddress.street}, ${selectedOrder.deliveryAddress.city}, ${selectedOrder.deliveryAddress.province} ${selectedOrder.deliveryAddress.postalCode}`
-                        ) : (
-                          'Address not available'
-                        )}
+                  <div className="flex flex-wrap items-center gap-3 mt-4">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
+                      <FontAwesomeIcon icon={faClock} className="h-4 w-4 mr-2" />
+                      <span className="text-sm font-medium">
+                        Delivery: {selectedOrder.deliveryTime?.estimated ? 
+                          new Date(selectedOrder.deliveryTime.estimated).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          }) : 
+                          'TBD'
+                        }
                       </span>
                     </div>
+                    
+                    {selectedOrder.mealType && (
+                      <div className="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
+                        <span className="text-sm font-medium">
+                          {selectedOrder.mealType === 'lunch' ? '🍽️ Lunch' : 
+                           selectedOrder.mealType === 'dinner' ? '🌙 Dinner' : 
+                           '🍽️ Meal'}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
-
-                {/* Order Items - Enhanced */}
-                <div className="bg-white border border-gray-200 rounded-lg p-2.5 sm:p-3">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center">
-                      <div className="bg-green-100 rounded-full p-1 mr-2">
-                        <FontAwesomeIcon icon={faBox} className="h-3 w-3 text-green-600" />
-                      </div>
-                      <h3 className="text-xs sm:text-sm font-semibold text-gray-900">Order Items</h3>
+                
+                <div className="text-right lg:text-center">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
+                    <div className="text-3xl font-bold mb-1">${selectedOrder.total?.toFixed(2)}</div>
+                    <div className="text-red-100 text-sm">
+                      {selectedOrder.items?.length || 0} items total
                     </div>
-                    <span className="bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded-full text-xs font-medium">
-                      {selectedOrder.items?.length || 0} items
-                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto space-y-6 px-6 pb-6">
+
+              {/* Status and Actions Card */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-3 rounded-full ${getStatusColor(selectedOrder.status).replace('text-', 'bg-').replace('800', '100')}`}>
+                        {getStatusIcon(selectedOrder.status)}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">Order Status</h3>
+                        <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${getStatusColor(selectedOrder.status)}`}>
+                          <span className="capitalize">{selectedOrder.status.replace('_', ' ')}</span>
+                        </span>
+                      </div>
+                    </div>
                   </div>
                   
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {selectedOrder.items?.map((item, index) => (
-                      <EnhancedItemCard 
-                        key={index} 
-                        item={item} 
-                        index={index}
-                      />
-                    ))}
+                  <div className="flex items-center gap-3">
+                    {selectedOrder.status === 'pending' && (
+                      <Button
+                        onClick={() => {
+                          handleUpdateStatus(selectedOrder._id, 'confirmed');
+                          setShowOrderModal(false);
+                          setSelectedOrder(null);
+                        }}
+                        disabled={updateStatusLoading === selectedOrder._id}
+                        className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+                      >
+                        {updateStatusLoading === selectedOrder._id ? (
+                          <>
+                            <FontAwesomeIcon icon={faSync} className="h-4 w-4 mr-2 animate-spin" />
+                            Confirming...
+                          </>
+                        ) : (
+                          <>
+                            <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4 mr-2" />
+                            Confirm Order
+                          </>
+                        )}
+                      </Button>
+                    )}
+                    {selectedOrder.status === 'confirmed' && (
+                      <Button
+                        onClick={() => {
+                          handleUpdateStatus(selectedOrder._id, 'preparing');
+                          setShowOrderModal(false);
+                          setSelectedOrder(null);
+                        }}
+                        disabled={updateStatusLoading === selectedOrder._id}
+                        className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+                      >
+                        {updateStatusLoading === selectedOrder._id ? (
+                          <>
+                            <FontAwesomeIcon icon={faSync} className="h-4 w-4 mr-2 animate-spin" />
+                            Starting...
+                          </>
+                        ) : (
+                          <>
+                            <FontAwesomeIcon icon={faClock} className="h-4 w-4 mr-2" />
+                            Start Preparation
+                          </>
+                        )}
+                      </Button>
+                    )}
+                    {selectedOrder.status === 'preparing' && (
+                      <Button
+                        onClick={() => {
+                          handleUpdateStatus(selectedOrder._id, 'ready');
+                          setShowOrderModal(false);
+                          setSelectedOrder(null);
+                        }}
+                        disabled={updateStatusLoading === selectedOrder._id}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+                      >
+                        {updateStatusLoading === selectedOrder._id ? (
+                          <>
+                            <FontAwesomeIcon icon={faSync} className="h-4 w-4 mr-2 animate-spin" />
+                            Updating...
+                          </>
+                        ) : (
+                          <>
+                            <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4 mr-2" />
+                            Mark as Ready
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Customer Information Card */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="bg-blue-100 rounded-full p-3">
+                    <FontAwesomeIcon icon={faUser} className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Customer Information</h3>
+                    <p className="text-sm text-gray-600">Delivery details and contact information</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Customer Name</label>
+                      <div className="mt-1 text-lg font-semibold text-gray-900">
+                        {selectedOrder.customerId?.firstName} {selectedOrder.customerId?.lastName}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Email Address</label>
+                      <div className="mt-1 flex items-center gap-2">
+                        <FontAwesomeIcon icon={faEnvelope} className="h-4 w-4 text-blue-500" />
+                        <span className="text-gray-900">{selectedOrder.customerId?.email}</span>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Phone Number</label>
+                      <div className="mt-1 flex items-center gap-2">
+                        <FontAwesomeIcon icon={faPhone} className="h-4 w-4 text-blue-500" />
+                        <span className="text-gray-900">{selectedOrder.customerId?.phone || 'Not provided'}</span>
+                      </div>
+                    </div>
                   </div>
                   
-                  {/* Order Summary */}
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-gray-900 text-sm">Order Total:</span>
-                      <span className="font-bold text-grub-red text-lg">${selectedOrder.total?.toFixed(2)}</span>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Delivery Address</label>
+                    <div className="mt-1 flex items-start gap-2">
+                      <FontAwesomeIcon icon={faMapMarkerAlt} className="h-4 w-4 text-blue-500 mt-1 flex-shrink-0" />
+                      <div className="text-gray-900 leading-relaxed">
+                        {selectedOrder.deliveryAddress ? (
+                          <>
+                            <div>{selectedOrder.deliveryAddress.street}</div>
+                            <div>{selectedOrder.deliveryAddress.city}, {selectedOrder.deliveryAddress.province}</div>
+                            <div className="font-medium">{selectedOrder.deliveryAddress.postalCode}</div>
+                          </>
+                        ) : (
+                          <span className="text-gray-500 italic">Address not available</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Special Instructions - Compact */}
-              {selectedOrder.specialInstructions && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 sm:p-3">
-                  <div className="flex items-start">
-                    <div className="bg-amber-100 rounded-full p-1 mr-2 flex-shrink-0">
-                      <FontAwesomeIcon icon={faCalendar} className="h-3 w-3 text-amber-600" />
+              {/* Order Items Card */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="bg-green-100 rounded-full p-3">
+                    <FontAwesomeIcon icon={faBox} className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900">Order Items</h3>
+                    <p className="text-sm text-gray-600">{selectedOrder.items?.length || 0} items in this order</p>
+                  </div>
+                  <div className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm font-medium">
+                    {selectedOrder.items?.length || 0} items
+                  </div>
+                </div>
+                
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {selectedOrder.items?.map((item, index) => (
+                    <EnhancedItemCard 
+                      key={index} 
+                      item={item} 
+                      index={index}
+                    />
+                  ))}
+                </div>
+                
+                {/* Order Summary */}
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-semibold text-gray-900">Order Total:</span>
+                      <span className="text-2xl font-bold text-grub-red">${selectedOrder.total?.toFixed(2)}</span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-xs sm:text-sm font-semibold text-gray-900 mb-1">Notes</h3>
-                      <p className="text-gray-700 text-xs break-words">{selectedOrder.specialInstructions}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Special Instructions */}
+              {selectedOrder.specialInstructions && (
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6">
+                  <div className="flex items-start gap-3">
+                    <div className="bg-amber-100 rounded-full p-3 flex-shrink-0">
+                      <FontAwesomeIcon icon={faExclamationCircle} className="h-5 w-5 text-amber-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Special Instructions</h3>
+                      <p className="text-gray-700 leading-relaxed">{selectedOrder.specialInstructions}</p>
                     </div>
                   </div>
                 </div>
               )}
-              </div>
             </div>
             
-            {/* Modal Footer - Outside scrollable area */}
-            <div className="border-t bg-white px-0 py-3 flex flex-col sm:flex-row sm:justify-end gap-2 mt-4 flex-shrink-0 mb-2 lg:mb-0">
+            {/* Modal Footer */}
+            <div className="border-t bg-white px-6 py-4 flex flex-col sm:flex-row sm:justify-end gap-3 mt-6 flex-shrink-0 -mx-6 -mb-6 rounded-b-2xl">
               <Button
                 variant="secondary"
                 onClick={() => {
                   setShowOrderModal(false);
                   setSelectedOrder(null);
                 }}
-                className="w-full sm:w-auto text-sm py-2.5"
+                className="w-full sm:w-auto px-6 py-3 rounded-xl font-medium"
               >
                 Close
               </Button>
               <Button
                 onClick={() => window.print()}
-                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white text-sm py-2.5"
+                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:scale-105"
               >
+                <FontAwesomeIcon icon={faBox} className="h-4 w-4 mr-2" />
                 Print Order
               </Button>
             </div>

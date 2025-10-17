@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import '../styles/settings-errors.css';
 import { 
   faSave, 
   faUpload, 
@@ -8,7 +9,9 @@ import {
   faClock, 
   faBell, 
   faCreditCard,
-  faExclamationTriangle
+  faExclamationTriangle,
+  faTimes,
+  faCheckCircle
 } from '@fortawesome/free-solid-svg-icons';
 import { Button, Input, Card, CardContent, CardHeader, CardTitle } from '@grub-gate/ui';
 import { useRestaurant } from '../../hooks/useRestaurant';
@@ -36,6 +39,8 @@ const SettingsPage = () => {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [errors, setErrors] = useState({});
+  const [errorSections, setErrorSections] = useState(new Set());
+  const [showErrorSummary, setShowErrorSummary] = useState(false);
   
   // Test function to trigger validation errors (for development)
   const testValidation = () => {
@@ -251,7 +256,7 @@ const SettingsPage = () => {
     loadSettings();
   }, [restaurant?.id]);
 
-  // Enhanced form validation using Joi schemas
+  // Enhanced form validation using Joi schemas with section detection
   const validateForm = () => {
     let schemaType = '';
     let validationData = {};
@@ -325,13 +330,54 @@ const SettingsPage = () => {
     
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      detectErrorSections(validationErrors);
+      setShowErrorSummary(true);
       // Scroll to top to show validation errors
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return false;
     }
     
     setErrors({});
+    setErrorSections(new Set());
+    setShowErrorSummary(false);
     return true;
+  };
+
+  // Detect which sections have errors and auto-open them
+  const detectErrorSections = (validationErrors) => {
+    const sectionsWithErrors = new Set();
+    
+    // Profile section errors
+    const profileFields = ['name', 'cuisine', 'description', 'phone', 'email', 'website', 'street', 'city', 'province', 'postalCode', 'country', 'address'];
+    if (profileFields.some(field => validationErrors[field])) {
+      sectionsWithErrors.add('profile');
+    }
+    
+    // Delivery section errors
+    const deliveryFields = ['deliveryRadius', 'deliveryFee', 'minOrderAmount', 'avgDeliveryTime'];
+    if (deliveryFields.some(field => validationErrors[field])) {
+      sectionsWithErrors.add('delivery');
+    }
+    
+    // Notifications section errors
+    const notificationFields = ['emailNotifications', 'smsNotifications', 'orderAlerts', 'customerMessages', 'systemUpdates'];
+    if (notificationFields.some(field => validationErrors[field])) {
+      sectionsWithErrors.add('notifications');
+    }
+    
+    // Billing section errors
+    const billingFields = ['businessName', 'paymentMethod', 'billingStreet', 'billingCity', 'billingProvince', 'billingPostalCode', 'billingCountry', 'bankName', 'accountType', 'routingNumber', 'accountNumber', 'businessNumber', 'gstHstNumber', 'qstNumber', 'billingEmail', 'billingPhone', 'contactPerson'];
+    if (billingFields.some(field => validationErrors[field])) {
+      sectionsWithErrors.add('billing');
+    }
+    
+    setErrorSections(sectionsWithErrors);
+    
+    // Auto-switch to first section with errors
+    if (sectionsWithErrors.size > 0) {
+      const firstErrorSection = Array.from(sectionsWithErrors)[0];
+      setActiveTab(firstErrorSection);
+    }
   };
 
   // Handle form input changes
@@ -581,22 +627,104 @@ const SettingsPage = () => {
         </p>
       </div>
 
+      {/* Error Summary */}
+      {showErrorSummary && Object.keys(errors).length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-6 animate-fadeInUp">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <FontAwesomeIcon icon={faExclamationTriangle} className="h-6 w-6 text-red-600" />
+            </div>
+            <div className="ml-3 flex-1">
+              <h3 className="text-lg font-semibold text-red-800 mb-2">
+                Please fix the following errors:
+              </h3>
+              <div className="space-y-2">
+                {Object.entries(errors).map(([field, message]) => (
+                  message && (
+                    <div key={field} className="flex items-start">
+                      <div className="flex-shrink-0 mt-1">
+                        <div className="h-2 w-2 bg-red-400 rounded-full"></div>
+                      </div>
+                      <p className="ml-3 text-sm text-red-700">
+                        <span className="font-medium capitalize">{field.replace(/([A-Z])/g, ' $1').trim()}:</span> {message}
+                      </p>
+                    </div>
+                  )
+                ))}
+              </div>
+              
+              {errorSections.size > 0 && (
+                <div className="mt-4 pt-4 border-t border-red-200">
+                  <p className="text-sm text-red-600 mb-3">
+                    <FontAwesomeIcon icon={faExclamationTriangle} className="h-4 w-4 mr-2" />
+                    Sections with errors:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {Array.from(errorSections).map((section) => (
+                      <button
+                        key={section}
+                        onClick={() => setActiveTab(section)}
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                          activeTab === section
+                            ? 'bg-red-600 text-white'
+                            : 'bg-red-100 text-red-700 hover:bg-red-200'
+                        }`}
+                      >
+                        {tabs.find(tab => tab.id === section)?.label || section}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => setShowErrorSummary(false)}
+              className="flex-shrink-0 ml-4 text-red-400 hover:text-red-600 transition-colors"
+            >
+              <FontAwesomeIcon icon={faTimes} className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
         {/* Mobile Tab Selector */}
         <div className="lg:hidden">
           <Card>
             <CardContent className="p-3">
-              <select
-                value={activeTab}
-                onChange={(e) => setActiveTab(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red"
-              >
-                {tabs.map((tab) => (
-                  <option key={tab.id} value={tab.id}>
-                    {tab.label}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={activeTab}
+                  onChange={(e) => setActiveTab(e.target.value)}
+                  className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red ${
+                    errorSections.has(activeTab) 
+                      ? 'border-red-300 bg-red-50 text-red-700' 
+                      : 'border-gray-300'
+                  }`}
+                >
+                  {tabs.map((tab) => {
+                    const hasErrors = errorSections.has(tab.id);
+                    return (
+                      <option key={tab.id} value={tab.id}>
+                        {hasErrors ? '⚠️ ' : ''}{tab.label}
+                      </option>
+                    );
+                  })}
+                </select>
+                {errorSections.has(activeTab) && (
+                  <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
+                    <FontAwesomeIcon icon={faExclamationTriangle} className="h-4 w-4 text-red-600" />
+                  </div>
+                )}
+              </div>
+              {errorSections.size > 0 && (
+                <div className="mt-3 p-2 bg-red-50 rounded-lg">
+                  <p className="text-xs text-red-600 font-medium">
+                    <FontAwesomeIcon icon={faExclamationTriangle} className="h-3 w-3 mr-1" />
+                    {errorSections.size} section{errorSections.size > 1 ? 's' : ''} with errors
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -608,18 +736,33 @@ const SettingsPage = () => {
               <nav className="space-y-1">
                 {tabs.map((tab) => {
                   const iconDef = tab.icon;
+                  const hasErrors = errorSections.has(tab.id);
                   return (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`w-full flex items-center px-4 py-3 text-sm font-medium text-left transition-colors ${
+                      className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-left transition-all duration-200 relative ${
                         activeTab === tab.id
-                          ? 'bg-grub-red text-white'
+                          ? hasErrors
+                            ? 'bg-red-600 text-white'
+                            : 'bg-grub-red text-white'
+                          : hasErrors
+                          ? 'text-red-700 bg-red-50 hover:bg-red-100 border-l-4 border-red-500'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      <FontAwesomeIcon icon={iconDef} className="h-5 w-5 mr-3" />
-                      {tab.label}
+                      <div className="flex items-center">
+                        <FontAwesomeIcon icon={iconDef} className="h-5 w-5 mr-3" />
+                        {tab.label}
+                      </div>
+                      {hasErrors && (
+                        <div className="flex items-center">
+                          <FontAwesomeIcon 
+                            icon={faExclamationTriangle} 
+                            className={`h-4 w-4 ${activeTab === tab.id ? 'text-white' : 'text-red-600'}`} 
+                          />
+                        </div>
+                      )}
                     </button>
                   );
                 })}
@@ -637,41 +780,87 @@ const SettingsPage = () => {
               </CardHeader>
               <CardContent className="space-y-4 sm:space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                  <div>
+                  <div className="relative">
                     <Input
                       label={t('settings.profile.name')}
                       value={formData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
+                      onBlur={() => validateField('name', formData.name)}
                       error={errors.name}
-                      className="text-sm sm:text-base"
+                      className={`text-sm sm:text-base transition-all duration-200 ${
+                        errors.name 
+                          ? 'input-error animate-shake' 
+                          : formData.name && !errors.name 
+                          ? 'input-success' 
+                          : ''
+                      }`}
                     />
+                    {errors.name && (
+                      <div className="error-message">
+                        {errors.name}
+                      </div>
+                    )}
+                    {formData.name && !errors.name && (
+                      <div className="absolute right-3 top-8">
+                        <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4 text-green-600" />
+                      </div>
+                    )}
                   </div>
-                  <div>
+                  <div className="relative">
                     <Input
                       label={t('settings.profile.cuisine')}
                       value={formData.cuisine}
                       onChange={(e) => handleInputChange('cuisine', e.target.value)}
+                      onBlur={() => validateField('cuisine', formData.cuisine)}
                       placeholder="e.g., French, Italian, American"
                       error={errors.cuisine}
-                      className="text-sm sm:text-base"
+                      className={`text-sm sm:text-base transition-all duration-200 ${
+                        errors.cuisine 
+                          ? 'input-error animate-shake' 
+                          : formData.cuisine && !errors.cuisine 
+                          ? 'input-success' 
+                          : ''
+                      }`}
                     />
+                    {errors.cuisine && (
+                      <div className="error-message">
+                        {errors.cuisine}
+                      </div>
+                    )}
+                    {formData.cuisine && !errors.cuisine && (
+                      <div className="absolute right-3 top-8">
+                        <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4 text-green-600" />
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div>
+                <div className="relative">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     {t('settings.profile.description')}
                   </label>
                   <textarea
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red ${
-                      errors.description ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-all duration-200 ${
+                      errors.description 
+                        ? 'input-error animate-shake' 
+                        : formData.description && !errors.description 
+                        ? 'input-success' 
+                        : 'border-gray-300'
                     }`}
                     rows={4}
                     value={formData.description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
+                    onBlur={() => validateField('description', formData.description)}
                     placeholder="Describe your restaurant..."
                   />
                   {errors.description && (
-                    <p className="mt-1 text-sm text-red-600">{errors.description}</p>
+                    <div className="error-message">
+                      {errors.description}
+                    </div>
+                  )}
+                  {formData.description && !errors.description && (
+                    <div className="absolute right-3 top-8">
+                      <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4 text-green-600" />
+                    </div>
                   )}
                 </div>
                 {/* Enhanced Address Form */}
@@ -1073,24 +1262,55 @@ const SettingsPage = () => {
             </Card>
           )}
 
-          <div className="flex justify-end pt-4">
-            <Button
-              onClick={handleSave}
-              disabled={loading}
-              className="w-full sm:w-auto min-w-[120px] bg-grub-red hover:bg-red-700 text-white text-sm sm:text-base py-2.5 sm:py-2"
-            >
-              {loading ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Saving...
+          <div className="flex flex-col sm:flex-row justify-between items-center pt-6 gap-4">
+            {/* Development Test Button */}
+            {process.env.NODE_ENV === 'development' && (
+              <Button
+                onClick={testValidation}
+                variant="outline"
+                className="w-full sm:w-auto border-orange-300 text-orange-700 hover:bg-orange-50"
+              >
+                <FontAwesomeIcon icon={faExclamationTriangle} className="h-4 w-4 mr-2" />
+                Test Validation Errors
+              </Button>
+            )}
+            
+            <div className="flex items-center gap-3">
+              {/* Error Count Badge */}
+              {Object.keys(errors).length > 0 && (
+                <div className="bg-red-100 text-red-800 px-3 py-1.5 rounded-full text-sm font-medium">
+                  <FontAwesomeIcon icon={faExclamationTriangle} className="h-4 w-4 mr-1" />
+                  {Object.keys(errors).length} error{Object.keys(errors).length > 1 ? 's' : ''}
                 </div>
-              ) : (
-                <>
-                  <FontAwesomeIcon icon={faSave} className="h-4 w-4 mr-2" />
-                  {t('common.save')}
-                </>
               )}
-            </Button>
+              
+              <Button
+                onClick={handleSave}
+                disabled={loading || Object.keys(errors).length > 0}
+                className={`w-full sm:w-auto min-w-[140px] text-white text-sm sm:text-base py-2.5 sm:py-2 transition-all duration-200 ${
+                  Object.keys(errors).length > 0
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-grub-red hover:bg-red-700 hover:scale-105'
+                }`}
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Saving...
+                  </div>
+                ) : Object.keys(errors).length > 0 ? (
+                  <>
+                    <FontAwesomeIcon icon={faExclamationTriangle} className="h-4 w-4 mr-2" />
+                    Fix Errors First
+                  </>
+                ) : (
+                  <>
+                    <FontAwesomeIcon icon={faSave} className="h-4 w-4 mr-2" />
+                    {t('common.save')}
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </div>

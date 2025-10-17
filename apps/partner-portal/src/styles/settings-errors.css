@@ -1,0 +1,133 @@
+/* Enhanced error styling for settings page */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes pulse-error {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+  }
+}
+
+.pulse-error {
+  animation: pulse-error 2s infinite;
+}
+
+/* Enhanced input error states */
+.input-error {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.input-error:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.input-success {
+  border-color: #10b981;
+  background-color: #f0fdf4;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.input-success:focus {
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+/* Error message styling */
+.error-message {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.error-message::before {
+  content: "⚠️";
+  font-size: 0.75rem;
+}
+
+/* Success message styling */
+.success-message {
+  color: #059669;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.success-message::before {
+  content: "✅";
+  font-size: 0.75rem;
+}
+
+/* Tab error indicators */
+.tab-error-indicator {
+  position: relative;
+}
+
+.tab-error-indicator::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+/* Error section highlighting */
+.section-with-errors {
+  border-left: 4px solid #ef4444;
+  background-color: #fef2f2;
+  padding-left: 1rem;
+}
+
+/* Smooth transitions */
+.error-transition {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Mobile error indicators */
+@media (max-width: 1024px) {
+  .mobile-error-badge {
+    background-color: #ef4444;
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: 9999px;
+    margin-left: 0.5rem;
+  }
+}
