@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import '../styles/settings-errors.css';
+import '../../styles/settings-errors.css';
 import { 
   faSave, 
   faUpload, 
