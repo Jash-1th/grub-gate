@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import '../../styles/auth-pages.css';
 import { 
   faEye, 
   faEyeSlash, 
@@ -10,7 +11,8 @@ import {
   faUtensils, 
   faUsers, 
   faArrowTrendUp, 
-  faShield 
+  faShield,
+  faExclamationTriangle
 } from '@fortawesome/free-solid-svg-icons';
 import { Button, Logo } from '@grub-gate/ui';
 import { useAuth } from '../../contexts/AuthContext.jsx';
@@ -153,9 +155,16 @@ const LoginPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-grub-gray-50 via-white to-red-50 flex">
+    <div className="min-h-screen auth-gradient flex relative overflow-hidden">
+      {/* Floating Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="floating-element absolute top-20 left-10 w-32 h-32 bg-gradient-to-br from-grub-red/10 to-orange-200/10 rounded-full blur-xl"></div>
+        <div className="floating-element absolute top-1/3 right-20 w-24 h-24 bg-gradient-to-br from-blue-200/10 to-grub-red/10 rounded-full blur-xl"></div>
+        <div className="floating-element absolute bottom-20 left-1/4 w-40 h-40 bg-gradient-to-br from-purple-200/10 to-pink-200/10 rounded-full blur-xl"></div>
+      </div>
+
       {/* Left Side - Features (Hidden on Mobile) */}
-      <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:pl-16 xl:pl-20 lg:pr-8 xl:pr-12">
+      <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:pl-16 xl:pl-20 lg:pr-8 xl:pr-12 relative z-10">
         <div className="max-w-lg">
           <div className="mb-16">
             <Logo size="xl" className="mb-12" />
@@ -173,12 +182,12 @@ const LoginPage = () => {
           
           <div className="space-y-8">
             {features.map((feature, index) => (
-              <div key={index} className="flex items-start space-x-5 group">
-                <div className="flex-shrink-0 w-14 h-14 bg-grub-red/10 rounded-xl flex items-center justify-center group-hover:bg-grub-red/20 transition-all duration-300">
+              <div key={index} className={`feature-card flex items-start space-x-5 group p-4 rounded-2xl hover:bg-white/50 stagger-animation`}>
+                <div className="feature-icon flex-shrink-0 w-14 h-14 bg-gradient-to-br from-grub-red/10 to-grub-red/20 rounded-xl flex items-center justify-center group-hover:from-grub-red/20 group-hover:to-grub-red/30 transition-all duration-300 shadow-lg">
                   <FontAwesomeIcon icon={feature.icon} className="w-7 h-7 text-grub-red" />
                 </div>
                 <div className="pt-1">
-                  <h3 className="font-semibold text-gray-900 mb-2 text-lg">{feature.title}</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2 text-lg group-hover:text-grub-red transition-colors duration-300">{feature.title}</h3>
                   <p className="text-gray-600 text-base leading-relaxed">{feature.description}</p>
                 </div>
               </div>
@@ -188,15 +197,15 @@ const LoginPage = () => {
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-12 xl:px-16 lg:max-w-xl xl:max-w-2xl">
+      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-12 xl:px-16 lg:max-w-xl xl:max-w-2xl relative z-10">
         <div className="w-full max-w-md mx-auto lg:max-w-none">
           {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-8">
+          <div className="lg:hidden text-center mb-6 px-4">
             <Logo size="lg" className="mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
               Partner Portal
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 text-sm sm:text-base">
               Sign in to manage your restaurant
             </p>
           </div>
@@ -225,8 +234,9 @@ const LoginPage = () => {
           </div>
 
           {/* Login Form */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 p-10 lg:p-12 relative overflow-hidden">
+          <div className="glass-card rounded-3xl p-10 lg:p-12 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-grub-red/10 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-500/5 to-transparent rounded-full translate-y-12 -translate-x-12"></div>
             <div className="relative">
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Email Field */}
@@ -245,9 +255,11 @@ const LoginPage = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="Enter your email"
-                    className={`block w-full pl-10 pr-3 py-3 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 text-base ${
+                    className={`auth-input block w-full pl-10 pr-3 py-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-0 text-base ${
                       errors.email 
-                        ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                        ? 'error border-red-300 focus:border-red-500 focus:ring-red-500' 
+                        : formData.email && !errors.email
+                        ? 'success border-green-300 focus:border-green-500 focus:ring-green-500'
                         : 'border-gray-300 focus:border-grub-red focus:ring-grub-red hover:border-gray-400'
                     }`}
                   />
@@ -273,9 +285,11 @@ const LoginPage = () => {
                     value={formData.password}
                     onChange={handleInputChange}
                     placeholder="Enter your password"
-                    className={`block w-full pl-10 pr-12 py-3 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 text-base ${
+                    className={`auth-input block w-full pl-10 pr-12 py-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-0 text-base ${
                       errors.password 
-                        ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                        ? 'error border-red-300 focus:border-red-500 focus:ring-red-500' 
+                        : formData.password && !errors.password
+                        ? 'success border-green-300 focus:border-green-500 focus:ring-green-500'
                         : 'border-gray-300 focus:border-grub-red focus:ring-grub-red hover:border-gray-400'
                     }`}
                   />
@@ -322,22 +336,32 @@ const LoginPage = () => {
 
               {/* Submit Button */}
               <div className="pt-4">
-                <Button
+                <button
                   type="submit"
-                  variant="primary"
-                  size="lg"
                   disabled={isLoading}
-                  className="w-full py-4 text-base font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
+                  className="auth-button w-full py-4 px-6 bg-gradient-to-r from-grub-red to-red-600 text-white text-base font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
                 >
-                  {isLoading ? 'Signing in...' : 'Sign in'}
-                </Button>
+                  {isLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="auth-spinner mr-3"></div>
+                      Signing in...
+                    </div>
+                  ) : (
+                    'Sign in to Dashboard'
+                  )}
+                </button>
                 
                 {/* Error Display */}
                 {error && (
-                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-sm text-red-600">
-                      {error}
-                    </p>
+                  <div className="message-slide-in mt-4 p-4 bg-gradient-to-r from-red-50 to-red-100/50 border border-red-200 rounded-xl backdrop-blur-sm">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0">
+                        <FontAwesomeIcon icon={faExclamationTriangle} className="h-5 w-5 text-red-600" />
+                      </div>
+                      <p className="ml-3 text-sm text-red-700 font-medium">
+                        {error}
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -359,15 +383,17 @@ const LoginPage = () => {
           </div>
 
           {/* Mobile Features */}
-          <div className="lg:hidden mt-12 space-y-6">
-            <div className="text-center text-sm text-gray-600 mb-6">
+          <div className="lg:hidden mt-8 px-4">
+            <div className="text-center text-sm text-gray-600 mb-4 font-medium">
               Why choose GrubGate?
             </div>
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {features.slice(0, 4).map((feature, index) => (
-                <div key={index} className="text-center p-4 bg-white rounded-xl shadow-soft border border-gray-100">
-                  <FontAwesomeIcon icon={feature.icon} className="w-6 h-6 text-grub-red mx-auto mb-2" />
-                  <h4 className="font-medium text-gray-900 text-sm mb-1">{feature.title}</h4>
+                <div key={index} className="feature-card text-center p-4 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
+                  <div className="feature-icon w-10 h-10 bg-gradient-to-br from-grub-red/10 to-grub-red/20 rounded-lg flex items-center justify-center mx-auto mb-3">
+                    <FontAwesomeIcon icon={feature.icon} className="w-5 h-5 text-grub-red" />
+                  </div>
+                  <h4 className="font-semibold text-gray-900 text-sm mb-2">{feature.title}</h4>
                   <p className="text-xs text-gray-600 leading-relaxed">{feature.description}</p>
                 </div>
               ))}

@@ -14,6 +14,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@grub-gate/ui';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
+import { completeSetupActivation } from '../../api/activationApi';
 
 /**
  * SetupComplete Component
@@ -24,10 +26,12 @@ const SetupComplete = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showToast } = useToast();
   
   // SSR safety
   const [isClient, setIsClient] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [isActivating, setIsActivating] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -74,8 +78,42 @@ const SetupComplete = () => {
     }
   ];
 
-  const handleGoToDashboard = () => {
-    navigate('/dashboard');
+  const handleGoToDashboard = async () => {
+    try {
+      setIsActivating(true);
+      console.log('🚀 Starting restaurant activation...');
+      
+      // Call the activation API to make both user and restaurant active
+      const result = await completeSetupActivation();
+      
+      if (result.success) {
+        console.log('✅ Restaurant activation successful:', result.data);
+        
+        // Show success message
+        showToast(result.message || 'Your restaurant is now active and ready to receive orders!', 'success');
+        
+        // Navigate to dashboard after a short delay to show the success message
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
+      } else {
+        throw new Error(result.message || 'Failed to activate restaurant');
+      }
+    } catch (error) {
+      console.error('❌ Restaurant activation failed:', error);
+      
+      // Show error message
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to activate restaurant. Please try again.';
+      showToast(errorMessage, 'error');
+      
+      // Still navigate to dashboard but show warning
+      showToast('Proceeding to dashboard. You may need to contact support if issues persist.', 'warning');
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 3000);
+    } finally {
+      setIsActivating(false);
+    }
   };
 
   const handleGoToRoute = (route) => {
@@ -214,14 +252,31 @@ const SetupComplete = () => {
       <div className="space-y-4">
         <Button
           onClick={handleGoToDashboard}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg font-semibold"
+          disabled={isActivating}
+          className={`px-8 py-3 text-lg font-semibold transition-all duration-200 ${
+            isActivating 
+              ? 'bg-gray-400 cursor-not-allowed' 
+              : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white hover:scale-105'
+          }`}
         >
-          <FontAwesomeIcon icon={faRocket} className="mr-2" />
-          Go to Dashboard
+          {isActivating ? (
+            <>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2 inline-block"></div>
+              Activating Restaurant...
+            </>
+          ) : (
+            <>
+              <FontAwesomeIcon icon={faRocket} className="mr-2" />
+              Launch My Restaurant
+            </>
+          )}
         </Button>
         
         <p className="text-sm text-gray-500">
-          You can always return to this setup guide from your dashboard settings
+          {isActivating 
+            ? 'Setting up your restaurant and making it active...' 
+            : 'Click to activate your restaurant and start receiving orders!'
+          }
         </p>
       </div>
     </div>

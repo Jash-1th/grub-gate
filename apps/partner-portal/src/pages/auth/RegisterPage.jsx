@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import '../../styles/auth-pages.css';
 import { 
   faEye, 
   faEyeSlash, 
@@ -321,9 +322,16 @@ const RegisterPage = () => {
 
   return (
     <>
-    <div className="min-h-screen bg-gradient-to-br from-grub-gray-50 via-white to-red-50 flex">
+    <div className="min-h-screen auth-gradient flex relative overflow-hidden">
+      {/* Floating Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="floating-element absolute top-32 left-16 w-28 h-28 bg-gradient-to-br from-green-200/10 to-grub-red/10 rounded-full blur-xl"></div>
+        <div className="floating-element absolute top-1/4 right-32 w-36 h-36 bg-gradient-to-br from-purple-200/10 to-blue-200/10 rounded-full blur-xl"></div>
+        <div className="floating-element absolute bottom-32 left-1/3 w-32 h-32 bg-gradient-to-br from-orange-200/10 to-pink-200/10 rounded-full blur-xl"></div>
+      </div>
+
       {/* Left Side - Benefits (Hidden on Mobile) */}
-      <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-12 xl:px-16">
+      <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-12 xl:px-16 relative z-10">
         <div className="max-w-md mx-auto">
           <div className="mb-8">
             <Logo size="xl" className="mb-6" />
@@ -337,12 +345,12 @@ const RegisterPage = () => {
           
           <div className="space-y-6">
             {benefits.map((benefit, index) => (
-              <div key={index} className="flex items-start space-x-4 group">
-                <div className="flex-shrink-0 w-12 h-12 bg-grub-red/10 rounded-xl flex items-center justify-center group-hover:bg-grub-red/20 transition-colors">
+              <div key={index} className={`feature-card flex items-start space-x-4 group p-4 rounded-2xl hover:bg-white/50 stagger-animation`}>
+                <div className="feature-icon flex-shrink-0 w-12 h-12 bg-gradient-to-br from-grub-red/10 to-grub-red/20 rounded-xl flex items-center justify-center group-hover:from-grub-red/20 group-hover:to-grub-red/30 transition-all duration-300 shadow-lg">
                   <FontAwesomeIcon icon={benefit.icon} className="w-6 h-6 text-grub-red" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">{benefit.title}</h3>
+                  <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-grub-red transition-colors duration-300">{benefit.title}</h3>
                   <p className="text-gray-600 text-sm leading-relaxed">{benefit.description}</p>
                 </div>
               </div>
@@ -352,14 +360,17 @@ const RegisterPage = () => {
       </div>
 
       {/* Right Side - Registration Form */}
-      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-8 lg:max-w-2xl xl:max-w-3xl">
-        <div className="w-full max-w-md">
+      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-8 lg:max-w-2xl xl:max-w-3xl relative z-10 min-h-screen py-8">
+        <div className="w-full max-w-md mx-auto lg:max-w-lg">
           {!isOTPAuthModalOpen && (
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
-              <div className="text-center mb-8">
+            <div className="glass-card rounded-3xl p-8 lg:p-10 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-grub-red/10 to-transparent rounded-full -translate-y-14 translate-x-14"></div>
+              <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-blue-500/5 to-transparent rounded-full translate-y-10 -translate-x-10"></div>
+              <div className="relative">
+              <div className="text-center mb-6 lg:mb-8">
                 <Logo className="mx-auto mb-4" size="lg" />
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Join as Partner</h1>
-                <p className="text-gray-600">Create your partner account to manage your restaurant</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Join as Partner</h1>
+                <p className="text-gray-600 text-sm sm:text-base px-2">Create your partner account to manage your restaurant</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -389,9 +400,11 @@ const RegisterPage = () => {
                     value={formData.restaurantName}
                     onChange={handleInputChange}
                     placeholder="Your Restaurant Name"
-                    className={`block w-full pl-10 pr-3 py-3 lg:py-4 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 text-base lg:text-lg ${
+                    className={`auth-input block w-full pl-10 pr-3 py-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-0 text-base ${
                       errors.restaurantName 
-                        ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                        ? 'error border-red-300 focus:border-red-500 focus:ring-red-500' 
+                        : formData.restaurantName && !errors.restaurantName
+                        ? 'success border-green-300 focus:border-green-500 focus:ring-green-500'
                         : 'border-gray-300 focus:border-grub-red focus:ring-grub-red hover:border-gray-400'
                     }`}
                   />
@@ -430,7 +443,7 @@ const RegisterPage = () => {
               </div>
 
               {/* Email & Phone Row */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                     Email
@@ -487,7 +500,7 @@ const RegisterPage = () => {
               </div>
 
               {/* Password Fields */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
                 <div>
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                     Password
@@ -591,15 +604,20 @@ const RegisterPage = () => {
               )}
 
               {/* Submit Button */}
-              <Button
+              <button
                 type="submit"
-                variant="primary"
-                size="lg"
-                loading={loading}
-                className="w-full py-3 text-base font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
+                disabled={loading}
+                className="auth-button w-full py-4 px-6 bg-gradient-to-r from-grub-red to-red-600 text-white text-base font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
               >
-                {loading ? 'Creating Account...' : 'Create Account'}
-              </Button>
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="auth-spinner mr-3"></div>
+                    Creating Account...
+                  </div>
+                ) : (
+                  'Create Partner Account'
+                )}
+              </button>
 
               {/* Sign In Link */}
               <div className="text-center pt-4 border-t border-gray-100">
@@ -614,19 +632,22 @@ const RegisterPage = () => {
                 </span>
               </div>
             </form>
-          </div>
+              </div>
+            </div>
           )}
 
           {/* Mobile Benefits */}
-          <div className="lg:hidden mt-8 space-y-4">
-            <div className="text-center text-sm text-gray-600 mb-4">
+          <div className="lg:hidden mt-6 px-4">
+            <div className="text-center text-sm text-gray-600 mb-4 font-medium">
               Why join GrubGate?
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {benefits.map((benefit, index) => (
-                <div key={index} className="text-center p-4 bg-white rounded-xl shadow-soft border border-gray-100">
-                  <FontAwesomeIcon icon={benefit.icon} className="w-6 h-6 text-grub-red mx-auto mb-2" />
-                  <h4 className="font-medium text-gray-900 text-sm mb-1">{benefit.title}</h4>
+                <div key={index} className="feature-card text-center p-4 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
+                  <div className="feature-icon w-10 h-10 bg-gradient-to-br from-grub-red/10 to-grub-red/20 rounded-lg flex items-center justify-center mx-auto mb-3">
+                    <FontAwesomeIcon icon={benefit.icon} className="w-5 h-5 text-grub-red" />
+                  </div>
+                  <h4 className="font-semibold text-gray-900 text-sm mb-2">{benefit.title}</h4>
                   <p className="text-xs text-gray-600 leading-relaxed">{benefit.description}</p>
                 </div>
               ))}
