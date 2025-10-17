@@ -8,7 +8,8 @@ const {
   getNotificationPreferences,
   updateNotificationPreferences,
   getBillingInfo,
-  updateBillingInfo
+  updateBillingInfo,
+  activateRestaurant
 } = require('../../controllers/partner/restaurantSettings.controller');
 const { authMiddleware, roleMiddleware } = require('../../middlewares/auth');
 const { validateRequest } = require('../../middlewares/joiValidation');
@@ -145,6 +146,9 @@ router.get('/restaurants/me', getMyRestaurant);
 router.route('/restaurants/:restaurantId/settings')
   .get(getRestaurantSettings)
   .patch(validateRequest(updateRestaurantSettingsSchema), updateRestaurantSettings);
+
+// Restaurant activation route
+router.patch('/restaurants/:restaurantId/activate', activateRestaurant);
 
 // User notification preferences routes
 router.route('/users/me/notification-preferences')

@@ -35,6 +35,7 @@ const partnerStatisticsRoutes = require('./src/routes/partner/statistics.routes'
 const orderGenerationRoutes = require('./src/routes/orderGeneration.routes');
 const adminRoutes = require('./src/routes/admin.routes');
 const geocodingRoutes = require('./src/routes/geocoding.routes');
+const activationRoutes = require('./src/routes/activation.routes');
 
 const app = express();
 
@@ -177,6 +178,7 @@ app.use('/api/v1/partner/statistics', partnerStatisticsRoutes);
 app.use('/api/v1/orders/generate', orderGenerationRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/geocoding', geocodingRoutes);
+app.use('/api/v1/activation', activationRoutes);
 app.use('/api/v1/meal-calendar', require('./src/routes/mealCalendar.routes'));
 app.use('/api/v1/restaurant-validation', require('./src/routes/restaurantValidation.routes'));
 

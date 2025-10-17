@@ -290,6 +290,60 @@ const updateBillingInfo = asyncHandler(async (req, res) => {
   successResponse(res, { billingInfo: restaurant.billingInfo }, 'Billing information updated successfully');
 });
 
+/**
+ * @desc    Activate restaurant and user status
+ * @route   PATCH /api/v1/partner/restaurants/:restaurantId/activate
+ * @access  Private (Partner)
+ */
+const activateRestaurant = asyncHandler(async (req, res) => {
+  const { restaurantId } = req.params;
+
+  // Verify restaurant ownership
+  const restaurant = await findRestaurantById(restaurantId, req.user._id);
+  
+  if (!restaurant) {
+    return notFoundResponse(res, 'Restaurant not found or access denied');
+  }
+
+  // Update restaurant status to active and mark registration as complete
+  const updatedRestaurant = await Restaurant.findOneAndUpdate(
+    { _id: restaurant._id },
+    { 
+      status: 'active',
+      registrationComplete: true,
+      registrationStage: 3
+    },
+    { new: true, runValidators: true }
+  );
+
+  // Update user status to active as well
+  const updatedUser = await User.findOneAndUpdate(
+    { _id: req.user._id },
+    { 
+      status: 'active',
+      registrationComplete: true,
+      registrationStage: 3
+    },
+    { new: true, runValidators: true }
+  );
+
+  successResponse(res, {
+    user: {
+      id: updatedUser._id,
+      status: updatedUser.status,
+      registrationComplete: updatedUser.registrationComplete,
+      registrationStage: updatedUser.registrationStage
+    },
+    restaurant: {
+      id: updatedRestaurant._id,
+      name: updatedRestaurant.name,
+      status: updatedRestaurant.status,
+      registrationComplete: updatedRestaurant.registrationComplete,
+      registrationStage: updatedRestaurant.registrationStage
+    }
+  }, 'Restaurant and user activated successfully');
+});
+
 module.exports = {
   getMyRestaurant,
   getRestaurantSettings,
@@ -297,5 +351,6 @@ module.exports = {
   getNotificationPreferences,
   updateNotificationPreferences,
   getBillingInfo,
-  updateBillingInfo
+  updateBillingInfo,
+  activateRestaurant
 };

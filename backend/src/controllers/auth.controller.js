@@ -997,7 +997,7 @@ const verifyPartnerOTP = asyncHandler(async (req, res) => {
       businessLicense: fileUrls.businessLicense || businessLicenseText,
       businessLicenseText: businessLicenseText || '',
       taxId: taxId || '',
-      status: 'pending', // New restaurants should be pending approval
+      status: 'active', // Set restaurant as active upon registration
       registrationComplete: true,
       registrationStage: 3,
       isVerified: false,
