@@ -53,6 +53,14 @@ const MealCalendarPage = () => {
     getWeekTotalItems(0) > 0 || getWeekTotalItems(1) > 0
   );
 
+  // Redirect users without planned meals and no active subscription
+  useEffect(() => {
+    if (isClient && isAuthenticated && !loading && !calendarData && !hasPlannedMeals) {
+      console.log('🚫 MealCalendar: No planned meals and no active subscription, redirecting to weekly menu');
+      navigate('/weekly-menu');
+    }
+  }, [isClient, isAuthenticated, loading, calendarData, hasPlannedMeals, navigate]);
+
   // Consolidated initialization function to fix timing issues
   const initializeCalendarData = async () => {
     try {
@@ -69,16 +77,36 @@ const MealCalendarPage = () => {
       // Step 2: Fetch subscription status
       await fetchSubscriptionStatus();
       
-      console.log('🔄 MealCalendar: Step 3 - Setting default date if needed...');
+      console.log('🔄 MealCalendar: Step 3 - Handling date initialization...');
       
-      // Step 3: Set default date if not already set from URL
-      if (!selectedDate && !searchParams.get('startDate')) {
-        const defaultDate = getDefaultStartDate();
-        console.log('🗓️ MealCalendar: Setting default date:', defaultDate);
-        setSelectedDate(defaultDate);
+      // Step 3: Handle date initialization properly
+      const urlStartDate = searchParams.get('startDate');
+      let dateToSet = null;
+      
+      if (urlStartDate) {
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (dateRegex.test(urlStartDate)) {
+          console.log('🗓️ MealCalendar: Using subscription start date from URL:', urlStartDate);
+          dateToSet = urlStartDate;
+        } else {
+          console.log('🗓️ MealCalendar: Invalid date format in URL, using default');
+          dateToSet = getDefaultStartDate();
+        }
+      } else if (!selectedDate) {
+        console.log('🗓️ MealCalendar: No start date in URL, using default');
+        dateToSet = getDefaultStartDate();
+      }
+      
+      // Set the date if we determined one
+      if (dateToSet && dateToSet !== selectedDate) {
+        console.log('🗓️ MealCalendar: Setting selected date to:', dateToSet);
+        setSelectedDate(dateToSet);
       }
       
       console.log('🔄 MealCalendar: Step 4 - Fetching calendar data...');
+      console.log('🗓️ MealCalendar: Current selectedDate before fetch:', selectedDate);
+      console.log('🗓️ MealCalendar: DateToSet value:', dateToSet);
+      console.log('🗓️ MealCalendar: URL startDate:', searchParams.get('startDate'));
       
       // Step 4: Fetch calendar data
       await fetchCalendarData();
@@ -168,27 +196,9 @@ const MealCalendarPage = () => {
       console.log('🔄 MealCalendar: Starting consolidated data fetch...');
       initializeCalendarData();
     }
-  }, [isClient, isAuthenticated]);
+  }, [isClient, isAuthenticated, searchParams]);
 
-  // Separate effect for URL parameter handling
-  useEffect(() => {
-    if (isClient && !selectedDate) {
-      const urlStartDate = searchParams.get('startDate');
-      if (urlStartDate) {
-        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (dateRegex.test(urlStartDate)) {
-          console.log('🗓️ MealCalendar: Using subscription start date from URL:', urlStartDate);
-          setSelectedDate(urlStartDate);
-        } else {
-          console.log('🗓️ MealCalendar: Invalid date format in URL, using default');
-          setSelectedDate(getDefaultStartDate());
-        }
-      } else {
-        console.log('🗓️ MealCalendar: No start date in URL, using default');
-        setSelectedDate(getDefaultStartDate());
-      }
-    }
-  }, [isClient, searchParams]);
+  // Note: URL parameter handling is now done in initializeCalendarData() to fix timing issues
 
   // Effect to refresh calendar data when date changes (for manual date selection)
   useEffect(() => {
@@ -626,6 +636,13 @@ const MealCalendarPage = () => {
 
   // For subscribed users, calculate week dates based on subscription start date
   const getWeekStartDate = () => {
+    // Check if we have a URL startDate parameter first
+    const urlStartDate = searchParams.get('startDate');
+    if (urlStartDate && /^\d{4}-\d{2}-\d{2}$/.test(urlStartDate)) {
+      console.log(`📅 Using URL startDate for week calculation: ${urlStartDate}`);
+      return urlStartDate;
+    }
+    
     if (isSubscribed && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate) {
       // Use subscription start date as the base for week calculation
       const subscriptionStart = new Date(userMealPlans.mealPlans[0].planStartDate);
@@ -638,7 +655,7 @@ const MealCalendarPage = () => {
     }
   };
 
-  const weekDates = selectedDate ? getWeekDates(getWeekStartDate()) : [];
+  const weekDates = (selectedDate || searchParams.get('startDate')) ? getWeekDates(getWeekStartDate()) : [];
 
   const getMealsForDisplay = (targetDate) => {
     if (!displayData?.meals) return [];
@@ -849,7 +866,7 @@ const MealCalendarPage = () => {
                   </label>
                   <input
                     type="date"
-                    value={selectedDate}
+                    value={selectedDate || searchParams.get('startDate') || ''}
                     min={isSubscribed && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate ? 
                       new Date(userMealPlans.mealPlans[0].planStartDate).toISOString().split('T')[0] : 
                       getNextSunday().toISOString().split('T')[0]
@@ -891,7 +908,9 @@ const MealCalendarPage = () => {
                 const isToday = date === new Date().toISOString().split('T')[0];
                 const hasMeals = dayMeals.length > 0;
                 const isClickable = isDateClickable(date);
-                const isSelected = date === selectedDate;
+                // Check if this date is selected - use URL parameter if selectedDate hasn't been set yet
+                const currentSelectedDate = selectedDate || searchParams.get('startDate');
+                const isSelected = date === currentSelectedDate;
                 
                 return (
                   <div 

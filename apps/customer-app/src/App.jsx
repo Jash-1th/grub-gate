@@ -23,6 +23,7 @@ import SubscriptionPage from './pages/SubscriptionPage';
 import CheckoutPage from './pages/CheckoutPage';
 import AddressBookPage from './pages/AddressBookPage';
 import MealCalendarPage from './pages/MealCalendarPage';
+import NotFoundPage from './pages/NotFoundPage';
 import MenuSelectionStep from './components/planning/MenuSelectionStep';
 import LaunchScreen from './components/common/LaunchScreen';
 import ScrollToTop from './components/common/ScrollToTop';
@@ -188,7 +189,8 @@ function App({ initialized = true }) {
                     </ProtectedRoute>
                   } />
                   <Route path="/restaurants/weekly-menu" element={<WeeklyMenuPage />} />
-                  {/* Add more routes as needed */}
+                  {/* Catch-all route for 404 - must be last */}
+                  <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </AnimatePresence>
               </Layout>
