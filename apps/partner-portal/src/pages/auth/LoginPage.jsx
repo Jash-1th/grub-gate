@@ -241,7 +241,7 @@ const LoginPage = () => {
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Email Field */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-800 mb-3 drop-shadow-sm">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-3 drop-shadow-sm">
                   Email address
                 </label>
                 <div className="relative">
@@ -271,7 +271,7 @@ const LoginPage = () => {
 
               {/* Password Field */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-800 mb-3 drop-shadow-sm">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-3 drop-shadow-sm">
                   Password
                 </label>
                 <div className="relative">
@@ -321,7 +321,7 @@ const LoginPage = () => {
                     onChange={handleInputChange}
                     className="h-4 w-4 text-grub-red focus:ring-grub-red border-gray-300 rounded transition-colors"
                   />
-                  <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-800 drop-shadow-sm">
+                  <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-800 dark:text-gray-200 drop-shadow-sm">
                     Remember me
                   </label>
                 </div>
@@ -368,7 +368,7 @@ const LoginPage = () => {
 
               {/* Sign Up Link */}
               <div className="text-center pt-6 border-t border-gray-100">
-                <span className="text-sm text-gray-700 drop-shadow-sm">
+                <span className="text-sm text-gray-700 dark:text-gray-300 drop-shadow-sm">
                   Don't have an account?{' '}
                   <Link
                     to="/register"
