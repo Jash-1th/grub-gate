@@ -10,7 +10,7 @@ import './modal-responsive.css';
 const LoginModal = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { isLoginModalOpen, closeLoginModal, switchToSignup } = useModal();
+  const { isLoginModalOpen, closeLoginModal, switchToSignup, openOTPAuthModal } = useModal();
   const { login, isLoading, error, clearError } = useAuth();
   const { showSuccess } = useToast();
   
@@ -181,7 +181,7 @@ const LoginModal = () => {
 
   // Handle sign up link click
   const handleSignUpClick = () => {
-    switchToSignup();
+    openOTPAuthModal('signup');
   };
 
   // Handle ESC key to close modal with form reset

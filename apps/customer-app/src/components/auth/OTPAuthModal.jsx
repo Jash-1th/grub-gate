@@ -233,7 +233,7 @@ const OTPAuthModal = () => {
       if (result.status === 'success') {
         // User exists and OTP verified - complete login immediately
         if (typeof window !== 'undefined') {
-          localStorage.setItem('accessToken', result.data.accessToken);
+          localStorage.setItem('authToken', result.data.accessToken);
           if (result.data.refreshToken) {
             localStorage.setItem('refreshToken', result.data.refreshToken);
           }
@@ -398,7 +398,7 @@ const OTPAuthModal = () => {
       if (result.status === 'success') {
         // Store auth data
         if (typeof window !== 'undefined') {
-          localStorage.setItem('accessToken', result.data.accessToken);
+          localStorage.setItem('authToken', result.data.accessToken);
           if (result.data.refreshToken) {
             localStorage.setItem('refreshToken', result.data.refreshToken);
           }

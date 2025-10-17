@@ -6,7 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 
 const RoleCards = () => {
   const { t } = useTranslation();
-  const { openSignupModal } = useModal();
+  const { openOTPAuthModal } = useModal();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -15,8 +15,8 @@ const RoleCards = () => {
       // User is logged in, navigate to plan page
       navigate('/plan');
     } else {
-      // User is not logged in, open signup modal
-      openSignupModal();
+      // User is not logged in, open OTP modal for signup
+      openOTPAuthModal('signup');
     }
   };
 

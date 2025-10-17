@@ -9,7 +9,7 @@ const heroImage = '/images/HeroHome.jpg';
 
 const HeroSection = () => {
   const { t } = useTranslation();
-  const { openSignupModal } = useModal();
+  const { openOTPAuthModal } = useModal();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -18,8 +18,8 @@ const HeroSection = () => {
       // User is logged in, navigate to plan page
       navigate('/plan');
     } else {
-      // User is not logged in, open signup modal
-      openSignupModal();
+      // User is not logged in, open OTP modal for signup
+      openOTPAuthModal('signup');
     }
   };
   

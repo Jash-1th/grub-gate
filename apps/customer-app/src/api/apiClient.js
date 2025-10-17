@@ -4,7 +4,7 @@ import { getStorageItem, removeStorageItem } from '../utils/ssrSafeStorage';
 // Create axios instance with base configuration
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'https://gg0b1.netlify.app/api/v1', // Deployed backend
-  // Local development: 'http://localhost:5000/api/v1',
+  // baseURL: 'http://localhost:5000/api/v1', // Local development
 
   timeout: 10000,
   headers: {

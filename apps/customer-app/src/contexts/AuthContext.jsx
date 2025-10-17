@@ -390,6 +390,29 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // OTP Login function - for when user completes OTP verification and registration
+  const otpLogin = async (user, accessToken, refreshToken) => {
+    try {
+      // Store tokens
+      setStorageItem('authToken', accessToken);
+      if (refreshToken) {
+        setStorageItem('refreshToken', refreshToken);
+      }
+      setStorageItem('user', user);
+
+      // Update state to logged in
+      dispatch({ 
+        type: AUTH_ACTIONS.LOGIN_SUCCESS, 
+        payload: { user, token: accessToken } 
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error('OTP Login error:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
   // Clear error function
   const clearError = () => {
     dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
@@ -400,6 +423,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    otpLogin,
     clearError,
     isClient,
     isLoading,

@@ -12,7 +12,7 @@ import ScheduleDemo from './ScheduleDemo';
 const LocationStep = ({ onNext }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { openLoginModal, openSignupModal } = useModal();
+  const { openLoginModal, openOTPAuthModal } = useModal();
   const { updatePostalCode, updatePreferences } = usePlanning();
   const { isAuthenticated } = useAuth();
   const { showSuccess, showError, showInfo } = useToast();
@@ -75,8 +75,8 @@ const LocationStep = ({ onNext }) => {
   };
 
   const handleUseCurrentLocation = () => {
-    // For now, open signup modal - can be enhanced later with geolocation
-    openSignupModal();
+    // For now, open OTP modal for signup - can be enhanced later with geolocation
+    openOTPAuthModal('signup');
   };
 
   const handleKeyPress = (e) => {
