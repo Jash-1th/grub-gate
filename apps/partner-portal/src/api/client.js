@@ -8,11 +8,11 @@ const getApiBaseUrl = () => {
     return import.meta.env.VITE_API_BASE_URL;
   }
   
-  // Using deployed backend for production
-  return 'https://gg0b1.netlify.app/api/v1';
+  // COMMENTED OUT: Using deployed backend for production
+  // return 'https://gg0b1.netlify.app/api/v1';
   
-  // COMMENTED OUT: Local development backend
-  // return 'http://localhost:5000/api/v1';
+  // Local development backend
+  return 'http://localhost:5000/api/v1';
   
   // COMMENTED OUT: Conditional logic for Netlify detection
   // if (typeof window !== 'undefined' && window.location.hostname.includes('netlify.app')) {
