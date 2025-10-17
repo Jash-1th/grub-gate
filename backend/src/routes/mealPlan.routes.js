@@ -93,16 +93,21 @@ router.use(authMiddleware);
 
 // Routes
 router.get('/me', getMealPlan); // Get current user's meal plan
+
+// Restaurant selection routes (MUST be before /:userId to avoid conflicts)
+router.get('/selected-restaurants', (req, res, next) => {
+  console.log('🔍 Route handler: /selected-restaurants GET route matched');
+  next();
+}, getSelectedRestaurants);
+router.post('/selected-restaurants', addSelectedRestaurant);
+router.delete('/selected-restaurants/:restaurantId', removeSelectedRestaurant);
+
+// User-specific routes (these have dynamic :userId parameter)
 router.get('/:userId', userIdValidation, handleValidationErrors, getMealPlan);
 router.post('/', mealPlanValidation, handleValidationErrors, createOrUpdateMealPlan);
 router.post('/:userId/add-item', addItemValidation, handleValidationErrors, addItemToMealPlan);
 router.delete('/:userId/remove-item', removeItemValidation, handleValidationErrors, removeItemFromMealPlan);
 router.delete('/:userId/clear', clearMealPlanValidation, handleValidationErrors, clearMealPlan);
 router.delete('/:userId/clear-restaurant/:restaurantId', userIdValidation, handleValidationErrors, clearItemsByRestaurant);
-
-// Restaurant selection routes
-router.get('/selected-restaurants', getSelectedRestaurants);
-router.post('/selected-restaurants', addSelectedRestaurant);
-router.delete('/selected-restaurants/:restaurantId', removeSelectedRestaurant);
 
 module.exports = router;

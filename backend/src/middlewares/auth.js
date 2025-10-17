@@ -5,6 +5,7 @@ const User = require('../models/User');
 // Middleware to verify JWT token and attach user to request
 const authMiddleware = async (req, res, next) => {
   try {
+    console.log('🔐 Auth middleware: Processing request to:', req.method, req.path);
     let token;
 
     // Check for token in Authorization header
@@ -48,6 +49,7 @@ const authMiddleware = async (req, res, next) => {
 
       // Attach user to request object
       req.user = user;
+      console.log('✅ Auth middleware: User authenticated:', user._id, 'for', req.method, req.path);
       next();
 
     } catch (jwtError) {

@@ -149,6 +149,7 @@ const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postal
                           const selectedCount = getSelectedRestaurantCount();
                           const selectedRestaurantsList = getSelectedRestaurants();
                           
+                          
                           if (selectedCount === 0) {
                             return 'Browse restaurants';
                           } else if (selectedCount === 1) {

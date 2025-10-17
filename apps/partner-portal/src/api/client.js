@@ -9,16 +9,15 @@ const getApiBaseUrl = () => {
   }
   
   // Using deployed backend for production
-  // If we're in production (on Netlify), use the backend URL
-  if (typeof window !== 'undefined' && window.location.hostname.includes('netlify.app')) {
-    return 'https://gg0b1.netlify.app/api/v1';
-  }
+  return 'https://gg0b1.netlify.app/api/v1';
   
-  // COMMENTED OUT: For local development, use local backend
+  // COMMENTED OUT: Local development backend
   // return 'http://localhost:5000/api/v1';
   
-  // FALLBACK: Production backend (using deployed backend)
-  return 'https://gg0b1.netlify.app/api/v1';
+  // COMMENTED OUT: Conditional logic for Netlify detection
+  // if (typeof window !== 'undefined' && window.location.hostname.includes('netlify.app')) {
+  //   return 'https://gg0b1.netlify.app/api/v1';
+  // }
 };
 
 // Create axios instance with base configuration

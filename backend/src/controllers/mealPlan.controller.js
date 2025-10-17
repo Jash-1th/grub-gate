@@ -523,15 +523,32 @@ const getSelectedRestaurants = asyncHandler(async (req, res) => {
   try {
     console.log('🔍 getSelectedRestaurants: Starting...');
     console.log('🔍 getSelectedRestaurants: req.user =', req.user);
+    console.log('🔍 getSelectedRestaurants: req.user type =', typeof req.user);
+    console.log('🔍 getSelectedRestaurants: req.user keys =', req.user ? Object.keys(req.user) : 'null');
     
-    const userId = req.user._id || req.user.id;
-    console.log('🔍 getSelectedRestaurants: userId =', userId);
+    // More robust user ID extraction
+    let userId = null;
+    if (req.user) {
+      userId = req.user._id?.toString() || req.user.id?.toString();
+      
+      // If still no userId, try other common fields
+      if (!userId && req.user.userId) {
+        userId = req.user.userId.toString();
+      }
+    }
+    
+    console.log('🔍 getSelectedRestaurants: extracted userId =', userId);
     
     if (!userId) {
-      console.log('❌ getSelectedRestaurants: No userId found');
+      console.log('❌ getSelectedRestaurants: No userId found in req.user');
+      console.log('❌ getSelectedRestaurants: req.user structure:', JSON.stringify(req.user, null, 2));
       return res.status(400).json({
         success: false,
-        message: 'User ID not found'
+        message: 'User ID not found in request. Please ensure you are authenticated.',
+        debug: {
+          userExists: !!req.user,
+          userKeys: req.user ? Object.keys(req.user) : null
+        }
       });
     }
     
@@ -551,6 +568,7 @@ const getSelectedRestaurants = asyncHandler(async (req, res) => {
     }, 'Selected restaurants retrieved successfully');
   } catch (error) {
     console.log('❌ getSelectedRestaurants: Error =', error);
+    console.log('❌ getSelectedRestaurants: Error stack =', error.stack);
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -581,8 +599,21 @@ const addSelectedRestaurant = asyncHandler(async (req, res) => {
   
   console.log('✅ Backend: Validation passed, proceeding with save');
   
-  // Find or create meal plan
-  const userId = req.user._id || req.user.id;
+  // Find or create meal plan - robust user ID extraction
+  let userId = null;
+  if (req.user) {
+    userId = req.user._id?.toString() || req.user.id?.toString();
+    
+    // If still no userId, try other common fields
+    if (!userId && req.user.userId) {
+      userId = req.user.userId.toString();
+    }
+  }
+  
+  if (!userId) {
+    console.log('❌ Backend: No userId found in req.user');
+    return errorResponse(res, 'User ID not found in request. Please ensure you are authenticated.', 400);
+  }
   let mealPlan = await MealPlan.findOne({ userId });
   
   if (!mealPlan) {
@@ -663,7 +694,22 @@ const addSelectedRestaurant = asyncHandler(async (req, res) => {
 const removeSelectedRestaurant = asyncHandler(async (req, res) => {
   const { restaurantId } = req.params;
   
-  const userId = req.user._id || req.user.id;
+  // Robust user ID extraction
+  let userId = null;
+  if (req.user) {
+    userId = req.user._id?.toString() || req.user.id?.toString();
+    
+    // If still no userId, try other common fields
+    if (!userId && req.user.userId) {
+      userId = req.user.userId.toString();
+    }
+  }
+  
+  if (!userId) {
+    console.log('❌ Backend: No userId found in req.user');
+    return errorResponse(res, 'User ID not found in request. Please ensure you are authenticated.', 400);
+  }
+  
   console.log('🗑️ Backend: Removing restaurant', restaurantId, 'for user', userId);
   
   const mealPlan = await MealPlan.findOne({ userId });

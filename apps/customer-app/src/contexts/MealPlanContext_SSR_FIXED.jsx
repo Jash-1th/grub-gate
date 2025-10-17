@@ -557,22 +557,12 @@ export const MealPlanProvider = ({ children }) => {
               console.log('🎯 Loading selected restaurants from database:', restaurantResponse.data.selectedRestaurants);
               const firstRestaurant = restaurantResponse.data.selectedRestaurants[0];
               
-              // Update both legacy and new restaurant state
-              dispatch({
-                type: MEAL_PLAN_ACTIONS.SET_SELECTED_RESTAURANT,
-                payload: {
-                  restaurantId: firstRestaurant.id,
-                  restaurantName: firstRestaurant.name,
-                  restaurantData: firstRestaurant
-                }
-              });
-              
-              // Also update the selectedRestaurants array
+              // Update restaurant state (this will handle both legacy fields and selectedRestaurants array)
               dispatch({
                 type: MEAL_PLAN_ACTIONS.ADD_SELECTED_RESTAURANT,
                 payload: {
-                  restaurantId: firstRestaurant.id,
-                  restaurantName: firstRestaurant.name,
+                  restaurantId: firstRestaurant.restaurantId,
+                  restaurantName: firstRestaurant.restaurantName,
                   restaurantData: firstRestaurant
                 }
               });
@@ -647,12 +637,20 @@ export const MealPlanProvider = ({ children }) => {
     if (!isAuthenticated || !user) return;
 
     try {
+      // Clean selectedRestaurants to match backend schema
+      const selectedRestaurants = (mealPlanData.selectedRestaurants !== undefined ? mealPlanData.selectedRestaurants : state.selectedRestaurants);
+      const cleanedSelectedRestaurants = selectedRestaurants.map(restaurant => ({
+        restaurantId: restaurant.restaurantId,
+        restaurantName: restaurant.restaurantName,
+        addedAt: restaurant.addedAt || new Date()
+      })).filter(restaurant => restaurant.restaurantId && restaurant.restaurantName); // Filter out invalid entries
+      
       // Ensure proper data structure for API
       const apiData = {
         userId: user._id,
         weeklyPlans: mealPlanData.weeklyPlans || state.weeklyPlans,
         totalItems: mealPlanData.totalItems || state.totalItems,
-        selectedRestaurants: mealPlanData.selectedRestaurants !== undefined ? mealPlanData.selectedRestaurants : state.selectedRestaurants,
+        selectedRestaurants: cleanedSelectedRestaurants,
         maxRestaurants: mealPlanData.maxRestaurants || state.maxRestaurants,
         selectedRestaurantId: state.selectedRestaurantId,
         selectedRestaurantName: state.selectedRestaurantName,
@@ -951,16 +949,7 @@ export const MealPlanProvider = ({ children }) => {
         await restaurantSelectionApi.addSelectedRestaurant(sanitizedRestaurant);
         console.log('✅ Restaurant selection saved successfully');
         
-        // Also save to meal plan database for backward compatibility
-        setTimeout(() => {
-          saveMealPlanToDatabase({
-            weeklyPlans: state.weeklyPlans,
-            totalItems: state.totalItems,
-            selectedRestaurantId: restaurantData.id,
-            selectedRestaurantName: restaurantData.name,
-            selectedRestaurantData: restaurantData
-          });
-        }, 50);
+        // Note: The meal plan will be automatically saved by the useEffect when state updates
       } catch (error) {
         console.error('❌ Error saving restaurant selection:', error);
         console.error('❌ Error details:', error.response?.data);
@@ -1099,19 +1088,8 @@ export const MealPlanProvider = ({ children }) => {
       payload: { restaurantId, restaurantName, restaurantData }
     });
     
-    // Trigger immediate database save
-    if (isAuthenticated && user) {
-      console.log('💾 Triggering immediate database save for restaurant addition');
-      setTimeout(() => {
-        const updatedRestaurants = [...state.selectedRestaurants, { restaurantId, restaurantName, restaurantData, addedAt: new Date() }];
-        saveMealPlanToDatabase({
-          weeklyPlans: state.weeklyPlans,
-          totalItems: state.totalItems,
-          selectedRestaurants: updatedRestaurants,
-          maxRestaurants: state.maxRestaurants
-        });
-      }, 50);
-    }
+    // Note: Database save will be triggered by the useEffect that watches for state changes
+    // No need for immediate save here as the state update will trigger the save automatically
     
     return true;
   };

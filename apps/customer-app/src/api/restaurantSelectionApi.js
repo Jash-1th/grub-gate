@@ -11,10 +11,16 @@ const restaurantSelectionApi = {
    */
   getSelectedRestaurants: async () => {
     try {
+      console.log('🔍 restaurantSelectionApi: Fetching selected restaurants...');
+      console.log('🔍 restaurantSelectionApi: API URL:', apiClient.defaults.baseURL + '/meal-plans/selected-restaurants');
       const response = await apiClient.get('/meal-plans/selected-restaurants');
+      console.log('✅ restaurantSelectionApi: Success response:', response.data);
       return response.data;
     } catch (error) {
       console.error('❌ Error fetching selected restaurants:', error);
+      console.error('❌ Error response data:', error.response?.data);
+      console.error('❌ Error status:', error.response?.status);
+      console.error('❌ Error headers:', error.response?.headers);
       throw error;
     }
   },

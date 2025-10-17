@@ -213,7 +213,7 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.LOGIN_START });
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1'}/auth/login`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://gg0b1.netlify.app/api/v1'}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

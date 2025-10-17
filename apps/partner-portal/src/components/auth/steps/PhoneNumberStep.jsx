@@ -68,8 +68,8 @@ const PhoneNumberStep = ({
     setErrors({});
     
     try {
-      // Use environment variable for API base URL with fallback
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
+      // Use environment variable for API base URL with fallback to deployed backend
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://gg0b1.netlify.app/api/v1';
       
       // Debug: Log what we're sending
       console.log('🔍 OTP Request Debug:', {
