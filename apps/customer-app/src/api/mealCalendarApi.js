@@ -23,7 +23,9 @@ const mealCalendarApi = {
       return response.data;
     } catch (error) {
       // Only log error if it's not a 404 (which is expected for non-subscribers)
-      if (error.response?.status !== 404) {
+      if (error.response?.status === 404) {
+        console.log('📅 mealCalendarApi: No active subscription found (404) - this is expected for non-subscribers');
+      } else {
         console.error('❌ mealCalendarApi: Error fetching calendar:', error.response?.data || error.message);
       }
       throw error;

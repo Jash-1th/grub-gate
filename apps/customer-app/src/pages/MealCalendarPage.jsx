@@ -213,26 +213,31 @@ const MealCalendarPage = () => {
   // Calculate calendar mode: SUBSCRIPTION (has active subscription) or PREVIEW (planned meals only)
   const calendarMode = calendarData ? 'SUBSCRIPTION' : 'PREVIEW';
 
+  // Fetch calendar data from API
   const fetchCalendarData = async () => {
     try {
       console.log('📅 MealCalendarPage: Fetching calendar data...');
       
       const response = await mealCalendarApi.getMealCalendar();
       
-      console.log('✅ MealCalendarPage: Calendar data received:', response);
-      setCalendarData(response.data);
-      
-      return response.data; // Return data for consolidated function
-      
-    } catch (err) {
-      // Only log error if it's not a 404 (which is expected for non-subscribers)
-      if (err.response?.status !== 404) {
-        console.error('❌ MealCalendarPage: Error fetching calendar:', err);
-        throw err; // Re-throw for consolidated error handling
+      if (response?.success && response?.data?.meals) {
+        console.log('✅ MealCalendarPage: Calendar data received:', response.data);
+        setCalendarData(response.data);
+        setIsSubscribed(true);
       } else {
         console.log('📅 No active subscription found, using preview mode');
-        return null; // Return null for preview mode
+        setCalendarData(null);
+        setIsSubscribed(false);
       }
+    } catch (error) {
+      // Handle 404 gracefully - it's expected for non-subscribers
+      if (error.response?.status === 404) {
+        console.log('📅 No active subscription found (404), using preview mode');
+      } else {
+        console.error('❌ MealCalendarPage: Error fetching calendar data:', error);
+      }
+      setCalendarData(null);
+      setIsSubscribed(false);
     }
   };
 
@@ -486,24 +491,34 @@ const MealCalendarPage = () => {
           return; // Skip empty days
         }
         
-        // Use stored date if available, otherwise fallback to calculation
+        // Use stored date if available, otherwise use consistent calculation
         let mealDate;
         if (dayMeals && dayMeals.date) {
           // Use the stored date from backend
           mealDate = new Date(dayMeals.date + 'T00:00:00.000Z'); // Ensure UTC
           console.log(`📅 Using stored date for ${day} (week ${weekIndex}):`, dayMeals.date, '→', mealDate.toDateString());
         } else {
-          // Fallback to old calculation method
-          console.log(`⚠️ No stored date for ${day} (week ${weekIndex}), using fallback calculation`);
-          const today = new Date();
-          const weekStartDate = new Date(today);
-          const daysUntilNextMonday = ((1 - today.getDay()) + 7) % 7 || 7;
-          weekStartDate.setDate(today.getDate() + daysUntilNextMonday + (weekIndex * 7));
+          // Use consistent calculation based on next Sunday
+          console.log(`⚠️ No stored date for ${day} (week ${weekIndex}), using consistent Sunday-based calculation`);
           
-          const dayIndex = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].indexOf(day);
+          const today = new Date();
+          const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+          
+          // Calculate next Sunday (or today if it's Sunday)
+          const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+          const nextSunday = new Date(today);
+          nextSunday.setDate(today.getDate() + daysUntilSunday);
+          
+          // Calculate the week start (Sunday) for this week index
+          const weekStartDate = new Date(nextSunday);
+          weekStartDate.setDate(nextSunday.getDate() + (weekIndex * 7));
+          
+          // Calculate the specific day within the week
+          const dayIndex = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].indexOf(day);
           mealDate = new Date(weekStartDate);
           mealDate.setDate(weekStartDate.getDate() + dayIndex);
-          console.log(`📅 Calculated fallback date for ${day} (week ${weekIndex}):`, mealDate.toDateString());
+          
+          console.log(`📅 Calculated consistent date for ${day} (week ${weekIndex}):`, mealDate.toDateString());
         }
         
         // Generate lunch and dinner meals
