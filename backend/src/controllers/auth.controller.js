@@ -136,9 +136,16 @@ const login = asyncHandler(async (req, res) => {
     return unauthorizedResponse(res, 'Your account has been deactivated. Please contact support.');
   }
 
-  // Check if user has customer role (for customer app login)
+  // Auto-add customer role if user is a partner logging into customer app
   if (!user.roles || !user.roles.includes('customer')) {
-    return unauthorizedResponse(res, 'Access denied. Customer account required.');
+    if (user.roles && user.roles.includes('partner')) {
+      // Partner trying to login to customer app - add customer role
+      user.roles.push('customer');
+      console.log('✅ Auto-added customer role to partner account during regular login');
+    } else {
+      // User has no customer role and is not a partner
+      return unauthorizedResponse(res, 'Access denied. Customer account required.');
+    }
   }
 
   // Update last login
@@ -221,7 +228,17 @@ const partnerLogin = asyncHandler(async (req, res) => {
 
   const user = await User.findOne(searchQuery).select('+passwordHash');
 
+  console.log('🔍 Partner Login Debug:', {
+    identifier: formattedIdentifier,
+    isEmail,
+    searchQuery,
+    userFound: !!user,
+    userRoles: user ? user.roles : null,
+    hasPassword: user ? !!user.passwordHash : null
+  });
+
   if (!user) {
+    console.log('❌ Partner login failed: User not found');
     return unauthorizedResponse(res, 'Wrong email or phone number. Please check your credentials and try again.');
   }
 
@@ -234,18 +251,23 @@ const partnerLogin = asyncHandler(async (req, res) => {
   const isPasswordMatch = await user.matchPassword(password);
 
   if (!isPasswordMatch) {
+    console.log('❌ Partner login failed: Wrong password');
     return unauthorizedResponse(res, 'Wrong password. Please check your password and try again.');
   }
 
   // Check if user is active
   if (user.status !== 'active') {
+    console.log('❌ Partner login failed: Account not active, status:', user.status);
     return unauthorizedResponse(res, 'Your account has been deactivated. Please contact support.');
   }
 
   // Check if user has partner role (for partner portal login)
   if (!user.roles || !user.roles.includes('partner')) {
+    console.log('❌ Partner login failed: No partner role, roles:', user.roles);
     return unauthorizedResponse(res, 'Access denied. Partner account required.');
   }
+
+  console.log('✅ Partner login successful for user:', user._id);
 
   // Update last login
   user.lastLoginAt = new Date();
@@ -477,6 +499,11 @@ const requestCustomerOTP = asyncHandler(async (req, res) => {
 
   // Block existing users from signup OTP flow - they should use login instead
   if (existingUser) {
+    // Check if existing user is a partner trying to signup as customer
+    if (existingUser.roles.includes('partner') && !existingUser.roles.includes('customer')) {
+      // For partners, auto-login and add customer role in the verification step
+      return errorResponse(res, 'Partner account detected. Please use the login form to access your account and add customer access.', 409);
+    }
     return errorResponse(res, 'User already exists with this email/phone. Please use the login form to sign in.', 409);
   }
 
@@ -583,6 +610,12 @@ const verifyLoginOTP = asyncHandler(async (req, res) => {
       return unauthorizedResponse(res, 'Your account has been deactivated.');
     }
 
+    // Auto-add customer role if user is a partner logging into customer app
+    if (user.roles.includes('partner') && !user.roles.includes('customer')) {
+      user.roles.push('customer');
+      console.log('✅ Auto-added customer role to partner account during login');
+    }
+
     user.lastLoginAt = new Date();
     await user.save();
 
@@ -642,33 +675,20 @@ const verifyCustomerOTP = asyncHandler(async (req, res) => {
     let existingUser = await User.findOne(searchQuery);
     let isNewUser = false;
 
-    // Handle existing user with partner role - add customer role instead of blocking
+    // Block all existing users - they should not reach this step
     if (existingUser) {
-      if (!existingUser.roles.includes('customer')) {
-        existingUser.roles.push('customer');
-        await existingUser.save();
-        
-        // Ensure user now has customer role
-        if (!existingUser.roles.includes('customer')) {
-          return errorResponse(res, 'Failed to add customer role to existing account', 500);
-        }
-        
-        const tokens = generateTokenPair(existingUser._id, existingUser.roles);
-        
-        return successResponse(res, {
-          user: {
-            _id: existingUser._id,
-            email: existingUser.email,
-            phoneNumber: existingUser.phoneNumber,
-            firstName: existingUser.firstName,
-            lastName: existingUser.lastName,
-            roles: existingUser.roles
-          },
-          ...tokens
-        }, 'Customer role added to existing account successfully');
-      } else {
-        return conflictResponse(res, 'A customer account with this identifier already exists.');
+      // If user already has customer role, they should have been blocked at OTP request
+      if (existingUser.roles.includes('customer')) {
+        return conflictResponse(res, 'A customer account with this identifier already exists. Please use the login form.');
       }
+      
+      // If user is a partner without customer role, they should have been blocked at OTP request too
+      if (existingUser.roles.includes('partner')) {
+        return conflictResponse(res, 'Partner account detected. Please use the login form to add customer access.');
+      }
+      
+      // Any other existing user should also be blocked
+      return conflictResponse(res, 'An account with this identifier already exists. Please use the login form.');
     }
 
     const userData = {
@@ -755,13 +775,25 @@ const requestPartnerOTP = asyncHandler(async (req, res) => {
     formattedIdentifier = smsService.formatPhoneNumber(identifier);
   }
   
+  const searchQuery = isEmail ? { email: formattedIdentifier } : { phoneNumber: formattedIdentifier };
+  const existingUser = await User.findOne(searchQuery);
+
+
+  // Block ALL existing users from partner registration
+  if (existingUser) {
+    if (existingUser.roles.includes('customer')) {
+      return errorResponse(res, 'This email/phone is registered as a customer account. Please use a different email/phone number for partner registration.', 409);
+    }
+    
+    if (existingUser.roles.includes('partner')) {
+      return errorResponse(res, 'A partner account with this email/phone already exists. Please use the login form to access your account.', 409);
+    }
+    
+    // Block any other existing user
+    return errorResponse(res, 'An account with this email/phone already exists. Please use a different email/phone number for partner registration.', 409);
+  }
+
   try {
-    const searchQuery = isEmail ? { email: formattedIdentifier } : { phoneNumber: formattedIdentifier };
-    const existingUser = await User.findOne(searchQuery);
-
-    // Allow existing users (both customer and partner) to proceed with OTP
-    // Role addition will be handled in the verification step
-
     const { otp } = await OTP.generateOTP(formattedIdentifier);
 
     if (channel === 'email') {

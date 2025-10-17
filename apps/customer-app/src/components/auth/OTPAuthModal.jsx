@@ -191,22 +191,34 @@ const OTPAuthModal = () => {
       console.error('Request OTP Error:', error);
       
       // Handle axios error responses - check for various user exists conditions
-      if (error.response?.status === 409 || 
-          (error.response?.data?.message && (
-            error.response.data.message.includes('already exists') ||
-            error.response.data.message.includes('User already registered') ||
-            error.response.data.message.includes('already registered')
-          ))) {
-        // User already exists - redirect to login modal
-        closeOTPAuthModal();
-        showError(
-          'Account Already Exists',
-          'This email/phone is already registered. Please use the login form to sign in with your password.'
-        );
-        // Open login modal after a short delay
-        setTimeout(() => {
-          openLoginModal();
-        }, 2000);
+      if (error.response?.status === 409) {
+        const errorMessage = error.response.data.message;
+        
+        if (errorMessage.includes('Partner account detected')) {
+          // Partner trying to signup as customer - redirect to login
+          closeOTPAuthModal();
+          showError(
+            'Partner Account Found',
+            'You have a partner account with this email/phone. Please login to add customer access to your existing account.'
+          );
+          // Open login modal after a short delay
+          setTimeout(() => {
+            openLoginModal();
+          }, 2000);
+        } else if (errorMessage.includes('already exists') || errorMessage.includes('already registered')) {
+          // Regular existing user - redirect to login
+          closeOTPAuthModal();
+          showError(
+            'Account Already Exists',
+            'This email/phone is already registered. Please use the login form to sign in.'
+          );
+          // Open login modal after a short delay
+          setTimeout(() => {
+            openLoginModal();
+          }, 2000);
+        } else {
+          setFormErrors({ general: errorMessage });
+        }
       } else {
         const errorMessage = error.response?.data?.message || error.message || 'Failed to send verification code. Please try again.';
         setFormErrors({ general: errorMessage });
