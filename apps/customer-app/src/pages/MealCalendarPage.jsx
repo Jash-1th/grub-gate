@@ -612,7 +612,26 @@ const MealCalendarPage = () => {
         // Generate lunch and dinner meals
         ['lunch', 'dinner'].forEach(mealType => {
           if (dayMeals[mealType] && dayMeals[mealType].length > 0) {
-            dayMeals[mealType].forEach((meal, index) => {
+            // Group meals by name to calculate quantities
+            const mealGroups = {};
+            
+            dayMeals[mealType].forEach((meal) => {
+              const mealName = meal.name || meal.itemName || 'Planned Meal';
+              const restaurant = meal.restaurant || meal.restaurantName || 'Restaurant';
+              const mealKey = `${mealName}-${restaurant}`;
+              
+              if (!mealGroups[mealKey]) {
+                mealGroups[mealKey] = {
+                  meal: meal,
+                  quantity: 0
+                };
+              }
+              mealGroups[mealKey].quantity++;
+            });
+            
+            // Create preview meals with quantities
+            Object.values(mealGroups).forEach((group, index) => {
+              const meal = group.meal;
               // Generate realistic delivery times for preview
               const baseHour = mealType === 'lunch' ? 12 : 19;
               const startTime = `${baseHour.toString().padStart(2, '0')}:00`;
@@ -630,6 +649,7 @@ const MealCalendarPage = () => {
                 },
                 restaurant: meal.restaurant || meal.restaurantName || 'Restaurant',
                 price: meal.price || 0,
+                quantity: group.quantity,
                 duration: 60 // Add 60 minutes duration for preview meals
               });
             });
@@ -661,11 +681,11 @@ const MealCalendarPage = () => {
       },
       summary: {
         byMealType: {
-          lunch: previewMeals.filter(m => m.mealType === 'lunch').length,
-          dinner: previewMeals.filter(m => m.mealType === 'dinner').length
+          lunch: previewMeals.filter(m => m.mealType === 'lunch').reduce((total, meal) => total + (meal.quantity || 1), 0),
+          dinner: previewMeals.filter(m => m.mealType === 'dinner').reduce((total, meal) => total + (meal.quantity || 1), 0)
         },
         byStatus: {
-          planned: previewMeals.length
+          planned: previewMeals.reduce((total, meal) => total + (meal.quantity || 1), 0)
         }
       }
     };
@@ -1141,6 +1161,11 @@ const MealCalendarPage = () => {
                               
                               <div className="text-sm font-medium mb-1 line-clamp-2" title={meal.mealName}>
                                 {meal.mealName}
+                                {meal.quantity && meal.quantity > 1 && (
+                                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    Qty: {meal.quantity}
+                                  </span>
+                                )}
                               </div>
                               
                               {meal.restaurant && (

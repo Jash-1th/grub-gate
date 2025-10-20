@@ -148,7 +148,8 @@ const EnhancedSubscriptionFlow = ({ selectedPlan, onComplete, onCancel }) => {
       const response = await apiClient.post('/subscription-meal-plans/create-from-meal-plan', subscriptionPayload);
       console.log('✅ Subscription created successfully:', response.data);
 
-      showSuccess('Subscription Created!', 'Your meal plan subscription has been set up successfully.');
+      // Use the backend success message instead of showing duplicate toast
+      showSuccess('Subscription Created!', response.data.message || 'Your meal plan subscription has been set up successfully.');
       onComplete?.(subscriptionPayload);
 
     } catch (error) {

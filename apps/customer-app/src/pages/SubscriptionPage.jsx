@@ -13,13 +13,27 @@ const SubscriptionPage = () => {
   useEffect(() => {
     const totalItems = getTotalItemsCount();
     
-    if (totalItems === 0) {
+    // Check if user just completed a subscription (to avoid showing error after successful subscription)
+    const recentSubscriptionSuccess = sessionStorage.getItem('recentSubscriptionSuccess');
+    
+    console.log('🔍 SubscriptionPage: totalItems =', totalItems);
+    console.log('🔍 SubscriptionPage: recentSubscriptionSuccess =', recentSubscriptionSuccess);
+    
+    if (totalItems === 0 && !recentSubscriptionSuccess) {
+      console.log('❌ SubscriptionPage: Showing "No Meals Selected" error');
       showError(
         'No Meals Selected',
         'Please select at least one meal item before choosing a subscription plan.'
       );
       // Redirect to weekly menu page
       navigate('/weekly-menu', { replace: true });
+    } else if (recentSubscriptionSuccess) {
+      console.log('✅ SubscriptionPage: Recent subscription detected, redirecting to meal calendar');
+      // Clear the flag and redirect to meal calendar
+      sessionStorage.removeItem('recentSubscriptionSuccess');
+      navigate('/meal-calendar', { replace: true });
+    } else {
+      console.log('✅ SubscriptionPage: Normal flow, totalItems > 0');
     }
   }, [getTotalItemsCount, navigate, showError]);
 

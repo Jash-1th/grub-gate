@@ -26,6 +26,8 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorMessage from '../../components/ui/ErrorMessage';
 import DatePicker from '../../components/common/DatePicker';
 import EnhancedItemCard from '../../components/orders/EnhancedItemCard';
+import StatusUpdateButton from '../../components/orders/StatusUpdateButton';
+import { ordersApi } from '../../api/ordersApi';
 
 const OrdersPage = () => {
   const { t } = useTranslation();
@@ -35,6 +37,7 @@ const OrdersPage = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [updateStatusLoading, setUpdateStatusLoading] = useState(null);
+  const [notification, setNotification] = useState(null);
 
   // Initialize orders hook with date filter to prevent showing all orders initially
   const initialFilters = useMemo(() => {
@@ -147,23 +150,52 @@ const OrdersPage = () => {
     setShowOrderModal(true);
   };
 
-  const handleUpdateStatus = async (orderId, newStatus) => {
+  const handleUpdateStatus = async (orderId, newStatus, notes = '') => {
     try {
       setUpdateStatusLoading(orderId);
-      const result = await updateOrderStatus(orderId, newStatus);
+      console.log(`🔄 Updating order ${orderId} to status: ${newStatus}`);
       
-      if (result.success) {
-        // Show success message (you can add toast notification here)
-        console.log('Order status updated successfully');
+      const response = await ordersApi.updateOrderStatus(orderId, newStatus, notes);
+      
+      if (response.data?.status === 'success') {
+        console.log('✅ Order status updated successfully');
+        
+        // Show success notification
+        setNotification({
+          type: 'success',
+          message: `Order status updated to "${newStatus}" successfully!`,
+          details: notes ? `Note: ${notes}` : null
+        });
+        
+        // Refresh orders to show updated status
+        await refreshOrders();
       } else {
-        console.error('Failed to update order status:', result.error);
+        throw new Error(response.data?.message || 'Failed to update order status');
       }
     } catch (err) {
-      console.error('Error updating order status:', err);
+      console.error('❌ Error updating order status:', err);
+      
+      // Show error notification
+      setNotification({
+        type: 'error',
+        message: 'Failed to update order status',
+        details: err.message || 'Please try again or contact support if the problem persists.'
+      });
     } finally {
       setUpdateStatusLoading(null);
     }
   };
+
+  // Auto-dismiss notifications
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 5000); // Auto-dismiss after 5 seconds
+      
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -217,6 +249,38 @@ const OrdersPage = () => {
             showRetry={true}
             showDismiss={true}
           />
+        )}
+
+        {/* Status Update Notification */}
+        {notification && (
+          <div className={`fixed top-4 right-4 z-50 max-w-md rounded-lg shadow-lg border p-4 ${
+            notification.type === 'success' 
+              ? 'bg-green-50 border-green-200 text-green-800' 
+              : 'bg-red-50 border-red-200 text-red-800'
+          }`}>
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <FontAwesomeIcon 
+                  icon={notification.type === 'success' ? faCheckCircle : faExclamationCircle} 
+                  className={`h-5 w-5 ${notification.type === 'success' ? 'text-green-600' : 'text-red-600'}`}
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm">{notification.message}</p>
+                {notification.details && (
+                  <p className="text-xs mt-1 opacity-80">{notification.details}</p>
+                )}
+              </div>
+              <button
+                onClick={() => setNotification(null)}
+                className={`flex-shrink-0 p-1 rounded-full hover:bg-opacity-20 transition-colors ${
+                  notification.type === 'success' ? 'hover:bg-green-600' : 'hover:bg-red-600'
+                }`}
+              >
+                <FontAwesomeIcon icon={faTimes} className="h-3 w-3" />
+              </button>
+            </div>
+          </div>
         )}
         {/* Header */}
         <div className="bg-gradient-to-r from-grub-red to-red-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
@@ -431,10 +495,11 @@ const OrdersPage = () => {
                                 <span className="font-bold text-base xl:text-lg text-grub-red">${order.total?.toFixed(2)}</span>
                               </td>
                               <td className="py-3 px-4 xl:py-4 xl:px-6">
-                                <span className={`inline-flex items-center px-2 xl:px-3 py-1 rounded-full text-xs xl:text-sm font-medium whitespace-nowrap ${getStatusColor(order.status)}`}>
-                                  {getStatusIcon(order.status)}
-                                  <span className="ml-1 xl:ml-2 capitalize">{order.status}</span>
-                                </span>
+                                <StatusUpdateButton
+                                  order={order}
+                                  onStatusUpdate={handleUpdateStatus}
+                                  isLoading={updateStatusLoading === order._id}
+                                />
                               </td>
                               <td className="py-3 px-4 xl:py-4 xl:px-6">
                                 <span className="text-gray-900 text-sm xl:text-base whitespace-nowrap">
@@ -451,61 +516,10 @@ const OrdersPage = () => {
                                 <div className="flex items-center space-x-2">
                                   <button
                                     onClick={() => handleViewOrder(order)}
-                                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                   >
                                     <FontAwesomeIcon icon={faEye} className="h-4 w-4" />
                                   </button>
-                                  {order.status === 'pending' && (
-                                    <Button
-                                      size="sm"
-                                      onClick={() => handleUpdateStatus(order._id, 'confirmed')}
-                                      disabled={updateStatusLoading === order._id}
-                                      className="bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
-                                    >
-                                      {updateStatusLoading === order._id ? (
-                                        <>
-                                          <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
-                                          Confirming...
-                                        </>
-                                      ) : (
-                                        'Confirm'
-                                      )}
-                                    </Button>
-                                  )}
-                                  {order.status === 'confirmed' && (
-                                    <Button
-                                      size="sm"
-                                      onClick={() => handleUpdateStatus(order._id, 'preparing')}
-                                      disabled={updateStatusLoading === order._id}
-                                      className="bg-orange-600 hover:bg-orange-700 text-white disabled:opacity-50"
-                                    >
-                                      {updateStatusLoading === order._id ? (
-                                        <>
-                                          <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
-                                          Starting...
-                                        </>
-                                      ) : (
-                                        'Start Prep'
-                                      )}
-                                    </Button>
-                                  )}
-                                  {order.status === 'preparing' && (
-                                    <Button
-                                      size="sm"
-                                      onClick={() => handleUpdateStatus(order._id, 'ready')}
-                                      disabled={updateStatusLoading === order._id}
-                                      className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
-                                    >
-                                      {updateStatusLoading === order._id ? (
-                                        <>
-                                          <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
-                                          Updating...
-                                        </>
-                                      ) : (
-                                        'Mark Ready'
-                                      )}
-                                    </Button>
-                                  )}
                                 </div>
                               </td>
                             </tr>
@@ -573,59 +587,20 @@ const OrdersPage = () => {
                             </div>
                           </div>
                           
-                          {/* Quick Actions */}
-                          <div className="flex items-center space-x-2 flex-shrink-0">
+                          {/* Status Management and Actions */}
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+                            <StatusUpdateButton
+                              order={order}
+                              onStatusUpdate={handleUpdateStatus}
+                              isLoading={updateStatusLoading === order._id}
+                            />
                             <button
                               onClick={() => handleViewOrder(order)}
-                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex-shrink-0"
+                              title="View Details"
                             >
                               <FontAwesomeIcon icon={faEye} className="h-4 w-4" />
                             </button>
-                            {order.status === 'pending' && (
-                              <Button
-                                size="sm"
-                                onClick={() => handleUpdateStatus(order._id, 'confirmed')}
-                                disabled={updateStatusLoading === order._id}
-                                className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm px-3 py-1.5 disabled:opacity-50 whitespace-nowrap"
-                              >
-                                {updateStatusLoading === order._id ? (
-                                  <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
-                                ) : (
-                                  <FontAwesomeIcon icon={faCheckCircle} className="h-3 w-3 mr-1" />
-                                )}
-                                {updateStatusLoading === order._id ? 'Confirming...' : 'Confirm'}
-                              </Button>
-                            )}
-                            {order.status === 'confirmed' && (
-                              <Button
-                                size="sm"
-                                onClick={() => handleUpdateStatus(order._id, 'preparing')}
-                                disabled={updateStatusLoading === order._id}
-                                className="bg-orange-600 hover:bg-orange-700 text-white text-xs sm:text-sm px-3 py-1.5 disabled:opacity-50 whitespace-nowrap"
-                              >
-                                {updateStatusLoading === order._id ? (
-                                  <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
-                                ) : (
-                                  <FontAwesomeIcon icon={faClock} className="h-3 w-3 mr-1" />
-                                )}
-                                {updateStatusLoading === order._id ? 'Starting...' : 'Prep'}
-                              </Button>
-                            )}
-                            {order.status === 'preparing' && (
-                              <Button
-                                size="sm"
-                                onClick={() => handleUpdateStatus(order._id, 'ready')}
-                                disabled={updateStatusLoading === order._id}
-                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm px-3 py-1.5 disabled:opacity-50 whitespace-nowrap"
-                              >
-                                {updateStatusLoading === order._id ? (
-                                  <FontAwesomeIcon icon={faSync} className="h-3 w-3 mr-1 animate-spin" />
-                                ) : (
-                                  <FontAwesomeIcon icon={faCheckCircle} className="h-3 w-3 mr-1" />
-                                )}
-                                {updateStatusLoading === order._id ? 'Updating...' : 'Ready'}
-                              </Button>
-                            )}
                           </div>
                         </div>
                       </div>

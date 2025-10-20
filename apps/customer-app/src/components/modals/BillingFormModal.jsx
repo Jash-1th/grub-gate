@@ -131,7 +131,8 @@ const BillingFormModal = ({ isOpen, onClose, selectedPlan, onSuccess }) => {
       const response = await subscriptionApi.createSubscriptionFromMealPlan(subscriptionMealPlanData);
       
       if (response.status === 'success') {
-        showSuccess('Success!', 'Subscription created successfully! Your meals have been scheduled for delivery.');
+        // Use the backend success message instead of showing duplicate toast
+        showSuccess('Success!', response.message || 'Subscription created successfully!');
         onSuccess({
           subscriptionMealPlan: response.data.subscriptionMealPlan
         });

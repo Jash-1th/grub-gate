@@ -984,7 +984,7 @@ export const MealPlanProvider = ({ children }) => {
   };
 
   // Clear all meal plan data and restaurant selection (for restaurant switching)
-  const clearAllMealPlanData = () => {
+  const clearAllMealPlanData = async () => {
     console.log('🎯 clearAllMealPlanData called - clearing everything');
     
     // Clear both weeks
@@ -1005,9 +1005,27 @@ export const MealPlanProvider = ({ children }) => {
       removeStorageItem('mealPlan'); // Clear legacy meal plan data
     }
     
-    // Save empty meal plan to database
+    // IMPORTANT: Force reload restaurant selection from database to ensure it's cleared
     if (isAuthenticated && user) {
-      console.log('💾 Saving cleared meal plan to database');
+      console.log('🔄 Force reloading restaurant selection after cleanup to ensure it\'s cleared...');
+      try {
+        const restaurantResponse = await restaurantSelectionApi.getSelectedRestaurants();
+        console.log('🔄 Restaurant reload response after cleanup:', restaurantResponse);
+        
+        // If restaurants still exist in database (shouldn't happen after subscription), clear them
+        if (restaurantResponse.status === 'success' && restaurantResponse.data?.selectedRestaurants?.length > 0) {
+          console.log('⚠️ WARNING: Restaurants still found in database after cleanup - this indicates incomplete backend cleanup');
+        } else {
+          console.log('✅ Confirmed: No restaurants found in database after cleanup');
+        }
+      } catch (error) {
+        console.log('✅ Restaurant reload failed (expected after cleanup):', error.message);
+      }
+    }
+    
+    // Save properly cleared meal plan to database to ensure clean state
+    if (isAuthenticated && user) {
+      console.log('💾 Saving cleared meal plan to database after subscription cleanup');
       const clearedData = {
         weeklyPlans: {
           week0: {
@@ -1034,9 +1052,14 @@ export const MealPlanProvider = ({ children }) => {
         maxRestaurants: state.maxRestaurants
       };
       console.log('🧹 Cleared data to save:', clearedData);
-      setTimeout(() => {
-        saveMealPlanToDatabase(clearedData);
-      }, 100);
+      
+      // Save immediately instead of using timeout to ensure it happens
+      try {
+        await saveMealPlanToDatabase(clearedData);
+        console.log('✅ Successfully saved cleared meal plan to database');
+      } catch (error) {
+        console.error('❌ Error saving cleared meal plan:', error);
+      }
     }
   };
 

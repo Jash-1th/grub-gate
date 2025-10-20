@@ -10,7 +10,14 @@ import EnhancedSubscriptionFlow from '../subscription/EnhancedSubscriptionFlow';
 const SubscriptionPlans = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { getWeekTotalCost, getWeekTotalItems } = useMealPlan();
+  const { 
+    getWeekTotalItems, 
+    getWeekTotalCost, 
+    getRestaurantsInAllWeeks,
+    getSelectedRestaurantCount,
+    getSelectedRestaurants,
+    clearAllMealPlanData
+  } = useMealPlan();
   const { isAuthenticated, user } = useAuth();
   const { showSuccess, showError, showInfo } = useToast();
   
@@ -77,8 +84,26 @@ const SubscriptionPlans = () => {
   };
 
   // Handle enhanced flow completion
-  const handleEnhancedFlowComplete = (subscriptionData) => {
+  const handleEnhancedFlowComplete = async (subscriptionData) => {
     setShowEnhancedFlow(false);
+    
+    // Set flag to prevent "No Meals Selected" error on subscription page
+    console.log('🎯 SubscriptionPlans: Setting recentSubscriptionSuccess flag (enhanced flow)');
+    sessionStorage.setItem('recentSubscriptionSuccess', 'true');
+    console.log('🎯 SubscriptionPlans: Flag set, value =', sessionStorage.getItem('recentSubscriptionSuccess'));
+    
+    // IMPORTANT: Clear all meal plan data from frontend after successful subscription
+    // This prevents showing old data even though it's deleted from database
+    console.log('🧹 Clearing meal plan data after successful subscription creation (enhanced flow)...');
+    
+    try {
+      // Clear all meal plan data and localStorage (now async)
+      await clearAllMealPlanData();
+      console.log('✅ Successfully cleared meal plan data from frontend');
+    } catch (error) {
+      console.error('⚠️ Error clearing meal plan data:', error);
+    }
+    
     // Toast already shown in EnhancedSubscriptionFlow, no need to show again
     // Navigate to meal calendar to show the newly created subscription
     navigate('/meal-calendar');
@@ -95,7 +120,24 @@ const SubscriptionPlans = () => {
   };
 
   // Handle successful subscription creation
-  const handleSubscriptionSuccess = () => {
+  const handleSubscriptionSuccess = async () => {
+    // Set flag to prevent "No Meals Selected" error on subscription page
+    console.log('🎯 SubscriptionPlans: Setting recentSubscriptionSuccess flag');
+    sessionStorage.setItem('recentSubscriptionSuccess', 'true');
+    console.log('🎯 SubscriptionPlans: Flag set, value =', sessionStorage.getItem('recentSubscriptionSuccess'));
+    
+    // IMPORTANT: Clear all meal plan data from frontend after successful subscription
+    // This prevents showing old data even though it's deleted from database
+    console.log('🧹 Clearing meal plan data after successful subscription creation...');
+    
+    try {
+      // Clear all meal plan data and localStorage (now async)
+      await clearAllMealPlanData();
+      console.log('✅ Successfully cleared meal plan data from frontend');
+    } catch (error) {
+      console.error('⚠️ Error clearing meal plan data:', error);
+    }
+    
     // Toast already shown in BillingFormModal, no need to show again
     // Navigate to meal calendar to show the newly created subscription
     navigate('/meal-calendar');

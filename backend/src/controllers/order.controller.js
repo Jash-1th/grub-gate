@@ -34,9 +34,7 @@ const getOrders = asyncHandler(async (req, res) => {
   // Build query based on user role
   let query = {};
   
-  if (req.user?.roles?.includes('customer') || req.user?.role === 'customer') {
-    query.customerId = req.user._id;
-  } else if (req.user?.roles?.includes('partner') || req.user?.role === 'partner') {
+  if (req.user?.roles?.includes('partner') || req.user?.role === 'partner') {
     // Get the specific restaurant for this partner (not all restaurants)
     let restaurantId = req.user.restaurantId;
     let restaurant = null;
@@ -83,6 +81,8 @@ const getOrders = asyncHandler(async (req, res) => {
     console.log('🏪 Partner restaurant:', restaurant.name);
     console.log('🏪 Specific restaurant ID:', restaurantId);
     console.log('🏪 Final query restaurantId filter:', query.restaurantId);
+  } else if (req.user?.roles?.includes('customer') || req.user?.role === 'customer') {
+    query.customerId = req.user._id;
   }
   // Admin can see all orders (no additional query filters)
 
@@ -408,10 +408,12 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
 
   // Find order and verify ownership for partners
   let query = { _id: orderId };
-  if (req.user.role === 'partner') {
+  if (req.user?.roles?.includes('partner') || req.user?.role === 'partner') {
     const restaurants = await Restaurant.find({ ownerId: req.user._id }).select('_id');
     const restaurantIds = restaurants.map(r => r._id);
     query.restaurantId = { $in: restaurantIds };
+    
+    console.log(`🔐 Partner ${req.user._id} updating order ${orderId} - Restaurant validation applied`);
   }
 
   const order = await Order.findOne(query);
@@ -421,6 +423,31 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
 
   try {
     await order.updateStatus(status, notes);
+    
+    // Sync status to customer meal calendar for subscription orders
+    if (order.isScheduledOrder && order.weeklyPlanId) {
+      try {
+        const UserMealCalendar = require('../models/UserMealCalendar');
+        
+        // Update corresponding meals in customer's meal calendar
+        const updateResult = await UserMealCalendar.updateMany(
+          {
+            customerId: order.customerId,
+            weeklyPlanId: order.weeklyPlanId,
+            scheduledDate: order.scheduledDate,
+            mealType: order.mealType
+          },
+          {
+            $set: { status: status }
+          }
+        );
+        
+        console.log(`🔄 Synced status "${status}" to ${updateResult.modifiedCount} meals in customer calendar for order ${order.orderNumber}`);
+      } catch (syncError) {
+        console.error('⚠️ Failed to sync status to meal calendar:', syncError);
+        // Don't fail the order update if calendar sync fails
+      }
+    }
     
     // Populate order for response
     await order.populate([

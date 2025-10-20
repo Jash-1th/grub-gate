@@ -34,8 +34,54 @@ const getUserMealCalendar = async (req, res) => {
       meals = meals.filter(meal => meal.status === status);
     }
 
+    // Group meals by name and restaurant to calculate quantities
+    console.log('🔍 Backend: Processing meals for grouping:', meals.length);
+    const groupedMeals = {};
+    meals.forEach((meal, index) => {
+      // Convert date to consistent string format for grouping
+      const dateStr = new Date(meal.date).toISOString().split('T')[0]; // YYYY-MM-DD format
+      const mealKey = `${meal.mealName}-${meal.restaurantId}-${dateStr}-${meal.mealType}`;
+      console.log(`🔍 Backend: Meal ${index + 1}: ${meal.mealName} (Key: ${mealKey})`);
+      
+      if (!groupedMeals[mealKey]) {
+        groupedMeals[mealKey] = {
+          ...meal.toObject(),
+          quantity: 0
+        };
+        console.log(`🆕 Backend: Created new group for: ${mealKey}`);
+      }
+      groupedMeals[mealKey].quantity++;
+      console.log(`📊 Backend: Updated quantity for ${mealKey}: ${groupedMeals[mealKey].quantity}`);
+    });
+    
+    // Convert grouped meals back to array
+    const mealsWithQuantity = Object.values(groupedMeals);
+    console.log('🎯 Backend: Final grouped meals:', mealsWithQuantity.length);
+    console.log('🎯 Backend: Meals with quantities:', mealsWithQuantity.map(m => `${m.mealName}: ${m.quantity}`));
+    
     // Populate restaurant details
     await calendar.populate('calendarEntries.restaurantId', 'name cuisine phone address');
+
+    // Calculate summary based on quantities
+    const calculateSummaryWithQuantities = (meals) => {
+      const totalMeals = meals.reduce((total, meal) => total + (meal.quantity || 1), 0);
+      
+      return {
+        totalMeals,
+        byStatus: {
+          scheduled: meals.filter(m => m.status === 'scheduled').reduce((total, meal) => total + (meal.quantity || 1), 0),
+          preparing: meals.filter(m => m.status === 'preparing').reduce((total, meal) => total + (meal.quantity || 1), 0),
+          ready: meals.filter(m => m.status === 'ready').reduce((total, meal) => total + (meal.quantity || 1), 0),
+          delivered: meals.filter(m => m.status === 'delivered').reduce((total, meal) => total + (meal.quantity || 1), 0),
+          cancelled: meals.filter(m => m.status === 'cancelled').reduce((total, meal) => total + (meal.quantity || 1), 0)
+        },
+        byMealType: {
+          breakfast: meals.filter(m => m.mealType === 'breakfast').reduce((total, meal) => total + (meal.quantity || 1), 0),
+          lunch: meals.filter(m => m.mealType === 'lunch').reduce((total, meal) => total + (meal.quantity || 1), 0),
+          dinner: meals.filter(m => m.mealType === 'dinner').reduce((total, meal) => total + (meal.quantity || 1), 0)
+        }
+      };
+    };
 
     res.status(200).json({
       success: true,
@@ -50,22 +96,8 @@ const getUserMealCalendar = async (req, res) => {
           remainingDays: calendar.remainingDays,
           metadata: calendar.metadata
         },
-        meals: meals,
-        summary: {
-          totalMeals: meals.length,
-          byStatus: {
-            scheduled: meals.filter(m => m.status === 'scheduled').length,
-            preparing: meals.filter(m => m.status === 'preparing').length,
-            ready: meals.filter(m => m.status === 'ready').length,
-            delivered: meals.filter(m => m.status === 'delivered').length,
-            cancelled: meals.filter(m => m.status === 'cancelled').length
-          },
-          byMealType: {
-            breakfast: meals.filter(m => m.mealType === 'breakfast').length,
-            lunch: meals.filter(m => m.mealType === 'lunch').length,
-            dinner: meals.filter(m => m.mealType === 'dinner').length
-          }
-        }
+        meals: mealsWithQuantity,
+        summary: calculateSummaryWithQuantities(mealsWithQuantity)
       }
     });
     

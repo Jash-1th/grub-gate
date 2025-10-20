@@ -854,8 +854,8 @@ const WeeklyMenuPage = () => {
                     </div>
                   </div>
                   
-                  {/* Prominent View Calendar Button - Only show if user has planned meals */}
-                  {hasPlannedMeals && (
+                  {/* Prominent View Calendar Button - Always show for subscribed users */}
+                  {(
                     <button
                       onClick={() => {
                         // Navigate to meal calendar with subscription start date

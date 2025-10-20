@@ -225,7 +225,7 @@ export const AuthProvider = ({ children }) => {
     
     try {
       console.log('🔐 Attempting login with apiClient...');
-      console.log('🔗 API Base URL:', import.meta.env.VITE_API_BASE_URL || 'https://gg0b1.netlify.app/api/v1');
+      console.log('🔗 API Base URL:', import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1');
       
       const response = await apiClient.post('/auth/partner/login', {
         identifier,

@@ -272,7 +272,9 @@ orderSchema.methods.calculateTotals = function(deliveryFee = 0, taxRate = 0.13) 
 
 // Instance method to update status
 orderSchema.methods.updateStatus = function(newStatus, notes = '') {
+  // Enhanced valid transitions including scheduled status for subscription orders
   const validTransitions = {
+    'scheduled': ['preparing', 'cancelled'],
     'pending': ['confirmed', 'cancelled'],
     'confirmed': ['preparing', 'cancelled'],
     'preparing': ['ready', 'cancelled'],
@@ -282,12 +284,59 @@ orderSchema.methods.updateStatus = function(newStatus, notes = '') {
     'cancelled': []
   };
 
+  // Check if transition is valid
   if (!validTransitions[this.status].includes(newStatus)) {
     throw new Error(`Cannot transition from ${this.status} to ${newStatus}`);
   }
 
+  // Time-based validation for subscription orders
+  if (this.isScheduledOrder && this.scheduledDate) {
+    const now = new Date();
+    const deliveryDate = new Date(this.scheduledDate);
+    const dayBefore = new Date(deliveryDate);
+    dayBefore.setDate(dayBefore.getDate() - 1);
+    dayBefore.setHours(0, 0, 0, 0); // Start of day before
+    
+    const isDeliveryDay = now.toDateString() === deliveryDate.toDateString();
+    const isDayBefore = now.toDateString() === dayBefore.toDateString();
+    const isAfterDayBefore = now >= dayBefore;
+    
+    // Validate timing based on new status
+    switch(newStatus) {
+      case 'preparing':
+        if (!isDayBefore && !isDeliveryDay) {
+          throw new Error(`Cannot set to "Preparing" - only allowed 1 day before delivery (${dayBefore.toDateString()}) or on delivery day (${deliveryDate.toDateString()})`);
+        }
+        break;
+        
+      case 'ready':
+        if (!isDeliveryDay) {
+          throw new Error(`Cannot set to "Ready" - only allowed on delivery day (${deliveryDate.toDateString()})`);
+        }
+        break;
+        
+      case 'delivered':
+        if (!isDeliveryDay) {
+          throw new Error(`Cannot set to "Delivered" - only allowed on delivery day (${deliveryDate.toDateString()})`);
+        }
+        // Additional check for delivery time window (optional - can be enhanced later)
+        break;
+        
+      case 'cancelled':
+        // Cancellation allowed anytime before delivery
+        if (now > deliveryDate) {
+          throw new Error(`Cannot cancel order - delivery time has passed`);
+        }
+        break;
+    }
+    
+    console.log(`🕐 Time validation passed for ${this.orderNumber}: ${this.status} → ${newStatus} (Delivery: ${deliveryDate.toDateString()})`);
+  }
+
+  // Update status
   this.status = newStatus;
   
+  // Handle special status updates
   if (newStatus === 'cancelled') {
     this.cancelledAt = new Date();
     this.cancelReason = notes;

@@ -810,15 +810,32 @@ const createSubscriptionFromMealPlan = async (req, res) => {
             };
           }
 
-          calendarEntries.push({
-            date: order.scheduledDate,
-            mealType: order.mealType,
-            mealName: order.items[0]?.name || 'Meal',
-            restaurantId: order.restaurantId,
-            status: order.status,
-            deliveryTime: deliveryTimeObj,
-            orderId: order._id
-          });
+          // Create calendar entry for each item in the order (handles quantities)
+          if (order.items && order.items.length > 0) {
+            order.items.forEach((item, itemIndex) => {
+              calendarEntries.push({
+                date: order.scheduledDate,
+                mealType: order.mealType,
+                mealName: item.name || 'Meal',
+                restaurantId: order.restaurantId,
+                status: order.status,
+                deliveryTime: deliveryTimeObj,
+                orderId: order._id,
+                itemId: item._id || `${order._id}-${itemIndex}`
+              });
+            });
+          } else {
+            // Fallback for orders without items
+            calendarEntries.push({
+              date: order.scheduledDate,
+              mealType: order.mealType,
+              mealName: 'Meal',
+              restaurantId: order.restaurantId,
+              status: order.status,
+              deliveryTime: deliveryTimeObj,
+              orderId: order._id
+            });
+          }
         }
       }
 
@@ -865,8 +882,16 @@ const createSubscriptionFromMealPlan = async (req, res) => {
       const deleteResult = await MealPlan.deleteOne({ userId: userId });
       console.log(`✅ Deleted meal plan for user ${userId}:`, deleteResult);
       
+      if (deleteResult.deletedCount === 0) {
+        console.log(`⚠️ No meal plan found to delete for user ${userId}`);
+        console.log(`   This might indicate the meal plan was already deleted or doesn't exist`);
+      } else {
+        console.log(`✅ Successfully deleted ${deleteResult.deletedCount} meal plan(s) for user ${userId}`);
+      }
+      
     } catch (cleanupError) {
       console.error('⚠️ Error during meal plan cleanup:', cleanupError);
+      console.error('⚠️ Cleanup error details:', cleanupError.message);
       // Don't fail the entire operation if cleanup fails
     }
 
@@ -888,6 +913,13 @@ const createSubscriptionFromMealPlan = async (req, res) => {
 
   } catch (error) {
     console.error('Error creating subscription from meal plan:', error);
+    
+    // IMPORTANT: DO NOT delete meal plan if subscription creation failed
+    // User needs to keep their meal plan to try subscription creation again
+    console.log(`🛡️ PRESERVING meal plan for user ${userId} after subscription error`);
+    console.log(`   User can fix any issues and retry subscription creation`);
+    console.log(`   Meal plan will be cleaned up only after successful subscription creation`);
+    
     res.status(500).json({
       status: 'error',
       message: 'Failed to create subscription meal plan',
