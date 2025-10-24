@@ -900,18 +900,10 @@ const RestaurantDetailPage = () => {
           {/* Back Button - Same position as Select Restaurant button */}
           <div className="fixed bottom-20 sm:bottom-6 left-1/2 transform -translate-x-1/2 z-50">
             <button
-              onClick={() => {
-                if (contextSource === 'daily-meal-plan') {
-                  navigate(`/meal-plan/${contextDay}?week=${contextWeek}`);
-                } else {
-                  navigate('/weekly-menu');
-                }
-              }}
+              onClick={() => navigate('/weekly-menu')}
               className={getButtonClasses(false, false)}
             >
-              <span>
-                {contextSource === 'daily-meal-plan' ? 'Back to Daily Meal Plan' : 'Back to Weekly Planning'}
-              </span>
+              <span>Back to Weekly Planning</span>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
