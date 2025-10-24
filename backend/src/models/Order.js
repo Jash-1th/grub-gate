@@ -293,20 +293,48 @@ orderSchema.methods.updateStatus = function(newStatus, notes = '') {
   if (this.isScheduledOrder && this.scheduledDate) {
     const now = new Date();
     const deliveryDate = new Date(this.scheduledDate);
-    const dayBefore = new Date(deliveryDate);
-    dayBefore.setDate(dayBefore.getDate() - 1);
-    dayBefore.setHours(0, 0, 0, 0); // Start of day before
     
-    const isDeliveryDay = now.toDateString() === deliveryDate.toDateString();
-    const isDayBefore = now.toDateString() === dayBefore.toDateString();
+    // Create day before date more carefully to handle timezone issues
+    const dayBefore = new Date(deliveryDate.getFullYear(), deliveryDate.getMonth(), deliveryDate.getDate() - 1);
+    
+    // Get current date components for comparison (timezone-safe)
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const currentDate = now.getDate();
+    
+    const deliveryYear = deliveryDate.getFullYear();
+    const deliveryMonth = deliveryDate.getMonth();
+    const deliveryDay = deliveryDate.getDate();
+    
+    const dayBeforeYear = dayBefore.getFullYear();
+    const dayBeforeMonth = dayBefore.getMonth();
+    const dayBeforeDay = dayBefore.getDate();
+    
+    // Compare dates using date components instead of toDateString() to avoid timezone issues
+    const isDeliveryDay = (currentYear === deliveryYear && currentMonth === deliveryMonth && currentDate === deliveryDay);
+    const isDayBefore = (currentYear === dayBeforeYear && currentMonth === dayBeforeMonth && currentDate === dayBeforeDay);
     const isAfterDayBefore = now >= dayBefore;
+    
+    // Debug logging for time validation
+    console.log(`🕐 DEBUG Time Validation for ${this.orderNumber}:`);
+    console.log(`   Current time: ${now.toISOString()} (${now.toDateString()})`);
+    console.log(`   Current date components: ${currentYear}-${currentMonth + 1}-${currentDate}`);
+    console.log(`   Delivery date: ${deliveryDate.toISOString()} (${deliveryDate.toDateString()})`);
+    console.log(`   Delivery date components: ${deliveryYear}-${deliveryMonth + 1}-${deliveryDay}`);
+    console.log(`   Day before: ${dayBefore.toISOString()} (${dayBefore.toDateString()})`);
+    console.log(`   Day before components: ${dayBeforeYear}-${dayBeforeMonth + 1}-${dayBeforeDay}`);
+    console.log(`   isDayBefore: ${isDayBefore}`);
+    console.log(`   isDeliveryDay: ${isDeliveryDay}`);
+    console.log(`   isAfterDayBefore: ${isAfterDayBefore}`);
     
     // Validate timing based on new status
     switch(newStatus) {
       case 'preparing':
         if (!isDayBefore && !isDeliveryDay) {
+          console.log(`❌ VALIDATION FAILED: isDayBefore=${isDayBefore}, isDeliveryDay=${isDeliveryDay}`);
           throw new Error(`Cannot set to "Preparing" - only allowed 1 day before delivery (${dayBefore.toDateString()}) or on delivery day (${deliveryDate.toDateString()})`);
         }
+        console.log(`✅ VALIDATION PASSED: Preparing status allowed`);
         break;
         
       case 'ready':
