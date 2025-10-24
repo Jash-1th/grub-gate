@@ -38,10 +38,10 @@ const RestaurantDetailPage = () => {
   const contextPreferences = searchParams.get('preferences');
   const isFromMenuSelection = !!(contextDay && contextSlot);
   
-  // Only allow meal planning when coming from weekly-menu workflow with day/slot context
+  // Only allow meal planning when coming from weekly-menu or daily-meal-plan workflow with day/slot context
   // Disable meal planning for menu browsing (View Full Menu button) and general restaurant browsing
-  // Daily meal plan page should show restaurant selection, not meal planning mode
-  const isMealPlanningEnabled = contextSource === 'weekly-menu' && isFromMenuSelection;
+  // Enable meal planning for both weekly menu and daily meal plan pages when restaurant is selected
+  const isMealPlanningEnabled = (contextSource === 'weekly-menu' || contextSource === 'daily-meal-plan') && isFromMenuSelection;
   
   // State for active day tab - initialize from context if available
   const [activeDay, setActiveDay] = useState(contextDay || 'monday');
@@ -884,7 +884,7 @@ const RestaurantDetailPage = () => {
         </div>
       )}
 
-      {/* Back to Weekly Planning Button - Only show when IN meal planning mode */}
+      {/* Back Button - Only show when IN meal planning mode */}
       {isMealPlanningEnabled && (
         <>
           {/* Quick Day/Slot Indicator - Top right corner */}
@@ -897,13 +897,21 @@ const RestaurantDetailPage = () => {
             </div>
           </div>
           
-          {/* Back to Weekly Planning Button - Same position as Select Restaurant button */}
+          {/* Back Button - Same position as Select Restaurant button */}
           <div className="fixed bottom-20 sm:bottom-6 left-1/2 transform -translate-x-1/2 z-50">
             <button
-              onClick={() => navigate('/weekly-menu')}
+              onClick={() => {
+                if (contextSource === 'daily-meal-plan') {
+                  navigate(`/meal-plan/${contextDay}?week=${contextWeek}`);
+                } else {
+                  navigate('/weekly-menu');
+                }
+              }}
               className={getButtonClasses(false, false)}
             >
-              <span>Back to Weekly Planning</span>
+              <span>
+                {contextSource === 'daily-meal-plan' ? 'Back to Daily Meal Plan' : 'Back to Weekly Planning'}
+              </span>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>

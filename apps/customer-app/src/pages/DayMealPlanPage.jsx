@@ -458,7 +458,14 @@ const DayMealPlanPage = () => {
                       <div className="flex-1">
                         <h3 className="text-lg font-semibold text-gray-900 mb-2">{groupedItem.name}</h3>
                         <button
-                          onClick={() => handleItemClick(groupedItem)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Navigate to restaurant page for meal planning
+                            const restaurantId = groupedItem.restaurantId;
+                            if (restaurantId) {
+                              navigate(`/restaurant/${restaurantId}?day=${day}&slot=${selectedMealType}&week=${week}&userType=normal&source=daily-meal-plan`);
+                            }
+                          }}
                           className="text-grub-red hover:text-red-600 font-medium text-sm transition-colors duration-200"
                         >
                           {groupedItem.restaurantName} →
