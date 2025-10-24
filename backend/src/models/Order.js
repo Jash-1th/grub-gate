@@ -330,11 +330,16 @@ orderSchema.methods.updateStatus = function(newStatus, notes = '') {
     // Validate timing based on new status
     switch(newStatus) {
       case 'preparing':
-        if (!isDayBefore && !isDeliveryDay) {
-          console.log(`❌ VALIDATION FAILED: isDayBefore=${isDayBefore}, isDeliveryDay=${isDeliveryDay}`);
+        // More lenient validation: allow preparing if current date is same or after day before delivery
+        const currentDateOnly = new Date(currentYear, currentMonth, currentDate);
+        const dayBeforeOnly = new Date(dayBeforeYear, dayBeforeMonth, dayBeforeDay);
+        const isAllowedForPreparing = currentDateOnly >= dayBeforeOnly;
+        
+        if (!isAllowedForPreparing) {
+          console.log(`❌ VALIDATION FAILED: Current date ${currentDateOnly.toDateString()} is before allowed date ${dayBeforeOnly.toDateString()}`);
           throw new Error(`Cannot set to "Preparing" - only allowed 1 day before delivery (${dayBefore.toDateString()}) or on delivery day (${deliveryDate.toDateString()})`);
         }
-        console.log(`✅ VALIDATION PASSED: Preparing status allowed`);
+        console.log(`✅ VALIDATION PASSED: Preparing status allowed (current: ${currentDateOnly.toDateString()}, allowed from: ${dayBeforeOnly.toDateString()})`);
         break;
         
       case 'ready':
