@@ -429,20 +429,39 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
       try {
         const UserMealCalendar = require('../models/UserMealCalendar');
         
-        // Update corresponding meals in customer's meal calendar
-        const updateResult = await UserMealCalendar.updateMany(
-          {
-            customerId: order.customerId,
-            weeklyPlanId: order.weeklyPlanId,
-            scheduledDate: order.scheduledDate,
-            mealType: order.mealType
-          },
-          {
-            $set: { status: status }
-          }
-        );
+        // Find the meal calendar document for this customer and subscription
+        const mealCalendar = await UserMealCalendar.findOne({
+          userId: order.customerId,
+          subscriptionId: order.weeklyPlanId
+        });
         
-        console.log(`🔄 Synced status "${status}" to ${updateResult.modifiedCount} meals in customer calendar for order ${order.orderNumber}`);
+        if (mealCalendar && mealCalendar.calendarEntries) {
+          // Update matching calendar entries within the array
+          let updatedCount = 0;
+          const orderDate = new Date(order.scheduledDate);
+          
+          mealCalendar.calendarEntries.forEach(entry => {
+            const entryDate = new Date(entry.date);
+            
+            // Match by date, meal type, AND order ID (order-specific sync)
+            if (entryDate.toDateString() === orderDate.toDateString() && 
+                entry.mealType === order.mealType &&
+                entry.orderId && entry.orderId.toString() === order._id.toString()) {
+              console.log(`🎯 Syncing meal: ${entry.mealName} from order ${order.orderNumber} to status "${status}"`);
+              entry.status = status;
+              updatedCount++;
+            }
+          });
+          
+          if (updatedCount > 0) {
+            await mealCalendar.save();
+            console.log(`🔄 Synced status "${status}" to ${updatedCount} meals in customer calendar for order ${order.orderNumber}`);
+          } else {
+            console.log(`⚠️ No matching meals found in calendar for order ${order.orderNumber} (Date: ${orderDate.toDateString()}, Type: ${order.mealType})`);
+          }
+        } else {
+          console.log(`⚠️ No meal calendar found for customer ${order.customerId} and subscription ${order.weeklyPlanId}`);
+        }
       } catch (syncError) {
         console.error('⚠️ Failed to sync status to meal calendar:', syncError);
         // Don't fail the order update if calendar sync fails

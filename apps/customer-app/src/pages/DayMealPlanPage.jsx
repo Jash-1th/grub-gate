@@ -173,7 +173,7 @@ const DayMealPlanPage = () => {
     if (selectedRestaurantsCount === 0) {
       // No restaurant selected - navigate to restaurant selection
       const postalParam = postalCode ? `&postal=${postalCode}` : '';
-      navigate(`/plan/restaurants?source=weekly-menu&day=${day}&slot=${selectedMealType}&week=${week}${postalParam}`);
+      navigate(`/plan/restaurants?source=daily-meal-plan&day=${day}&slot=${selectedMealType}&week=${week}${postalParam}`);
     } else if (selectedRestaurantsCount === 1) {
       // User has 1 restaurant - show continue modal
       setContinueModalData({ 
@@ -213,7 +213,7 @@ const DayMealPlanPage = () => {
     // Navigate to the selected restaurant with day/slot context
     if (modalData && modalData.existingRestaurant) {
       const restaurantId = modalData.existingRestaurant.restaurantId || modalData.existingRestaurant.id;
-      const navigationUrl = `/restaurant/${restaurantId}?day=${modalData.day}&slot=${modalData.mealType}&week=${modalData.week}&userType=normal&source=weekly-menu`;
+      const navigationUrl = `/restaurant/${restaurantId}?day=${modalData.day}&slot=${modalData.mealType}&week=${modalData.week}&userType=normal&source=daily-meal-plan`;
       console.log('🎯 Navigating to existing restaurant:', navigationUrl);
       navigate(navigationUrl);
     }
@@ -230,7 +230,7 @@ const DayMealPlanPage = () => {
     // Navigate to restaurant selection with day/slot context
     if (modalData) {
       const postalParam = postalCode ? `&postal=${postalCode}` : '';
-      const navigationUrl = `/plan/restaurants?source=weekly-menu&day=${modalData.day}&slot=${modalData.mealType}&week=${modalData.week}${postalParam}`;
+      const navigationUrl = `/plan/restaurants?source=daily-meal-plan&day=${modalData.day}&slot=${modalData.mealType}&week=${modalData.week}${postalParam}`;
       console.log('🎯 Navigating to add new restaurant:', navigationUrl);
       navigate(navigationUrl);
     }
@@ -253,7 +253,7 @@ const DayMealPlanPage = () => {
     // Navigate to the chosen restaurant with day/slot context
     if (modalData && restaurant) {
       const restaurantId = restaurant.restaurantId || restaurant.id;
-      const navigationUrl = `/restaurant/${restaurantId}?day=${modalData.day}&slot=${modalData.mealType}&week=${modalData.week}&userType=normal&source=weekly-menu`;
+      const navigationUrl = `/restaurant/${restaurantId}?day=${modalData.day}&slot=${modalData.mealType}&week=${modalData.week}&userType=normal&source=daily-meal-plan`;
       console.log('🎯 Navigating to chosen restaurant:', navigationUrl);
       navigate(navigationUrl);
     }
@@ -270,7 +270,7 @@ const DayMealPlanPage = () => {
     // Navigate to restaurant selection with day/slot context
     if (modalData) {
       const postalParam = postalCode ? `&postal=${postalCode}` : '';
-      const navigationUrl = `/plan/restaurants?source=weekly-menu&day=${modalData.day}&slot=${modalData.mealType}&week=${modalData.week}${postalParam}`;
+      const navigationUrl = `/plan/restaurants?source=daily-meal-plan&day=${modalData.day}&slot=${modalData.mealType}&week=${modalData.week}${postalParam}`;
       console.log('🎯 Navigating to add new restaurant from choice:', navigationUrl);
       navigate(navigationUrl);
     }

@@ -40,6 +40,7 @@ const RestaurantDetailPage = () => {
   
   // Only allow meal planning when coming from weekly-menu workflow with day/slot context
   // Disable meal planning for menu browsing (View Full Menu button) and general restaurant browsing
+  // Daily meal plan page should show restaurant selection, not meal planning mode
   const isMealPlanningEnabled = contextSource === 'weekly-menu' && isFromMenuSelection;
   
   // State for active day tab - initialize from context if available
@@ -513,7 +514,13 @@ const RestaurantDetailPage = () => {
     // Check if restaurant is already selected
     if (isRestaurantSelected(restaurantId)) {
       console.log('✅ Restaurant already selected, navigating directly');
-      navigateToWeeklyMenuWithRestaurant(navigate, setSelectedRestaurant, restaurantId, restaurantName, restaurant, contextWeek);
+      
+      // Navigate back to the appropriate page based on source
+      if (contextSource === 'daily-meal-plan') {
+        navigate(`/meal-plan/${contextDay}?week=${contextWeek}`);
+      } else {
+        navigateToWeeklyMenuWithRestaurant(navigate, setSelectedRestaurant, restaurantId, restaurantName, restaurant, contextWeek);
+      }
       return;
     }
     
@@ -535,7 +542,25 @@ const RestaurantDetailPage = () => {
     
     // Show success message and navigate
     // showMealPlanSuccess(`Added ${restaurantName} to your restaurant selection!`, '', '', restaurantName, 0); // Temporarily commented out
-    navigateToWeeklyMenuWithRestaurant(navigate, setSelectedRestaurant, restaurantId, restaurantName, restaurant, contextWeek);
+    
+    // Navigate back to the appropriate page based on source
+    if (contextSource === 'daily-meal-plan') {
+      // Save restaurant to database first
+      const restaurantObject = restaurant || {
+        id: restaurantId,
+        name: restaurantName,
+        isApiRestaurant: true
+      };
+      setSelectedRestaurant(restaurantObject);
+      
+      // Navigate back to daily meal plan page with context
+      setTimeout(() => {
+        navigate(`/meal-plan/${contextDay}?week=${contextWeek}`);
+      }, 100);
+    } else {
+      // Default behavior for weekly menu
+      navigateToWeeklyMenuWithRestaurant(navigate, setSelectedRestaurant, restaurantId, restaurantName, restaurant, contextWeek);
+    }
   };
 
   // Handle user type selection
@@ -828,7 +853,9 @@ const RestaurantDetailPage = () => {
       {!isMealPlanningEnabled && (
         <div className="fixed bottom-20 sm:bottom-6 left-1/2 transform -translate-x-1/2 z-50">
           <button
-            onClick={contextSource === 'menu-browse' ? () => navigate(`/weekly-menu`) : handleSelectRestaurant}
+            onClick={contextSource === 'menu-browse' ? () => navigate(`/weekly-menu`) : 
+                     contextSource === 'daily-meal-plan' ? handleSelectRestaurant :
+                     handleSelectRestaurant}
             className={getButtonClasses(
               isRestaurantSelected(restaurant.id), 
               contextSource === 'menu-browse'
