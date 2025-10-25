@@ -36,6 +36,8 @@ const orderGenerationRoutes = require('./src/routes/orderGeneration.routes');
 const adminRoutes = require('./src/routes/admin.routes');
 const geocodingRoutes = require('./src/routes/geocoding.routes');
 const activationRoutes = require('./src/routes/activation.routes');
+const notificationRoutes = require('./src/routes/notification.routes');
+const pushNotificationRoutes = require('./src/routes/pushNotification.routes');
 
 const app = express();
 
@@ -83,28 +85,37 @@ app.use('/api', limiter);
 
 // CORS configuration - Allow both Customer App and Partner Portal
 const allowedOrigins = [
-  'http://localhost:3000', // Customer App
+  'http://localhost:3000', // Customer App (local)
   'http://localhost:5173', // Partner Portal (Vite dev server)
-  'http://localhost:4173'  // Partner Portal (Vite preview)
+  'http://localhost:4173', // Partner Portal (Vite preview)
+  'http://127.0.0.1:3000', // Customer App (alternative localhost)
+  'http://127.0.0.1:5173', // Partner Portal (alternative localhost)
 ];
 
 // Add production origins from environment variable
+// Format: CORS_ORIGIN="https://customer-app.netlify.app,https://partner-portal.netlify.app"
 if (process.env.CORS_ORIGIN) {
   const productionOrigins = process.env.CORS_ORIGIN.split(',').map(origin => origin.trim());
   allowedOrigins.push(...productionOrigins);
+  console.log('🌐 Added production origins:', productionOrigins);
 }
 
 console.log('🔧 CORS: Allowing origins:', allowedOrigins);
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    // Allow requests with no origin (like mobile apps, curl, Postman, or same-origin)
+    if (!origin) {
+      console.log('✅ CORS: Allowing request with no origin (mobile/curl/same-origin)');
+      return callback(null, true);
+    }
     
     if (allowedOrigins.indexOf(origin) !== -1) {
+      console.log('✅ CORS: Allowing origin:', origin);
       callback(null, true);
     } else {
       console.log('❌ CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
+      console.log('📝 Allowed origins:', allowedOrigins);
+      callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
     }
   },
   credentials: true,
@@ -179,6 +190,8 @@ app.use('/api/v1/orders/generate', orderGenerationRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/geocoding', geocodingRoutes);
 app.use('/api/v1/activation', activationRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
+app.use('/api/v1/push-notifications', pushNotificationRoutes);
 app.use('/api/v1/meal-calendar', require('./src/routes/mealCalendar.routes'));
 app.use('/api/v1/restaurant-validation', require('./src/routes/restaurantValidation.routes'));
 

@@ -12,7 +12,8 @@ import {
   faQuestionCircle,
   faSignOutAlt,
   faGlobe,
-  faTimes
+
+  faBell
 } from '@fortawesome/free-solid-svg-icons';
 import { Logo, Button } from '@grub-gate/ui';
 import MobileBottomNav from './MobileBottomNav';
@@ -43,6 +44,7 @@ const DashboardLayout = ({ onLanguageChange }) => {
     { name: 'Customers', href: '/dashboard/customers', icon: faUsers },
     { name: 'Settings', href: '/dashboard/settings', icon: faCog },
     { name: 'Support', href: '/dashboard/support', icon: faQuestionCircle },
+    { name: '🧪 Test Notifications', href: '/dashboard/test/notifications', icon: faBell },
   ];
 
   const isCurrentPath = (path) => {

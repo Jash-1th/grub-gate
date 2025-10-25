@@ -4,20 +4,12 @@ import axios from 'axios';
 // Determine the correct API base URL
 const getApiBaseUrl = () => {
   // If environment variable is set, use it
-  if (import.meta.env.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL;
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
   }
   
-  // Using deployed backend for production
-  return 'https://gg0b1.netlify.app/api/v1';
-  
-  // COMMENTED OUT: Local development backend
-  // return 'http://localhost:5000/api/v1';
-  
-  // COMMENTED OUT: Conditional logic for Netlify detection
-  // if (typeof window !== 'undefined' && window.location.hostname.includes('netlify.app')) {
-  //   return 'https://gg0b1.netlify.app/api/v1';
-  // }
+  // Fallback to localhost for development
+  return 'http://localhost:5000/api/v1';
 };
 
 // Create axios instance with base configuration

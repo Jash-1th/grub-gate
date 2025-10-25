@@ -211,9 +211,20 @@ export const AuthProvider = ({ children }) => {
 
       const { accessToken, user } = response.data.data;
 
+      console.log('🔐 AuthContext: Received login response:', { accessToken: accessToken ? '***' : null, user });
+
       // Store in localStorage
-      setStorageItem('authToken', accessToken);
-      setStorageItem('user', user);
+      const tokenSaved = setStorageItem('authToken', accessToken);
+      const userSaved = setStorageItem('user', user);
+      
+      console.log('💾 AuthContext: Token saved to localStorage:', tokenSaved);
+      console.log('💾 AuthContext: User saved to localStorage:', userSaved);
+      
+      // Verify storage
+      const verifyToken = getStorageItem('authToken');
+      const verifyUser = getStorageItem('user');
+      console.log('✅ AuthContext: Verified token in storage:', !!verifyToken);
+      console.log('✅ AuthContext: Verified user in storage:', !!verifyUser);
 
       dispatch({
         type: AUTH_ACTIONS.LOGIN_SUCCESS,
@@ -227,7 +238,8 @@ export const AuthProvider = ({ children }) => {
       const redirectUrl = getStorageItem('redirectAfterLogin');
       console.log('🔄 AuthContext: Checking for redirect URL:', redirectUrl);
       
-      if (redirectUrl && redirectUrl !== '/') {
+      // TEMPORARILY DISABLE REDIRECTS TO FIX LOGIN ISSUE
+      if (redirectUrl && redirectUrl !== '/' && false) { // Added && false to disable
         console.log('🔄 AuthContext: Setting up redirect to:', redirectUrl);
         // Set a flag to trigger redirect after state updates
         setStorageItem('pendingRedirect', redirectUrl);
@@ -240,7 +252,11 @@ export const AuthProvider = ({ children }) => {
           removeStorageItem('loginInProgress');
         }, 5000); // Increased to 5 seconds for better reliability
       } else {
-        console.log('🔄 AuthContext: No valid redirect URL found, staying on current page');
+        console.log('🔄 AuthContext: No valid redirect URL found or redirects disabled, staying on current page');
+        // Clear any pending redirects
+        removeStorageItem('redirectAfterLogin');
+        removeStorageItem('pendingRedirect');
+        removeStorageItem('loginInProgress');
       }
 
       return { success: true, user };

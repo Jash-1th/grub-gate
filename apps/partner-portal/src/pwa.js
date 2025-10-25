@@ -51,6 +51,52 @@ export const registerPWA = () => {
   }
 };
 
+// Utility function to convert VAPID key from DER format to raw bytes
+function urlBase64ToUint8Array(base64String) {
+  try {
+    // Remove any whitespace
+    const cleanBase64 = base64String.replace(/\s/g, '');
+    
+    // Calculate proper padding
+    const padding = '='.repeat((4 - cleanBase64.length % 4) % 4);
+    
+    // Convert base64url to standard base64
+    const base64 = (cleanBase64 + padding)
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+
+    // Decode base64 string
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    
+    console.log('✅ Converted', cleanBase64.length, 'chars to', outputArray.length, 'bytes');
+    return outputArray;
+  } catch (error) {
+    console.error('❌ Error in urlBase64ToUint8Array:', error);
+    console.error('Input string:', base64String);
+    throw new Error('Failed to decode VAPID key: ' + error.message);
+  }
+}
+
+// Helper function to convert VAPID key from base64url to Uint8Array
+function convertVapidKey(vapidPublicKey) {
+  try {
+    // The VAPID key is already in raw format (65 bytes base64url encoded)
+    // Just convert from base64url to Uint8Array directly
+    const rawPublicKey = urlBase64ToUint8Array(vapidPublicKey);
+    
+    console.log('✅ VAPID key converted:', rawPublicKey.length, 'bytes');
+    return rawPublicKey;
+  } catch (error) {
+    console.error('❌ Error converting VAPID key:', error);
+    throw error;
+  }
+}
+
 // Function to request permission for push notifications
 export const requestNotificationPermission = async () => {
   try {
@@ -70,23 +116,36 @@ export const requestNotificationPermission = async () => {
     if (permission === 'granted') {
       console.log('Notification permission granted');
       
-      // For development, we'll skip push subscription setup
-      // In production, you would set up proper VAPID keys and backend
-      console.log('Notification permission granted - push subscription skipped for development');
-      
-      // Optional: Subscribe to push notifications if VAPID key is configured
-      if ('serviceWorker' in navigator && 'PushManager' in window && import.meta.env.VITE_VAPID_PUBLIC_KEY) {
+      // Subscribe to push notifications if service worker is ready
+      if ('serviceWorker' in navigator && 'PushManager' in window) {
         try {
           const registration = await navigator.serviceWorker.ready;
-          const subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: import.meta.env.VITE_VAPID_PUBLIC_KEY
-          });
           
-          console.log('Push subscription successful:', subscription);
-          return { success: true, subscription };
+          // Check if already subscribed
+          let subscription = await registration.pushManager.getSubscription();
+          
+          if (!subscription && import.meta.env.VITE_VAPID_PUBLIC_KEY) {
+            // Convert VAPID key from DER to raw format
+            const applicationServerKey = convertVapidKey(import.meta.env.VITE_VAPID_PUBLIC_KEY);
+            
+            // Subscribe with VAPID key
+            subscription = await registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: applicationServerKey
+            });
+          }
+          
+          if (subscription) {
+            // Send subscription to backend
+            await sendSubscriptionToBackend(subscription);
+            console.log('✅ Push subscription successful');
+            return { success: true, subscription };
+          } else {
+            console.log('✅ Notification permission granted (VAPID key not configured)');
+            return { success: true };
+          }
         } catch (pushError) {
-          console.warn('Push subscription failed (this is expected in development):', pushError.message);
+          console.warn('Push subscription failed:', pushError.message);
           return { success: true }; // Still return success since notification permission was granted
         }
       }
@@ -102,6 +161,62 @@ export const requestNotificationPermission = async () => {
     return { success: false, error: error.message };
   }
 };
+
+// Helper function to send subscription to backend
+async function sendSubscriptionToBackend(subscription) {
+  try {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+    
+    // Get FCM token from subscription
+    const token = subscription.endpoint;
+    
+    // Get auth token from localStorage (using 'token' key, not 'authToken')
+    const authToken = localStorage.getItem('token');
+    
+    if (!authToken) {
+      console.warn('⚠️ No auth token found, cannot save subscription');
+      return;
+    }
+    
+    const response = await fetch(`${API_URL}/push-notifications/subscribe`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({
+        token: token,
+        deviceType: 'web',
+        deviceInfo: {
+          userAgent: navigator.userAgent,
+          platform: navigator.platform,
+          browser: getBrowserName()
+        },
+        subscription: subscription.toJSON()
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Server responded with ${response.status}`);
+    }
+    
+    const result = await response.json();
+    console.log('✅ Subscription saved to backend:', result);
+  } catch (error) {
+    console.error('❌ Failed to save subscription to backend:', error);
+  }
+}
+
+// Helper function to get browser name
+function getBrowserName() {
+  const userAgent = navigator.userAgent;
+  if (userAgent.includes('Firefox')) return 'Firefox';
+  if (userAgent.includes('Chrome')) return 'Chrome';
+  if (userAgent.includes('Safari')) return 'Safari';
+  if (userAgent.includes('Edge')) return 'Edge';
+  if (userAgent.includes('Opera') || userAgent.includes('OPR')) return 'Opera';
+  return 'Unknown';
+}
 
 // Function to test push notifications (for development)
 export const testPushNotification = async () => {

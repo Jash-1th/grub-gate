@@ -1,5 +1,5 @@
 // Cache names with versioning for better cache management
-const CACHE_VERSION = '2.1.0';
+const CACHE_VERSION = '2.1.5'; // Added error logging for notification display
 const CACHE_NAME = `grubgate-v${CACHE_VERSION}`;
 const STATIC_CACHE = `grubgate-static-v${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `grubgate-dynamic-v${CACHE_VERSION}`;
@@ -258,12 +258,31 @@ self.addEventListener('push', (event) => {
   console.log('Push event received:', event);
   
   // Extract notification data from the push event
-  let notificationData;
-  try {
-    notificationData = event.data ? event.data.json() : {};
-  } catch (error) {
-    console.error('Error parsing push data:', error);
-    notificationData = {};
+  let notificationData = {};
+  
+  if (event.data) {
+    try {
+      const payload = event.data.json();
+      console.log('Push payload:', payload);
+      
+      // Firebase sends notification in payload.notification
+      if (payload.notification) {
+        notificationData = payload.notification;
+      } else {
+        notificationData = payload;
+      }
+      
+      // Merge with data if present
+      if (payload.data) {
+        notificationData.data = payload.data;
+      }
+    } catch (error) {
+      console.error('Error parsing push data:', error);
+      notificationData = {
+        title: 'GrubGate',
+        body: 'You have a new notification!'
+      };
+    }
   }
   
   // Set default values if no data is provided
@@ -294,8 +313,16 @@ self.addEventListener('push', (event) => {
     renotify: true
   };
   
+  console.log('Showing notification:', title, options);
+  
   event.waitUntil(
     self.registration.showNotification(title, options)
+      .then(() => {
+        console.log('✅ Notification displayed successfully');
+      })
+      .catch((error) => {
+        console.error('❌ Failed to show notification:', error);
+      })
   );
 });
 

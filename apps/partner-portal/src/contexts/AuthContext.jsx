@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { apiClient } from '../api/client.js';
+import partnerPushNotificationService from '../services/pushNotificationService';
 
 const AuthContext = createContext();
 
@@ -143,30 +144,59 @@ const getRedirectRoute = (user, isSignup = false) => {
     return '/onboarding/welcome';
   }
   
-  // For login flow - check completion status
-  // If registration is complete, go directly to dashboard
-  if (registrationComplete && registrationStage >= 3) {
+  // For login flow - prioritize dashboard for existing partners
+  // If user has partner role and restaurantId, go to dashboard
+  if (user.roles?.includes('partner') && user.restaurantId) {
+    console.log('✅ Partner with restaurant found, redirecting to dashboard');
     return '/dashboard';
   }
   
-  // If no restaurant info is available, assume incomplete registration
-  if (registrationComplete === undefined && registrationStage === undefined) {
-    console.log('⚠️ No restaurant info available, redirecting to onboarding');
+  // If registration is explicitly complete, go to dashboard
+  if (registrationComplete === true) {
+    console.log('✅ Registration marked complete, redirecting to dashboard');
+    return '/dashboard';
+  }
+  
+  // If user has partner info, go to dashboard
+  if (hasPartnerInfo) {
+    console.log('✅ Partner info found, redirecting to dashboard');
+    return '/dashboard';
+  }
+  
+  // Only redirect to onboarding if clearly incomplete
+  if (registrationComplete === false || registrationStage < 3) {
+    console.log('⚠️ Registration incomplete, redirecting to onboarding');
     return '/onboarding/welcome';
   }
   
-  // If registration is not complete, redirect to onboarding
-  if (!registrationComplete || registrationStage < 3) {
-    return '/onboarding/welcome';
-  }
-  
-  // If no partner info exists, redirect to setup
-  if (!hasPartnerInfo) {
-    return '/onboarding/setup';
-  }
-  
-  // Default to dashboard
+  // Default to dashboard for partners
+  console.log('✅ Defaulting to dashboard for partner user');
   return '/dashboard';
+};
+
+// Initialize push notifications for partner
+const initializePartnerNotifications = async () => {
+  try {
+    console.log('🔔 Initializing partner push notifications...');
+    
+    // Initialize the notification service
+    const initialized = await partnerPushNotificationService.initialize();
+    
+    if (initialized) {
+      // Request permission and register token
+      const registered = await partnerPushNotificationService.requestPermissionAndRegister();
+      
+      if (registered) {
+        console.log('✅ Partner push notifications initialized successfully');
+      } else {
+        console.log('⚠️ Partner push notification registration failed');
+      }
+    } else {
+      console.log('⚠️ Partner push notification service initialization failed');
+    }
+  } catch (error) {
+    console.error('❌ Error initializing partner push notifications:', error);
+  }
 };
 
 export const AuthProvider = ({ children }) => {
@@ -195,6 +225,9 @@ export const AuthProvider = ({ children }) => {
               payload: { user }
             });
             console.log('✅ Partner AuthContext: User authenticated from localStorage');
+            
+            // Initialize push notifications for returning user
+            initializePartnerNotifications();
           } else {
             // User doesn't have partner role, clear storage
             removeStorageItem('accessToken');
@@ -226,7 +259,7 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('🔐 Attempting login with apiClient...');
       console.log('🔗 API Base URL:', import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1');
-      
+        
       const response = await apiClient.post('/auth/partner/login', {
         identifier,
         password,
@@ -266,6 +299,9 @@ export const AuthProvider = ({ children }) => {
           payload: { user }
         });
 
+        // Initialize push notifications for partner
+        initializePartnerNotifications();
+
         return { 
           success: true, 
           user,
@@ -294,6 +330,10 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
+      // Cleanup push notifications
+      await partnerPushNotificationService.removeTokenFromBackend();
+      partnerPushNotificationService.cleanup();
+      
       // Clear localStorage
       removeStorageItem('accessToken');
       removeStorageItem('refreshToken');

@@ -208,6 +208,10 @@ const userSchema = new mongoose.Schema({
       type: Boolean,
       default: true
     },
+    pushNotifications: {
+      type: Boolean,
+      default: true
+    },
     orderAlerts: {
       type: Boolean,
       default: true
@@ -227,8 +231,46 @@ const userSchema = new mongoose.Schema({
     subscriptionReminders: {
       type: Boolean,
       default: true
+    },
+    promotionalOffers: {
+      type: Boolean,
+      default: true
     }
-  }
+  },
+
+  // FCM device tokens for push notifications
+  fcmTokens: [{
+    token: {
+      type: String,
+      required: true
+    },
+    deviceType: {
+      type: String,
+      enum: ['web', 'android', 'ios'],
+      default: 'web'
+    },
+    deviceInfo: {
+      userAgent: String,
+      platform: String,
+      browser: String
+    },
+    subscription: {
+      type: mongoose.Schema.Types.Mixed, // For web push subscription object
+      required: false
+    },
+    isActive: {
+      type: Boolean,
+      default: true
+    },
+    lastUsed: {
+      type: Date,
+      default: Date.now
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
@@ -359,6 +401,58 @@ userSchema.methods.removeAddress = function(addressId) {
 // Instance method to get default address
 userSchema.methods.getDefaultAddress = function() {
   return this.addresses.find(addr => addr.isDefault) || this.addresses[0];
+};
+
+// Instance method to add FCM token
+userSchema.methods.addFCMToken = function(tokenData) {
+  // Check if token already exists
+  const existingToken = this.fcmTokens.find(t => t.token === tokenData.token);
+  
+  if (existingToken) {
+    // Update existing token
+    existingToken.isActive = true;
+    existingToken.lastUsed = new Date();
+    existingToken.deviceInfo = tokenData.deviceInfo || existingToken.deviceInfo;
+  } else {
+    // Add new token
+    this.fcmTokens.push({
+      token: tokenData.token,
+      deviceType: tokenData.deviceType || 'web',
+      deviceInfo: tokenData.deviceInfo || {},
+      isActive: true,
+      lastUsed: new Date(),
+      createdAt: new Date()
+    });
+  }
+  
+  return this.save();
+};
+
+// Instance method to remove FCM token
+userSchema.methods.removeFCMToken = function(token) {
+  this.fcmTokens = this.fcmTokens.filter(t => t.token !== token);
+  return this.save();
+};
+
+// Instance method to deactivate FCM token
+userSchema.methods.deactivateFCMToken = function(token) {
+  const tokenObj = this.fcmTokens.find(t => t.token === token);
+  if (tokenObj) {
+    tokenObj.isActive = false;
+  }
+  return this.save();
+};
+
+// Instance method to get active FCM tokens
+userSchema.methods.getActiveFCMTokens = function() {
+  return this.fcmTokens.filter(t => t.isActive);
+};
+
+// Instance method to cleanup old FCM tokens (older than 30 days)
+userSchema.methods.cleanupOldFCMTokens = function() {
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  this.fcmTokens = this.fcmTokens.filter(t => t.lastUsed > thirtyDaysAgo);
+  return this.save();
 };
 
 module.exports = mongoose.model('User', userSchema);

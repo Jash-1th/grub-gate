@@ -477,7 +477,8 @@ export const MealPlanProvider = ({ children }) => {
   console.log('🎯 DEBUG: initialState at provider creation:', initialState);
   
   const [state, dispatch] = useReducer(mealPlanReducer, initialState);
-  const [isClient, setIsClient] = useState(false);
+  // Set isClient synchronously to prevent hydration mismatch on mobile
+  const [isClient, setIsClient] = useState(typeof window !== 'undefined');
   // Set initial loading state based on whether we have data
   const [isLoading, setIsLoading] = useState(!initialState.loadedFromDatabase);
   const saveTimeoutRef = useRef(null);
@@ -489,9 +490,8 @@ export const MealPlanProvider = ({ children }) => {
   console.log('🎯 DEBUG: isLoading:', isLoading);
   console.log('🎯 DEBUG: isAuthenticated:', isAuthenticated);
 
-  // SSR Safety - only run on client side
+  // SSR Safety - sync with database on mount
   useEffect(() => {
-    setIsClient(true);
     
     const syncWithDatabase = async () => {
       try {

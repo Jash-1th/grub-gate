@@ -4,6 +4,7 @@ const Restaurant = require('../../models/Restaurant');
 const User = require('../../models/User');
 const { validationResult } = require('express-validator');
 const { createDateRange, getCurrentDateUTC } = require('../../utils/smartDateCalculator');
+const pushNotificationService = require('../../services/pushNotificationService');
 
 /**
  * Get today's orders for a partner restaurant
@@ -223,6 +224,9 @@ const updateOrderStatus = async (req, res) => {
       });
     }
 
+    // Store previous status for notification logic
+    const previousStatus = order.status;
+
     // Update order status
     order.status = status;
     if (notes) {
@@ -241,6 +245,14 @@ const updateOrderStatus = async (req, res) => {
     });
 
     await order.save();
+
+    // 🔔 Send push notification to customer about status change
+    try {
+      await sendOrderStatusNotification(order, restaurant, previousStatus);
+    } catch (notificationError) {
+      console.error('❌ Failed to send notification, but order was updated:', notificationError);
+      // Don't fail the request if notification fails
+    }
 
     res.json({
       status: 'success',
@@ -371,6 +383,125 @@ const getOrderAnalytics = async (req, res) => {
     });
   }
 };
+
+/**
+ * Send push notification to customer when order status changes
+ */
+async function sendOrderStatusNotification(order, restaurant, previousStatus) {
+  try {
+    // Populate customer data if not already populated
+    if (!order.customerId.firstName) {
+      await order.populate('customerId', 'firstName lastName email fcmTokens');
+    }
+
+    const customer = order.customerId;
+    const orderNumber = order.orderNumber || order._id.toString().slice(-6);
+    const newStatus = order.status;
+
+    // Only send notification if status actually changed
+    if (previousStatus === newStatus) {
+      console.log('ℹ️ Status unchanged, skipping notification');
+      return;
+    }
+
+    console.log(`📤 Sending notification for order ${orderNumber}: ${previousStatus} → ${newStatus}`);
+
+    // Determine notification template based on new status
+    let notificationType = null;
+    let customData = {
+      orderNumber,
+      orderId: order._id.toString(),
+      restaurantName: restaurant.name,
+      previousStatus,
+      newStatus
+    };
+
+    // Map order status to notification templates
+    switch (newStatus) {
+      case 'confirmed':
+        notificationType = 'ORDER_CONFIRMED';
+        break;
+      case 'preparing':
+      case 'in_progress':
+        notificationType = 'ORDER_PREPARING';
+        break;
+      case 'ready':
+        notificationType = 'ORDER_READY';
+        customData.deliveryType = order.deliveryType || 'pickup';
+        customData.estimatedTime = order.estimatedDeliveryTime || '15-20 mins';
+        break;
+      case 'delivered':
+      case 'completed':
+        notificationType = 'ORDER_DELIVERED';
+        break;
+      case 'out-for-delivery':
+        // Custom notification for out for delivery
+        const deliveryNotification = {
+          title: '🚗 Order On The Way!',
+          body: `Your order from ${restaurant.name} is on its way to you.`,
+          icon: '/icons/delivery.png',
+          data: {
+            type: 'ORDER_UPDATE',
+            orderId: order._id.toString(),
+            action: 'track_order'
+          }
+        };
+        return await pushNotificationService.sendToUser(
+          customer._id,
+          deliveryNotification,
+          customData
+        );
+      case 'cancelled':
+        // Custom notification for cancellation
+        const cancellationNotification = {
+          title: '❌ Order Cancelled',
+          body: `Your order #${orderNumber} from ${restaurant.name} has been cancelled.`,
+          icon: '/icons/cancelled.png',
+          data: {
+            type: 'ORDER_CANCELLED',
+            orderId: order._id.toString(),
+            action: 'view_order'
+          }
+        };
+        return await pushNotificationService.sendToUser(
+          customer._id,
+          cancellationNotification,
+          customData
+        );
+      default:
+        console.log(`ℹ️ No notification template for status: ${newStatus}`);
+        return;
+    }
+
+    // Get notification template and send
+    if (notificationType) {
+      const notification = pushNotificationService.getNotificationTemplate(
+        notificationType,
+        customData
+      );
+
+      if (notification) {
+        const result = await pushNotificationService.sendToUser(
+          customer._id,
+          notification,
+          customData
+        );
+
+        if (result.success) {
+          console.log(`✅ Notification sent successfully to customer ${customer.firstName} ${customer.lastName}`);
+          console.log(`📊 Success: ${result.successCount || 1}, Failed: ${result.failureCount || 0}`);
+        } else {
+          console.error(`❌ Failed to send notification: ${result.error}`);
+        }
+
+        return result;
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error in sendOrderStatusNotification:', error);
+    throw error;
+  }
+}
 
 module.exports = {
   getTodaysOrders,

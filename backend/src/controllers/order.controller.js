@@ -11,6 +11,7 @@ const {
   paginatedResponse
 } = require('../utils/apiResponse');
 const { asyncHandler } = require('../middlewares/errorHandler');
+const pushNotificationService = require('../services/pushNotificationService');
 
 /**
  * @desc    Get orders (customer orders or restaurant orders)
@@ -390,9 +391,8 @@ const createOrder = asyncHandler(async (req, res) => {
     { path: 'items.menuItemId', select: 'name description image category' }
   ]);
 
-  // TODO: Send notification emails/SMS
-  // TODO: Notify restaurant of new order
-  // TODO: Process payment if not already processed
+  // Send push notifications for new order
+  await sendNewOrderNotifications(order);
 
   createdResponse(res, { order }, 'Order created successfully');
 });
@@ -474,6 +474,9 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
       { path: 'restaurantId', select: 'name cuisine phone' }
     ]);
 
+    // Send push notifications for status changes
+    await sendOrderStatusNotifications(order, status);
+
     successResponse(res, { order }, 'Order status updated successfully');
   } catch (error) {
     return errorResponse(res, error.message, 400);
@@ -506,6 +509,16 @@ const cancelOrder = asyncHandler(async (req, res) => {
 
   try {
     await order.cancel(reason);
+    
+    // Populate order for notifications
+    await order.populate([
+      { path: 'customerId', select: 'firstName lastName email phone' },
+      { path: 'restaurantId', select: 'name cuisine phone ownerId' }
+    ]);
+
+    // Send cancellation notifications
+    await sendOrderCancellationNotifications(order, req.user.role, reason);
+    
     successResponse(res, { order }, 'Order cancelled successfully');
   } catch (error) {
     return errorResponse(res, error.message, 400);
@@ -607,6 +620,239 @@ const getOrderStats = asyncHandler(async (req, res) => {
     dailyTrends
   }, 'Order statistics retrieved successfully');
 });
+
+/**
+ * Send push notifications for new orders
+ */
+const sendNewOrderNotifications = async (order) => {
+  try {
+    console.log(`📱 Sending new order notifications for order ${order.orderNumber}`);
+
+    // Send notification to customer (order confirmation)
+    if (order.customerId) {
+      const customerNotification = {
+        title: '✅ Order Confirmed!',
+        body: `Your order #${order.orderNumber} has been placed successfully and will be prepared soon.`,
+        icon: '/icons/order-confirmed.png'
+      };
+
+      await pushNotificationService.sendToUser(
+        order.customerId._id,
+        customerNotification,
+        {
+          orderId: order._id.toString(),
+          orderNumber: order.orderNumber,
+          type: 'ORDER_CONFIRMED',
+          action: 'view_order'
+        }
+      );
+      console.log(`✅ Customer confirmation sent for order ${order.orderNumber}`);
+    }
+
+    // Send notification to partner (new order alert)
+    if (order.restaurantId && order.restaurantId.ownerId) {
+      const itemCount = order.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+      const customerName = order.customerId ? 
+        `${order.customerId.firstName || ''} ${order.customerId.lastName || ''}`.trim() : 
+        'Customer';
+
+      const partnerNotification = {
+        title: '🔔 New Order Received!',
+        body: `New order from ${customerName} - ${itemCount} items (₹${order.total.toFixed(2)})`,
+        icon: '/icons/new-order.png',
+        requireInteraction: true
+      };
+
+      await pushNotificationService.sendToUser(
+        order.restaurantId.ownerId,
+        partnerNotification,
+        {
+          orderId: order._id.toString(),
+          orderNumber: order.orderNumber,
+          customerName: customerName,
+          itemCount: itemCount,
+          total: order.total,
+          type: 'NEW_ORDER',
+          action: 'view_order',
+          requireInteraction: 'true'
+        }
+      );
+      console.log(`✅ Partner new order notification sent for order ${order.orderNumber}`);
+    }
+  } catch (error) {
+    console.error('❌ Error sending new order notifications:', error);
+    // Don't throw error to avoid breaking order creation
+  }
+};
+
+/**
+ * Send push notifications for order cancellation
+ */
+const sendOrderCancellationNotifications = async (order, cancelledBy, reason) => {
+  try {
+    console.log(`📱 Sending cancellation notifications for order ${order.orderNumber} (cancelled by ${cancelledBy})`);
+
+    if (cancelledBy === 'customer') {
+      // Customer cancelled - notify partner
+      if (order.restaurantId && order.restaurantId.ownerId) {
+        const customerName = order.customerId ? 
+          `${order.customerId.firstName || ''} ${order.customerId.lastName || ''}`.trim() : 
+          'Customer';
+
+        const partnerNotification = {
+          title: '❌ Order Cancelled',
+          body: `${customerName} cancelled order #${order.orderNumber}${reason ? ` - Reason: ${reason}` : ''}`,
+          icon: '/icons/order-cancelled.png'
+        };
+
+        await pushNotificationService.sendToUser(
+          order.restaurantId.ownerId,
+          partnerNotification,
+          {
+            orderId: order._id.toString(),
+            orderNumber: order.orderNumber,
+            customerName: customerName,
+            reason: reason || 'No reason provided',
+            type: 'ORDER_CANCELLED',
+            action: 'view_order'
+          }
+        );
+        console.log(`✅ Partner cancellation notification sent for order ${order.orderNumber}`);
+      }
+    } else if (cancelledBy === 'partner') {
+      // Partner cancelled - notify customer
+      if (order.customerId) {
+        const restaurantName = order.restaurantId?.name || 'Restaurant';
+
+        const customerNotification = {
+          title: '❌ Order Cancelled',
+          body: `Your order #${order.orderNumber} has been cancelled by ${restaurantName}${reason ? ` - Reason: ${reason}` : ''}`,
+          icon: '/icons/order-cancelled.png'
+        };
+
+        await pushNotificationService.sendToUser(
+          order.customerId._id,
+          customerNotification,
+          {
+            orderId: order._id.toString(),
+            orderNumber: order.orderNumber,
+            restaurantName: restaurantName,
+            reason: reason || 'No reason provided',
+            type: 'ORDER_CANCELLED',
+            action: 'view_order'
+          }
+        );
+        console.log(`✅ Customer cancellation notification sent for order ${order.orderNumber}`);
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error sending order cancellation notifications:', error);
+    // Don't throw error to avoid breaking order cancellation
+  }
+};
+
+/**
+ * Send push notifications for order status changes
+ */
+const sendOrderStatusNotifications = async (order, newStatus) => {
+  try {
+    console.log(`📱 Sending notifications for order ${order.orderNumber} status change to ${newStatus}`);
+
+    // Send notification to customer
+    if (order.customerId) {
+      const customerNotification = getCustomerNotificationForStatus(newStatus, order);
+      if (customerNotification) {
+        await pushNotificationService.sendToUser(
+          order.customerId._id,
+          customerNotification,
+          {
+            orderId: order._id.toString(),
+            orderNumber: order.orderNumber,
+            type: customerNotification.type
+          }
+        );
+        console.log(`✅ Customer notification sent for order ${order.orderNumber}`);
+      }
+    }
+
+    // Send notification to partner for certain statuses
+    if (order.restaurantId && order.restaurantId.ownerId) {
+      const partnerNotification = getPartnerNotificationForStatus(newStatus, order);
+      if (partnerNotification) {
+        await pushNotificationService.sendToUser(
+          order.restaurantId.ownerId,
+          partnerNotification,
+          {
+            orderId: order._id.toString(),
+            orderNumber: order.orderNumber,
+            type: partnerNotification.type
+          }
+        );
+        console.log(`✅ Partner notification sent for order ${order.orderNumber}`);
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error sending order status notifications:', error);
+    // Don't throw error to avoid breaking order update
+  }
+};
+
+/**
+ * Get customer notification template for order status
+ */
+const getCustomerNotificationForStatus = (status, order) => {
+  const templates = {
+    confirmed: {
+      type: 'ORDER_CONFIRMED',
+      title: '✅ Order Confirmed!',
+      body: `Your order #${order.orderNumber} has been confirmed and will be prepared soon.`,
+      icon: '/icons/order-confirmed.png'
+    },
+    preparing: {
+      type: 'ORDER_PREPARING',
+      title: '🍳 Order Being Prepared',
+      body: `Your delicious meal is being prepared by ${order.restaurantId?.name || 'the restaurant'}.`,
+      icon: '/icons/cooking.png'
+    },
+    ready: {
+      type: 'ORDER_READY',
+      title: '📦 Order Ready!',
+      body: `Your order #${order.orderNumber} is ready for pickup/delivery.`,
+      icon: '/icons/order-ready.png'
+    },
+    delivered: {
+      type: 'ORDER_DELIVERED',
+      title: '🎉 Order Delivered!',
+      body: 'Your order has been delivered. Enjoy your meal!',
+      icon: '/icons/delivered.png'
+    },
+    cancelled: {
+      type: 'ORDER_CANCELLED',
+      title: '❌ Order Cancelled',
+      body: `Your order #${order.orderNumber} has been cancelled.`,
+      icon: '/icons/order-cancelled.png'
+    }
+  };
+
+  return templates[status] || null;
+};
+
+/**
+ * Get partner notification template for order status
+ */
+const getPartnerNotificationForStatus = (status, order) => {
+  // Only send partner notifications for specific statuses
+  if (status === 'delivered') {
+    return {
+      type: 'ORDER_COMPLETED',
+      title: '✅ Order Completed',
+      body: `Order #${order.orderNumber} has been successfully delivered to ${order.customerId?.firstName || 'customer'}.`,
+      icon: '/icons/order-completed.png'
+    };
+  }
+
+  return null;
+};
 
 module.exports = {
   getOrders,

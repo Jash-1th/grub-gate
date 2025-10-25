@@ -101,12 +101,13 @@ const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore, isSel
           
           {/* Selected Restaurant Badge */}
           {isSelected && (
-            <div className="absolute top-3 left-3 right-3 flex justify-center z-10">
-              <span className="px-3 py-1.5 bg-green-500 text-white text-sm font-bold rounded-full shadow-xl border-2 border-white flex items-center space-x-1 animate-pulse">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="absolute top-2 sm:top-3 left-2 sm:left-3 right-2 sm:right-3 flex justify-center z-10">
+              <span className="px-2 sm:px-3 py-1 sm:py-1.5 bg-green-500 text-white text-xs sm:text-sm font-bold rounded-full shadow-xl border-2 border-white flex items-center space-x-1 animate-pulse">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <span>✅ SELECTED</span>
+                <span className="hidden xs:inline">✅ SELECTED</span>
+                <span className="inline xs:hidden">✅</span>
               </span>
             </div>
           )}
@@ -179,7 +180,7 @@ const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore, isSel
           {/* Preferences Tags - Fixed height container */}
           <div className="mb-4 min-h-[1.5rem] flex items-start">
             <div className="flex flex-wrap gap-1">
-              {restaurant.preferences.slice(0, 3).map((preference, index) => (
+              {(restaurant.preferences || []).slice(0, 3).map((preference, index) => (
                 <span
                   key={index}
                   className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full capitalize"
@@ -187,9 +188,9 @@ const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore, isSel
                   {preference.replace('-', ' ')}
                 </span>
               ))}
-              {restaurant.preferences.length > 3 && (
+              {(restaurant.preferences || []).length > 3 && (
                 <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                  +{restaurant.preferences.length - 3} more
+                  +{(restaurant.preferences || []).length - 3} more
                 </span>
               )}
             </div>

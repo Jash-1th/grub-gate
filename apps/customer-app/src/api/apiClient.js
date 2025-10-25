@@ -3,8 +3,7 @@ import { getStorageItem, removeStorageItem } from '../utils/ssrSafeStorage';
 
 // Create axios instance with base configuration
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://gg0b1.netlify.app/api/v1', // Deployed backend
-  // baseURL: 'http://localhost:5000/api/v1', // Local development
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1', // Use local backend by default
 
   timeout: 10000,
   headers: {
@@ -15,7 +14,7 @@ const apiClient = axios.create({
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = getStorageItem('authToken');
+    const token = getStorageItem('authToken'); // Changed from 'token' to 'authToken'
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -39,7 +38,7 @@ apiClient.interceptors.response.use(
       const isLoginAttempt = error.config?.url?.includes('/auth/login');
       
       if (!isLoginAttempt) {
-        removeStorageItem('authToken');
+        removeStorageItem('authToken'); // Changed from 'token' to 'authToken'
         removeStorageItem('user');
         // Redirect to login or refresh page for authenticated requests
         if (typeof window !== 'undefined') {

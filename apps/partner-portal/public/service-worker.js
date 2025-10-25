@@ -1,5 +1,5 @@
 // Cache names with versioning for better cache management
-const CACHE_VERSION = '1.0.0';
+const CACHE_VERSION = '1.1.0'; // Updated for push notification fix
 const CACHE_NAME = `grubgate-partner-v${CACHE_VERSION}`;
 const STATIC_CACHE = `grubgate-partner-static-v${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `grubgate-partner-dynamic-v${CACHE_VERSION}`;
@@ -158,13 +158,26 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('push', (event) => {
   console.log('Service Worker: Push received');
   
-  let data = {};
+  let notificationData = {};
   
   if (event.data) {
     try {
-      data = event.data.json();
+      const payload = event.data.json();
+      console.log('Push payload:', payload);
+      
+      // Firebase sends notification in payload.notification
+      if (payload.notification) {
+        notificationData = payload.notification;
+      } else {
+        notificationData = payload;
+      }
+      
+      // Merge with data if present
+      if (payload.data) {
+        notificationData.data = payload.data;
+      }
     } catch (e) {
-      data = {
+      notificationData = {
         title: 'GrubGate Partner',
         body: event.data.text() || 'You have a new notification',
         icon: '/icons/logo192.png',
@@ -174,22 +187,31 @@ self.addEventListener('push', (event) => {
   }
   
   const options = {
-    title: data.title || 'GrubGate Partner',
-    body: data.body || 'You have a new notification',
-    icon: data.icon || '/icons/logo192.png',
-    badge: data.badge || '/icons/Logo.png',
-    data: data.data || {},
-    actions: data.actions || [],
-    requireInteraction: data.requireInteraction || false,
-    silent: data.silent || false,
-    tag: data.tag || 'grubgate-partner-notification',
-    renotify: data.renotify || false,
-    vibrate: data.vibrate || [200, 100, 200],
-    timestamp: data.timestamp || Date.now()
+    body: notificationData.body || 'You have a new notification',
+    icon: notificationData.icon || '/icons/logo192.png',
+    badge: notificationData.badge || '/icons/Logo.png',
+    data: notificationData.data || {},
+    actions: notificationData.actions || [],
+    requireInteraction: notificationData.requireInteraction || false,
+    silent: notificationData.silent || false,
+    tag: notificationData.tag || 'grubgate-partner-notification',
+    renotify: notificationData.renotify || false,
+    vibrate: notificationData.vibrate || [200, 100, 200],
+    timestamp: notificationData.timestamp || Date.now()
   };
   
+  const title = notificationData.title || 'GrubGate Partner';
+  
+  console.log('Showing notification:', title, options);
+  
   event.waitUntil(
-    self.registration.showNotification(options.title, options)
+    self.registration.showNotification(title, options)
+      .then(() => {
+        console.log('✅ Notification displayed successfully');
+      })
+      .catch((error) => {
+        console.error('❌ Failed to show notification:', error);
+      })
   );
 });
 

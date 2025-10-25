@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMealPlan } from '../contexts/MealPlanContext_SSR_FIXED';
 import { useToast } from '../contexts/ToastContext';
@@ -6,20 +6,41 @@ import SubscriptionPlans from '../components/planning/SubscriptionPlans';
 
 const SubscriptionPage = () => {
   const navigate = useNavigate();
-  const { getTotalItemsCount } = useMealPlan();
+  const { getTotalItemsCount, isLoading } = useMealPlan();
   const { showError } = useToast();
+  const hasCheckedOnMount = useRef(false);
+
+  // Check IMMEDIATELY if user just completed a subscription (before any useEffect runs)
+  const recentSubscriptionSuccess = sessionStorage.getItem('recentSubscriptionSuccess');
+  
+  // If subscription was just completed, redirect immediately without rendering
+  if (recentSubscriptionSuccess) {
+    console.log('✅ SubscriptionPage: Recent subscription detected (immediate check), redirecting to meal calendar');
+    sessionStorage.removeItem('recentSubscriptionSuccess');
+    navigate('/meal-calendar', { replace: true });
+    return null; // Don't render anything, just redirect
+  }
 
   // Check if user has selected at least one meal item
   useEffect(() => {
+    // Skip the check on initial mount (to avoid false positives during page refresh)
+    if (!hasCheckedOnMount.current) {
+      hasCheckedOnMount.current = true;
+      console.log('⏭️ SubscriptionPage: Skipping check on initial mount');
+      return;
+    }
+    
+    // Don't check until meal plan data is fully loaded
+    if (isLoading) {
+      console.log('⏳ SubscriptionPage: Still loading meal plan data, waiting...');
+      return;
+    }
+    
     const totalItems = getTotalItemsCount();
     
-    // Check if user just completed a subscription (to avoid showing error after successful subscription)
-    const recentSubscriptionSuccess = sessionStorage.getItem('recentSubscriptionSuccess');
-    
     console.log('🔍 SubscriptionPage: totalItems =', totalItems);
-    console.log('🔍 SubscriptionPage: recentSubscriptionSuccess =', recentSubscriptionSuccess);
     
-    if (totalItems === 0 && !recentSubscriptionSuccess) {
+    if (totalItems === 0) {
       console.log('❌ SubscriptionPage: Showing "No Meals Selected" error');
       showError(
         'No Meals Selected',
@@ -27,15 +48,10 @@ const SubscriptionPage = () => {
       );
       // Redirect to weekly menu page
       navigate('/weekly-menu', { replace: true });
-    } else if (recentSubscriptionSuccess) {
-      console.log('✅ SubscriptionPage: Recent subscription detected, redirecting to meal calendar');
-      // Clear the flag and redirect to meal calendar
-      sessionStorage.removeItem('recentSubscriptionSuccess');
-      navigate('/meal-calendar', { replace: true });
     } else {
       console.log('✅ SubscriptionPage: Normal flow, totalItems > 0');
     }
-  }, [getTotalItemsCount, navigate, showError]);
+  }, [getTotalItemsCount, navigate, showError, isLoading]);
 
   // Don't render the page if no items are selected
   const totalItems = getTotalItemsCount();

@@ -394,12 +394,23 @@ const WeeklyMenuPage = () => {
   const selectedRestaurantId = selectedRestaurant?.id;
   const selectedRestaurantName = selectedRestaurant?.name;
 
-  // Get current restaurants in meal plan
+  // Get current selected restaurants (not just ones with meals)
   const currentRestaurants = (() => {
     try {
-      return getRestaurantsInPlan();
+      // Use selectedRestaurants array to show ALL selected restaurants, not just ones with meals
+      const allSelectedRestaurants = getSelectedRestaurants();
+      console.log('🏪 All selected restaurants:', allSelectedRestaurants);
+      
+      if (allSelectedRestaurants && allSelectedRestaurants.length > 0) {
+        return allSelectedRestaurants.map(r => r.restaurantName);
+      }
+      
+      // Fallback to restaurants with meals if no selected restaurants
+      const restaurantsWithMeals = getRestaurantsInPlan();
+      console.log('🏪 Restaurants with meals (fallback):', restaurantsWithMeals);
+      return restaurantsWithMeals;
     } catch (error) {
-      console.error('Error getting restaurants in plan:', error);
+      console.error('Error getting restaurants:', error);
       return [];
     }
   })();
@@ -967,7 +978,7 @@ const WeeklyMenuPage = () => {
           
           {/* Week Date Range Display */}
           <div className="text-center space-y-2">
-            <p className="text-sm sm:text-base text-gray-700 font-medium">
+            <div className="text-sm sm:text-base text-gray-700 font-medium">
               {isClient && (
                 selectedWeek === 0 ? (
                   <div className="flex items-center justify-center space-x-2">
@@ -985,7 +996,7 @@ const WeeklyMenuPage = () => {
                   </div>
                 )
               )}
-            </p>
+            </div>
             
             {/* Restaurant Restriction Indicator for Normal Users */}
             {user?.userType === 'normal' && selectedRestaurant && (
@@ -1024,20 +1035,23 @@ const WeeklyMenuPage = () => {
                     </>
                   ) : selectedRestaurant ? (
                     <>
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
-                        Planning meals from {' '}
-                        {currentRestaurants.map((restaurant, index) => (
-                          <span key={index}>
-                            <span className="inline-flex items-center px-3 py-1 mx-1 bg-gradient-to-r from-grub-red to-red-600 text-white text-sm font-medium rounded-full shadow-sm">
-                              {restaurant}
+                      {/* Restaurant Names - Mobile Optimized */}
+                      <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">
+                        <span className="block sm:inline">Planning meals from</span>
+                        <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0 sm:inline-flex">
+                          {currentRestaurants.map((restaurant, index) => (
+                            <span key={index} className="inline-flex items-center">
+                              <span className="inline-flex items-center px-2 sm:px-3 py-1 bg-gradient-to-r from-grub-red to-red-600 text-white text-xs sm:text-sm font-medium rounded-full shadow-sm">
+                                {restaurant}
+                              </span>
+                              {index < currentRestaurants.length - 1 && (
+                                <span className="text-gray-500 mx-1">&</span>
+                              )}
                             </span>
-                            {index < currentRestaurants.length - 1 && (
-                              <span className="text-gray-500 mx-1">&</span>
-                            )}
-                          </span>
-                        ))}
+                          ))}
+                        </div>
                       </h3>
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm sm:text-base text-gray-600">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs sm:text-sm md:text-base text-gray-600 mt-1">
                         <span>Click any empty slot to add meals</span>
                         <span className="hidden sm:inline">•</span>
                         <div className="flex items-center gap-2">
@@ -1170,7 +1184,7 @@ const WeeklyMenuPage = () => {
                         postalCode={postalCode}
                         selectedRestaurant={selectedRestaurant}
                         selectedWeek={selectedWeek}
-                        onShowRestaurantSelectionModal={setShowRestaurantSelectionModal}
+                        onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
                         isAuthenticated={isAuthenticated}
                         hasLoadedFromDatabase={hasLoadedFromDatabase}
                         disabled={subscriptionStatus.hasActiveSubscription || subscriptionStatus.loading}

@@ -2,6 +2,7 @@ import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { viteStaticCopy } from 'vite-plugin-static-copy'
 
 // Create __dirname and __filename equivalents in ES Modules
 const __filename = fileURLToPath(import.meta.url)
@@ -17,10 +18,25 @@ export default ({ mode }) => {
       // Only expose VITE_ prefixed environment variables for security
       'import.meta.env': env,
     },
-    plugins: [react({
-      jsxRuntime: 'automatic',
-      jsxImportSource: 'react'
-    })],
+    plugins: [
+      react({
+        jsxRuntime: 'automatic',
+        jsxImportSource: 'react'
+      }),
+      // Copy service workers to dist root for proper registration
+      viteStaticCopy({
+        targets: [
+          {
+            src: 'public/service-worker.js',
+            dest: '.'
+          },
+          {
+            src: 'public/firebase-messaging-sw-partner.js',
+            dest: '.'
+          }
+        ]
+      })
+    ],
     envPrefix: 'VITE_',
     
     resolve: {
@@ -59,6 +75,8 @@ export default ({ mode }) => {
           manualChunks: undefined
         }
       },
+      // Copy public assets including service workers
+      copyPublicDir: true,
       sourcemap: true,
       minify: 'terser',
       target: 'esnext'

@@ -64,17 +64,19 @@ export const requestNotificationPermission = async () => {
     console.log('Creating new push subscription...');
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true, // Required for Chrome
-      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+      applicationServerKey: vapidPublicKey // Already converted to Uint8Array by getVapidPublicKey()
     });
     
     console.log('✓ New push subscription created:', subscription.toJSON());
     
     // Step 7: Send the subscription to your server
+    console.log('📤 Attempting to save subscription to server...');
     try {
-      await sendSubscriptionToServer(subscription);
-      console.log('✓ Subscription sent to server successfully');
+      const result = await sendSubscriptionToServer(subscription);
+      console.log('✅ Subscription sent to server successfully:', result);
     } catch (serverError) {
-      console.warn('Warning: Failed to send subscription to server:', serverError);
+      console.error('❌ Failed to send subscription to server:', serverError);
+      console.error('Server error details:', serverError.message);
       // Don't throw here as the subscription is still valid locally
     }
     
@@ -96,22 +98,21 @@ export const requestNotificationPermission = async () => {
   }
 };
 
-// Function to get VAPID public key (placeholder implementation)
+// Function to get VAPID public key
 const getVapidPublicKey = async () => {
   try {
-    // In a real application, you would fetch this from your server
-    // const response = await fetch('/api/vapid-public-key');
-    // const data = await response.json();
-    // return data.publicKey;
+    // Get VAPID public key from environment - already in raw format (65 bytes base64url)
+    const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || 
+      'BEznDlQ8AJxIzEh4fJf0ATiQIjPmKwn3rNMF6NxvaV7WVph-OCI0saDL6LeJYmEljA0QIQJtKdcaR8zgtlvSz9o';
     
-    // For now, return a placeholder VAPID public key
-    // Replace this with your actual VAPID public key
-    const placeholderKey = 'BEl62iUYgUivxIkv69yViEuiBIa40HI80NcL_8WNZZJlmKlpfxcE4zUOZMB6xFaI8HlHdQP48gwb25Pk6YdxVxI';
+    console.log('🔑 Using VAPID key from:', import.meta.env.VITE_VAPID_PUBLIC_KEY ? 'environment' : 'hardcoded (NEW)');
     
-    // Simulate a server request delay
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Convert base64url to Uint8Array (key is already in raw format)
+    const rawPublicKey = urlBase64ToUint8Array(vapidPublicKey);
     
-    return placeholderKey;
+    console.log('✅ VAPID key converted:', rawPublicKey.length, 'bytes');
+    
+    return rawPublicKey;
   } catch (error) {
     console.error('Failed to get VAPID public key:', error);
     throw new Error('Failed to retrieve VAPID public key from server');
@@ -121,33 +122,74 @@ const getVapidPublicKey = async () => {
 // Function to send subscription to server (placeholder implementation)
 const sendSubscriptionToServer = async (subscription) => {
   try {
-    // In a real application, you would send the subscription to your server
-    // const response = await fetch('/api/push-subscription', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify(subscription.toJSON())
-    // });
-    // 
-    // if (!response.ok) {
-    //   throw new Error(`Server responded with ${response.status}`);
-    // }
-    // 
-    // return await response.json();
+    // Get the backend API URL from environment or default
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
     
-    // Placeholder implementation - just log the subscription
-    console.log('📤 Would send to server:', subscription.toJSON());
+    // Get FCM token from subscription
+    const token = subscription.endpoint; // For web push, we use endpoint as token
     
-    // Simulate a server request
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // Get auth token from localStorage - ssrSafeStorage stores it as JSON string
+    let authToken = localStorage.getItem('authToken');
     
-    return { success: true, message: 'Subscription saved (placeholder)' };
+    // Parse JSON-stringified token (ssrSafeStorage wraps with JSON.stringify)
+    if (authToken) {
+      try {
+        authToken = JSON.parse(authToken);
+        console.log('🔍 DEBUG: Parsed auth token, length:', authToken?.length);
+      } catch (e) {
+        console.warn('⚠️ Failed to parse auth token:', e);
+      }
+    }
+    
+    if (!authToken) {
+      console.warn('⚠️ No auth token found, cannot save subscription to server');
+      return { success: false, error: 'Not authenticated' };
+    }
+    
+    // Send subscription to backend
+    const response = await fetch(`${API_URL}/push-notifications/subscribe`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({
+        token: token,
+        deviceType: 'web',
+        deviceInfo: {
+          userAgent: navigator.userAgent,
+          platform: navigator.platform,
+          browser: getBrowserName()
+        },
+        subscription: subscription.toJSON() // Store full subscription details
+      })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || `Server responded with ${response.status}`);
+    }
+    
+    const result = await response.json();
+    console.log('✅ Subscription saved to server:', result);
+    
+    return { success: true, data: result };
   } catch (error) {
-    console.error('Failed to send subscription to server:', error);
+    console.error('❌ Failed to send subscription to server:', error);
     throw error;
   }
 };
+
+// Helper function to get browser name
+function getBrowserName() {
+  const userAgent = navigator.userAgent;
+  if (userAgent.includes('Firefox')) return 'Firefox';
+  if (userAgent.includes('Chrome')) return 'Chrome';
+  if (userAgent.includes('Safari')) return 'Safari';
+  if (userAgent.includes('Edge')) return 'Edge';
+  if (userAgent.includes('Opera') || userAgent.includes('OPR')) return 'Opera';
+  return 'Unknown';
+}
 
 // Function to test push notifications (for development)
 export const testPushNotification = async () => {
@@ -222,16 +264,31 @@ export const unsubscribeFromPushNotifications = async () => {
 
 // Utility function to convert VAPID key
 function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding)
-    .replace(/-/g, '+')
-    .replace(/_/g, '/');
+  try {
+    // Remove any whitespace
+    const cleanBase64 = base64String.replace(/\s/g, '');
+    
+    // Calculate proper padding
+    const padding = '='.repeat((4 - cleanBase64.length % 4) % 4);
+    
+    // Convert base64url to standard base64
+    const base64 = (cleanBase64 + padding)
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
 
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
+    // Decode base64 string
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
 
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    
+    console.log('✅ Converted', cleanBase64.length, 'chars to', outputArray.length, 'bytes');
+    return outputArray;
+  } catch (error) {
+    console.error('❌ Error in urlBase64ToUint8Array:', error);
+    console.error('Input string:', base64String);
+    throw new Error('Failed to decode VAPID key: ' + error.message);
   }
-  return outputArray;
 }

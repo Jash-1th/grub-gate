@@ -19,15 +19,21 @@ const authMiddleware = async (req, res, next) => {
     }
 
     if (!token) {
+      console.log('❌ Auth middleware: No token found in request');
       return res.status(401).json({
         status: 'error',
         message: 'Access denied. No token provided.'
       });
     }
 
+    console.log('🔍 Auth middleware: Token received (first 20 chars):', token.substring(0, 20) + '...');
+    console.log('🔍 Auth middleware: Token length:', token.length);
+
     try {
       // Verify token
+      console.log('🔑 Auth middleware: Attempting to verify token...');
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log('✅ Auth middleware: Token verified successfully, user ID:', decoded.id);
       
       // Get user from database
       const user = await User.findById(decoded.id).select('-passwordHash');
@@ -53,6 +59,8 @@ const authMiddleware = async (req, res, next) => {
       next();
 
     } catch (jwtError) {
+      console.log('❌ Auth middleware: JWT verification failed:', jwtError.name, jwtError.message);
+      
       if (jwtError.name === 'TokenExpiredError') {
         return res.status(401).json({
           status: 'error',

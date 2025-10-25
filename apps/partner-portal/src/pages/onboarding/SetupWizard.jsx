@@ -65,9 +65,9 @@ const SetupWizard = () => {
         dinner: { open: '17:00', close: '23:00', available: true }
       },
       sunday: { 
-        open: '10:00', close: '21:00', closed: true,
-        lunch: { open: '11:00', close: '15:00', available: false },
-        dinner: { open: '17:00', close: '21:00', available: false }
+        open: '10:00', close: '21:00', closed: false,
+        lunch: { open: '11:00', close: '15:00', available: true },
+        dinner: { open: '17:00', close: '21:00', available: true }
       }
     }
   });
