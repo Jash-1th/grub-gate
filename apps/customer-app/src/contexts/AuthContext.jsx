@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
 import apiClient from '../api/apiClient';
 import { getStorageItem, setStorageItem, removeStorageItem } from '../utils/ssrSafeStorage';
+import { requestNotificationPermission, getNotificationPermissionStatus } from '../pwa';
 
 // Auth Context
 const AuthContext = createContext();
@@ -234,6 +235,32 @@ export const AuthProvider = ({ children }) => {
       console.log('✅ AuthContext: Login successful, user:', user);
       console.log('✅ AuthContext: Token stored:', accessToken);
 
+      // Request notification permission after successful login
+      setTimeout(async () => {
+        const permissionStatus = getNotificationPermissionStatus();
+        console.log('🔔 Current notification permission:', permissionStatus);
+        
+        if (permissionStatus === 'default') {
+          console.log('🔔 Requesting notification permission...');
+          try {
+            await requestNotificationPermission();
+            console.log('✅ Notification permission granted and subscription saved!');
+          } catch (error) {
+            console.log('⚠️ Notification permission denied or failed:', error.message);
+          }
+        } else if (permissionStatus === 'granted') {
+          console.log('✅ Notifications already enabled');
+          // Ensure subscription is synced with server
+          try {
+            await requestNotificationPermission();
+          } catch (error) {
+            console.log('⚠️ Failed to sync notification subscription:', error.message);
+          }
+        } else {
+          console.log('⚠️ Notifications are blocked by user');
+        }
+      }, 1500); // Small delay to ensure login UI completes
+
       // Handle redirect after login - using a flag to trigger redirect in useEffect
       const redirectUrl = getStorageItem('redirectAfterLogin');
       console.log('🔄 AuthContext: Checking for redirect URL:', redirectUrl);
@@ -330,6 +357,20 @@ export const AuthProvider = ({ children }) => {
           type: AUTH_ACTIONS.LOGIN_SUCCESS, 
           payload: { user, token: accessToken } 
         });
+
+        // Request notification permission after successful registration
+        setTimeout(async () => {
+          const permissionStatus = getNotificationPermissionStatus();
+          if (permissionStatus === 'default') {
+            console.log('🔔 Requesting notification permission after registration...');
+            try {
+              await requestNotificationPermission();
+              console.log('✅ Notification permission granted!');
+            } catch (error) {
+              console.log('⚠️ Notification permission denied:', error.message);
+            }
+          }
+        }, 1500);
 
         return { 
           success: true, 
