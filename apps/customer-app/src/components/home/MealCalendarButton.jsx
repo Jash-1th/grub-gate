@@ -78,7 +78,7 @@ const MealCalendarButton = () => {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-20 sm:bottom-6 right-6 z-50">
       <button
         onClick={handleCalendarClick}
         className="bg-orange-600 hover:bg-orange-700 text-white p-4 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-orange-300"

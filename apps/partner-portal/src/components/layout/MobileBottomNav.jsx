@@ -51,7 +51,7 @@ const MobileBottomNav = () => {
       name: 'settings', 
       href: '/dashboard/settings', 
       icon: faCog,
-      label: ''
+      label: 'Settings'
     }
   ];
 

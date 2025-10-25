@@ -1263,17 +1263,6 @@ const SettingsPage = () => {
           )}
 
           <div className="flex flex-col sm:flex-row justify-between items-center pt-6 gap-4">
-            {/* Development Test Button */}
-            {process.env.NODE_ENV === 'development' && (
-              <Button
-                onClick={testValidation}
-                variant="outline"
-                className="w-full sm:w-auto border-orange-300 text-orange-700 hover:bg-orange-50"
-              >
-                <FontAwesomeIcon icon={faExclamationTriangle} className="h-4 w-4 mr-2" />
-                Test Validation Errors
-              </Button>
-            )}
             
             <div className="flex items-center gap-3">
               {/* Error Count Badge */}

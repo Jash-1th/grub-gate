@@ -70,17 +70,15 @@ const DashboardLayout = ({ onLanguageChange }) => {
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
           <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
-            <div className="absolute top-0 right-0 -mr-12 pt-2">
-              <button
-                className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
-                onClick={() => setSidebarOpen(false)}
-              >
-                <FontAwesomeIcon icon={faTimes} className="h-6 w-6 text-white" />
-              </button>
-            </div>
             <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
-              <div className="flex-shrink-0 flex items-center px-4">
+              <div className="flex-shrink-0 flex items-center justify-between px-4 mb-4">
                 <Logo size="lg" />
+                <button
+                  className="flex items-center justify-center h-8 w-8 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <FontAwesomeIcon icon={faTimes} className="h-5 w-5" />
+                </button>
               </div>
               <nav className="mt-5 px-2 space-y-1">
                 {navigation.map((item) => {
@@ -233,7 +231,7 @@ const DashboardLayout = ({ onLanguageChange }) => {
               {/* Mobile Logo */}
               <div className="lg:hidden ml-2 mr-4">
                 <NavLink to="/" aria-label="Go to landing page" className="inline-flex">
-                  <Logo size="md" />
+                  <Logo size="lg" />
                 </NavLink>
               </div>
               
@@ -245,43 +243,12 @@ const DashboardLayout = ({ onLanguageChange }) => {
             </div>
 
             <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4">
-              {/* Language switcher - mobile */}
-              <button
-                onClick={handleLanguageToggle}
-                className="lg:hidden flex items-center justify-center space-x-1 px-2 py-1.5 text-xs font-medium text-gray-600 hover:text-grub-red hover:bg-gray-100 rounded-md transition-colors border border-gray-300"
-                title={t('common.language')}
-              >
-                <FontAwesomeIcon icon={faGlobe} className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline uppercase font-semibold">
-                  {i18n.language}
-                </span>
-              </button>
-              
-              {/* Logout button - mobile */}
-              <button
-                onClick={handleLogout}
-                className="lg:hidden flex items-center justify-center p-1.5 sm:p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                title="Logout"
-              >
-                <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4 sm:h-5 sm:w-5" />
-              </button>
-              
               {/* User avatar - mobile */}
               <div className="lg:hidden flex items-center">
                 <div className="h-8 w-8 bg-grub-red rounded-full flex items-center justify-center">
                   <span className="text-white text-xs font-medium">{getRestaurantInitial()}</span>
                 </div>
               </div>
-              
-              {/* Notifications */}
-              <button className="p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                <div className="h-5 w-5 sm:h-6 sm:w-6 relative">
-                  <svg className="h-full w-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5-5-5 5h5zM9 7l5 5 5-5H9z" />
-                  </svg>
-                  <div className="absolute -top-1 -right-1 h-2 w-2 sm:h-3 sm:w-3 bg-red-500 rounded-full"></div>
-                </div>
-              </button>
             </div>
           </div>
         </div>
