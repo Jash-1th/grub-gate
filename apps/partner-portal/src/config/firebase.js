@@ -94,41 +94,9 @@ export const getFCMToken = async () => {
   }
 
   try {
-    // Unregister any existing service workers with incorrect scope
-    if ('serviceWorker' in navigator) {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      for (const registration of registrations) {
-        // If the service worker is registered with the old domain, unregister it
-        if (registration.scope.includes('gg0p1.netlify.app')) {
-          console.log('🔄 Unregistering old service worker with scope:', registration.scope);
-          await registration.unregister();
-        }
-      }
-    }
-
-    // Register service worker for Partner Portal
-    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw-partner.js');
-    console.log('✅ Partner service worker registered:', registration);
-
-    // Wait for service worker to become active
-    if (registration.installing || registration.waiting) {
-      console.log('🔄 Waiting for partner service worker to activate...');
-      await new Promise((resolve) => {
-        const checkState = () => {
-          if (registration.active) {
-            console.log('✅ Partner service worker is now active');
-            resolve();
-          } else {
-            setTimeout(checkState, 100);
-          }
-        };
-        checkState();
-      });
-    }
-
-    // Ensure service worker is fully ready
-    await navigator.serviceWorker.ready;
-    console.log('✅ Partner service worker is ready');
+    // Get the existing service worker registration (the main PWA one)
+    const registration = await navigator.serviceWorker.ready;
+    console.log('✅ Using existing PWA service worker registration:', registration);
 
     const token = await getToken(messaging, {
       vapidKey: vapidKey,

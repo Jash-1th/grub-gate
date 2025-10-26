@@ -29,11 +29,9 @@ export default ({ mode }) => {
           {
             src: 'public/service-worker.js',
             dest: '.'
-          },
-          {
-            src: 'public/firebase-messaging-sw-partner.js',
-            dest: '.'
           }
+          // Removed firebase-messaging-sw-partner.js as it's no longer needed
+          // Firebase messaging is now integrated into the main service worker
         ]
       })
     ],
