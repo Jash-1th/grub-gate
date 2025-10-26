@@ -290,26 +290,31 @@ export const unsubscribeFromPushNotifications = async () => {
 
 // Function to show update notification
 const showUpdateNotification = () => {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.ready.then((registration) => {
-      registration.showNotification('App Update Available', {
-        body: 'A new version of GrubGate Partner Portal is available. Click to update.',
-        icon: '/icons/logo192.png',
-        badge: '/icons/Logo.png',
-        tag: 'app-update',
-        requireInteraction: true,
-        actions: [
-          {
-            action: 'update',
-            title: 'Update Now'
-          },
-          {
-            action: 'dismiss',
-            title: 'Later'
-          }
-        ]
+  // Check if notifications are supported and permission is granted
+  if ('Notification' in window && Notification.permission === 'granted') {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then((registration) => {
+        registration.showNotification('App Update Available', {
+          body: 'A new version of GrubGate Partner Portal is available. Click to update.',
+          icon: '/icons/logo192.png',
+          badge: '/icons/Logo.png',
+          tag: 'app-update',
+          requireInteraction: true,
+          actions: [
+            {
+              action: 'update',
+              title: 'Update Now'
+            },
+            {
+              action: 'dismiss',
+              title: 'Later'
+            }
+          ]
+        });
       });
-    });
+    }
+  } else {
+    console.log('Notification permission not granted, skipping update notification');
   }
 };
 

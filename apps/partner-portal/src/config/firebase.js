@@ -94,6 +94,18 @@ export const getFCMToken = async () => {
   }
 
   try {
+    // Unregister any existing service workers with incorrect scope
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const registration of registrations) {
+        // If the service worker is registered with the old domain, unregister it
+        if (registration.scope.includes('gg0p1.netlify.app')) {
+          console.log('🔄 Unregistering old service worker with scope:', registration.scope);
+          await registration.unregister();
+        }
+      }
+    }
+
     // Register service worker for Partner Portal
     const registration = await navigator.serviceWorker.register('/firebase-messaging-sw-partner.js');
     console.log('✅ Partner service worker registered:', registration);

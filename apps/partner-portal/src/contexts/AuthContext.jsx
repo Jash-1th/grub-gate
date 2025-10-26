@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
 import { apiClient } from '../api/client.js';
 import partnerPushNotificationService from '../services/pushNotificationService';
 
@@ -201,7 +201,7 @@ const initializePartnerNotifications = async () => {
 
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
-
+  const [notificationsInitialized, setNotificationsInitialized] = useState(false);
 
   // Initialize auth state from localStorage (SSR-safe)
   useEffect(() => {
@@ -226,8 +226,11 @@ export const AuthProvider = ({ children }) => {
             });
             console.log('✅ Partner AuthContext: User authenticated from localStorage');
             
-            // Initialize push notifications for returning user
-            initializePartnerNotifications();
+            // Initialize push notifications for returning user (only if not already initialized)
+            if (!notificationsInitialized) {
+              initializePartnerNotifications();
+              setNotificationsInitialized(true);
+            }
           } else {
             // User doesn't have partner role, clear storage
             removeStorageItem('accessToken');
@@ -299,8 +302,11 @@ export const AuthProvider = ({ children }) => {
           payload: { user }
         });
 
-        // Initialize push notifications for partner
-        initializePartnerNotifications();
+        // Initialize push notifications for partner (only if not already initialized)
+        if (!notificationsInitialized) {
+          initializePartnerNotifications();
+          setNotificationsInitialized(true);
+        }
 
         return { 
           success: true, 
