@@ -68,8 +68,8 @@ const BusinessDetailsPage = () => {
       // Debug: Log the userData being set
       console.log('🔐 Setting user as authenticated:', userData);
       
-      // Set user as authenticated
-      const authResult = setAuthenticatedUser(userData);
+      // Set user as authenticated (with isSignup = true)
+      const authResult = setAuthenticatedUser(userData, true);
       
       console.log('🔐 Auth result:', authResult);
       

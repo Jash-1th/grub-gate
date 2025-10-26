@@ -463,6 +463,20 @@ export const AuthProvider = ({ children }) => {
         payload: { user, token: accessToken } 
       });
 
+      // Request notification permission after successful OTP login/registration
+      setTimeout(async () => {
+        const permissionStatus = getNotificationPermissionStatus();
+        if (permissionStatus === 'default') {
+          console.log('🔔 Requesting notification permission after OTP login/registration...');
+          try {
+            await requestNotificationPermission();
+            console.log('✅ Notification permission granted!');
+          } catch (error) {
+            console.log('⚠️ Notification permission denied:', error.message);
+          }
+        }
+      }, 1500);
+
       return { success: true };
     } catch (error) {
       console.error('OTP Login error:', error);

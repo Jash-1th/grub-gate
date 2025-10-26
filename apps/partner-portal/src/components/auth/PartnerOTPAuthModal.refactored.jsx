@@ -60,8 +60,8 @@ const PartnerOTPAuthModal = ({ isOpen, onClose }) => {
   // Handle successful signup completion
   const handleSignupComplete = async (userData) => {
     try {
-      // Store auth data and set authenticated user
-      const authResult = setAuthenticatedUser(userData);
+      // Store auth data and set authenticated user (with isSignup = true)
+      const authResult = setAuthenticatedUser(userData, true);
       
       if (authResult.success) {
         showSuccess('Partner account created successfully! Redirecting to dashboard...');

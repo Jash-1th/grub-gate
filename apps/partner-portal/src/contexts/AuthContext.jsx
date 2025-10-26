@@ -377,6 +377,14 @@ export const AuthProvider = ({ children }) => {
         payload: { user: userData.user }
       });
 
+      // Initialize push notifications for partner after successful signup
+      if (isSignup && !notificationsInitialized) {
+        setTimeout(async () => {
+          await initializePartnerNotifications();
+          setNotificationsInitialized(true);
+        }, 1500);
+      }
+
       console.log('✅ Partner AuthContext: User authenticated directly', isSignup ? '(signup)' : '(login)');
       return { 
         success: true, 
