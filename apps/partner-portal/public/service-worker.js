@@ -1,5 +1,8 @@
+// Import Workbox modules for precaching
+importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
+
 // Cache names with versioning for better cache management
-const CACHE_VERSION = '1.1.0'; // Updated for push notification fix
+const CACHE_VERSION = '1.1.2'; // Updated to use Workbox precaching
 const CACHE_NAME = `grubgate-partner-v${CACHE_VERSION}`;
 const STATIC_CACHE = `grubgate-partner-static-v${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `grubgate-partner-dynamic-v${CACHE_VERSION}`;
@@ -246,11 +249,6 @@ const OPTIONAL_ASSETS = [
   '/icons/Logo.png'
 ];
 
-// Static assets that change infrequently
-const STATIC_ASSETS = [
-  '/vite.svg'
-];
-
 // Install event: Pre-cache App Shell and critical static assets
 self.addEventListener('install', (event) => {
   console.log('Service Worker: Installing...');
@@ -258,15 +256,23 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     Promise.all([
       // Cache critical app shell assets
-      caches.open(STATIC_CACHE).then((cache) => {
+      caches.open(STATIC_CACHE).then(async (cache) => {
         console.log('Service Worker: Caching App Shell');
-        return cache.addAll(APP_SHELL_ASSETS);
-      }),
-      
-      // Cache static assets
-      caches.open(IMAGE_CACHE).then((cache) => {
-        console.log('Service Worker: Caching Static Assets');
-        return cache.addAll(STATIC_ASSETS);
+        // Cache app shell assets individually to avoid failures
+        const promises = APP_SHELL_ASSETS.map(async (asset) => {
+          try {
+            const response = await fetch(asset);
+            if (response.ok) {
+              await cache.put(asset, response);
+              console.log(`Service Worker: Cached app shell asset: ${asset}`);
+            } else {
+              console.warn(`Service Worker: Failed to fetch app shell asset: ${asset} (status: ${response.status})`);
+            }
+          } catch (error) {
+            console.warn(`Service Worker: Failed to cache app shell asset: ${asset}`, error);
+          }
+        });
+        await Promise.allSettled(promises);
       }),
       
       // Try to cache optional assets (don't fail if they don't exist)
