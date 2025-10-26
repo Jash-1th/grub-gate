@@ -22,7 +22,7 @@ const RoleCards = () => {
 
   const handlePartnerClick = () => {
     // Navigate to partner portal
-    window.open('https://gg0p1.netlify.app', '_blank');
+    window.open('https://gg0b1.netlify.app', '_blank');
   };
 
   const handleGrubRunnerClick = () => {

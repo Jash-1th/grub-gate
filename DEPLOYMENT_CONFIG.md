@@ -3,7 +3,7 @@
 ## 📍 Deployed URLs
 
 - **Customer App**: https://gg0c1.netlify.app/
-- **Partner Portal**: https://gg0p1.netlify.app/
+- **Partner Portal**: https://gg0b1.netlify.app/
 - **Backend**: (Add your backend URL when deployed)
 
 ---
@@ -30,7 +30,7 @@
 3. Add these domains:
 
    - [ ] `gg0c1.netlify.app` (Customer App)
-   - [ ] `gg0p1.netlify.app` (Partner Portal)
+   - [ ] `gg0b1.netlify.app` (Partner Portal)
    - [ ] `localhost` (should already exist)
 
 4. Click **"Add domain"** for each
@@ -61,7 +61,7 @@ VITE_VAPID_PUBLIC_KEY=MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAElmN6pnm9OqGL3Ha-i_SAY1
 
 ---
 
-### Partner Portal (https://gg0p1.netlify.app/)
+### Partner Portal (https://gg0b1.netlify.app/)
 
 **Netlify Dashboard** → Your Site → Site settings → Environment variables → Add variables
 
@@ -109,7 +109,7 @@ EMAIL_PASS=xavw bakr leto fsyk
 EMAIL_FROM=noreply@grubgate.com
 
 # CORS (IMPORTANT - includes your deployed URLs)
-CORS_ORIGIN=http://localhost:3000,http://localhost:5173,https://gg0c1.netlify.app,https://gg0p1.netlify.app
+CORS_ORIGIN=http://localhost:3000,http://localhost:5173,https://gg0c1.netlify.app,https://gg0b1.netlify.app
 
 # Firebase Admin SDK
 FIREBASE_PROJECT_ID=messagegg-39a44
@@ -147,7 +147,7 @@ MAPBOX_ACCESS_TOKEN=pk.eyJ1IjoiamFzaC0xdGgiLCJhIjoiY202ZXcwbWd1MTJkeTJpc2Y0NW55a
 ### After Deploying
 
 - [ ] Test on deployed customer app (https://gg0c1.netlify.app/)
-- [ ] Test on deployed partner portal (https://gg0p1.netlify.app/)
+- [ ] Test on deployed partner portal (https://gg0b1.netlify.app/)
 - [ ] Verify service workers load (no 404 errors)
 - [ ] Test push notification permission prompt
 - [ ] Test notification delivery
@@ -168,7 +168,7 @@ MAPBOX_ACCESS_TOKEN=pk.eyJ1IjoiamFzaC0xdGgiLCJhIjoiY202ZXcwbWd1MTJkeTJpc2Y0NW55a
 4. Check console for: `✅ FCM token generated`
 
 ### 3. Test Notification Delivery
-1. Partner changes order status on https://gg0p1.netlify.app/
+1. Partner changes order status on https://gg0b1.netlify.app/
 2. Customer should receive notification on https://gg0c1.netlify.app/
 
 ---

@@ -50,6 +50,13 @@
   status = 200
   force = true
 
+# Add redirect for partner portal firebase messaging service worker
+[[redirects]]
+  from = "/firebase-messaging-sw-partner.js"
+  to = "/firebase-messaging-sw-partner.js"
+  status = 200
+  force = true
+
 # Note: Partner Portal doesn't have its own API functions
 # All API requests are handled by the external backend via axios client
 # No API redirect needed since we use full URLs in the API client

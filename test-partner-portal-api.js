@@ -4,7 +4,7 @@ console.log('🧪 Testing Partner Portal API Configuration\n');
 // Simulate the Partner Portal environment
 const mockWindow = {
   location: {
-    hostname: 'gg0p1.netlify.app'
+    hostname: 'gg0b1.netlify.app'
   }
 };
 

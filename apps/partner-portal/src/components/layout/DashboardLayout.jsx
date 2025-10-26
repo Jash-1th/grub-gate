@@ -12,8 +12,8 @@ import {
   faQuestionCircle,
   faSignOutAlt,
   faGlobe,
-
-  faBell
+  faBell,
+  faTimes
 } from '@fortawesome/free-solid-svg-icons';
 import { Logo, Button } from '@grub-gate/ui';
 import MobileBottomNav from './MobileBottomNav';

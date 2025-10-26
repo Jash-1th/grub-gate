@@ -68,7 +68,7 @@ MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
 
 # CORS Configuration
-CORS_ORIGIN=https://gg0c1.netlify.app,https://gg0p1.netlify.app
+CORS_ORIGIN=https://gg0c1.netlify.app,https://gg0b1.netlify.app
 
 # Optional Geocoding APIs (has fallbacks)
 GOOGLE_MAPS_API_KEY=your_google_maps_key
@@ -175,7 +175,7 @@ cd apps/partner-portal
 git add .
 git commit -m "feat: enhanced address form with global support"
 git push origin main
-# Verify deployment at https://gg0p1.netlify.app
+# Verify deployment at https://gg0b1.netlify.app
 ```
 
 ## Post-Deployment Verification

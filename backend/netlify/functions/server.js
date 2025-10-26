@@ -7,7 +7,7 @@ const handler = serverless(app);
 function getCorsOrigin(requestOrigin) {
   const allowedOrigins = [
     'https://gg0c1.netlify.app', // Customer App
-    'https://gg0p1.netlify.app', // Partner Portal
+    'https://gg0b1.netlify.app', // Partner Portal
     'http://localhost:3000',     // Local Customer App
     'http://localhost:5173',     // Local Partner Portal
     'http://localhost:4173'      // Local Partner Portal Preview
