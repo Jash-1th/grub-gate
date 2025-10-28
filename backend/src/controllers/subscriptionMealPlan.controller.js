@@ -1149,7 +1149,7 @@ const sendSubscriptionNotificationsToPartners = async (subscriptionMealPlan, gen
           restaurantName: restaurantName,
           orderCount: String(data.orderCount),
           totalAmount: String(data.totalAmount),
-          durationWeeks: String(durationWeeks),
+          duration: durationText,
           planType: subscriptionMealPlan.planType,
           startDate: new Date(subscriptionMealPlan.planStartDate).toISOString(),
           endDate: new Date(subscriptionMealPlan.planEndDate).toISOString(),

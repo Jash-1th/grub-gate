@@ -290,10 +290,14 @@ class PushNotificationService {
         // Remove invalid FCM tokens
         if (fcmResults.failedTokens && fcmResults.failedTokens.length > 0) {
           const invalidTokens = fcmResults.failedTokens
-            .filter(failed => failed.error === 'messaging/invalid-registration-token')
+            .filter(failed => 
+              failed.error === 'messaging/invalid-registration-token' ||
+              failed.error === 'messaging/registration-token-not-registered'
+            )
             .map(failed => failed.token);
           
           if (invalidTokens.length > 0) {
+            console.log(`🧹 Removing ${invalidTokens.length} invalid FCM token(s) from user ${userId}`);
             await this.removeInvalidTokensFromUser(userId, invalidTokens);
           }
         }
