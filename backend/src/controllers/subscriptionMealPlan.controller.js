@@ -9,6 +9,7 @@ const { generateAllSubscriptionOrders } = require('../services/enhancedOrderGene
 const Subscription = require('../models/Subscription');
 const MenuItem = require('../models/MenuItem');
 const { validationResult } = require('express-validator');
+const pushNotificationService = require('../services/pushNotificationService');
 
 // Get or create meal plan for user (updated for multi-restaurant)
 const getMealPlan = async (req, res) => {
@@ -901,6 +902,20 @@ const createSubscriptionFromMealPlan = async (req, res) => {
       { path: 'restaurants.restaurantId', select: 'name cuisine rating address' }
     ]);
 
+    // 7. **SEND PUSH NOTIFICATIONS TO PARTNER RESTAURANTS**
+    console.log('📱 Sending subscription notifications to partner restaurants...');
+    console.log('📊 DEBUG: generatedOrders length:', generatedOrders?.length);
+    console.log('📊 DEBUG: subscriptionMealPlan._id:', subscriptionMealPlan._id);
+    
+    try {
+      await sendSubscriptionNotificationsToPartners(subscriptionMealPlan, generatedOrders);
+      console.log('✅ Successfully sent subscription notifications to partners');
+    } catch (notificationError) {
+      console.error('⚠️ Error sending partner notifications:', notificationError);
+      console.error('⚠️ Error stack:', notificationError.stack);
+      // Don't fail the subscription creation if notifications fail
+    }
+
     res.status(201).json({
       status: 'success',
       message: 'Subscription meal plan created successfully! Your weekly meal plan has been converted to a subscription.',
@@ -980,6 +995,201 @@ const getRestaurantMealPlans = async (req, res) => {
       message: 'Failed to get meal plans',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
+  }
+};
+
+/**
+ * Send push notifications to partner restaurants about new subscription
+ */
+const sendSubscriptionNotificationsToPartners = async (subscriptionMealPlan, generatedOrders) => {
+  try {
+    console.log('📱 Processing subscription notifications for partners...');
+    console.log('📊 Generated orders count:', generatedOrders?.length || 0);
+    
+    // Get customer info
+    const customer = subscriptionMealPlan.customerId;
+    const customerName = customer ? 
+      `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || 'Customer' : 
+      'Customer';
+    
+    console.log('👤 Customer name:', customerName);
+    
+    // Get unique restaurants from generated orders
+    const restaurantMap = new Map();
+    
+    // Extract restaurants from generated orders
+    if (generatedOrders && generatedOrders.length > 0) {
+      console.log('🔍 Processing generated orders to find restaurants...');
+      console.log('📦 Sample order structure:', JSON.stringify({
+        _id: generatedOrders[0]._id,
+        restaurantId: generatedOrders[0].restaurantId,
+        total: generatedOrders[0].total,
+        items: generatedOrders[0].items?.map(i => ({ name: i.name, price: i.price }))
+      }, null, 2));
+      
+      for (let i = 0; i < generatedOrders.length; i++) {
+        const order = generatedOrders[i];
+        console.log(`\n📦 Processing order ${i + 1}/${generatedOrders.length}:`);
+        console.log(`   Order ID: ${order._id}`);
+        console.log(`   Restaurant ID: ${order.restaurantId}`);
+        console.log(`   Total: ₹${order.total || 0}`);
+        console.log(`   Items count: ${order.items?.length || 0}`);
+        
+        const restaurantId = order.restaurantId ? order.restaurantId.toString() : null;
+        
+        if (!restaurantId) {
+          console.log('   ⚠️ Order missing restaurantId!');
+          continue;
+        }
+        
+        console.log(`   ✅ Valid restaurant ID: ${restaurantId}`);
+        
+        // Initialize restaurant data if not exists
+        if (!restaurantMap.has(restaurantId)) {
+          console.log(`   🆕 First order for this restaurant, initializing data`);
+          restaurantMap.set(restaurantId, {
+            restaurantId: restaurantId,
+            orderCount: 0,
+            totalAmount: 0,
+            items: []
+          });
+        }
+        
+        // Update restaurant data
+        const data = restaurantMap.get(restaurantId);
+        data.orderCount++;
+        data.totalAmount += order.total || 0;
+        
+        console.log(`   📊 Updated stats - Orders: ${data.orderCount}, Total: ₹${data.totalAmount.toFixed(2)}`);
+        
+        // Collect item names
+        if (order.items && order.items.length > 0) {
+          order.items.forEach(item => {
+            if (item.name && !data.items.includes(item.name)) {
+              data.items.push(item.name);
+              console.log(`   🍽️ Added item: ${item.name}`);
+            }
+          });
+        }
+      }
+    } else {
+      console.log('⚠️ No generated orders found, cannot send notifications');
+      return;
+    }
+    
+    console.log(`📊 Found ${restaurantMap.size} unique restaurant(s) in subscription`);
+    
+    // Send notification to each restaurant owner
+    console.log('🔄 Starting to send notifications to restaurant owners...');
+    
+    for (const [restaurantId, data] of restaurantMap) {
+      try {
+        console.log(`\n🏪 Processing restaurant: ${restaurantId}`);
+        console.log(`   📊 Order count: ${data.orderCount}`);
+        console.log(`   💰 Total amount: ₹${data.totalAmount.toFixed(2)}`);
+        
+        // Get restaurant with owner info
+        console.log(`   🔍 Fetching restaurant details from database...`);
+        const restaurant = await Restaurant.findById(restaurantId).populate('ownerId');
+        
+        if (!restaurant) {
+          console.log(`   ❌ Restaurant not found in database: ${restaurantId}`);
+          continue;
+        }
+        
+        console.log(`   ✅ Restaurant found: ${restaurant.name}`);
+        console.log(`   🔍 Checking for owner...`);
+        
+        if (!restaurant.ownerId) {
+          console.log(`   ❌ Restaurant ${restaurant.name} has no ownerId field`);
+          console.log(`   📋 Restaurant data:`, JSON.stringify(restaurant, null, 2));
+          continue;
+        }
+        
+        const ownerId = restaurant.ownerId._id;
+        const restaurantName = restaurant.name;
+        
+        console.log(`   ✅ Owner found: ${ownerId}`);
+        console.log(`   👤 Owner email: ${restaurant.ownerId.email}`);
+        console.log(`   📱 Owner FCM tokens count: ${restaurant.ownerId.fcmTokens?.length || 0}`);
+        
+        // Get subscription duration based on plan type
+        let durationText = '';
+        if (subscriptionMealPlan.planType === 'bi-weekly') {
+          durationText = '2 weeks';
+        } else if (subscriptionMealPlan.planType === 'monthly') {
+          durationText = '1 month';
+        } else {
+          // Fallback to calculated duration
+          const startDate = new Date(subscriptionMealPlan.planStartDate);
+          const endDate = new Date(subscriptionMealPlan.planEndDate);
+          const durationWeeks = Math.ceil((endDate - startDate) / (7 * 24 * 60 * 60 * 1000));
+          durationText = `${durationWeeks} weeks`;
+        }
+        
+        console.log(`   📅 Subscription duration: ${durationText}`);
+        console.log(`   📅 Plan type: ${subscriptionMealPlan.planType}`);
+        console.log(`   📅 Start date: ${subscriptionMealPlan.planStartDate}`);
+        console.log(`   📅 End date: ${subscriptionMealPlan.planEndDate}`);
+        
+        // Create notification message
+        const notification = {
+          title: '🎉 New Subscription Customer!',
+          body: `${customerName} subscribed for ${durationText}! ${data.orderCount} orders scheduled (₹${data.totalAmount.toFixed(2)})`,
+          icon: '/icons/subscription-icon.png',
+          requireInteraction: false
+        };
+        
+        const notificationData = {
+          type: 'NEW_SUBSCRIPTION',
+          subscriptionId: subscriptionMealPlan._id.toString(),
+          customerId: customer._id.toString(),
+          customerName: customerName,
+          restaurantId: restaurantId,
+          restaurantName: restaurantName,
+          orderCount: String(data.orderCount),
+          totalAmount: String(data.totalAmount),
+          durationWeeks: String(durationWeeks),
+          planType: subscriptionMealPlan.planType,
+          startDate: new Date(subscriptionMealPlan.planStartDate).toISOString(),
+          endDate: new Date(subscriptionMealPlan.planEndDate).toISOString(),
+          action: 'view_subscriptions'
+        };
+        
+        console.log(`   📝 Notification message:`, notification);
+        console.log(`   📝 Notification data:`, notificationData);
+        
+        // Send notification to restaurant owner
+        console.log(`   📤 Calling pushNotificationService.sendToUser...`);
+        
+        const result = await pushNotificationService.sendToUser(
+          ownerId,
+          notification,
+          notificationData
+        );
+        
+        console.log(`   📥 Push service result:`, result);
+        
+        if (result.success) {
+          console.log(`   ✅ Notification sent to ${restaurantName} successfully`);
+        } else {
+          console.log(`   ⚠️ Failed to send notification to ${restaurantName}`);
+          console.log(`   ⚠️ Error:`, result.error);
+        }
+        
+      } catch (restaurantError) {
+        console.error(`   ❌ Error sending notification for restaurant ${restaurantId}:`);
+        console.error(`   ❌ Error message:`, restaurantError.message);
+        console.error(`   ❌ Error stack:`, restaurantError.stack);
+        // Continue with other restaurants
+      }
+    }
+    
+    console.log(`\n✅ Completed sending notifications to ${restaurantMap.size} restaurant(s)`);
+    
+  } catch (error) {
+    console.error('❌ Error in sendSubscriptionNotificationsToPartners:', error);
+    throw error;
   }
 };
 

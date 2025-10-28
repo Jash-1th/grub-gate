@@ -94,14 +94,31 @@ export const getFCMToken = async () => {
   }
 
   try {
-    // Get the existing service worker registration (the main PWA one)
-    const registration = await navigator.serviceWorker.ready;
-    console.log('✅ Using existing PWA service worker registration:', registration);
-
-    const token = await getToken(messaging, {
-      vapidKey: vapidKey,
-      serviceWorkerRegistration: registration
-    });
+    console.log('🔍 Partner: Checking for service worker registration...');
+    
+    // Check if there's an active service worker
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    console.log('🔍 Partner: Found', registrations.length, 'service worker registrations');
+    
+    let token;
+    
+    if (registrations.length > 0) {
+      // Use existing service worker registration
+      const registration = registrations[0];
+      console.log('✅ Partner: Using existing service worker registration');
+      
+      token = await getToken(messaging, {
+        vapidKey: vapidKey,
+        serviceWorkerRegistration: registration
+      });
+    } else {
+      // No service worker - get token without registration (dev mode)
+      console.log('⚠️ Partner: No service worker found, getting token without SW (dev mode)');
+      
+      token = await getToken(messaging, {
+        vapidKey: vapidKey
+      });
+    }
 
     if (token) {
       console.log('✅ Partner FCM token generated:', token.substring(0, 20) + '...');
@@ -112,6 +129,7 @@ export const getFCMToken = async () => {
     }
   } catch (error) {
     console.error('❌ Error getting Partner FCM token:', error);
+    console.error('❌ Error details:', error.message);
     throw error;
   }
 };

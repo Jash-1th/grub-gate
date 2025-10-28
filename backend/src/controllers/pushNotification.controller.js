@@ -10,8 +10,13 @@ const pushNotificationService = require('../services/pushNotificationService');
  */
 const subscribeToPushNotifications = async (req, res) => {
   try {
+    console.log('📱 ===== PUSH NOTIFICATION SUBSCRIBE REQUEST =====');
+    console.log('📱 User ID:', req.user?._id);
+    console.log('📱 Request body keys:', Object.keys(req.body));
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('❌ Validation errors:', errors.array());
       return res.status(400).json({
         status: 'error',
         message: 'Validation failed',
@@ -23,7 +28,12 @@ const subscribeToPushNotifications = async (req, res) => {
     const { token, deviceType, deviceInfo, subscription } = req.body;
 
     console.log('🔍 DEBUG subscribe request:', {
+      userId: userId.toString(),
       hasToken: !!token,
+      tokenLength: token?.length,
+      tokenPrefix: token?.substring(0, 50),
+      deviceType,
+      hasDeviceInfo: !!deviceInfo,
       hasSubscription: !!subscription,
       subscriptionKeys: subscription ? Object.keys(subscription) : []
     });

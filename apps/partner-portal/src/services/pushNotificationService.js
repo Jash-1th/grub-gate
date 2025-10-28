@@ -65,16 +65,21 @@ class PartnerPushNotificationService {
    * Request permission and register FCM token for Partner Portal
    */
   async requestPermissionAndRegister() {
+    console.log('🚀 Partner: requestPermissionAndRegister called');
+    
     if (this.isRegistering) {
       console.log('🔄 Partner token registration already in progress');
       return false;
     }
 
     this.isRegistering = true;
+    console.log('🔄 Partner: Starting token registration process...');
 
     try {
       // Request notification permission
+      console.log('📱 Partner: Requesting notification permission...');
       const permissionGranted = await requestNotificationPermission();
+      console.log('📱 Partner: Permission result:', permissionGranted);
       
       if (!permissionGranted) {
         console.log('❌ Partner notification permission not granted');
@@ -83,7 +88,9 @@ class PartnerPushNotificationService {
       }
 
       // Get FCM token
+      console.log('🔑 Partner: Getting FCM token...');
       const token = await getFCMToken();
+      console.log('🔑 Partner: FCM token received:', token ? `${token.substring(0, 50)}...` : 'null');
       
       if (!token) {
         console.log('❌ Failed to get Partner FCM token');
@@ -92,11 +99,14 @@ class PartnerPushNotificationService {
       }
 
       // Register token with backend
+      console.log('📤 Partner: Registering token with backend...');
       const success = await this.registerTokenWithBackend(token);
+      console.log('📤 Partner: Backend registration result:', success);
       
       if (success) {
         this.fcmToken = token;
         console.log('✅ Partner FCM token registered successfully');
+        console.log('✅ Partner: Token saved to service:', this.fcmToken ? 'YES' : 'NO');
         
         // Process any queued notifications
         this.processNotificationQueue();
@@ -110,6 +120,7 @@ class PartnerPushNotificationService {
       }
     } catch (error) {
       console.error('❌ Error during partner permission request and registration:', error);
+      console.error('❌ Error stack:', error.stack);
       this.isRegistering = false;
       return false;
     }

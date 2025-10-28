@@ -113,6 +113,20 @@ function getPartnerNotificationActions(type) {
         }
       ];
     
+    case 'NEW_SUBSCRIPTION':
+      return [
+        {
+          action: 'view_subscriptions',
+          title: '📋 View Subscriptions',
+          icon: '/icons/subscription-icon.png'
+        },
+        {
+          action: 'view_dashboard',
+          title: '📊 Dashboard',
+          icon: '/icons/dashboard-icon.png'
+        }
+      ];
+    
     default:
       return [
         {
@@ -128,7 +142,7 @@ function getPartnerNotificationActions(type) {
  * Handle partner notification action button clicks
  */
 function handlePartnerNotificationAction(action, data) {
-  const { orderId, reviewId, type } = data;
+  const { orderId, reviewId, subscriptionId, type } = data;
   let url = '/dashboard';
 
   switch (action) {
@@ -146,6 +160,9 @@ function handlePartnerNotificationAction(action, data) {
       break;
     case 'respond_review':
       url = reviewId ? `/reviews/${reviewId}` : '/reviews';
+      break;
+    case 'view_subscriptions':
+      url = subscriptionId ? `/subscriptions/${subscriptionId}` : '/subscriptions';
       break;
     case 'view_dashboard':
       url = '/dashboard';
@@ -166,7 +183,7 @@ function handlePartnerNotificationAction(action, data) {
  * Handle main partner notification click
  */
 function handlePartnerNotificationClick(data) {
-  const { action, orderId, reviewId, type } = data;
+  const { action, orderId, reviewId, subscriptionId, type } = data;
   let url = '/dashboard';
 
   // Determine URL based on notification data
@@ -179,6 +196,9 @@ function handlePartnerNotificationClick(data) {
         break;
       case 'view_reviews':
         url = '/reviews';
+        break;
+      case 'view_subscriptions':
+        url = subscriptionId ? `/subscriptions/${subscriptionId}` : '/subscriptions';
         break;
       case 'view_dashboard':
         url = '/dashboard';
@@ -195,6 +215,9 @@ function handlePartnerNotificationClick(data) {
         break;
       case 'NEW_REVIEW':
         url = '/reviews';
+        break;
+      case 'NEW_SUBSCRIPTION':
+        url = subscriptionId ? `/subscriptions/${subscriptionId}` : '/subscriptions';
         break;
       case 'DAILY_SUMMARY':
         url = '/dashboard';

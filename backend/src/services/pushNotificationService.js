@@ -69,29 +69,23 @@ class PushNotificationService {
     }
 
     try {
+      // Convert all data values to strings (FCM requirement)
+      const stringifiedData = {};
+      for (const [key, value] of Object.entries(data)) {
+        if (value !== null && value !== undefined) {
+          stringifiedData[key] = typeof value === 'object' ? JSON.stringify(value) : String(value);
+        }
+      }
+
       const message = {
         token,
         notification: {
           title: notification.title,
           body: notification.body,
-          icon: notification.icon || '/icons/notification-icon.png',
-          badge: notification.badge || '/icons/notification-badge.png',
         },
         data: {
-          ...data,
+          ...stringifiedData,
           timestamp: new Date().toISOString(),
-          click_action: data.click_action || 'FLUTTER_NOTIFICATION_CLICK'
-        },
-        webpush: {
-          headers: {
-            Urgency: notification.priority || 'normal',
-          },
-          notification: {
-            icon: notification.icon || '/icons/notification-icon.png',
-            badge: notification.badge || '/icons/notification-badge.png',
-            requireInteraction: notification.requireInteraction || false,
-            actions: notification.actions || []
-          }
         }
       };
 
@@ -162,23 +156,23 @@ class PushNotificationService {
     }
 
     try {
+      // Convert all data values to strings (FCM requirement)
+      const stringifiedData = {};
+      for (const [key, value] of Object.entries(data)) {
+        if (value !== null && value !== undefined) {
+          stringifiedData[key] = typeof value === 'object' ? JSON.stringify(value) : String(value);
+        }
+      }
+
       const response = await admin.messaging().sendEach(tokens.map(token => ({
         token,
         notification: {
           title: notification.title,
           body: notification.body,
-          icon: notification.icon || '/icons/notification-icon.png',
         },
         data: {
-          ...data,
+          ...stringifiedData,
           timestamp: new Date().toISOString(),
-        },
-        webpush: {
-          notification: {
-            icon: notification.icon || '/icons/notification-icon.png',
-            badge: notification.badge || '/icons/notification-badge.png',
-            requireInteraction: notification.requireInteraction || false,
-          }
         }
       })));
       

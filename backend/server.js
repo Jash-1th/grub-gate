@@ -194,6 +194,7 @@ app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/push-notifications', pushNotificationRoutes);
 app.use('/api/v1/meal-calendar', require('./src/routes/mealCalendar.routes'));
 app.use('/api/v1/restaurant-validation', require('./src/routes/restaurantValidation.routes'));
+app.use('/api/v1/order-activation', require('./src/routes/orderActivation.routes'));
 
 // 404 handler
 app.use('*', (req, res) => {
