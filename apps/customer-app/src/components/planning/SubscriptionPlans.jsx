@@ -138,9 +138,14 @@ const SubscriptionPlans = () => {
       console.error('⚠️ Error clearing meal plan data:', error);
     }
     
+    // CRITICAL FIX: Wait a brief moment to ensure state updates are complete
+    // This prevents the flash of weekly-menu page during navigation
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     // Toast already shown in BillingFormModal, no need to show again
     // Navigate to meal calendar to show the newly created subscription
-    navigate('/meal-calendar');
+    // Use replace: true to avoid adding to history stack
+    navigate('/meal-calendar', { replace: true });
   };
 
   const plans = [

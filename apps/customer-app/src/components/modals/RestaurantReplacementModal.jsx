@@ -35,7 +35,7 @@ const RestaurantReplacementModal = ({
   };
 
 
-  if (!isOpen || selectedRestaurants.length !== 2) return null;
+  if (!isOpen || selectedRestaurants.length === 0 || selectedRestaurants.length > 2) return null;
 
 
   const toggleRestaurantSelection = (restaurant) => {
@@ -229,20 +229,22 @@ const RestaurantReplacementModal = ({
                     const postalParam = window.location.search.includes('postal=') ? window.location.search.split('postal=')[1]?.split('&')[0] : '';
                     window.location.href = `/plan/restaurants?source=plan${postalParam ? `&postal=${postalParam}` : ''}`;
                   }}
-                  className="w-full p-6 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg cursor-pointer hover:from-green-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="w-full p-4 sm:p-6 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-xl cursor-pointer hover:from-green-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95 touch-manipulation"
                 >
-                  <div className="flex items-center justify-center space-x-4">
-                    <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
+                  <div className="flex items-center justify-between sm:justify-center sm:space-x-4">
+                    <div className="flex items-center space-x-3 sm:space-x-4 flex-1">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                      </div>
+                      <div className="text-left sm:text-center">
+                        <h4 className="text-base sm:text-xl font-bold mb-0.5 sm:mb-1">Browse Restaurants</h4>
+                        <p className="text-green-100 text-xs sm:text-sm">Click to explore and add a new restaurant</p>
+                      </div>
                     </div>
-                    <div className="text-center">
-                      <h4 className="text-xl font-bold mb-1">Browse Restaurants</h4>
-                      <p className="text-green-100 text-sm">Click to explore and add a new restaurant</p>
-                    </div>
-                    <div className="text-white">
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="text-white flex-shrink-0">
+                      <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                     </div>

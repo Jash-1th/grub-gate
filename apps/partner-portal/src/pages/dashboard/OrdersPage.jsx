@@ -532,51 +532,52 @@ const OrdersPage = () => {
               </div>
 
               {/* Mobile and Tablet Card View */}
-              <div className="lg:hidden space-y-3 sm:space-y-4">
+              <div className="lg:hidden space-y-3">
                 {filteredOrders.map((order) => (
-                  <Card key={order._id} className="hover:shadow-lg transition-all duration-200">
-                    <CardContent className="p-3 sm:p-4">
-                      <div className="space-y-3 sm:space-y-4">
-                        {/* Header Row */}
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                            <span className="font-bold text-gray-900 text-sm sm:text-base">#{order.orderNumber}</span>
-                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                  <Card key={order._id} className="hover:shadow-md transition-all duration-200 border-l-4" style={{borderLeftColor: order.status === 'scheduled' ? '#3B82F6' : order.status === 'delivered' ? '#10B981' : '#F59E0B'}}>
+                    <CardContent className="p-3">
+                      <div className="space-y-2.5">
+                        {/* Header Row - Compact */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-gray-900 text-sm">#{order.orderNumber}</span>
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold ${getStatusColor(order.status)}`}>
                                 {getStatusIcon(order.status)}
                                 <span className="ml-1 capitalize">{order.status}</span>
                               </span>
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                order.mealType === 'lunch' 
-                                  ? 'bg-yellow-100 text-yellow-800' 
-                                  : order.mealType === 'dinner'
-                                  ? 'bg-purple-100 text-purple-800'
-                                  : 'bg-gray-100 text-gray-800'
-                              }`}>
-                                {order.mealType === 'lunch' ? '🍽️ Lunch' : 
-                                 order.mealType === 'dinner' ? '🍽️ Dinner' : 
-                                 '🍽️ Order'}
-                              </span>
                             </div>
+                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium w-fit ${
+                              order.mealType === 'lunch' 
+                                ? 'bg-yellow-100 text-yellow-800' 
+                                : order.mealType === 'dinner'
+                                ? 'bg-purple-100 text-purple-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {order.mealType === 'lunch' ? '🍽️ Lunch' : 
+                               order.mealType === 'dinner' ? '🌙 Dinner' : 
+                               '🍽️ Order'}
+                            </span>
                           </div>
                           <div className="text-right flex-shrink-0">
-                            <div className="font-bold text-lg sm:text-xl text-grub-red">${order.total?.toFixed(2)}</div>
-                            <div className="text-xs sm:text-sm text-gray-500">{order.items?.length || 0} items</div>
+                            <div className="font-bold text-base text-grub-red">${order.total?.toFixed(2)}</div>
+                            <div className="text-[10px] text-gray-500">{order.items?.length || 0} items</div>
                           </div>
                         </div>
 
-                        {/* Customer Info - Enhanced */}
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                          <div className="flex items-center space-x-3 flex-1 min-w-0">
-                            <div className="bg-blue-100 rounded-full p-2 flex-shrink-0">
-                              <FontAwesomeIcon icon={faUser} className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
+                        {/* Customer Info - Compact */}
+                        <div className="flex items-center justify-between gap-2 bg-gray-50 rounded-lg p-2">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <div className="bg-blue-100 rounded-full p-1.5 flex-shrink-0">
+                              <FontAwesomeIcon icon={faUser} className="h-3 w-3 text-blue-600" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="font-medium text-gray-900 text-sm sm:text-base truncate">
+                              <div className="font-semibold text-gray-900 text-xs truncate">
                                 {order.customerId?.firstName} {order.customerId?.lastName}
                               </div>
-                              <div className="text-xs sm:text-sm text-gray-500">
-                                Delivery: {order.deliveryTime?.estimated ? 
+                              <div className="text-[10px] text-gray-500 flex items-center gap-1">
+                                <FontAwesomeIcon icon={faClock} className="h-2.5 w-2.5" />
+                                {order.deliveryTime?.estimated ? 
                                   new Date(order.deliveryTime.estimated).toLocaleTimeString('en-US', {
                                     hour: '2-digit',
                                     minute: '2-digit'
@@ -587,22 +588,22 @@ const OrdersPage = () => {
                             </div>
                           </div>
                           
-                          {/* Status Management and Actions */}
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
-                            <StatusUpdateButton
-                              order={order}
-                              onStatusUpdate={handleUpdateStatus}
-                              isLoading={updateStatusLoading === order._id}
-                            />
-                            <button
-                              onClick={() => handleViewOrder(order)}
-                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex-shrink-0"
-                              title="View Details"
-                            >
-                              <FontAwesomeIcon icon={faEye} className="h-4 w-4" />
-                            </button>
-                          </div>
+                          {/* Actions - Compact */}
+                          <button
+                            onClick={() => handleViewOrder(order)}
+                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex-shrink-0"
+                            title="View Details"
+                          >
+                            <FontAwesomeIcon icon={faEye} className="h-3.5 w-3.5" />
+                          </button>
                         </div>
+                        
+                        {/* Status Button - Full Width */}
+                        <StatusUpdateButton
+                          order={order}
+                          onStatusUpdate={handleUpdateStatus}
+                          isLoading={updateStatusLoading === order._id}
+                        />
                       </div>
                     </CardContent>
                   </Card>

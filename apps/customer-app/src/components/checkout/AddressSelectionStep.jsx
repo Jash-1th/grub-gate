@@ -308,28 +308,40 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
       {/* Selected Address & Delivery Validation */}
       {selectedAddress && (
         <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
             Selected Address
           </h3>
           
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-            <div className="flex items-start justify-between">
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
               <div className="flex-1">
-                <p className="font-medium text-blue-900 capitalize mb-1">
-                  {selectedAddress.type} {selectedAddress.isTemporary && '(Current Location)'}
-                </p>
-                <p className="text-blue-800">
+                <div className="flex items-center justify-between sm:justify-start mb-2">
+                  <p className="font-semibold text-blue-900 capitalize text-sm sm:text-base">
+                    {selectedAddress.type} {selectedAddress.isTemporary && '(Current Location)'}
+                  </p>
+                  
+                  {/* Remove Button - Mobile (top right) */}
+                  <button
+                    onClick={() => setSelectedAddress(null)}
+                    className="sm:hidden p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors duration-200"
+                    title="Remove address"
+                  >
+                    <FontAwesomeIcon icon={faTimes} className="w-4 h-4" />
+                  </button>
+                </div>
+                
+                <p className="text-blue-800 text-sm sm:text-base leading-relaxed">
                   {addressService.formatAddressForDisplay(selectedAddress)}
                 </p>
                 {selectedAddress.instructions && (
-                  <p className="text-sm text-blue-700 mt-2">
+                  <p className="text-xs sm:text-sm text-blue-700 mt-2 bg-blue-100 rounded-lg p-2">
                     <strong>Instructions:</strong> {selectedAddress.instructions}
                   </p>
                 )}
               </div>
               
-              {/* Remove Button and Delivery Status */}
-              <div className="ml-4 flex items-start space-x-2">
+              {/* Remove Button and Delivery Status - Desktop */}
+              <div className="hidden sm:flex ml-4 items-start space-x-2">
                 {/* Remove Address Button */}
                 <button
                   onClick={() => setSelectedAddress(null)}
@@ -382,6 +394,48 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
                   )
                 ) : null}
                 </div>
+              </div>
+              
+              {/* Delivery Status - Mobile (below address) */}
+              <div className="sm:hidden">
+                {validatingDelivery ? (
+                  <div className="flex items-center justify-center text-blue-600 bg-blue-100 rounded-lg p-2.5">
+                    <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
+                    <span className="text-sm font-medium">Checking delivery...</span>
+                  </div>
+                ) : deliveryValidation ? (
+                  deliveryValidation.canDeliver ? (
+                    <div className="flex items-center justify-between bg-green-100 rounded-lg p-2.5">
+                      <div className="flex items-center text-green-700">
+                        <FontAwesomeIcon icon={faCheckCircle} className="mr-2 text-lg" />
+                        <div className="text-sm font-medium">
+                          <div>Delivery Available</div>
+                          {deliveryValidation.distance && deliveryValidation.distance > 0 ? (
+                            <div className="text-xs text-green-600">
+                              {Math.round(deliveryValidation.distance * 10) / 10} km away
+                            </div>
+                          ) : (
+                            <div className="text-xs text-green-600">
+                              5 km (estimated)
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center bg-red-100 rounded-lg p-2.5">
+                      <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2 text-red-600 text-lg" />
+                      <div className="text-sm text-red-700">
+                        <div className="font-medium">Outside delivery zone</div>
+                        {deliveryValidation.distance && deliveryValidation.distance > 0 && (
+                          <div className="text-xs">
+                            {Math.round(deliveryValidation.distance * 10) / 10} km away (Max: {deliveryValidation.maxDistance || 'N/A'} km)
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                ) : null}
               </div>
             </div>
 
@@ -448,11 +502,11 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
       )}
 
       {/* Action Buttons */}
-      <div className={`flex ${onPrevious ? 'justify-between' : 'justify-end'}`}>
+      <div className={`flex flex-col sm:flex-row gap-3 ${onPrevious ? 'sm:justify-between' : 'sm:justify-end'}`}>
         {onPrevious && (
           <button
             onClick={onPrevious}
-            className="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 border-2 border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 touch-manipulation"
           >
             Back
           </button>
@@ -462,10 +516,10 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
           onClick={handleContinue}
           disabled={!selectedAddress || validatingDelivery || (deliveryValidation && !deliveryValidation.canDeliver) || isLoading}
           className={`
-            px-8 py-3 font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+            w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 touch-manipulation
             ${!selectedAddress || validatingDelivery || (deliveryValidation && !deliveryValidation.canDeliver) || isLoading
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              : 'bg-blue-600 text-white hover:bg-blue-700 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl'
+              : 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl'
             }
           `}
         >

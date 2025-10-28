@@ -464,10 +464,10 @@ const AddressForm = ({
       {/* Address Type Selection */}
       {showTypeSelection && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">
+          <label className="block text-sm font-medium text-gray-700 mb-2 sm:mb-3">
             Address Type
           </label>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             {addressTypes.map(type => (
               <button
                 key={type.value}
@@ -477,15 +477,15 @@ const AddressForm = ({
                   handleInputChange('type', type.value);
                 }}
                 className={`
-                  flex items-center justify-center p-3 rounded-lg border-2 transition-all duration-200
+                  flex flex-col sm:flex-row items-center justify-center p-2.5 sm:p-3 rounded-lg border-2 transition-all duration-200 touch-manipulation
                   ${formData.type === type.value
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                    ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
+                    : 'border-gray-200 hover:border-gray-300 active:border-blue-300 text-gray-600 hover:bg-gray-50'
                   }
                 `}
               >
-                <FontAwesomeIcon icon={type.icon} className="mr-2" />
-                {type.label}
+                <FontAwesomeIcon icon={type.icon} className="sm:mr-2 mb-1 sm:mb-0 text-base sm:text-lg" />
+                <span className="text-xs sm:text-sm font-medium">{type.label}</span>
               </button>
             ))}
           </div>

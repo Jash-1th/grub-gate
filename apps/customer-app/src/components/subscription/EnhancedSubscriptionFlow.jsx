@@ -229,44 +229,59 @@ const EnhancedSubscriptionFlow = ({ selectedPlan, onComplete, onCancel }) => {
       )}
 
       {/* Progress Steps */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
           {steps.map((step, index) => (
-            <div key={step.id} className="flex items-center">
-              {/* Step Circle */}
-              <div className={`
-                flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all duration-300
-                ${currentStep === step.id
-                  ? 'bg-blue-600 border-blue-600 text-white'
-                  : currentStep > step.id
-                  ? 'bg-green-600 border-green-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-400'
-                }
-              `}>
-                {currentStep > step.id ? (
-                  <FontAwesomeIcon icon={faCheck} className="w-5 h-5" />
-                ) : (
-                  <FontAwesomeIcon icon={step.icon} className="w-5 h-5" />
-                )}
-              </div>
+            <React.Fragment key={step.id}>
+              <div className="flex items-center flex-1">
+                {/* Step Circle */}
+                <div className={`
+                  flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-all duration-300 flex-shrink-0
+                  ${currentStep === step.id
+                    ? 'bg-blue-600 border-blue-600 text-white shadow-lg'
+                    : currentStep > step.id
+                    ? 'bg-green-600 border-green-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-400'
+                  }
+                `}>
+                  {currentStep > step.id ? (
+                    <FontAwesomeIcon icon={faCheck} className="w-4 h-4 sm:w-5 sm:h-5" />
+                  ) : (
+                    <FontAwesomeIcon icon={step.icon} className="w-4 h-4 sm:w-5 sm:h-5" />
+                  )}
+                </div>
 
-              {/* Step Info */}
-              <div className="ml-4">
-                <h3 className={`font-semibold ${
-                  currentStep >= step.id ? 'text-gray-900' : 'text-gray-500'
-                }`}>
-                  {step.title}
-                </h3>
-                <p className="text-sm text-gray-600">{step.description}</p>
+                {/* Step Info - Hidden on mobile, shown on tablet+ */}
+                <div className="ml-2 sm:ml-4 hidden sm:block">
+                  <h3 className={`font-semibold text-sm sm:text-base ${
+                    currentStep >= step.id ? 'text-gray-900' : 'text-gray-500'
+                  }`}>
+                    {step.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-600">{step.description}</p>
+                </div>
               </div>
 
               {/* Connector Line */}
               {index < steps.length - 1 && (
                 <div className={`
-                  ml-8 w-24 h-0.5 transition-colors duration-300
+                  w-8 sm:w-16 md:w-24 h-0.5 transition-colors duration-300 flex-shrink-0
                   ${currentStep > step.id ? 'bg-green-600' : 'bg-gray-300'}
                 `} />
               )}
+            </React.Fragment>
+          ))}
+        </div>
+        
+        {/* Mobile Step Labels - Show below circles on mobile */}
+        <div className="flex justify-between mt-3 sm:hidden">
+          {steps.map((step) => (
+            <div key={`label-${step.id}`} className="flex-1 text-center px-1">
+              <p className={`text-xs font-medium ${
+                currentStep >= step.id ? 'text-gray-900' : 'text-gray-500'
+              }`}>
+                {step.title}
+              </p>
             </div>
           ))}
         </div>
@@ -301,29 +316,29 @@ const PaymentStep = ({ subscriptionData, onNext, onPrevious, isLoading }) => {
   };
 
   return (
-    <div className="p-8">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">
           Payment
         </h2>
-        <p className="text-gray-600">
+        <p className="text-sm sm:text-base text-gray-600">
           Choose your payment method to complete your subscription
         </p>
       </div>
 
       {/* Selected Plan Summary */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-        <h3 className="font-semibold text-blue-900 mb-2">Selected Plan</h3>
-        <div className="flex justify-between items-center">
-          <div>
-            <p className="font-medium text-blue-900">{subscriptionData.planData?.name}</p>
-            <p className="text-sm text-blue-700">{subscriptionData.planData?.description}</p>
+      <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
+        <h3 className="font-semibold text-blue-900 mb-2 text-sm sm:text-base">Selected Plan</h3>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0">
+          <div className="flex-1">
+            <p className="font-semibold text-blue-900 text-sm sm:text-base">{subscriptionData.planData?.name}</p>
+            <p className="text-xs sm:text-sm text-blue-700 mt-0.5">{subscriptionData.planData?.description}</p>
           </div>
-          <div className="text-right">
-            <p className="text-2xl font-bold text-blue-600">
+          <div className="text-left sm:text-right">
+            <p className="text-xl sm:text-2xl font-bold text-blue-600">
               ${subscriptionData.planData?.price}
             </p>
-            <p className="text-sm text-blue-700">
+            <p className="text-xs sm:text-sm text-blue-700">
               / {subscriptionData.planData?.duration}
             </p>
           </div>
@@ -331,57 +346,57 @@ const PaymentStep = ({ subscriptionData, onNext, onPrevious, isLoading }) => {
       </div>
 
       {/* Delivery Address Summary */}
-      <div className="bg-gray-50 rounded-xl p-4 mb-6">
-        <h3 className="font-semibold text-gray-900 mb-2">Delivery Address</h3>
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
+        <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">Delivery Address</h3>
         {subscriptionData.deliveryAddress ? (
-          <p className="text-gray-700">
+          <p className="text-gray-700 text-xs sm:text-sm leading-relaxed">
             {subscriptionData.deliveryAddress.street}, {subscriptionData.deliveryAddress.city}, {subscriptionData.deliveryAddress.province} {subscriptionData.deliveryAddress.postalCode}
           </p>
         ) : (
-          <p className="text-gray-500">Address will be selected in previous step</p>
+          <p className="text-gray-500 text-xs sm:text-sm">Address will be selected in previous step</p>
         )}
       </div>
 
       {/* Payment Method */}
-      <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Method</h3>
-        <div className="space-y-3">
-          <label className="flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+      <div className="mb-6 sm:mb-8">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Payment Method</h3>
+        <div className="space-y-2 sm:space-y-3">
+          <label className="flex items-center p-3 sm:p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation">
             <input
               type="radio"
               name="paymentMethod"
               value="card"
               checked={paymentMethod === 'card'}
               onChange={(e) => setPaymentMethod(e.target.value)}
-              className="mr-3"
+              className="mr-3 w-4 h-4 sm:w-5 sm:h-5"
             />
-            <FontAwesomeIcon icon={faCreditCard} className="mr-3 text-blue-600" />
+            <FontAwesomeIcon icon={faCreditCard} className="mr-2 sm:mr-3 text-blue-600 text-lg sm:text-xl" />
             <div>
-              <p className="font-medium text-gray-900">Credit/Debit Card</p>
-              <p className="text-sm text-gray-600">Secure payment with your card</p>
+              <p className="font-semibold text-gray-900 text-sm sm:text-base">Credit/Debit Card</p>
+              <p className="text-xs sm:text-sm text-gray-600">Secure payment with your card</p>
             </div>
           </label>
         </div>
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-between">
+      <div className="flex flex-col sm:flex-row gap-3 sm:justify-between">
         <button
           onClick={onPrevious}
           disabled={isLoading}
-          className="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors duration-200"
+          className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 border-2 border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-colors duration-200 touch-manipulation order-2 sm:order-1"
         >
           <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
-          Back to Address
+          <span className="text-sm sm:text-base">Back to Address</span>
         </button>
 
         <button
           onClick={handleContinue}
           disabled={isLoading}
           className={`
-            px-8 py-3 font-semibold rounded-xl transition-all duration-200
+            w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 font-semibold rounded-xl transition-all duration-200 touch-manipulation order-1 sm:order-2
             ${!isLoading
-              ? 'bg-green-600 text-white hover:bg-green-700 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl'
+              ? 'bg-green-600 text-white hover:bg-green-700 active:bg-green-800 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl'
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }
           `}
@@ -389,11 +404,11 @@ const PaymentStep = ({ subscriptionData, onNext, onPrevious, isLoading }) => {
           {isLoading ? (
             <>
               <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
-              Creating Subscription...
+              <span className="text-sm sm:text-base">Creating Subscription...</span>
             </>
           ) : (
             <>
-              Complete Subscription
+              <span className="text-sm sm:text-base">Complete Subscription</span>
               <FontAwesomeIcon icon={faCheck} className="ml-2" />
             </>
           )}

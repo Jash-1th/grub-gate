@@ -44,7 +44,7 @@ import SettingsPage from './pages/dashboard/SettingsPage.jsx';
 import SupportPage from './pages/dashboard/SupportPage.jsx';
 
 // Test Pages
-import NotificationTestPage from './pages/test/NotificationTestPage.jsx';
+// import NotificationTestPage from './pages/test/NotificationTestPage.jsx';
 
 // Component that uses modal context (must be inside ModalProvider)
 const AppContent = () => {
@@ -135,7 +135,7 @@ const AppContent = () => {
             <Route path="customers" element={<CustomersPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="support" element={<SupportPage />} />
-            <Route path="test/notifications" element={<NotificationTestPage />} />
+            {/* <Route path="test/notifications" element={<NotificationTestPage />} /> */}
           </Route>
 
           {/* Catch all route */}

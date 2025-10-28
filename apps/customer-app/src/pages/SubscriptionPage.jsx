@@ -9,20 +9,31 @@ const SubscriptionPage = () => {
   const { getTotalItemsCount, isLoading } = useMealPlan();
   const { showError } = useToast();
   const hasCheckedOnMount = useRef(false);
+  const hasCheckedSubscriptionFlag = useRef(false);
 
-  // Check IMMEDIATELY if user just completed a subscription (before any useEffect runs)
-  const recentSubscriptionSuccess = sessionStorage.getItem('recentSubscriptionSuccess');
-  
-  // If subscription was just completed, redirect immediately without rendering
-  if (recentSubscriptionSuccess) {
-    console.log('✅ SubscriptionPage: Recent subscription detected (immediate check), redirecting to meal calendar');
-    sessionStorage.removeItem('recentSubscriptionSuccess');
-    navigate('/meal-calendar', { replace: true });
-    return null; // Don't render anything, just redirect
-  }
+  // CRITICAL FIX: Check for recent subscription in useEffect (not during render)
+  useEffect(() => {
+    // Only check once on mount
+    if (hasCheckedSubscriptionFlag.current) return;
+    hasCheckedSubscriptionFlag.current = true;
+    
+    const recentSubscriptionSuccess = sessionStorage.getItem('recentSubscriptionSuccess');
+    if (recentSubscriptionSuccess) {
+      console.log('✅ SubscriptionPage: Recent subscription detected, redirecting to meal calendar');
+      sessionStorage.removeItem('recentSubscriptionSuccess');
+      navigate('/meal-calendar', { replace: true });
+    }
+  }, [navigate]);
 
   // Check if user has selected at least one meal item
   useEffect(() => {
+    // CRITICAL: Don't check if user just completed subscription
+    const recentSubscriptionSuccess = sessionStorage.getItem('recentSubscriptionSuccess');
+    if (recentSubscriptionSuccess) {
+      console.log('⏭️ SubscriptionPage: Skipping meal count check - subscription just completed');
+      return;
+    }
+    
     // Skip the check on initial mount (to avoid false positives during page refresh)
     if (!hasCheckedOnMount.current) {
       hasCheckedOnMount.current = true;
@@ -52,6 +63,12 @@ const SubscriptionPage = () => {
       console.log('✅ SubscriptionPage: Normal flow, totalItems > 0');
     }
   }, [getTotalItemsCount, navigate, showError, isLoading]);
+
+  // CRITICAL FIX: Don't render if subscription just completed (let useEffect handle redirect)
+  const recentSubscriptionSuccess = sessionStorage.getItem('recentSubscriptionSuccess');
+  if (recentSubscriptionSuccess) {
+    return null; // Will redirect via useEffect
+  }
 
   // Don't render the page if no items are selected
   const totalItems = getTotalItemsCount();

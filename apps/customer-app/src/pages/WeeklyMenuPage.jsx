@@ -184,6 +184,7 @@ const WeeklyMenuPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  
   const { 
     mealPlan, 
     weeklyPlan, 
@@ -244,6 +245,16 @@ const WeeklyMenuPage = () => {
   // Get restaurant info from URL parameters (moved to top to avoid reference errors)
   const urlRestaurantId = searchParams.get('restaurantId');
   const urlRestaurantName = searchParams.get('restaurantName');
+  
+  // CRITICAL FIX: Check if user just completed a subscription - redirect immediately
+  useEffect(() => {
+    const recentSubscriptionSuccess = sessionStorage.getItem('recentSubscriptionSuccess');
+    if (recentSubscriptionSuccess) {
+      console.log('✅ WeeklyMenuPage: Recent subscription detected, redirecting to meal calendar');
+      sessionStorage.removeItem('recentSubscriptionSuccess');
+      navigate('/meal-calendar', { replace: true });
+    }
+  }, [navigate]);
   
   // Debug: Log restaurant data when it changes
   useEffect(() => {
@@ -524,6 +535,13 @@ const WeeklyMenuPage = () => {
     }
   };
 
+  const handleAddRestaurant = () => {
+    console.log('🔍 handleAddRestaurant called - navigating to restaurants page');
+    const postalParam = postalCode ? `&postal=${postalCode}` : '';
+    console.log('🔍 Navigating to:', `/plan/restaurants?source=plan${postalParam}`);
+    navigate(`/plan/restaurants?source=plan${postalParam}`);
+  };
+
   const handleSelectOtherRestaurant = () => {
     console.log('🔍 handleSelectOtherRestaurant called');
     console.log('🔍 Selected restaurants count:', getSelectedRestaurantCount());
@@ -537,12 +555,22 @@ const WeeklyMenuPage = () => {
     console.log('🔍 Determined user type:', userType);
     
     if (userType === 'normal') {
-      if (selectedRestaurantsCount < 2) {
-        // User has 0 or 1 restaurant - go directly to restaurants page (no modal)
-        console.log('✅ User has < 2 restaurants - navigating directly to restaurants page');
+      if (selectedRestaurantsCount === 0) {
+        // User has no restaurants - go directly to restaurants page
+        console.log('✅ User has 0 restaurants - navigating directly to restaurants page');
         const postalParam = postalCode ? `&postal=${postalCode}` : '';
         console.log('🔍 Navigating to:', `/plan/restaurants?source=plan${postalParam}`);
         navigate(`/plan/restaurants?source=plan${postalParam}`);
+        return;
+      } else if (selectedRestaurantsCount === 1) {
+        // User has 1 restaurant - show replacement modal (same as 2 restaurants)
+        console.log('🚨 User has 1 restaurant - showing replacement modal');
+        
+        setReplacementModalData({
+          selectedRestaurants: allSelectedRestaurants,
+          newRestaurant: null // Will be set when user selects from restaurant list
+        });
+        setShowRestaurantReplacementModal(true);
         return;
       } else if (selectedRestaurantsCount === 2) {
         // User has 2 restaurants - show replacement modal (choose which to replace)
@@ -1076,7 +1104,7 @@ const WeeklyMenuPage = () => {
                   <>
                     {getSelectedRestaurantCount() < 2 && (
                       <button
-                        onClick={handleSelectOtherRestaurant}
+                        onClick={handleAddRestaurant}
                         className="px-4 py-3 bg-grub-red text-white rounded-xl hover:bg-red-700 transition-colors text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 touch-manipulation"
                       >
                         <div className="flex items-center justify-center space-x-2">

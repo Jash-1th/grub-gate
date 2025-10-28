@@ -20,6 +20,9 @@ const getUserMealCalendar = async (req, res) => {
       });
     }
 
+    // Populate restaurant details FIRST before processing
+    await calendar.populate('calendarEntries.restaurantId', 'name cuisine phone address');
+    
     let meals = calendar.calendarEntries;
 
     // Filter by date range if provided
@@ -44,11 +47,15 @@ const getUserMealCalendar = async (req, res) => {
       console.log(`🔍 Backend: Meal ${index + 1}: ${meal.mealName} (Key: ${mealKey})`);
       
       if (!groupedMeals[mealKey]) {
+        const mealObj = meal.toObject();
         groupedMeals[mealKey] = {
-          ...meal.toObject(),
+          ...mealObj,
+          // Add restaurant name from populated data
+          restaurant: meal.restaurantId?.name || mealObj.restaurantId,
+          restaurantName: meal.restaurantId?.name || null,
           quantity: 0
         };
-        console.log(`🆕 Backend: Created new group for: ${mealKey}`);
+        console.log(`🆕 Backend: Created new group for: ${mealKey} with restaurant: ${meal.restaurantId?.name}`);
       }
       groupedMeals[mealKey].quantity++;
       console.log(`📊 Backend: Updated quantity for ${mealKey}: ${groupedMeals[mealKey].quantity}`);
@@ -57,10 +64,7 @@ const getUserMealCalendar = async (req, res) => {
     // Convert grouped meals back to array
     const mealsWithQuantity = Object.values(groupedMeals);
     console.log('🎯 Backend: Final grouped meals:', mealsWithQuantity.length);
-    console.log('🎯 Backend: Meals with quantities:', mealsWithQuantity.map(m => `${m.mealName}: ${m.quantity}`));
-    
-    // Populate restaurant details
-    await calendar.populate('calendarEntries.restaurantId', 'name cuisine phone address');
+    console.log('🎯 Backend: Meals with quantities:', mealsWithQuantity.map(m => `${m.mealName}: ${m.quantity} from ${m.restaurant || m.restaurantName || 'Unknown'}`));
 
     // Calculate summary based on quantities
     const calculateSummaryWithQuantities = (meals) => {

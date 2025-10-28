@@ -53,50 +53,50 @@ const RestaurantHero = ({
       </div>
       
       {/* Restaurant Info Overlay */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
+      <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
           <button
             onClick={handleBack}
-            className="inline-flex items-center text-white/80 hover:text-white mb-4 transition-all duration-300 hover:translate-x-1 bg-black/20 backdrop-blur-sm px-3 py-2 rounded-lg"
+            className="inline-flex items-center text-white/80 hover:text-white mb-3 sm:mb-4 transition-all duration-300 hover:translate-x-1 bg-black/30 backdrop-blur-sm px-3 py-2 rounded-lg text-sm sm:text-base"
           >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             Back to Restaurants
           </button>
           
-          <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3 leading-tight">
+          <div className="bg-grub-red/90 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-red-400/30 shadow-lg">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2 sm:mb-3 leading-tight">
               {pageTitle}
             </h1>
-            <p className="text-white/90 text-lg sm:text-xl mb-4 leading-relaxed">
+            <p className="text-white/95 text-sm sm:text-base lg:text-lg mb-3 sm:mb-4 leading-relaxed">
               {pageDescription}
             </p>
             
-            <div className="flex flex-wrap items-center gap-4 text-white/90">
-              <div className="flex items-center bg-white/20 px-3 py-2 rounded-full">
-                <svg className="w-5 h-5 text-yellow-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-white">
+              <div className="flex items-center bg-white/25 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-300 mr-1.5 sm:mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
-                <span className="font-bold text-lg">{restaurant.rating}</span>
-                <span className="text-white/70 ml-1">rating</span>
+                <span className="font-bold text-sm sm:text-base">{restaurant.rating}</span>
+                <span className="text-white/80 ml-1 text-xs sm:text-sm">rating</span>
               </div>
               
               {restaurant.cuisine && (
-                <div className="flex items-center bg-white/20 px-3 py-2 rounded-full">
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center bg-white/25 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
-                  <span className="font-semibold">{restaurant.cuisine}</span>
+                  <span className="font-semibold text-xs sm:text-sm">{restaurant.cuisine}</span>
                 </div>
               )}
               
               {restaurant.deliveryTime && (
-                <div className="flex items-center bg-white/20 px-3 py-2 rounded-full">
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center bg-white/25 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span className="font-semibold">{restaurant.deliveryTime}</span>
+                  <span className="font-semibold text-xs sm:text-sm">{restaurant.deliveryTime}</span>
                 </div>
               )}
             </div>
