@@ -2,7 +2,7 @@
 
 [build]
   # Build command modified to explicitly install the missing Rollup package as a workaround.
-  command = "cd ../.. && npm install --ignore-scripts && npm install @rollup/rollup-linux-x64-gnu --save-optional && cd apps/partner-portal && npm run build && cp -r dist/client/* dist/"
+  command = "cd ../.. && npm install --ignore-scripts && npm install @rollup/rollup-linux-x64-gnu --save-optional && cd apps/partner-portal && npm run build && cp -r dist/client/* dist/ && ls -la dist/ && echo 'Checking for service worker files:' && ls -la dist/*.js"
   
   # The publish directory is "dist", relative to the 
   # "Base directory" ("apps/partner-portal") set in the Netlify UI.
@@ -50,10 +50,10 @@
   status = 200
   force = true
 
-# Add redirect for partner portal firebase messaging service worker
+# Add redirect for firebase messaging service worker
 [[redirects]]
-  from = "/firebase-messaging-sw-partner.js"
-  to = "/firebase-messaging-sw-partner.js"
+  from = "/firebase-messaging-sw.js"
+  to = "/firebase-messaging-sw.js"
   status = 200
   force = true
 
@@ -108,6 +108,13 @@
   [headers.values]
     Content-Type = "application/javascript; charset=utf-8"
     Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/firebase-messaging-sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "public, max-age=0, must-revalidate"
+    Service-Worker-Allowed = "/"
 
 [[headers]]
   for = "/*.html"
