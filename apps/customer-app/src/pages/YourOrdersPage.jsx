@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import OrderHistoryCard from '../components/orders/OrderHistoryCard';
 import ReviewModal from '../components/reviews/ReviewModal';
 import Loading from '../components/common/Loading';
@@ -16,6 +17,7 @@ const YourOrdersPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, loading: authLoading, token, isAuthenticated } = useAuth();
+  const { showError } = useToast();
   const [orders, setOrders] = useState([]);
   const [mealItems, setMealItems] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
@@ -324,7 +326,7 @@ const YourOrdersPage = () => {
       console.log('✅ fetchOrders: Fetch complete');
     } catch (error) {
       console.error('💥 fetchOrders: Error fetching orders:', error);
-      showError(t('errors.failedToFetchOrders'));
+      showError(t('common.error'), t('common.retry'));
       setLoading(false);
       setFilterLoading(false); // Hide filter loading indicator even on error
     }

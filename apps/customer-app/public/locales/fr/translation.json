@@ -351,7 +351,9 @@
     "next": "Suivant",
     "previous": "Précédent",
     "viewMore": "Voir Plus",
-    "readMore": "Lire Plus"
+    "readMore": "Lire Plus",
+    "subscription": "Plan de Repas par Abonnement",
+    "loadMore": "Charger Plus"
   },
   "mealPlanning": {
     "hero": {

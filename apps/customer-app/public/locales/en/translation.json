@@ -27,7 +27,9 @@
     "subscription": "Subscription Meal Plan",
     "loadMore": "Load More",
     "loading" :"Loading...",
-    "restaurant": "Restaurant"
+    "restaurant": "Restaurant",
+    "error": "Something went wrong",
+    "retry": "Try Again"
   },
   "deliveredOrders": {
     "title": "Delivered Orders",
