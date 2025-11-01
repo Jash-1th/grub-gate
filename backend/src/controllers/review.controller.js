@@ -3,6 +3,7 @@ const Review = require('../models/Review');
 const Order = require('../models/Order');
 const Restaurant = require('../models/Restaurant');
 const MenuItem = require('../models/MenuItem');
+const mongoose = require('mongoose');
 const { 
   successResponse, 
   errorResponse,
@@ -153,14 +154,17 @@ const createReview = asyncHandler(async (req, res) => {
     rating,
     title,
     comment,
-    images: images || []
+    images: images || [],
+    status: 'approved' // Auto-approve reviews for immediate rating calculation
   });
+  
+  console.log('📝 ReviewController.createReview: Created review with status', review.status, 'for menu item', review.menuItemId);
 
   // Populate for response
   await review.populate([
     { path: 'customerId', select: 'firstName lastName' },
     { path: 'restaurantId', select: 'name cuisine' },
-    { path: 'menuItemId', select: 'name category' }
+    { path: 'menuItemId', select: 'name category price' }
   ]);
 
   createdResponse(res, { review }, 'Review created successfully');
@@ -422,6 +426,37 @@ const rejectReview = asyncHandler(async (req, res) => {
   successResponse(res, { review }, 'Review rejected successfully');
 });
 
+/**
+ * @desc    Check if order has been reviewed
+ * @route   GET /api/v1/reviews/check/:orderId
+ * @access  Private (Customer)
+ */
+const checkOrderReview = asyncHandler(async (req, res) => {
+  const { orderId } = req.params;
+  
+  // Validate order ID
+  if (!mongoose.Types.ObjectId.isValid(orderId)) {
+    return errorResponse(res, 'Invalid order ID', 400);
+  }
+
+  // Check if review exists for this order and customer
+  const review = await Review.findOne({
+    orderId,
+    customerId: req.user._id
+  }).select('status createdAt rating');
+
+  if (review) {
+    successResponse(res, { 
+      hasReview: true, 
+      reviewStatus: review.status,
+      reviewedAt: review.createdAt,
+      rating: review.rating
+    }, 'Order has been reviewed');
+  } else {
+    successResponse(res, { hasReview: false }, 'Order has not been reviewed');
+  }
+});
+
 module.exports = {
   getReviews,
   getReview,
@@ -435,5 +470,6 @@ module.exports = {
   getReviewStats,
   getTrendingReviews,
   approveReview,
-  rejectReview
+  rejectReview,
+  checkOrderReview
 };

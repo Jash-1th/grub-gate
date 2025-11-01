@@ -23,6 +23,7 @@ import SubscriptionPage from './pages/SubscriptionPage';
 import CheckoutPage from './pages/CheckoutPage';
 import AddressBookPage from './pages/AddressBookPage';
 import MealCalendarPage from './pages/MealCalendarPage';
+import YourOrdersPage from './pages/YourOrdersPage';
 import NotFoundPage from './pages/NotFoundPage';
 import MenuSelectionStep from './components/planning/MenuSelectionStep';
 import LaunchScreen from './components/common/LaunchScreen';
@@ -186,6 +187,11 @@ function App({ initialized = true }) {
                   <Route path="/meal-calendar" element={
                     <ProtectedRoute>
                       <MealCalendarPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/your-orders" element={
+                    <ProtectedRoute>
+                      <YourOrdersPage />
                     </ProtectedRoute>
                   } />
                   <Route path="/restaurants/weekly-menu" element={<WeeklyMenuPage />} />

@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useModal } from '../../context/ModalContext';
 import { useAuth } from '../../contexts/AuthContext';
+import mealCalendarApi from '../../api/mealCalendarApi';
 import '../common/hero-responsive.css';
 // Use public path for SSR compatibility
 const heroImage = '/images/HeroHome.jpg';
@@ -10,13 +11,49 @@ const heroImage = '/images/HeroHome.jpg';
 const HeroSection = () => {
   const { t } = useTranslation();
   const { openOTPAuthModal } = useModal();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Check subscription status when component mounts
+  useEffect(() => {
+    if (isAuthenticated && user?.roles?.includes('customer')) {
+      checkSubscriptionStatus();
+    } else {
+      setLoading(false);
+    }
+  }, [isAuthenticated, user]);
+
+  const checkSubscriptionStatus = async () => {
+    try {
+      setLoading(true);
+      
+      const response = await mealCalendarApi.getSubscriptionStatus();
+      
+      if (response.success && response.data.hasActiveSubscription) {
+        setHasActiveSubscription(true);
+      } else {
+        setHasActiveSubscription(false);
+      }
+      
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+      setHasActiveSubscription(false);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleGetStarted = () => {
     if (isAuthenticated) {
-      // User is logged in, navigate to plan page
-      navigate('/plan');
+      if (hasActiveSubscription) {
+        // User has active subscription, navigate to meal calendar
+        navigate('/meal-calendar');
+      } else {
+        // User is logged in but no active subscription, navigate to plan page
+        navigate('/plan');
+      }
     } else {
       // User is not logged in, open OTP modal for signup
       openOTPAuthModal('signup');
@@ -59,6 +96,7 @@ const HeroSection = () => {
           <div className="relative rounded-2xl bg-black/30 backdrop-blur-md p-1 border border-white/20">
             <button
               onClick={handleGetStarted}
+              disabled={loading}
               className="group relative px-10 py-5 bg-gradient-to-r from-grub-red via-red-600 to-red-700 text-white rounded-xl font-bold text-xl shadow-2xl hover:shadow-red-500/50 transition-all duration-500 transform hover:scale-110 hover:-translate-y-2 overflow-hidden"
             >
               {/* Animated background shimmer */}
@@ -67,7 +105,16 @@ const HeroSection = () => {
               {/* Button content */}
               <div className="relative flex items-center justify-center">
                 <span className="text-xl font-bold tracking-wide">
-                  {isAuthenticated ? 'Start Planning' : t('hero.getStarted')}
+                  {loading ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
+                      Loading...
+                    </div>
+                  ) : isAuthenticated ? (
+                    hasActiveSubscription ? t('yourOrders.viewCalendar') : 'Start Planning'
+                  ) : (
+                    t('hero.getStarted')
+                  )}
                 </span>
               </div>
               

@@ -19,7 +19,8 @@
     "about": "À Propos",
     "howItWorks": "Comment Ça Marche",
     "contact": "Nous Contacter",
-    "faq": "FAQ"
+    "faq": "FAQ",
+    "yourOrders": "Vos Commandes"
   },
   "hero": {
     "title": "Vos Repas Quotidiens,",
@@ -521,5 +522,99 @@
         "noHiddenFees": "Aucuns Frais Cachés"
       }
     }
+  }
+  ,
+  "login": {
+    "title": "Bon Retour!",
+    "subtitle": "Connectez-vous pour accéder à vos plans de repas et continuer votre voyage avec GrubGate.",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "votre.email@example.com",
+    "passwordLabel": "Mot de passe",
+    "passwordPlaceholder": "Entrez votre mot de passe",
+    "forgotPassword": "Mot de passe oublié?",
+    "button": "Connexion",
+    "googleButton": "Connexion avec Google",
+    "divider": "OU",
+    "signupPrompt": "Vous n'avez pas de compte?",
+    "signupLink": "S'inscrire"
+  },
+  
+  "nav": {
+    "home": "Accueil",
+    "about": "À Propos",
+    "howItWorks": "Comment Ça Marche",
+    "contact": "Nous Contacter",
+    "faq": "FAQ",
+    "yourOrders": "Vos Commandes"
+  },
+  "common": {
+    "subscription": "Plan de Repas par Abonnement",
+    "loadMore": "Charger Plus"
+  },
+  "deliveredOrders": {
+    "title": "Commandes Livrées",
+    "noOrders": "Vous n'avez pas encore de commandes livrées"
+  },
+  "yourOrders": {
+    "title": "Vos Commandes",
+    "subtitle": "Suivez vos livraisons de repas et gérez votre abonnement",
+    "filterOrders": "Filtrer les Commandes",
+    "filters": {
+      "all": "Toutes les Commandes",
+      "scheduled": "Planifiées",
+      "pending": "En Attente",
+      "confirmed": "Confirmées",
+      "preparing": "En Préparation",
+      "delivered": "Livrées",
+      "cancelled": "Annulées"
+    },
+    "noOrdersTitle": "Aucune Commande Trouvée",
+    "noOrders": "Vous n'avez pas encore passé de commandes. Commencez à explorer les restaurants et abonnez-vous à des plans de repas pour faire livrer des repas délicieux à votre porte.",
+    "browseRestaurants": "Parcourir les Restaurants",
+    "viewCalendar": "Voir Mon Calendrier de Repas",
+    "checkScheduledMeals": "Vérifier vos repas planifiés et l'état de livraison",
+    "subscriptionMeal": "Repas d'Abonnement",
+    "status": {
+      "scheduled": "Planifié"
+    },
+    "mealTypes": {
+      "dinner": "Dîner"
+    }
+  },
+  "orders": {
+    "orderNumber": "Numéro de commande",
+    "deliveredOn": "Livrée le",
+    "total": "Total",
+    "deliveryAddress": "Adresse de livraison",
+    "quantity": "Quantité",
+    "items": "Articles de la commande",
+    "restaurantNameMissing": "Informations sur le restaurant indisponibles"
+  },
+  "reviews": {
+    "leaveReview": "Laisser un avis",
+    "reviewed": "Avis donné",
+    "rating": "Note",
+    "stars": "étoiles",
+    "title": "Titre",
+    "titlePlaceholder": "Donnez un titre à votre avis",
+    "comment": "Commentaire",
+    "commentPlaceholder": "Partagez votre expérience avec ce repas",
+    "photos": "Photos",
+    "maxImages": "Vous pouvez télécharger jusqu'à 5 images",
+    "invalidImageFormat": "Veuillez télécharger uniquement des fichiers image valides",
+    "maxImagesExceeded": "Vous ne pouvez télécharger que jusqu'à 5 images",
+    "ratingRequired": "Veuillez fournir une note",
+    "missingOrderOrItem": "Les informations de commande ou d'article sont manquantes",
+    "submit": "Soumettre l'avis",
+    "submitting": "Soumission en cours...",
+    "submitSuccess": "Merci pour votre avis !",
+    "submitError": "Échec de la soumission de l'avis. Veuillez réessayer.",
+    "reviewAlreadyExists": "Un avis existe déjà pour cette commande.",
+    "orderNotDelivered": "Cette commande n'a pas encore été livrée.",
+    "menuItemNotInOrder": "Cet article n'était pas dans cette commande.",
+    "restaurantMismatch": "Le restaurant ne correspond pas à la commande.",
+    "loading": "Vérification de l'état de l'avis...",
+    "error": "Erreur",
+    "success": "Succès"
   }
 }

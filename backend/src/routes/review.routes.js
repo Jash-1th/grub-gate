@@ -13,7 +13,8 @@ const {
   getReviewStats,
   getTrendingReviews,
   approveReview,
-  rejectReview
+  rejectReview,
+  checkOrderReview
 } = require('../controllers/review.controller');
 const { authMiddleware, roleMiddleware, optionalAuthMiddleware } = require('../middlewares/auth');
 const { reviewValidations, commonValidations, queryValidations } = require('../middlewares/validation');
@@ -27,8 +28,8 @@ router.get('/stats', getReviewStats);
 router.get('/:id', commonValidations.mongoId, getReview);
 
 // Restaurant and menu item specific reviews
-router.get('/restaurants/:restaurantId/reviews', commonValidations.mongoId, queryValidations.pagination, getRestaurantReviews);
-router.get('/menu-items/:menuItemId/reviews', commonValidations.mongoId, queryValidations.pagination, getMenuItemReviews);
+router.get('/restaurants/:restaurantId/reviews', commonValidations.mongoRestaurantId, queryValidations.pagination, getRestaurantReviews);
+router.get('/menu-items/:menuItemId/reviews', commonValidations.mongoMenuItemId, queryValidations.pagination, getMenuItemReviews);
 
 // Protected routes
 router.use(authMiddleware);
@@ -45,5 +46,14 @@ router.post('/:id/report', commonValidations.mongoId, roleMiddleware('customer')
 // Admin/Moderator routes
 router.post('/:id/approve', commonValidations.mongoId, roleMiddleware('admin'), approveReview);
 router.post('/:id/reject', commonValidations.mongoId, roleMiddleware('admin'), rejectReview);
+
+// Check if order has been reviewed
+router
+  .route('/check/:orderId')
+  .get(
+    commonValidations.mongoId,
+    roleMiddleware('customer'),
+    checkOrderReview
+  );
 
 module.exports = router;

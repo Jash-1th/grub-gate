@@ -196,12 +196,15 @@ reviewSchema.pre('save', async function(next) {
 
 // Post-save middleware to update restaurant/menu item ratings
 reviewSchema.post('save', async function() {
+  console.log('🔄 Review.postSave: Review saved with status', this.status, 'for menu item', this.menuItemId);
   if (this.status === 'approved') {
     try {
+      console.log('⚙️ Review.postSave: Updating ratings for approved review');
       // Update restaurant rating
       const Restaurant = mongoose.model('Restaurant');
       const restaurant = await Restaurant.findById(this.restaurantId);
       if (restaurant) {
+        console.log('🏪 Review.postSave: Updating restaurant rating', restaurant._id);
         await restaurant.updateRating();
       }
       
@@ -210,12 +213,15 @@ reviewSchema.post('save', async function() {
         const MenuItem = mongoose.model('MenuItem');
         const menuItem = await MenuItem.findById(this.menuItemId);
         if (menuItem) {
+          console.log('🍽️ Review.postSave: Updating menu item rating', menuItem._id);
           await menuItem.updateRating();
         }
       }
     } catch (error) {
-      console.error('Error updating ratings after review save:', error);
+      console.error('💥 Review.postSave: Error updating ratings after review save:', error);
     }
+  } else {
+    console.log('⏭️ Review.postSave: Skipping rating update - review not approved');
   }
 });
 

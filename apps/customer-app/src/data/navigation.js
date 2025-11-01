@@ -26,6 +26,11 @@ export const navigation = {
       name: 'faq',
       href: '/faq',
       current: false
+    },
+    {
+      name: 'yourOrders',
+      href: '/your-orders',
+      current: false
     }
   ],
   auth: [

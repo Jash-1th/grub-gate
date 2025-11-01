@@ -553,3 +553,5 @@ self.addEventListener('message', (event) => {
 });
 
 console.log('🔥 Firebase Messaging Service Worker integrated with PWA Service Worker');
+
+

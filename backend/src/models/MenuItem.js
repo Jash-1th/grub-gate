@@ -155,17 +155,26 @@ const menuItemSchema = new mongoose.Schema({
 
 // Virtual for formatted price
 menuItemSchema.virtual('formattedPrice').get(function() {
+  if (this.price === undefined || this.price === null) {
+    return '$0.00';
+  }
   return `$${this.price.toFixed(2)}`;
 });
 
 // Virtual for isPopular
 menuItemSchema.virtual('isPopular').get(function() {
+  if (this.totalOrders === undefined || this.rating === undefined) {
+    return false;
+  }
   return this.totalOrders >= 50 && this.rating >= 4.0;
 });
 
 // Virtual for isAvailableToday
 menuItemSchema.virtual('isAvailableToday').get(function() {
   if (this.status !== 'available') return false;
+  
+  // Check if availability data is available
+  if (!this.availability) return false;
   
   const today = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()];
   const todayAvailability = this.availability[today];
@@ -225,6 +234,7 @@ menuItemSchema.methods.isAvailableFor = function(day, mealType) {
 
 // Instance method to update rating
 menuItemSchema.methods.updateRating = async function() {
+  console.log('🔍 MenuItem.updateRating: Updating rating for menu item', this._id);
   const Review = mongoose.model('Review');
   const stats = await Review.aggregate([
     { $match: { menuItemId: this._id, status: 'approved' } },
@@ -237,15 +247,21 @@ menuItemSchema.methods.updateRating = async function() {
     }
   ]);
   
+  console.log('📊 MenuItem.updateRating: Aggregation result', stats);
+  
   if (stats.length > 0) {
     this.rating = Math.round(stats[0].averageRating * 10) / 10;
     this.reviewCount = stats[0].totalReviews;
+    console.log('✅ MenuItem.updateRating: Updated rating to', this.rating, 'with', this.reviewCount, 'reviews');
   } else {
     this.rating = 0;
     this.reviewCount = 0;
+    console.log('⚠️ MenuItem.updateRating: No approved reviews found, setting rating to 0');
   }
   
-  return this.save();
+  const result = await this.save();
+  console.log('💾 MenuItem.updateRating: Saved menu item rating update');
+  return result;
 };
 
 // Instance method to increment order count

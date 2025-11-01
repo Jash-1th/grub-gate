@@ -49,6 +49,14 @@ const commonValidations = {
     .isMongoId()
     .withMessage('Invalid ID format'),
     
+  mongoMenuItemId: param('menuItemId')
+    .isMongoId()
+    .withMessage('Invalid menu item ID format'),
+    
+  mongoRestaurantId: param('restaurantId')
+    .isMongoId()
+    .withMessage('Invalid restaurant ID format'),
+
   flexibleId: param('id')
     .custom((value) => {
       // Allow numeric IDs (for frontend compatibility) or valid MongoDB ObjectIds

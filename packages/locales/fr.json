@@ -136,6 +136,9 @@
       "backToLogin": "Retour à la Connexion"
     }
   },
+  "nav": {
+    "deliveredOrders": "Commandes Livrées"
+  },
   "dashboard": {
     "welcome": "Bon retour, {{name}}!",
     "overview": "Aperçu du Tableau de Bord",
@@ -364,4 +367,5 @@
     "validationError": "Erreur de Validation"
   }
 }
+
 

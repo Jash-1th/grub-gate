@@ -103,16 +103,6 @@ const MealCalendarPage = () => {
 
   // Redirect users without planned meals and no active subscription (but wait for meal plan to load)
   useEffect(() => {
-    // CRITICAL FIX: Check if user just completed a subscription - if so, don't redirect
-    const recentSubscriptionSuccess = sessionStorage.getItem('recentSubscriptionSuccess');
-    
-    if (recentSubscriptionSuccess) {
-      console.log('✅ MealCalendar: Recent subscription detected, skipping redirect check');
-      // Clear the flag after checking
-      sessionStorage.removeItem('recentSubscriptionSuccess');
-      return;
-    }
-    
     if (isClient && isAuthenticated && !loading && !isMealPlanLoading && !calendarData && !hasPlannedMeals) {
       console.log('🚫 MealCalendar: No planned meals and no active subscription, redirecting to weekly menu');
       navigate('/weekly-menu');
@@ -1145,25 +1135,6 @@ const MealCalendarPage = () => {
                         </div>
                       ) : (
                         dayMeals.map((meal) => {
-                          // Extract restaurant name - restaurantId is just a string, not populated
-                          // We need to get the restaurant name from somewhere else
-                          const getRestaurantName = () => {
-                            // Try direct fields first
-                            if (meal.restaurant) return meal.restaurant;
-                            if (meal.restaurantName) return meal.restaurantName;
-                            
-                            // Check nested objects
-                            if (meal.restaurantId?.name) return meal.restaurantId.name;
-                            if (meal.menuItemId?.restaurant) return meal.menuItemId.restaurant;
-                            if (meal.menuItemId?.restaurantName) return meal.menuItemId.restaurantName;
-                            
-                            // If restaurantId is just a string, we need to fetch it or use a fallback
-                            // For now, return a generic name - backend should populate this
-                            return 'Restaurant';
-                          };
-                          
-                          const restaurantName = getRestaurantName();
-                          
                           const statusConfig = {
                             delivered: { bg: 'bg-green-100', text: 'text-green-800', icon: '✓', border: 'border-green-200' },
                             preparing: { bg: 'bg-yellow-100', text: 'text-yellow-800', icon: '🍳', border: 'border-yellow-200' },
@@ -1178,44 +1149,38 @@ const MealCalendarPage = () => {
                           return (
                             <div
                               key={meal._id}
-                              className={`${config.bg} ${config.text} ${config.border} border rounded-xl p-2.5 sm:p-3 transition-all duration-200 hover:shadow-md cursor-pointer`}
+                              className={`${config.bg} ${config.text} ${config.border} border rounded-xl p-3 transition-all duration-200 hover:shadow-md cursor-pointer`}
                               title={`${meal.mealName} - ${meal.status}`}
                             >
                               <div className="flex items-center justify-between mb-2">
-                                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wide">
+                                <span className="text-xs font-bold uppercase tracking-wide">
                                   {meal.mealType}
                                 </span>
-                                <span className="text-xs sm:text-sm">{config.icon}</span>
+                                <span className="text-sm">{config.icon}</span>
                               </div>
                               
-                              <div className="text-xs sm:text-sm font-semibold mb-1.5 line-clamp-2 leading-tight" title={meal.mealName}>
+                              <div className="text-sm font-medium mb-1 line-clamp-2" title={meal.mealName}>
                                 {meal.mealName}
                                 {meal.quantity && meal.quantity > 1 && (
-                                  <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-blue-100 text-blue-800">
+                                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                     Qty: {meal.quantity}
                                   </span>
                                 )}
                               </div>
                               
-                              {/* Restaurant Name - Always visible with better mobile styling */}
-                              <div className="text-[10px] sm:text-xs text-gray-700 mb-1.5 flex items-center bg-white/40 rounded-md px-1.5 py-1">
-                                <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1 flex-shrink-0 text-grub-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                </svg>
-                                <span className="font-semibold truncate">
-                                  {restaurantName}
-                                </span>
+                              {meal.restaurant && (
+                                <div className="text-xs text-gray-600 mb-1 flex items-center">
+                                  <span className="mr-1">🏪</span>
+                                  <span className="font-medium">{meal.restaurant}</span>
+                                </div>
+                              )}
+                              
+                              <div className="text-xs opacity-75 mb-2">
+                                🕐 {meal.deliveryTime.start} - {meal.deliveryTime.end}
                               </div>
                               
-                              <div className="text-[10px] sm:text-xs opacity-75 mb-1.5 flex items-center">
-                                <svg className="w-3 h-3 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <span>{meal.deliveryTime.start} - {meal.deliveryTime.end}</span>
-                              </div>
-                              
-                              <div className="flex items-center justify-between mt-2">
-                                <span className="text-[10px] sm:text-xs font-semibold capitalize px-2 py-0.5 sm:py-1 rounded-full bg-white/50">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-semibold capitalize px-2 py-1 rounded-full bg-white/50">
                                   {meal.status}
                                 </span>
                               </div>
