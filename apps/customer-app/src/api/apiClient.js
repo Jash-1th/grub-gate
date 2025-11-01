@@ -3,8 +3,7 @@ import { getStorageItem, removeStorageItem } from '../utils/ssrSafeStorage';
 
 // Create axios instance with base configuration
 const apiClient = axios.create({
-  // baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1', // Local development
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://gg0b1.netlify.app/api/v1', // Deployed backend
+  baseURL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1',
 
   timeout: 10000,
   headers: {
@@ -49,9 +48,11 @@ apiClient.interceptors.response.use(
       // For login attempts, just pass the error through without redirecting
     }
     
-    // Handle network errors
+    // Handle network errors and HTML responses
     if (!error.response) {
       console.error('Network error:', error.message);
+    } else if (error.response?.data instanceof String && error.response.data.startsWith('<!DOCTYPE')) {
+      console.error('Received HTML response instead of JSON - API endpoint may be incorrect or server is down');
     }
     
     return Promise.reject(error);

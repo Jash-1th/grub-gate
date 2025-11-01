@@ -195,16 +195,16 @@ const YourOrdersPage = () => {
       console.log('🔑 fetchOrders: Fetching with token:', effectiveToken ? 'Token exists' : 'No token');
       
       // Build API URL with appropriate parameters
-      let apiUrl = `/api/v1/orders?page=${pageNum}&limit=10&includeScheduled=true`;
+      let apiUrl = `/orders?page=${pageNum}&limit=10&includeScheduled=true`;
       
       // If we're fetching for delivered orders, use status filter
       if (filter === 'delivered') {
-        apiUrl = `/api/v1/orders?status=delivered&page=${pageNum}&limit=50`;
+        apiUrl = `/orders?status=delivered&page=${pageNum}&limit=50`;
       }
       
       // If we're fetching for confirmed orders, use status filter
       if (filter === 'confirmed') {
-        apiUrl = `/api/v1/orders?status=confirmed&page=${pageNum}&limit=50`;
+        apiUrl = `/orders?status=confirmed&page=${pageNum}&limit=50`;
       }
       
       // If no filter is specified but we want to see all orders including delivered ones,
@@ -212,23 +212,16 @@ const YourOrdersPage = () => {
       const shouldFetchDelivered = !filter && activeFilter === 'delivered';
       if (shouldFetchDelivered) {
         console.log('📥 fetchOrders: Also fetching delivered orders');
-        apiUrl = `/api/v1/orders?status=delivered&page=${pageNum}&limit=50`;
+        apiUrl = `/orders?status=delivered&page=${pageNum}&limit=50`;
       }
       
-      const response = await fetch(apiUrl, {
-        headers: {
-          'Authorization': `Bearer ${effectiveToken}`
-        }
-      });
+      // Use apiClient instead of fetch to ensure proper baseURL and headers
+      const response = await apiClient.get(apiUrl);
       
       console.log('🌐 fetchOrders: Orders API response status:', response.status);
       
-      if (!response.ok) {
-        console.error('❌ fetchOrders: Failed to fetch orders, status:', response.status);
-        throw new Error('Failed to fetch orders');
-      }
-      
-      const data = await response.json();
+      // The response is already parsed by axios, so we can access response.data directly
+      const data = response.data;
       console.log('📦 fetchOrders: Orders data received:', data);
       
       // Check if response is successful
