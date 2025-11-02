@@ -35,29 +35,38 @@ const FollowUsSection = () => {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
-      <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-6 text-center" style={{color: '#800020'}}>
+    <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8 lg:p-10">
+      <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 md:mb-8 text-center px-2" style={{color: '#800020'}}>
         {t('contact.social.title')}
       </h3>
       
-      <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8 max-w-4xl mx-auto">
         {navigation.footer.social.map((social, index) => (
           <a
             key={index}
             href={social.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex flex-col items-center space-y-2 p-4 rounded-xl hover:bg-gray-50 transition-colors duration-200 group"
+            className="flex flex-col items-center justify-center p-3 sm:p-4 md:p-6 rounded-xl hover:bg-gray-50 transition-all duration-300 group border border-transparent hover:border-grub-red/20 hover:shadow-md transform hover:-translate-y-1"
             aria-label={`Follow us on ${social.name}`}
           >
-            <div className="w-12 h-12 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors duration-200 group-hover:scale-110 transform">
-              {getSocialIcon(social.name)}
+            <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-full bg-gradient-to-br from-grub-red to-red-700 flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-all duration-300 mb-2 sm:mb-3">
+              <div className="scale-75 sm:scale-100 md:scale-110">
+                {getSocialIcon(social.name)}
+              </div>
             </div>
-            <span className="text-sm font-medium text-gray-700 group-hover:text-grub-red transition-colors duration-200">
+            <span className="text-xs sm:text-sm md:text-base font-medium text-gray-700 group-hover:text-grub-red transition-colors duration-300 text-center leading-tight">
               {social.name}
             </span>
           </a>
         ))}
+      </div>
+      
+      {/* Additional CTA text for better engagement */}
+      <div className="mt-6 sm:mt-8 text-center">
+        <p className="text-xs sm:text-sm md:text-base text-gray-600 max-w-2xl mx-auto leading-relaxed px-4">
+          Stay connected with us for the latest updates, special offers, and delicious food inspiration!
+        </p>
       </div>
     </div>
   );

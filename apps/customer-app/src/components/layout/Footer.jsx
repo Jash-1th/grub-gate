@@ -41,8 +41,8 @@ const Footer = () => {
 
   return (
     <footer className="w-full bg-gradient-to-r from-grub-red to-red-700 text-white">
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12">
           {/* Column 1: Logo + Tagline */}
           <div className="space-y-3">
             {/* <div className="text-2xl font-bold text-white">{siteInfo.logoText}</div> */}
@@ -88,49 +88,66 @@ const Footer = () => {
           </div>
 
           {/* Column 3: Social + Newsletter */}
-          <div className="space-y-4">
-            <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-white">{t('footer.followUsTitle')}</h4>
-              <div className="flex space-x-4">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-3 sm:space-y-4">
+              <h4 className="text-sm sm:text-base md:text-lg font-semibold text-white">{t('footer.followUsTitle')}</h4>
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
                 {navigation.footer.social.map((item) => (
                   <a
                     key={item.name}
                     href={item.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-red-100 hover:text-white transition-colors duration-200 group"
+                    className="text-red-100 hover:text-white transition-all duration-300 group flex flex-col sm:flex-row items-center justify-center sm:justify-start p-2 sm:p-1 rounded-lg hover:bg-red-700/30"
                     aria-label={item.name}
                   >
                     <span className="sr-only">{item.name}</span>
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors duration-200 group-hover:scale-110 transform">
-                      {getSocialIcon(item.name)}
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-red-700/50 flex items-center justify-center hover:bg-red-600 transition-all duration-300 group-hover:scale-110 transform shadow-lg mb-1 sm:mb-0 sm:mr-2 text-white">
+                      <div className="scale-75 sm:scale-90 md:scale-100 text-white">
+                        {getSocialIcon(item.name)}
+                      </div>
                     </div>
+                    <span className="text-xs sm:text-sm font-medium text-red-100 group-hover:text-white transition-colors duration-300 text-center sm:text-left">
+                      {item.name}
+                    </span>
                   </a>
                 ))}
               </div>
             </div>
 
-            <form className="flex space-x-2">
-              <input
-                type="email"
-                placeholder={t('footer.emailPlaceholder')}
-                className="w-full px-3 py-2 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none"
-                aria-label="Email address"
-              />
-              <button type="button" className="bg-white text-grub-red px-4 py-2 rounded-md font-semibold hover:bg-red-50">
-                {t('footer.subscribeButton')}
-              </button>
-            </form>
+            <div className="space-y-3">
+              <h4 className="text-sm sm:text-base font-semibold text-white">{t('footer.newsletterTitle', 'Newsletter')}</h4>
+              <form className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                <input
+                  type="email"
+                  placeholder={t('footer.emailPlaceholder')}
+                  className="flex-1 px-3 py-2 sm:py-2.5 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm sm:text-base"
+                  aria-label="Email address"
+                />
+                <button 
+                  type="button" 
+                  className="bg-white text-grub-red px-4 py-2 sm:py-2.5 rounded-md font-semibold hover:bg-red-50 transition-colors duration-300 text-sm sm:text-base whitespace-nowrap"
+                >
+                  {t('footer.subscribeButton')}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
 
         {/* Bottom Bar: Legal */}
-        <div className="mt-6 pt-6 border-t border-red-300">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
-            <p className="text-red-100 text-sm">{t('footer.copyright', { year: currentYear, company: siteInfo.name })}</p>
-            <div className="flex items-center space-x-6 text-sm">
+        <div className="mt-6 sm:mt-8 lg:mt-12 pt-4 sm:pt-6 lg:pt-8 border-t border-red-300/50">
+          <div className="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 gap-4">
+            <p className="text-red-100 text-xs sm:text-sm text-center sm:text-left leading-relaxed">
+              {t('footer.copyright', { year: currentYear, company: siteInfo.name })}
+            </p>
+            <div className="flex flex-wrap items-center justify-center sm:justify-end gap-3 sm:gap-4 lg:gap-6 text-xs sm:text-sm">
               {navigation.footer.legal.map((item) => (
-                <Link key={item.name} to={item.href} className="text-red-100 hover:text-white">
+                <Link 
+                  key={item.name} 
+                  to={item.href} 
+                  className="text-red-100 hover:text-white transition-colors duration-300 whitespace-nowrap"
+                >
                   {t(`footer.legal.${item.name.toLowerCase()}`)}
                 </Link>
               ))}

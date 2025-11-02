@@ -68,7 +68,9 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-4">
-            {navigation.main.map((item) => (
+            {navigation.main
+              .filter(item => !item.protected || isAuthenticated)
+              .map((item) => (
               <NavLink
                 key={item.name}
                 to={item.href}

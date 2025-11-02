@@ -37,7 +37,11 @@ const StatusUpdateButton = ({ order, onStatusUpdate, isLoading }) => {
 
     const isDeliveryDay = now.toDateString() === deliveryDate.toDateString();
     const isDayBefore = now.toDateString() === dayBefore.toDateString();
-    const isAfterDelivery = now > deliveryDate;
+    
+    // Create end of delivery day for proper comparison
+    const endOfDeliveryDay = new Date(deliveryDate);
+    endOfDeliveryDay.setHours(23, 59, 59, 999);
+    const isAfterDelivery = now > endOfDeliveryDay;
 
     return {
       canUpdate: !isAfterDelivery,
@@ -169,8 +173,12 @@ const StatusUpdateButton = ({ order, onStatusUpdate, isLoading }) => {
   dayBefore.setDate(dayBefore.getDate() - 1);
   dayBefore.setHours(0, 0, 0, 0);
   
+  // Create end of delivery day for proper comparison
+  const endOfDeliveryDay = new Date(deliveryDate);
+  endOfDeliveryDay.setHours(23, 59, 59, 999);
+  
   const isTooEarly = now < dayBefore;
-  const isAfterDelivery = now > deliveryDate;
+  const isAfterDelivery = now > endOfDeliveryDay;
 
   if (isAfterDelivery) {
     return (

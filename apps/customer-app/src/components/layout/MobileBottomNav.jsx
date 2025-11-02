@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { navigation } from '../../data';
+import { useAuth } from '../../contexts/AuthContext';
 // const howItWorksImage = '/images/HowItWorks.png';
 
 const getNavIcon = (key) => {
@@ -51,12 +52,15 @@ const getNavIcon = (key) => {
 
 const MobileBottomNav = () => {
   const { t } = useTranslation();
+  const { isAuthenticated } = useAuth() || { isAuthenticated: false };
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] pb-[max(env(safe-area-inset-bottom),0px)]">
       {/* Main Navigation */}
       <ul className="flex items-stretch justify-between px-2 py-2 overflow-hidden">
-        {navigation.main.map((item) => (
+        {navigation.main
+          .filter(item => !item.protected || isAuthenticated)
+          .map((item) => (
           <li key={item.name} className="flex-1 min-w-0 overflow-hidden">
             <NavLink
               to={item.href}

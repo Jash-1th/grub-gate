@@ -90,45 +90,76 @@ const About = () => {
       </section> */}
 
       {/* Values Section */}
-      <section className="py-16 lg:py-24 bg-white">
+      <section className="py-12 sm:py-16 lg:py-24 bg-gradient-to-br from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6" style={{color: '#800020'}}>
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6 px-2" style={{color: '#800020'}}>
               {t('about.valuesTitle')}
             </h2>
-            <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-4 leading-relaxed">
               {t('about.valuesSubtitle')}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="text-5xl mb-4">🤝</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">{t('about.values.partnershipTitle')}</h3>
-              <p className="text-gray-600">
-                {t('about.values.partnershipText')}
-              </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+            {/* Partnership Value */}
+            <div className="group">
+              <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300 text-center border border-gray-100 hover:border-grub-red/20 transform hover:-translate-y-1">
+                <div className="relative mb-6">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    🤝
+                  </div>
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">{t('about.values.partnershipTitle')}</h3>
+                <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                  {t('about.values.partnershipText')}
+                </p>
+              </div>
             </div>
-            <div className="text-center">
-              <div className="text-5xl mb-4">⭐</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">{t('about.values.qualityTitle')}</h3>
-              <p className="text-gray-600">
-                {t('about.values.qualityText')}
-              </p>
+
+            {/* Quality Value */}
+            <div className="group">
+              <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300 text-center border border-gray-100 hover:border-grub-red/20 transform hover:-translate-y-1">
+                <div className="relative mb-6">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-gradient-to-br from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    ⭐
+                  </div>
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">{t('about.values.qualityTitle')}</h3>
+                <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                  {t('about.values.qualityText')}
+                </p>
+              </div>
             </div>
-            <div className="text-center">
-              <div className="text-5xl mb-4">🚀</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">{t('about.values.innovationTitle')}</h3>
-              <p className="text-gray-600">
-                {t('about.values.innovationText')}
-              </p>
+
+            {/* Innovation Value */}
+            <div className="group">
+              <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300 text-center border border-gray-100 hover:border-grub-red/20 transform hover:-translate-y-1">
+                <div className="relative mb-6">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    🚀
+                  </div>
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">{t('about.values.innovationTitle')}</h3>
+                <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                  {t('about.values.innovationText')}
+                </p>
+              </div>
             </div>
-            <div className="text-center">
-              <div className="text-5xl mb-4">❤️</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">{t('about.values.communityTitle')}</h3>
-              <p className="text-gray-600">
-                {t('about.values.communityText')}
-              </p>
+
+            {/* Community Value */}
+            <div className="group">
+              <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300 text-center border border-gray-100 hover:border-grub-red/20 transform hover:-translate-y-1">
+                <div className="relative mb-6">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-gradient-to-br from-red-500 to-pink-500 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    ❤️
+                  </div>
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">{t('about.values.communityTitle')}</h3>
+                <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                  {t('about.values.communityText')}
+                </p>
+              </div>
             </div>
           </div>
         </div>

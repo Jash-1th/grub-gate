@@ -30,7 +30,8 @@ export const navigation = {
     {
       name: 'yourOrders',
       href: '/your-orders',
-      current: false
+      current: false,
+      protected: true
     }
   ],
   auth: [

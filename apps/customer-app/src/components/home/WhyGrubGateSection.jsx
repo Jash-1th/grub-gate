@@ -14,15 +14,15 @@ const BenefitCard = ({ benefit }) => {
   return (
     <div 
       ref={cardRef} 
-      className={`bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 text-center group scroll-animate ${isVisible ? 'is-visible' : ''}`}
+      className={`bg-white rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300 text-center group scroll-animate ${isVisible ? 'is-visible' : ''}`}
     >
-      <h3 className="text-xl font-bold text-gray-900 mb-4">{t(`benefits.${benefit.id}.title`)}</h3>
-      <p className="text-gray-600 mb-6 leading-relaxed">{t(`benefits.${benefit.id}.description`)}</p>
-      <ul className="text-sm text-gray-500 space-y-2 inline-block text-left">
+      <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">{t(`benefits.${benefit.id}.title`)}</h3>
+      <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 leading-relaxed">{t(`benefits.${benefit.id}.description`)}</p>
+      <ul className="text-xs sm:text-sm text-gray-500 space-y-1.5 sm:space-y-2 inline-block text-left">
         {Object.keys(t(`benefits.${benefit.id}.features`, { returnObjects: true })).map(key => (
           <li key={key} className="flex items-center">
-            <span className="w-2 h-2 bg-[#800020] rounded-full mr-2"></span>
-            {t(`benefits.${benefit.id}.features.${key}`)}
+            <span className="w-2 h-2 bg-[#800020] rounded-full mr-2 flex-shrink-0"></span>
+            <span className="leading-relaxed">{t(`benefits.${benefit.id}.features.${key}`)}</span>
           </li>
         ))}
       </ul>
@@ -39,20 +39,28 @@ const SpecialFeatureCard = ({ feature }) => {
   return (
     <div 
       ref={cardRef}
-      className={`text-center scroll-animate ${isVisible ? 'is-visible' : ''}`}
+      className={`bg-gradient-to-br from-white to-gray-50 rounded-xl p-6 border border-gray-100 hover:border-grub-red/20 hover:shadow-lg transition-all duration-300 scroll-animate ${isVisible ? 'is-visible' : ''}`}
     >
-      <div className="text-2xl font-bold mb-2 text-gray-900 flex items-center justify-center">
-        {feature.isLoading && feature.id === '2' ? (
-          <div className="flex items-center space-x-2">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-grub-red"></div>
-            <span>Loading...</span>
-          </div>
-        ) : (
-          <span className={feature.id === '2' ? 'text-grub-red' : ''}>{feature.stat}</span>
-        )}
+      <div className="text-center">
+        <div className="text-2xl md:text-3xl font-bold mb-3 text-gray-900 flex items-center justify-center">
+          {feature.isLoading && feature.id === '2' ? (
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-grub-red"></div>
+              <span className="text-lg">Loading...</span>
+            </div>
+          ) : (
+            <span className={`${feature.id === '2' ? 'text-grub-red' : 'text-gray-800'} leading-tight`}>
+              {feature.stat}
+            </span>
+          )}
+        </div>
+        <h4 className="text-lg md:text-xl font-semibold text-gray-900 mb-2 leading-tight">
+          {t(`additionalFeatures.${feature.id}.title`)}
+        </h4>
+        <p className="text-gray-600 text-sm md:text-base leading-relaxed">
+          {t(`additionalFeatures.${feature.id}.description`)}
+        </p>
       </div>
-      <h4 className="text-lg font-semibold text-gray-900 mb-2">{t(`additionalFeatures.${feature.id}.title`)}</h4>
-      <p className="text-gray-600 text-sm">{t(`additionalFeatures.${feature.id}.description`)}</p>
     </div>
   );
 };
@@ -102,31 +110,31 @@ const WhyGrubGateSection = () => {
   ];
 
   return (
-    <section className="py-16 lg:py-24 bg-gray-50">
+    <section className="py-12 sm:py-16 lg:py-24 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6" style={{ color: '#800020' }}>
+        <div className="text-center mb-12 sm:mb-16">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 px-2" style={{ color: '#800020' }}>
             {t('whyGrubGate.title')}
           </h2>
-          <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-4 leading-relaxed">
             {t('whyGrubGate.subtitle')}
           </p>
         </div>
 
         {/* Benefits Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 mb-12 sm:mb-16">
           {benefitsData.map(benefit => (
             <BenefitCard key={benefit.id} benefit={benefit} />
           ))}
         </div>
 
         {/* Special Features Section */}
-        <div className="bg-white rounded-3xl p-8 md:p-12 shadow-lg">
-          <h3 className="text-2xl md:text-3xl font-bold text-center mb-12" style={{ color: '#800020' }}>
+        <div className="bg-white rounded-3xl p-6 sm:p-8 md:p-12 shadow-lg">
+          <h3 className="text-2xl md:text-3xl font-bold text-center mb-8 md:mb-12 px-4" style={{ color: '#800020' }}>
             {t('whyGrubGate.specialTitle')}
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
             {specialFeaturesData.map(feature => (
               <SpecialFeatureCard key={feature.id} feature={feature} />
             ))}

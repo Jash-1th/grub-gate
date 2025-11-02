@@ -1,10 +1,10 @@
-import React, { Suspense, lazy, useState, useEffect } from 'react';
+import React, { Suspense, lazy } from 'react';
 import HeroSection from '../components/home/HeroSection';
 import WhyGrubGateSection from '../components/home/WhyGrubGateSection';
 import TestimonialsSection from '../components/home/TestimonialsSection';
 import RoleCards from '../components/home/RoleCards';
 import MealCalendarButton from '../components/home/MealCalendarButton';
-import PushNotificationTester from '../components/common/PushNotificationTester';
+// import PushNotificationTester from '../components/common/PushNotificationTester';
 // import NearbyRestaurants from '../components/home/NearbyRestaurants';
 import GetStartedCTA from '../components/common/GetStartedCTA';
 
@@ -32,9 +32,6 @@ const Fallback = () => (
 );
 
 const HomePage = () => {
-  // Show push notification tester in development mode
-  const isDevelopment = import.meta.env.DEV;
-  
   return (
     <div className="min-h-screen">
       <HeroSection />
@@ -53,12 +50,7 @@ const HomePage = () => {
       {/* <NearbyRestaurants /> */}
       <GetStartedCTA />
       
-      {/* Push Notification Tester - Development Only */}
-      {isDevelopment && (
-        <div className="fixed bottom-4 right-4 z-50">
-          <PushNotificationTester />
-        </div>
-      )}
+      {/* Push Notification Tester - Development Only - Commented Out */}
       
       {/* Floating Calendar Button - Only shows for customers with active subscriptions */}
       <MealCalendarButton />

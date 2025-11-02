@@ -5,6 +5,7 @@ import { useMealPlan } from '../contexts/MealPlanContext_SSR_FIXED';
 import mealCalendarApi from '../api/mealCalendarApi';
 import subscriptionApi from '../api/subscriptionApi';
 import Loading from '../components/common/Loading';
+import MealDetailModal from '../components/calendar/MealDetailModal';
 
 const MealCalendarPage = () => {
   // SSR-safe state initialization
@@ -19,6 +20,14 @@ const MealCalendarPage = () => {
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [userMealPlans, setUserMealPlans] = useState(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  
+  // Modal state for meal details
+  const [showMealModal, setShowMealModal] = useState(false);
+  const [selectedMealData, setSelectedMealData] = useState({
+    meals: [],
+    date: null,
+    mealType: null
+  });
 
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -207,11 +216,30 @@ const MealCalendarPage = () => {
   const getDefaultStartDate = () => {
     const today = new Date();
 
-    // For subscribed users, use subscription start date
-    if (isSubscribed && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate) {
-      const subscriptionStart = new Date(userMealPlans.mealPlans[0].planStartDate);
+    // For subscribed users, use subscription start date from calendar data
+    if (isSubscribed && calendarData?.calendar?.subscriptionPeriod?.startDate) {
+      const subscriptionStart = new Date(calendarData.calendar.subscriptionPeriod.startDate);
       console.log('📆 Using subscription start date as default:', subscriptionStart.toDateString());
       return subscriptionStart.toISOString().split('T')[0];
+    } else if (isSubscribed && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate) {
+      // Fallback to user meal plans
+      const subscriptionStart = new Date(userMealPlans.mealPlans[0].planStartDate);
+      console.log('📆 Using fallback subscription start date as default:', subscriptionStart.toDateString());
+      return subscriptionStart.toISOString().split('T')[0];
+    }
+
+    // For unsubscribed users with weekly plans, use their actual meal dates (not plan start date)
+    if (!isSubscribed && hasPlannedMeals) {
+      const storedWeekStart = getEarliestStoredMealDate();
+      if (storedWeekStart) {
+        console.log('📆 Using actual stored meal date as default for unsubscribed user:', storedWeekStart.toDateString());
+        return storedWeekStart.toISOString().split('T')[0];
+      } else if (userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate) {
+        // Fallback to plan start date if no stored meals
+        const weeklyPlanStart = new Date(userMealPlans.mealPlans[0].planStartDate);
+        console.log('📆 Using weekly plan start date as fallback for unsubscribed user:', weeklyPlanStart.toDateString());
+        return weeklyPlanStart.toISOString().split('T')[0];
+      }
     }
 
     // For preview mode, use stored meal dates if available, otherwise next Sunday
@@ -432,26 +460,40 @@ const MealCalendarPage = () => {
 
   // Check if a date is clickable based on user subscription status
   const isDateClickable = (dateString) => {
+    console.log(`🔍 Checking if date is clickable: ${dateString}`);
     const date = new Date(dateString);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     date.setHours(0, 0, 0, 0);
+    
+    console.log(`🔍 Date details: ${date.toDateString()}, isSubscribed: ${isSubscribed}, hasCalendarData: ${!!calendarData?.calendar?.subscriptionPeriod}`);
 
-    if (isSubscribed && userMealPlans?.mealPlans?.length > 0) {
-      // Subscribed user: only dates within subscription period are clickable
-      const mealPlan = userMealPlans.mealPlans[0]; // Get first active meal plan
-      // Check if this is a real subscription with valid subscription period
+    if (isSubscribed && calendarData?.calendar?.subscriptionPeriod) {
+      // Subscribed user: use calendar data subscription period (same as date calculation)
+      const subscriptionPeriod = calendarData.calendar.subscriptionPeriod;
+      const startDate = new Date(subscriptionPeriod.startDate);
+      const endDate = new Date(subscriptionPeriod.endDate);
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(0, 0, 0, 0);
+
+      console.log(`📆 Subscription date range: ${startDate.toDateString()} to ${endDate.toDateString()}`);
+      console.log(`📆 Checking date: ${date.toDateString()}, Start: ${startDate.toDateString()}, End: ${endDate.toDateString()}`);
+      console.log(`📆 Date comparison: ${date.getTime()} >= ${startDate.getTime()} && ${date.getTime()} <= ${endDate.getTime()}`);
+      const isClickable = date >= startDate && date <= endDate;
+      console.log(`📆 SUBSCRIPTION RESULT: ${dateString} is ${isClickable ? 'CLICKABLE' : 'NOT CLICKABLE'}`);
+      return isClickable;
+    } else if (isSubscribed && userMealPlans?.mealPlans?.length > 0) {
+      // Fallback to user meal plans if calendar data not available
+      const mealPlan = userMealPlans.mealPlans[0];
       if (mealPlan.planStartDate && mealPlan.planEndDate) {
         const startDate = new Date(mealPlan.planStartDate);
         const endDate = new Date(mealPlan.planEndDate);
         startDate.setHours(0, 0, 0, 0);
         endDate.setHours(0, 0, 0, 0);
 
-        console.log(`📆 Subscription date range: ${startDate.toDateString()} to ${endDate.toDateString()}`);
-        console.log(`📆 Checking date: ${date.toDateString()}, Start: ${startDate.toDateString()}, End: ${endDate.toDateString()}`);
-        console.log(`📆 Date comparison: ${date.getTime()} >= ${startDate.getTime()} && ${date.getTime()} <= ${endDate.getTime()}`);
+        console.log(`📆 Fallback subscription date range: ${startDate.toDateString()} to ${endDate.toDateString()}`);
         const isClickable = date >= startDate && date <= endDate;
-        console.log(`📆 Result: ${isClickable}`);
+        console.log(`📆 FALLBACK SUBSCRIPTION RESULT: ${dateString} is ${isClickable ? 'CLICKABLE' : 'NOT CLICKABLE'}`);
         return isClickable;
       } else {
         // No valid subscription period, treat as unsubscribed
@@ -464,8 +506,48 @@ const MealCalendarPage = () => {
 
         return date >= nextSunday && date <= twoWeeksLater;
       }
+    } else if (!isSubscribed && hasPlannedMeals) {
+      // Unsubscribed user with planned meals: use their actual stored meal dates
+      const storedWeekStart = getEarliestStoredMealDate();
+      if (storedWeekStart) {
+        const startDate = new Date(storedWeekStart);
+        const endDate = new Date(storedWeekStart);
+        endDate.setDate(startDate.getDate() + 13); // 14 days total
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(0, 0, 0, 0);
+
+        console.log(`📆 Stored meal date range: ${startDate.toDateString()} to ${endDate.toDateString()}`);
+        const isClickable = date >= startDate && date <= endDate;
+        console.log(`📆 STORED MEAL RESULT: ${dateString} is ${isClickable ? 'CLICKABLE' : 'NOT CLICKABLE'}`);
+        return isClickable;
+      }
+    } else if (!isSubscribed && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate) {
+      // Fallback: Unsubscribed user with plan dates but no stored meals
+      const mealPlan = userMealPlans.mealPlans[0];
+      if (mealPlan.planStartDate && mealPlan.planEndDate) {
+        const startDate = new Date(mealPlan.planStartDate);
+        const endDate = new Date(mealPlan.planEndDate);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(0, 0, 0, 0);
+
+        console.log(`📆 Weekly plan fallback date range: ${startDate.toDateString()} to ${endDate.toDateString()}`);
+        const isClickable = date >= startDate && date <= endDate;
+        console.log(`📆 WEEKLY PLAN FALLBACK RESULT: ${dateString} is ${isClickable ? 'CLICKABLE' : 'NOT CLICKABLE'}`);
+        return isClickable;
+      } else {
+        // Fallback to 2-week range from plan start
+        const startDate = new Date(mealPlan.planStartDate);
+        startDate.setHours(0, 0, 0, 0);
+        const twoWeeksLater = new Date(startDate);
+        twoWeeksLater.setDate(startDate.getDate() + 13);
+        
+        console.log(`📆 Weekly plan double fallback range: ${startDate.toDateString()} to ${twoWeeksLater.toDateString()}`);
+        const isClickable = date >= startDate && date <= twoWeeksLater;
+        console.log(`📆 WEEKLY PLAN DOUBLE FALLBACK RESULT: ${dateString} is ${isClickable ? 'CLICKABLE' : 'NOT CLICKABLE'}`);
+        return isClickable;
+      }
     } else {
-      // Unsubscribed user: next Sunday + 14 days (2 weeks)
+      // Unsubscribed user without plans: next Sunday + 14 days (2 weeks)
       const nextSunday = getNextSunday();
       nextSunday.setHours(0, 0, 0, 0);
       
@@ -474,9 +556,8 @@ const MealCalendarPage = () => {
       
       const isClickable = date >= nextSunday && date <= twoWeeksLater;
       
-      if (date.getTime() === nextSunday.getTime() || date.getTime() === twoWeeksLater.getTime()) {
-        console.log(`📅 Date range: ${dateString} - Clickable: ${isClickable} (Range: ${nextSunday.toDateString()} to ${twoWeeksLater.toDateString()})`);
-      }
+      console.log(`📅 Default date range: ${nextSunday.toDateString()} to ${twoWeeksLater.toDateString()}`);
+      console.log(`📆 DEFAULT RESULT: ${dateString} is ${isClickable ? 'CLICKABLE' : 'NOT CLICKABLE'}`);
       
       return isClickable;
     }
@@ -500,20 +581,130 @@ const MealCalendarPage = () => {
     
     setCurrentWeekStart(weekStart.toISOString().split('T')[0]);
     console.log('📅 Updated week start to:', weekStart.toDateString());
+    
+    // Scroll to the selected date column in the calendar (desktop) or card (mobile)
+    setTimeout(() => {
+      // Check if we're on mobile (mobile cards are visible)
+      const mobileCard = document.querySelector(`div[data-mobile-date="${dateString}"]`);
+      const desktopElement = document.querySelector(`th[data-date="${dateString}"]`);
+      
+      if (mobileCard && window.innerWidth < 768) {
+        // Mobile scroll
+        mobileCard.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+        console.log('📍 Mobile: Scrolled to selected date card:', dateString);
+      } else if (desktopElement && window.innerWidth >= 768) {
+        // Desktop scroll
+        desktopElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'nearest', 
+          inline: 'center' 
+        });
+        console.log('📍 Desktop: Scrolled to selected date:', dateString);
+      } else {
+        console.log('⚠️ Could not find date element to scroll to:', dateString, 'Mobile card:', !!mobileCard, 'Desktop element:', !!desktopElement, 'Window width:', window.innerWidth);
+      }
+    }, 200); // Increased delay to ensure DOM is updated
   };
 
   const getWeekDates = (startDate) => {
     if (!isClient) return [];
     
+    console.log('🔍 getWeekDates called with:', {
+      startDate,
+      isSubscribed,
+      hasCalendarData: !!calendarData,
+      subscriptionPeriod: calendarData?.calendar?.subscriptionPeriod,
+      userMealPlans: userMealPlans?.mealPlans?.length || 0,
+      planStartDate: userMealPlans?.mealPlans?.[0]?.planStartDate
+    });
+    
     const dates = [];
+    
+    // For subscribed users, show the full subscription period (not just 7 days)
+    if (isSubscribed && calendarData?.calendar?.subscriptionPeriod) {
+      console.log('🎯 Taking SUBSCRIPTION path');
+      const subscriptionStart = new Date(calendarData.calendar.subscriptionPeriod.startDate);
+      const subscriptionEnd = new Date(calendarData.calendar.subscriptionPeriod.endDate);
+      
+      console.log(`📅 Subscription mode: Generating dates from ${subscriptionStart.toDateString()} to ${subscriptionEnd.toDateString()}`);
+      
+      // Generate all dates in the subscription period
+      const currentDate = new Date(subscriptionStart);
+      while (currentDate <= subscriptionEnd) {
+        dates.push(currentDate.toISOString().split('T')[0]);
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      
+      console.log(`📅 Generated subscription dates (${dates.length} days):`, dates);
+      return dates;
+    }
+    
+    // For weekly planned users, use their actual meal dates (not plan period)
+    if (!isSubscribed && hasPlannedMeals) {
+      console.log('🎯 Taking WEEKLY PLAN (STORED MEALS) path');
+      const storedWeekStart = getEarliestStoredMealDate();
+      if (storedWeekStart) {
+        // Generate 14 days from the earliest stored meal date
+        const startDate = new Date(storedWeekStart);
+        console.log(`📅 Weekly plan mode: Generating 14 days from stored meal date ${startDate.toDateString()}`);
+        
+        for (let i = 0; i < 14; i++) {
+          const date = new Date(startDate);
+          date.setDate(startDate.getDate() + i);
+          dates.push(date.toISOString().split('T')[0]);
+        }
+        
+        console.log(`📅 Generated weekly plan dates from stored meals (${dates.length} days):`, dates);
+        return dates;
+      }
+    }
+    
+    // Fallback for unsubscribed users with plan dates but no stored meals
+    if (!isSubscribed && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate) {
+      console.log('🎯 Taking WEEKLY PLAN FALLBACK path');
+      const mealPlan = userMealPlans.mealPlans[0];
+      if (mealPlan.planEndDate) {
+        const planStart = new Date(mealPlan.planStartDate);
+        const planEnd = new Date(mealPlan.planEndDate);
+        
+        console.log(`📅 Weekly plan fallback: Generating dates from ${planStart.toDateString()} to ${planEnd.toDateString()}`);
+        
+        // Generate all dates in the plan period
+        const currentDate = new Date(planStart);
+        while (currentDate <= planEnd) {
+          dates.push(currentDate.toISOString().split('T')[0]);
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+        
+        console.log(`📅 Generated weekly plan fallback dates (${dates.length} days):`, dates);
+        return dates;
+      } else {
+        // Fallback to 14 days from plan start
+        const planStart = new Date(mealPlan.planStartDate);
+        console.log(`📅 Weekly plan double fallback: Generating 14 days from ${planStart.toDateString()}`);
+        
+        for (let i = 0; i < 14; i++) {
+          const date = new Date(planStart);
+          date.setDate(planStart.getDate() + i);
+          dates.push(date.toISOString().split('T')[0]);
+        }
+        
+        console.log(`📅 Generated weekly plan double fallback dates:`, dates);
+        return dates;
+      }
+    }
+    
+    // Fallback: Generate 7-day week for other cases
+    console.log('🎯 Taking FALLBACK 7-DAY path');
     let weekStartDate;
     
-    // Use currentWeekStart if available, otherwise calculate from selectedDate
     if (currentWeekStart) {
       weekStartDate = new Date(currentWeekStart);
       console.log(`📅 Using current week start: ${weekStartDate.toDateString()}`);
     } else if (calendarMode === 'PREVIEW' && hasPlannedMeals) {
-      // For preview mode, use stored meal dates if available, otherwise fallback to next Sunday
       const storedWeekStart = getEarliestStoredMealDate();
       if (storedWeekStart) {
         weekStartDate = storedWeekStart;
@@ -523,21 +714,22 @@ const MealCalendarPage = () => {
         console.log(`📅 Preview mode: No stored dates, using next Sunday (${weekStartDate.toDateString()})`);
       }
     } else {
-      // For subscription mode or regular calendar, use the provided startDate
+      // For regular calendar, use the provided startDate and go to Sunday
       const start = new Date(startDate);
       const dayOfWeek = start.getDay();
       weekStartDate = new Date(start);
       weekStartDate.setDate(start.getDate() - dayOfWeek); // Go to Sunday of that week
+      console.log(`📅 Regular mode: Using Sunday of week (${weekStartDate.toDateString()})`);
     }
     
-    // Generate 7 days starting from Sunday
+    // Generate 7 days starting from the determined start date
     for (let i = 0; i < 7; i++) {
       const date = new Date(weekStartDate);
       date.setDate(weekStartDate.getDate() + i);
       dates.push(date.toISOString().split('T')[0]);
     }
     
-    console.log(`📅 Generated week dates:`, dates);
+    console.log(`📅 Generated fallback week dates:`, dates);
     return dates;
   };
 
@@ -797,19 +989,44 @@ const MealCalendarPage = () => {
       return urlStartDate;
     }
     
-    if (isSubscribed && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate) {
-      // Use subscription start date as the base for week calculation
-      const subscriptionStart = new Date(userMealPlans.mealPlans[0].planStartDate);
+    if (isSubscribed && calendarData?.calendar?.subscriptionPeriod?.startDate) {
+      // Use subscription start date from calendar data (more accurate)
+      const subscriptionStart = new Date(calendarData.calendar.subscriptionPeriod.startDate);
       console.log(`📅 Using subscription start date for week calculation: ${subscriptionStart.toDateString()}`);
       return subscriptionStart.toISOString().split('T')[0];
+    } else if (isSubscribed && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate) {
+      // Fallback to user meal plans if calendar data not available
+      const subscriptionStart = new Date(userMealPlans.mealPlans[0].planStartDate);
+      console.log(`📅 Using fallback subscription start date for week calculation: ${subscriptionStart.toDateString()}`);
+      return subscriptionStart.toISOString().split('T')[0];
+    } else if (!isSubscribed && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate) {
+      // For unsubscribed users with weekly plans, use their plan start date
+      const weeklyPlanStart = new Date(userMealPlans.mealPlans[0].planStartDate);
+      console.log(`📅 Using weekly plan start date for week calculation: ${weeklyPlanStart.toDateString()}`);
+      return weeklyPlanStart.toISOString().split('T')[0];
     } else {
-      // For unsubscribed users, use selected date
+      // For users without any plans, use selected date
       console.log(`📅 Using selectedDate for week calculation: ${selectedDate}`);
       return selectedDate;
     }
   };
 
-  const weekDates = (selectedDate || searchParams.get('startDate')) ? getWeekDates(getWeekStartDate()) : [];
+  // Generate dates - wait for calendar data to be loaded for subscribed users
+  console.log('🔍 Main component state:', {
+    isSubscribed,
+    hasCalendarData: !!calendarData,
+    hasSubscriptionPeriod: !!calendarData?.calendar?.subscriptionPeriod,
+    selectedDate,
+    urlStartDate: searchParams.get('startDate')
+  });
+  
+  let weekDates = [];
+  if (isSubscribed && !calendarData?.calendar?.subscriptionPeriod) {
+    console.log('⏳ Waiting for calendar data to load...');
+    weekDates = [];
+  } else if (selectedDate || searchParams.get('startDate')) {
+    weekDates = getWeekDates(getWeekStartDate());
+  }
 
   const getMealsForDisplay = (targetDate) => {
     if (!displayData?.meals) return [];
@@ -824,6 +1041,27 @@ const MealCalendarPage = () => {
     acc[date] = getMealsForDisplay(date);
     return acc;
   }, {});
+
+  // Function to get meals by date and meal type
+  const getMealsByDateAndType = (targetDate, mealType) => {
+    if (!displayData?.meals) return [];
+    
+    return displayData.meals.filter(meal => {
+      const mealDate = new Date(meal.date).toISOString().split('T')[0];
+      return mealDate === targetDate && meal.mealType === mealType;
+    });
+  };
+
+  // Function to handle opening meal detail modal
+  const handleMealDetailClick = (date, mealType) => {
+    const meals = getMealsByDateAndType(date, mealType);
+    setSelectedMealData({
+      meals,
+      date,
+      mealType
+    });
+    setShowMealModal(true);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -1001,10 +1239,12 @@ const MealCalendarPage = () => {
                     <svg className="w-5 h-5 text-grub-red flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
-                    <span>Weekly Meal Schedule</span>
+                    <span>{isSubscribed ? 'Subscription Meal Schedule' : 'Weekly Meal Schedule'}</span>
                   </h2>
                   <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                    {isSubscribed 
+                    {isSubscribed && calendarData?.calendar?.subscriptionPeriod
+                      ? `Your subscription period: ${new Date(calendarData.calendar.subscriptionPeriod.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} to ${new Date(calendarData.calendar.subscriptionPeriod.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                      : isSubscribed 
                       ? 'Click on any date within your subscription period'
                       : `Click on dates from ${getNextSunday().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} to ${new Date(getNextSunday().getTime() + 13 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} (2 weeks)`
                     }
@@ -1021,12 +1261,29 @@ const MealCalendarPage = () => {
                   <input
                     type="date"
                     value={selectedDate || searchParams.get('startDate') || ''}
-                    min={isSubscribed && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate ? 
+                    min={isSubscribed && calendarData?.calendar?.subscriptionPeriod ? 
+                      new Date(calendarData.calendar.subscriptionPeriod.startDate).toISOString().split('T')[0] : 
+                      isSubscribed && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate ? 
                       new Date(userMealPlans.mealPlans[0].planStartDate).toISOString().split('T')[0] : 
+                      !isSubscribed && hasPlannedMeals && getEarliestStoredMealDate() ?
+                      getEarliestStoredMealDate().toISOString().split('T')[0] :
+                      !isSubscribed && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate ?
+                      new Date(userMealPlans.mealPlans[0].planStartDate).toISOString().split('T')[0] :
                       getNextSunday().toISOString().split('T')[0]
                     }
-                    max={isSubscribed && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planEndDate ? 
+                    max={isSubscribed && calendarData?.calendar?.subscriptionPeriod ? 
+                      new Date(calendarData.calendar.subscriptionPeriod.endDate).toISOString().split('T')[0] : 
+                      isSubscribed && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planEndDate ? 
                       new Date(userMealPlans.mealPlans[0].planEndDate).toISOString().split('T')[0] : 
+                      !isSubscribed && hasPlannedMeals && getEarliestStoredMealDate() ?
+                      (() => {
+                        const startDate = getEarliestStoredMealDate();
+                        const endDate = new Date(startDate);
+                        endDate.setDate(startDate.getDate() + 13); // 14 days total
+                        return endDate.toISOString().split('T')[0];
+                      })() :
+                      !isSubscribed && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planEndDate ?
+                      new Date(userMealPlans.mealPlans[0].planEndDate).toISOString().split('T')[0] :
                       (() => {
                         const nextSunday = getNextSunday();
                         const twoWeeksLater = new Date(nextSunday);
@@ -1051,143 +1308,447 @@ const MealCalendarPage = () => {
               </div>
             </div>
             
-            {/* Enhanced Week Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 divide-y sm:divide-y-0 sm:divide-x lg:divide-x divide-gray-200">
+            {/* Enhanced Calendar Table with Lunch/Dinner Rows - Hidden on Mobile */}
+            <div className="hidden md:block overflow-x-auto rounded-2xl shadow-lg bg-white">
+              <table className="w-full bg-white rounded-2xl overflow-hidden" style={{ minWidth: `${Math.max(900, weekDates.length * 160)}px` }}>
+                {/* Header Row with Days */}
+                <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                  <tr className="border-b border-gray-100">
+                    <th className="w-32 p-6 text-left font-bold text-gray-800 border-r border-gray-100 bg-gradient-to-br from-gray-100 to-gray-200 shadow-sm">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold">Meal Type</div>
+                          <div className="text-xs text-gray-600">Daily Schedule</div>
+                        </div>
+                      </div>
+                    </th>
+                    {weekDates.map((date) => {
+                      const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'short' });
+                      const dayNumber = new Date(date).getDate();
+                      const monthName = new Date(date).toLocaleDateString('en-US', { month: 'short' });
+                      const isToday = date === new Date().toISOString().split('T')[0];
+                      
+                      const isClickable = isDateClickable(date);
+                      const currentSelectedDate = selectedDate || searchParams.get('startDate');
+                      const isSelected = date === currentSelectedDate;
+                      
+                      // Debug selected date logic
+                      if (date === '2025-11-02' || date === '2025-11-04' || date === '2025-11-06') {
+                        const appliedClasses = isSelected ? 'bg-grub-red/20 ring-2 ring-grub-red text-grub-red' : 
+                                             isToday ? 'bg-grub-red/10 text-grub-red' : 'text-gray-900';
+                        console.log(`🔍 Date ${date}: selectedDate=${selectedDate}, isSelected=${isSelected}, isToday=${isToday}, appliedClasses="${appliedClasses}"`);
+                      }
+                      
+                      return (
+                        <th 
+                          key={date} 
+                          data-date={date}
+                          className={`relative p-4 text-center font-medium border-r border-gray-100 min-w-[140px] transition-all duration-300 group ${
+                            isSelected ? 'bg-white text-grub-red' : 
+                            isToday ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
+                          } ${
+                            isClickable ? 'cursor-pointer hover:bg-gray-50' : 
+                            'cursor-not-allowed opacity-50'
+                          }`}
+                          onClick={() => {
+                            console.log(`🖱️ Header clicked for date: ${date}`);
+                            if (isClickable) {
+                              handleDateClick(date);
+                            } else {
+                              console.log(`🚫 Header click blocked - date not clickable: ${date}`);
+                            }
+                          }}
+                          title={isClickable ? `Click to select ${dayName}, ${monthName} ${dayNumber}` : `${dayName}, ${monthName} ${dayNumber} - Not available`}
+                        >
+                          <div className="flex flex-col items-center space-y-2">
+                            <div className={`text-xs font-medium uppercase tracking-wide ${isSelected ? 'text-grub-red' : isToday ? 'text-blue-600' : 'text-gray-500'}`}>
+                              {dayName}
+                            </div>
+                            <div className={`relative w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg transition-all duration-200 ${
+                              isSelected ? 'bg-grub-red text-white shadow-lg' : 
+                              isToday ? 'bg-blue-500 text-white shadow-md' : 
+                              'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}>
+                              {dayNumber}
+                            </div>
+                            <div className={`text-xs font-medium ${isSelected ? 'text-grub-red' : isToday ? 'text-blue-500' : 'text-gray-400'}`}>
+                              {monthName}
+                            </div>
+                            {!isClickable && (
+                              <div className="text-xs text-red-500 font-medium">
+                                Unavailable
+                              </div>
+                            )}
+                          </div>
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+                
+                <tbody>
+                  {/* Lunch Row */}
+                  <tr className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-orange-50 hover:to-yellow-50 transition-all duration-200">
+                    <td className="p-6 font-semibold text-gray-900 bg-gradient-to-br from-orange-50 to-yellow-50 border-r border-gray-100 shadow-sm">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-yellow-500 rounded-full flex items-center justify-center shadow-md">
+                          <span className="text-white text-lg">🍽️</span>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-gray-800">Lunch</div>
+                          <div className="text-xs text-gray-500 font-medium">Midday Meals</div>
+                        </div>
+                      </div>
+                    </td>
+                    {weekDates.map((date) => {
+                      const lunchMeals = getMealsByDateAndType(date, 'lunch');
+                      const mealCount = lunchMeals.length;
+                      
+                      return (
+                        <td 
+                          key={`${date}-lunch`} 
+                          className="p-3 text-center border-r border-gray-100 min-h-[140px] align-top bg-gradient-to-b from-white to-gray-50"
+                        >
+                          {mealCount > 0 ? (
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 space-y-2 hover:shadow-md transition-all duration-200 h-full">
+                              <div className="flex items-center justify-center space-x-1">
+                                <div className="w-6 h-6 bg-gradient-to-br from-orange-400 to-yellow-500 rounded-full flex items-center justify-center">
+                                  <span className="text-white text-xs font-bold">{mealCount}</span>
+                                </div>
+                                <div className="text-xs font-medium text-gray-600">
+                                  {mealCount === 1 ? 'Item' : 'Items'}
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => handleMealDetailClick(date, 'lunch')}
+                                className="w-full px-2 py-1 text-xs text-white bg-blue-500 hover:bg-blue-600 rounded-md font-medium transition-colors"
+                              >
+                                View Details
+                              </button>
+                              <div className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                                ${lunchMeals.reduce((total, meal) => {
+                                  // Debug: Log meal structure to understand what fields are available
+                                  console.log('🔍 Lunch meal object:', meal);
+                                  
+                                  // Check multiple possible price locations
+                                  let price = 0;
+                                  
+                                  // If meal has items array, sum up item prices
+                                  if (meal.items && Array.isArray(meal.items) && meal.items.length > 0) {
+                                    price = meal.items.reduce((itemTotal, item) => {
+                                      return itemTotal + (parseFloat(item.price) || 0) * (parseInt(item.quantity) || 1);
+                                    }, 0);
+                                  } else {
+                                    // Try various price fields
+                                    price = parseFloat(
+                                      meal.subtotal || 
+                                      meal.total || 
+                                      meal.price || 
+                                      meal.menuItem?.price || 
+                                      meal.orderItem?.price || 
+                                      meal.cost ||
+                                      meal.amount ||
+                                      0
+                                    );
+                                    
+                                    // If no price found, use a reasonable estimate based on meal type
+                                    if (price === 0 && meal.mealName) {
+                                      // Simple price estimation based on meal name/type
+                                      if (meal.mealName.toLowerCase().includes('chicken')) {
+                                        price = 12.99;
+                                      } else if (meal.mealName.toLowerCase().includes('mutton')) {
+                                        price = 15.99;
+                                      } else if (meal.mealType === 'lunch') {
+                                        price = 10.99;
+                                      } else {
+                                        price = 12.99; // Default price
+                                      }
+                                      console.log(`💰 Using estimated lunch price for ${meal.mealName}: $${price}`);
+                                    }
+                                  }
+                                  
+                                  console.log('🔍 Calculated price for lunch meal:', price);
+                                  const quantity = parseInt(meal.quantity) || 1;
+                                  return total + (price * quantity);
+                                }, 0).toFixed(2)}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 h-full flex items-center justify-center min-h-[80px]">
+                              <div className="text-gray-500 text-xs font-medium">No meals</div>
+                            </div>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                  
+                  {/* Dinner Row */}
+                  <tr className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50 transition-all duration-200">
+                    <td className="p-6 font-semibold text-gray-900 bg-gradient-to-br from-purple-50 to-indigo-50 border-r border-gray-100 shadow-sm">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center shadow-md">
+                          <span className="text-white text-lg">🌙</span>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-gray-800">Dinner</div>
+                          <div className="text-xs text-gray-500 font-medium">Evening Meals</div>
+                        </div>
+                      </div>
+                    </td>
+                    {weekDates.map((date) => {
+                      const dinnerMeals = getMealsByDateAndType(date, 'dinner');
+                      const mealCount = dinnerMeals.length;
+                      
+                      return (
+                        <td 
+                          key={`${date}-dinner`} 
+                          className="p-3 text-center border-r border-gray-100 min-h-[140px] align-top bg-gradient-to-b from-white to-gray-50"
+                        >
+                          {mealCount > 0 ? (
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 space-y-2 hover:shadow-md transition-all duration-200 h-full">
+                              <div className="flex items-center justify-center space-x-1">
+                                <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
+                                  <span className="text-white text-xs font-bold">{mealCount}</span>
+                                </div>
+                                <div className="text-xs font-medium text-gray-600">
+                                  {mealCount === 1 ? 'Item' : 'Items'}
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => handleMealDetailClick(date, 'dinner')}
+                                className="w-full px-2 py-1 text-xs text-white bg-purple-500 hover:bg-purple-600 rounded-md font-medium transition-colors"
+                              >
+                                View Details
+                              </button>
+                              <div className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                                ${dinnerMeals.reduce((total, meal) => {
+                                  // Debug: Log meal structure to understand what fields are available
+                                  console.log('🔍 Dinner meal object:', meal);
+                                  
+                                  // Check multiple possible price locations
+                                  let price = 0;
+                                  
+                                  // If meal has items array, sum up item prices
+                                  if (meal.items && Array.isArray(meal.items) && meal.items.length > 0) {
+                                    price = meal.items.reduce((itemTotal, item) => {
+                                      return itemTotal + (parseFloat(item.price) || 0) * (parseInt(item.quantity) || 1);
+                                    }, 0);
+                                  } else {
+                                    // Try various price fields
+                                    price = parseFloat(
+                                      meal.subtotal || 
+                                      meal.total || 
+                                      meal.price || 
+                                      meal.menuItem?.price || 
+                                      meal.orderItem?.price || 
+                                      meal.cost ||
+                                      meal.amount ||
+                                      0
+                                    );
+                                    
+                                    // If no price found, use a reasonable estimate based on meal type
+                                    if (price === 0 && meal.mealName) {
+                                      // Simple price estimation based on meal name/type
+                                      if (meal.mealName.toLowerCase().includes('chicken')) {
+                                        price = 14.99; // Dinner chicken slightly more expensive
+                                      } else if (meal.mealName.toLowerCase().includes('mutton')) {
+                                        price = 17.99; // Dinner mutton slightly more expensive
+                                      } else if (meal.mealType === 'dinner') {
+                                        price = 14.99;
+                                      } else {
+                                        price = 14.99; // Default dinner price
+                                      }
+                                      console.log(`💰 Using estimated dinner price for ${meal.mealName}: $${price}`);
+                                    }
+                                  }
+                                  
+                                  console.log('🔍 Calculated price for dinner meal:', price);
+                                  const quantity = parseInt(meal.quantity) || 1;
+                                  return total + (price * quantity);
+                                }, 0).toFixed(2)}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 h-full flex items-center justify-center min-h-[80px]">
+                              <div className="text-gray-500 text-xs font-medium">No meals</div>
+                            </div>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Responsive Calendar Cards - Hidden on Desktop */}
+            <div className="block md:hidden mt-6 space-y-4">
               {weekDates.map((date) => {
-                const dayMeals = currentWeekMeals[date] || [];
                 const dayName = new Date(date).toLocaleDateString('en-US', { weekday: 'long' });
-                const dayShort = new Date(date).toLocaleDateString('en-US', { weekday: 'short' });
                 const dayNumber = new Date(date).getDate();
-                const monthName = new Date(date).toLocaleDateString('en-US', { month: 'short' });
+                const monthName = new Date(date).toLocaleDateString('en-US', { month: 'long' });
                 const isToday = date === new Date().toISOString().split('T')[0];
-                const hasMeals = dayMeals.length > 0;
                 const isClickable = isDateClickable(date);
-                // Check if this date is selected - use URL parameter if selectedDate hasn't been set yet
                 const currentSelectedDate = selectedDate || searchParams.get('startDate');
                 const isSelected = date === currentSelectedDate;
                 
+                const lunchMeals = getMealsByDateAndType(date, 'lunch');
+                const dinnerMeals = getMealsByDateAndType(date, 'dinner');
+                
                 return (
                   <div 
-                    key={date} 
-                    className={`p-3 sm:p-4 min-h-[200px] sm:min-h-[250px] lg:min-h-[280px] transition-all duration-200 hover:bg-gray-50 ${
-                      isToday ? 'bg-gradient-to-b from-grub-red/5 to-red-50' : ''
-                    } ${
-                      isSelected ? 'ring-2 ring-grub-red bg-red-50' : ''
+                    key={`mobile-${date}`}
+                    data-mobile-date={date}
+                    className={`bg-white rounded-xl shadow-md border-2 transition-all duration-200 ${
+                      isSelected ? 'border-grub-red bg-grub-red/5' : 
+                      isToday ? 'border-blue-500 bg-blue-50' : 
+                      'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    {/* Day Header - ONLY this part should be clickable/non-clickable */}
-                    <div className="text-center mb-4">
-                      <div className={`text-sm font-medium ${
-                        isToday ? 'text-grub-red' : 'text-gray-600'
-                      }`}>
-                        <span className="hidden sm:inline">{dayName}</span>
-                        <span className="sm:hidden">{dayShort}</span>
-                      </div>
-                      
-                      {/* Date Number - This is the ONLY clickable part */}
-                      <div 
-                        className={`text-xl font-bold mt-1 transition-all duration-200 inline-block ${
-                          isToday 
-                            ? 'bg-grub-red text-white rounded-full w-10 h-10 flex items-center justify-center mx-auto shadow-lg cursor-pointer' 
-                            : isSelected
-                            ? 'bg-grub-red text-white rounded-full w-10 h-10 flex items-center justify-center mx-auto cursor-pointer'
-                            : isClickable
-                            ? 'text-gray-800 hover:bg-grub-red hover:text-white rounded-full w-10 h-10 flex items-center justify-center mx-auto cursor-pointer'
-                            : 'text-gray-500 rounded-full w-10 h-10 flex items-center justify-center mx-auto cursor-not-allowed opacity-75 hover:bg-red-200 hover:text-red-700 hover:opacity-90 relative group'
-                        }`}
-                        onClick={() => handleDateClick(date)}
-                        title={isClickable ? `Click to view ${dayName}, ${monthName} ${dayNumber}` : `${dayName}, ${monthName} ${dayNumber} - Not available`}
-                      >
-                        {dayNumber}
-                        {/* X overlay for non-clickable dates on hover */}
+                    {/* Mobile Date Header */}
+                    <div 
+                      className={`p-4 border-b border-gray-100 cursor-pointer ${
+                        isClickable ? 'hover:bg-gray-50' : 'cursor-not-allowed opacity-60'
+                      }`}
+                      onClick={() => {
+                        if (isClickable) {
+                          handleDateClick(date);
+                        }
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
+                            isSelected ? 'bg-grub-red text-white' : 
+                            isToday ? 'bg-blue-500 text-white' : 
+                            'bg-gray-100 text-gray-700'
+                          }`}>
+                            {dayNumber}
+                          </div>
+                          <div>
+                            <div className={`font-bold text-lg ${isSelected ? 'text-grub-red' : isToday ? 'text-blue-700' : 'text-gray-800'}`}>
+                              {dayName}
+                            </div>
+                            <div className={`text-sm ${isSelected ? 'text-grub-red/70' : isToday ? 'text-blue-600' : 'text-gray-500'}`}>
+                              {monthName} {dayNumber}
+                            </div>
+                          </div>
+                        </div>
                         {!isClickable && (
-                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                          <div className="text-xs text-red-500 font-medium bg-red-50 px-2 py-1 rounded-full">
+                            Unavailable
                           </div>
                         )}
                       </div>
-                      
-                      <div className="text-xs mt-1 text-gray-500">{monthName}</div>
-                      {isToday && (
-                        <div className="text-xs text-grub-red font-semibold mt-1">Today</div>
-                      )}
-                      {isSelected && !isToday && (
-                        <div className="text-xs text-grub-red font-semibold mt-1">Selected</div>
-                      )}
-                      {!isClickable && (
-                        <div className="text-xs text-gray-400 mt-1 opacity-60">Not Available</div>
-                      )}
                     </div>
-                    
-                    {/* Meals - These should ALWAYS be fully visible and clickable */}
-                    <div className="space-y-2">
-                      {dayMeals.length === 0 ? (
-                        <div className="text-center py-6">
-                          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
+
+                    {/* Mobile Meals Content */}
+                    <div className="p-4 space-y-4">
+                      {/* Lunch Section */}
+                      <div className="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-yellow-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-lg">🍽️</span>
                           </div>
-                          <p className="text-xs text-gray-400">No meals</p>
-                          <p className="text-xs text-gray-400">scheduled</p>
+                          <div>
+                            <div className="font-semibold text-gray-800">Lunch</div>
+                            {lunchMeals.length > 0 ? (
+                              <div className="space-y-2">
+                                <span className="text-sm text-gray-600">{lunchMeals.length} {lunchMeals.length === 1 ? 'item' : 'items'}</span>
+                                <button
+                                  onClick={() => handleMealDetailClick(date, 'lunch')}
+                                  className="px-3 py-1.5 text-xs text-white bg-blue-500 hover:bg-blue-600 rounded-md font-medium transition-colors"
+                                >
+                                  View Details
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="text-sm text-gray-500">No meals</div>
+                            )}
+                          </div>
                         </div>
-                      ) : (
-                        dayMeals.map((meal) => {
-                          const statusConfig = {
-                            delivered: { bg: 'bg-green-100', text: 'text-green-800', icon: '✓', border: 'border-green-200' },
-                            preparing: { bg: 'bg-yellow-100', text: 'text-yellow-800', icon: '🍳', border: 'border-yellow-200' },
-                            ready: { bg: 'bg-blue-100', text: 'text-blue-800', icon: '📦', border: 'border-blue-200' },
-                            scheduled: { bg: 'bg-gray-100', text: 'text-gray-800', icon: '📅', border: 'border-gray-200' },
-                            planned: { bg: 'bg-blue-50', text: 'text-blue-700', icon: '👁️', border: 'border-blue-200' },
-                            cancelled: { bg: 'bg-red-100', text: 'text-red-800', icon: '✕', border: 'border-red-200' }
-                          };
-                          
-                          const config = statusConfig[meal.status] || statusConfig.scheduled;
-                          
-                          return (
-                            <div
-                              key={meal._id}
-                              className={`${config.bg} ${config.text} ${config.border} border rounded-xl p-3 transition-all duration-200 hover:shadow-md cursor-pointer`}
-                              title={`${meal.mealName} - ${meal.status}`}
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-bold uppercase tracking-wide">
-                                  {meal.mealType}
-                                </span>
-                                <span className="text-sm">{config.icon}</span>
+                        {lunchMeals.length > 0 && (
+                          <div className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                            ${lunchMeals.reduce((total, meal) => {
+                              let price = 0;
+                              if (meal.items && Array.isArray(meal.items) && meal.items.length > 0) {
+                                price = meal.items.reduce((itemTotal, item) => {
+                                  return itemTotal + (parseFloat(item.subtotal) || parseFloat(item.price) || parseFloat(item.total) || 0);
+                                }, 0);
+                              } else {
+                                price = parseFloat(meal.subtotal) || parseFloat(meal.price) || parseFloat(meal.total) || 0;
+                              }
+                              if (price === 0 && meal.mealName) {
+                                if (meal.mealName.toLowerCase().includes('chicken')) {
+                                  price = 12.99;
+                                } else if (meal.mealName.toLowerCase().includes('mutton')) {
+                                  price = 15.99;
+                                } else {
+                                  price = 10.99;
+                                }
+                              }
+                              const quantity = parseInt(meal.quantity) || 1;
+                              return total + (price * quantity);
+                            }, 0).toFixed(2)}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Dinner Section */}
+                      <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
+                            <span className="text-white text-lg">🌙</span>
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-800">Dinner</div>
+                            {dinnerMeals.length > 0 ? (
+                              <div className="space-y-2">
+                                <span className="text-sm text-gray-600">{dinnerMeals.length} {dinnerMeals.length === 1 ? 'item' : 'items'}</span>
+                                <button
+                                  onClick={() => handleMealDetailClick(date, 'dinner')}
+                                  className="px-3 py-1.5 text-xs text-white bg-purple-500 hover:bg-purple-600 rounded-md font-medium transition-colors"
+                                >
+                                  View Details
+                                </button>
                               </div>
-                              
-                              <div className="text-sm font-medium mb-1 line-clamp-2" title={meal.mealName}>
-                                {meal.mealName}
-                                {meal.quantity && meal.quantity > 1 && (
-                                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    Qty: {meal.quantity}
-                                  </span>
-                                )}
-                              </div>
-                              
-                              {meal.restaurant && (
-                                <div className="text-xs text-gray-600 mb-1 flex items-center">
-                                  <span className="mr-1">🏪</span>
-                                  <span className="font-medium">{meal.restaurant}</span>
-                                </div>
-                              )}
-                              
-                              <div className="text-xs opacity-75 mb-2">
-                                🕐 {meal.deliveryTime.start} - {meal.deliveryTime.end}
-                              </div>
-                              
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs font-semibold capitalize px-2 py-1 rounded-full bg-white/50">
-                                  {meal.status}
-                                </span>
-                              </div>
-                            </div>
-                          );
-                        })
-                      )}
+                            ) : (
+                              <div className="text-sm text-gray-500">No meals</div>
+                            )}
+                          </div>
+                        </div>
+                        {dinnerMeals.length > 0 && (
+                          <div className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                            ${dinnerMeals.reduce((total, meal) => {
+                              let price = 0;
+                              if (meal.items && Array.isArray(meal.items) && meal.items.length > 0) {
+                                price = meal.items.reduce((itemTotal, item) => {
+                                  return itemTotal + (parseFloat(item.subtotal) || parseFloat(item.price) || parseFloat(item.total) || 0);
+                                }, 0);
+                              } else {
+                                price = parseFloat(meal.subtotal) || parseFloat(meal.price) || parseFloat(meal.total) || 0;
+                              }
+                              if (price === 0 && meal.mealName) {
+                                if (meal.mealName.toLowerCase().includes('chicken')) {
+                                  price = meal.mealType === 'dinner' ? 14.99 : 12.99;
+                                } else if (meal.mealName.toLowerCase().includes('mutton')) {
+                                  price = meal.mealType === 'dinner' ? 17.99 : 15.99;
+                                } else {
+                                  price = meal.mealType === 'dinner' ? 14.99 : 12.99;
+                                }
+                              }
+                              const quantity = parseInt(meal.quantity) || 1;
+                              return total + (price * quantity);
+                            }, 0).toFixed(2)}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -1371,6 +1932,16 @@ const MealCalendarPage = () => {
           </div>
         )}
       </div>
+
+      {/* Meal Detail Modal */}
+      <MealDetailModal
+        isOpen={showMealModal}
+        onClose={() => setShowMealModal(false)}
+        meals={selectedMealData.meals}
+        date={selectedMealData.date}
+        mealType={selectedMealData.mealType}
+        userType={isSubscribed ? 'subscribed' : 'planned'}
+      />
     </div>
   );
 };
