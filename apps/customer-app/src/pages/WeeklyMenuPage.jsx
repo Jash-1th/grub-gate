@@ -74,9 +74,10 @@ const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postal
                 )}
                 <button
                   onClick={(e) => handleRemoveItem(e, firstItem.planId)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-0.5 sm:p-1 rounded-full bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 touch-manipulation"
+                  className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200 p-1 sm:p-1 rounded-full bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 touch-manipulation shadow-sm"
+                  aria-label="Remove item"
                 >
-                  <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -1079,14 +1080,14 @@ const WeeklyMenuPage = () => {
                           ))}
                         </div>
                       </h3>
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-xs sm:text-sm md:text-base text-gray-600 mt-1">
+                      <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm md:text-base text-gray-600 mt-1">
                         <span>Click any empty slot to add meals</span>
-                        <span className="hidden sm:inline">•</span>
-                        <div className="flex items-center gap-2">
-                          <span>{selectedRestaurant.cuisine}</span>
-                          <span>•</span>
-                          <span>⭐ {selectedRestaurant.rating}</span>
-                        </div>
+                        {selectedRestaurant.cuisine && (
+                          <>
+                            <span>•</span>
+                            <span>{selectedRestaurant.cuisine}</span>
+                          </>
+                        )}
                       </div>
                     </>
                   ) : null}

@@ -78,16 +78,22 @@ const MealCalendarButton = () => {
   }
 
   return (
-    <div className="fixed bottom-20 sm:bottom-6 right-6 z-50">
+    <div className="fixed 
+                    bottom-[72px] left-1/2 -translate-x-1/2 z-40
+                    xs:bottom-[76px] sm:bottom-[80px]
+                    md:bottom-6 md:right-6 md:left-auto md:translate-x-0 md:z-50">
       <button
         onClick={handleCalendarClick}
-        className="bg-orange-600 hover:bg-orange-700 text-white p-4 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-orange-300"
-        title="View My Meal Calendar"
-        aria-label="View My Meal Calendar"
+        className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white 
+                   px-4 py-2.5 xs:px-5 xs:py-3 sm:px-6 sm:py-3.5 md:px-6 md:py-4 
+                   rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 
+                   focus:outline-none focus:ring-4 focus:ring-orange-300"
+        title="View Your Meal Calendar"
+        aria-label="View Your Meal Calendar"
       >
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 xs:space-x-2.5">
           <svg 
-            className="w-6 h-6" 
+            className="w-5 h-5 xs:w-5 xs:h-5 sm:w-6 sm:h-6" 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
@@ -97,25 +103,19 @@ const MealCalendarButton = () => {
               strokeLinecap="round" 
               strokeLinejoin="round" 
               strokeWidth={2} 
-              d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 4v10m6-10v10m-6-4h6" 
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" 
             />
           </svg>
-          <span className="hidden sm:inline font-semibold">My Calendar</span>
+          <span className="font-semibold text-xs xs:text-sm sm:text-base whitespace-nowrap">Your Meal Calendar</span>
         </div>
         
         {/* Notification badge if there are upcoming meals */}
         {subscriptionData?.remainingDays > 0 && (
-          <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold">
+          <div className="absolute -top-2 xs:-top-2 -right-2 xs:-right-2 bg-red-500 text-white text-[10px] xs:text-xs font-bold rounded-full w-5 h-5 xs:w-6 xs:h-6 flex items-center justify-center shadow-md border-2 border-white">
             {subscriptionData.remainingDays > 99 ? '99+' : subscriptionData.remainingDays}
           </div>
         )}
       </button>
-      
-      {/* Tooltip for desktop */}
-      <div className="hidden lg:block absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
-        View your scheduled meals
-        <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
-      </div>
     </div>
   );
 };

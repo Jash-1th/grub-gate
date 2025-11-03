@@ -876,7 +876,7 @@ const SettingsPage = () => {
                           Enhanced address system with global support, automatic country detection, and coordinate validation for accurate deliveries.
                         </p>
                       </div>
-                      {process.env.NODE_ENV === 'development' && (
+                      {/* {process.env.NODE_ENV === 'development' && (
                         <button
                           onClick={() => {
                             // Test validation by validating all address fields
@@ -890,7 +890,7 @@ const SettingsPage = () => {
                         >
                           Test Validation
                         </button>
-                      )}
+                      )} */}
                     </div>
                     <EnhancedAddressForm
                       formData={formData}

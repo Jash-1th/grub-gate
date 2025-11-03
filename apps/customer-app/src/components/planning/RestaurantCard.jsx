@@ -84,7 +84,7 @@ const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore, isSel
           : 'bg-white border-gray-100'
       }`}>
         {/* Restaurant Image */}
-        <div className="relative h-32 sm:h-40 overflow-hidden flex-shrink-0">
+        <div className="relative h-28 sm:h-40 overflow-hidden flex-shrink-0">
           <img
             src={restaurant.image}
             alt={restaurant.name}
@@ -146,39 +146,39 @@ const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore, isSel
         </div>
         
         {/* Restaurant Info - Flexible content area */}
-        <div className="p-3 sm:p-4 flex flex-col flex-1">
+        <div className="p-2.5 sm:p-4 flex flex-col flex-1">
           {/* Restaurant Name and Cuisine */}
-          <div className="mb-2">
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 group-hover:text-grub-red transition-colors duration-300">
+          <div className="mb-1.5 sm:mb-2">
+            <h3 className="text-base sm:text-xl font-bold text-gray-900 mb-0.5 sm:mb-1 group-hover:text-grub-red transition-colors duration-300 line-clamp-1">
               {restaurant.name}
             </h3>
-            <p className="text-sm text-gray-500 font-medium">{restaurant.cuisine}</p>
+            <p className="text-xs sm:text-sm text-gray-500 font-medium">{restaurant.cuisine}</p>
           </div>
           
           {/* Description - Fixed height container */}
-          <div className="mb-3 min-h-[2rem] flex items-start">
-            <p className="text-gray-600 text-sm line-clamp-2 leading-relaxed">
+          <div className="mb-2 sm:mb-3 min-h-[1.5rem] sm:min-h-[2rem] flex items-start">
+            <p className="text-gray-600 text-xs sm:text-sm line-clamp-2 leading-relaxed">
               {restaurant.description}
             </p>
           </div>
           
           {/* Rating and Reviews */}
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
             <div className="flex items-center gap-2">
               <div className="flex items-center">
                 {renderStars(restaurant.rating)}
               </div>
-              <span className="text-sm font-semibold text-gray-700">
+              <span className="text-xs sm:text-sm font-semibold text-gray-700">
                 {restaurant.rating}
               </span>
-              <span className="text-sm text-gray-500">
+              <span className="text-xs sm:text-sm text-gray-500">
                 ({restaurant.reviewCount})
               </span>
             </div>
           </div>
           
           {/* Preferences Tags - Fixed height container */}
-          <div className="mb-4 min-h-[1.5rem] flex items-start">
+          <div className="mb-2.5 sm:mb-4 min-h-[1.5rem] flex items-start">
             <div className="flex flex-wrap gap-1">
               {(restaurant.preferences || []).slice(0, 3).map((preference, index) => (
                 <span
@@ -200,7 +200,7 @@ const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore, isSel
           <div className="mt-auto">
             <button 
               onClick={handleExploreRestaurant}
-              className={`w-full font-semibold py-2 px-3 rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-lg hover:shadow-xl ${
+              className={`w-full font-semibold py-1.5 sm:py-2 px-3 rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-lg hover:shadow-xl text-sm sm:text-base ${
                 isSelected
                   ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white focus:ring-green-500' 
                   : 'bg-gradient-to-r from-grub-red to-red-600 hover:from-grub-red hover:to-red-700 text-white focus:ring-grub-red'

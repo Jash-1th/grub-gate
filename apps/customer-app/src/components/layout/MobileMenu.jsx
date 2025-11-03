@@ -51,30 +51,30 @@ const MobileMenu = ({ isOpen, onClose }) => {
     >
       <div className="fixed inset-0 bg-black bg-opacity-50" onClick={onClose} aria-hidden="true" />
       <div
-        className={`fixed inset-y-0 right-0 w-full max-w-xs bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${
+        className={`fixed inset-y-0 right-0 w-full max-w-[280px] xs:max-w-xs sm:max-w-sm bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         <div className="flex flex-col h-full overflow-y-auto mobile-menu-panel">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">{t('menu')}</h2>
+          <div className="flex items-center justify-between px-4 xs:px-5 sm:px-6 py-4 xs:py-5 border-b border-gray-200">
+            <h2 className="text-lg xs:text-xl sm:text-2xl font-semibold text-gray-900">{t('menu')}</h2>
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-grub-red"
+              className="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-grub-red p-1"
             >
               <span className="sr-only">{t('close')}</span>
-              <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+              <XMarkIcon className="h-5 w-5 xs:h-6 xs:w-6" aria-hidden="true" />
             </button>
           </div>
 
           {/* Language and Auth Section - Main Content */}
-          <div className="flex-1 flex flex-col p-6 space-y-8 justify-center">
+          <div className="flex-1 flex flex-col p-4 xs:p-5 sm:p-6 space-y-5 xs:space-y-6 sm:space-y-8 justify-center">
             {/* Language Switcher */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-              <h3 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <svg className="w-5 h-5 text-grub-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="bg-white p-4 xs:p-5 sm:p-6 rounded-lg xs:rounded-xl shadow-sm border border-gray-100">
+              <h3 className="text-sm xs:text-base font-semibold text-gray-800 mb-3 xs:mb-4 flex items-center gap-2">
+                <svg className="w-4 h-4 xs:w-5 xs:h-5 text-grub-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
                 </svg>
                 {t('language').toUpperCase()}
@@ -85,9 +85,9 @@ const MobileMenu = ({ isOpen, onClose }) => {
             </div>
             
             {/* Auth Buttons */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-              <h3 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <svg className="w-5 h-5 text-grub-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="bg-white p-4 xs:p-5 sm:p-6 rounded-lg xs:rounded-xl shadow-sm border border-gray-100">
+              <h3 className="text-sm xs:text-base font-semibold text-gray-800 mb-3 xs:mb-4 flex items-center gap-2">
+                <svg className="w-4 h-4 xs:w-5 xs:h-5 text-grub-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 {t('account').toUpperCase()}

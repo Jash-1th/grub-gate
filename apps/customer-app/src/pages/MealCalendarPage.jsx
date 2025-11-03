@@ -118,25 +118,43 @@ const MealCalendarPage = () => {
     }
   }, [isClient, isAuthenticated, loading, isMealPlanLoading, calendarData, hasPlannedMeals, navigate]);
 
-  // Consolidated initialization function to fix timing issues
+  // Consolidated initialization function with parallel API calls for better performance
   const initializeCalendarData = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log('🔄 MealCalendar: Step 1 - Fetching user meal plans...');
+      console.log('🔄 MealCalendar: Starting parallel data fetch...');
       
-      // Step 1: Fetch user meal plans first
-      await fetchUserMealPlans();
+      // Fetch all API data in parallel (much faster!)
+      const [mealPlansResult, subscriptionResult, calendarResult] = await Promise.allSettled([
+        fetchUserMealPlans(),
+        fetchSubscriptionStatus(),
+        fetchCalendarData()
+      ]);
       
-      console.log('🔄 MealCalendar: Step 2 - Fetching subscription status...');
+      // Log results
+      if (mealPlansResult.status === 'fulfilled') {
+        console.log('✅ MealCalendar: User meal plans loaded');
+      } else {
+        console.error('❌ MealCalendar: Failed to load meal plans:', mealPlansResult.reason);
+      }
       
-      // Step 2: Fetch subscription status
-      await fetchSubscriptionStatus();
+      if (subscriptionResult.status === 'fulfilled') {
+        console.log('✅ MealCalendar: Subscription status loaded');
+      } else {
+        console.error('❌ MealCalendar: Failed to load subscription status:', subscriptionResult.reason);
+      }
       
-      console.log('🔄 MealCalendar: Step 3 - Handling date initialization...');
+      if (calendarResult.status === 'fulfilled') {
+        console.log('✅ MealCalendar: Calendar data loaded');
+      } else {
+        console.error('❌ MealCalendar: Failed to load calendar data:', calendarResult.reason);
+      }
       
-      // Step 3: Handle date initialization properly
+      console.log('🔄 MealCalendar: Handling date initialization...');
+      
+      // Handle date initialization after data is loaded
       const urlStartDate = searchParams.get('startDate');
       let dateToSet = null;
       
@@ -159,14 +177,6 @@ const MealCalendarPage = () => {
         console.log('🗓️ MealCalendar: Setting selected date to:', dateToSet);
         setSelectedDate(dateToSet);
       }
-      
-      console.log('🔄 MealCalendar: Step 4 - Fetching calendar data...');
-      console.log('🗓️ MealCalendar: Current selectedDate before fetch:', selectedDate);
-      console.log('🗓️ MealCalendar: DateToSet value:', dateToSet);
-      console.log('🗓️ MealCalendar: URL startDate:', searchParams.get('startDate'));
-      
-      // Step 4: Fetch calendar data
-      await fetchCalendarData();
       
       console.log('✅ MealCalendar: Initialization complete!');
       
@@ -303,9 +313,16 @@ const MealCalendarPage = () => {
   // Note: URL parameter handling is now done in initializeCalendarData() to fix timing issues
 
   // Effect to refresh calendar data when date changes (for manual date selection)
+  // Skip the first render to avoid duplicate fetch during initialization
+  const isInitialMount = React.useRef(true);
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    
     if (isClient && isAuthenticated && selectedDate && calendarData) {
-      console.log('🔄 MealCalendar: Date changed, refreshing calendar data...');
+      console.log('🔄 MealCalendar: Date changed manually, refreshing calendar data...');
       fetchCalendarData().catch(err => {
         console.error('❌ MealCalendar: Error refreshing calendar data:', err);
       });
@@ -349,19 +366,12 @@ const MealCalendarPage = () => {
       console.log('✅ MealCalendarPage: User meal plans received:', response);
       setUserMealPlans(response.data);
       
-      // Determine if user is subscribed - check for REAL subscriptions with payment and subscription periods
-      const hasActiveSubscription = response.data?.mealPlans?.some(plan => 
-        plan.status === 'active' && 
-        (plan.planStartDate && plan.planEndDate) && // Check for actual subscription dates
-        plan.totalMealsCount > 0 // Must have meals
-      ) || false;
+      // Don't set isSubscribed here - let fetchCalendarData determine subscription status
+      // This function only fetches meal plan data
       
-      setIsSubscribed(hasActiveSubscription);
-      
-      console.log('📊 MealCalendarPage: User subscription status:', hasActiveSubscription);
       console.log('📊 MealCalendarPage: Meal plans found:', response.data?.mealPlans?.length || 0);
       if (response.data?.mealPlans?.length > 0) {
-        console.log('\ud83d\udcca MealCalendarPage: First meal plan details:', {
+        console.log('📊 MealCalendarPage: First meal plan details:', {
           status: response.data.mealPlans[0].status,
           planStartDate: response.data.mealPlans[0].planStartDate,
           planEndDate: response.data.mealPlans[0].planEndDate,
@@ -1206,25 +1216,6 @@ const MealCalendarPage = () => {
               </div>
               
               {/* Subscribe CTA for Preview Mode */}
-              {calendarMode === 'PREVIEW' && (
-                <div className="mt-4 p-4 bg-gradient-to-r from-grub-red/5 to-red-50 rounded-lg border border-red-100">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-                    <div>
-                      <p className="text-sm font-semibold text-grub-red">Ready to start your meal plan?</p>
-                      <p className="text-xs text-red-600">Subscribe now to activate your scheduled meals</p>
-                    </div>
-                    <button
-                      onClick={() => navigate('/subscription')}
-                      className="bg-grub-red text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors flex items-center space-x-2"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                      </svg>
-                      <span>Subscribe Now</span>
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -1424,13 +1415,14 @@ const MealCalendarPage = () => {
                                   {mealCount === 1 ? 'Item' : 'Items'}
                                 </div>
                               </div>
-                              <button
-                                onClick={() => handleMealDetailClick(date, 'lunch')}
-                                className="w-full px-2 py-1 text-xs text-white bg-blue-500 hover:bg-blue-600 rounded-md font-medium transition-colors"
-                              >
-                                View Details
-                              </button>
-                              <div className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                              <div className="flex items-center justify-between gap-2">
+                                <button
+                                  onClick={() => handleMealDetailClick(date, 'lunch')}
+                                  className="flex-1 px-2 py-1 text-xs text-white bg-blue-500 hover:bg-blue-600 rounded-md font-medium transition-colors whitespace-nowrap"
+                                >
+                                  View Details
+                                </button>
+                                <div className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
                                 ${lunchMeals.reduce((total, meal) => {
                                   // Debug: Log meal structure to understand what fields are available
                                   console.log('🔍 Lunch meal object:', meal);
@@ -1476,6 +1468,7 @@ const MealCalendarPage = () => {
                                   const quantity = parseInt(meal.quantity) || 1;
                                   return total + (price * quantity);
                                 }, 0).toFixed(2)}
+                                </div>
                               </div>
                             </div>
                           ) : (
@@ -1520,13 +1513,14 @@ const MealCalendarPage = () => {
                                   {mealCount === 1 ? 'Item' : 'Items'}
                                 </div>
                               </div>
-                              <button
-                                onClick={() => handleMealDetailClick(date, 'dinner')}
-                                className="w-full px-2 py-1 text-xs text-white bg-purple-500 hover:bg-purple-600 rounded-md font-medium transition-colors"
-                              >
-                                View Details
-                              </button>
-                              <div className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                              <div className="flex items-center justify-between gap-2">
+                                <button
+                                  onClick={() => handleMealDetailClick(date, 'dinner')}
+                                  className="flex-1 px-2 py-1 text-xs text-white bg-purple-500 hover:bg-purple-600 rounded-md font-medium transition-colors whitespace-nowrap"
+                                >
+                                  View Details
+                                </button>
+                                <div className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
                                 ${dinnerMeals.reduce((total, meal) => {
                                   // Debug: Log meal structure to understand what fields are available
                                   console.log('🔍 Dinner meal object:', meal);
@@ -1572,6 +1566,7 @@ const MealCalendarPage = () => {
                                   const quantity = parseInt(meal.quantity) || 1;
                                   return total + (price * quantity);
                                 }, 0).toFixed(2)}
+                                </div>
                               </div>
                             </div>
                           ) : (
@@ -1656,25 +1651,20 @@ const MealCalendarPage = () => {
                           <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-yellow-500 rounded-full flex items-center justify-center">
                             <span className="text-white text-lg">🍽️</span>
                           </div>
-                          <div>
+                          <div className="flex-1">
                             <div className="font-semibold text-gray-800">Lunch</div>
                             {lunchMeals.length > 0 ? (
-                              <div className="space-y-2">
-                                <span className="text-sm text-gray-600">{lunchMeals.length} {lunchMeals.length === 1 ? 'item' : 'items'}</span>
-                                <button
-                                  onClick={() => handleMealDetailClick(date, 'lunch')}
-                                  className="px-3 py-1.5 text-xs text-white bg-blue-500 hover:bg-blue-600 rounded-md font-medium transition-colors"
-                                >
-                                  View Details
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="text-sm text-gray-500">No meals</div>
-                            )}
-                          </div>
-                        </div>
-                        {lunchMeals.length > 0 && (
-                          <div className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                              <div className="flex items-center justify-between gap-2 mt-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm text-gray-600">{lunchMeals.length} {lunchMeals.length === 1 ? 'item' : 'items'}</span>
+                                  <button
+                                    onClick={() => handleMealDetailClick(date, 'lunch')}
+                                    className="px-3 py-1.5 text-xs text-white bg-blue-500 hover:bg-blue-600 rounded-md font-medium transition-colors"
+                                  >
+                                    View Details
+                                  </button>
+                                </div>
+                                <div className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
                             ${lunchMeals.reduce((total, meal) => {
                               let price = 0;
                               if (meal.items && Array.isArray(meal.items) && meal.items.length > 0) {
@@ -1696,8 +1686,13 @@ const MealCalendarPage = () => {
                               const quantity = parseInt(meal.quantity) || 1;
                               return total + (price * quantity);
                             }, 0).toFixed(2)}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-sm text-gray-500">No meals</div>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </div>
 
                       {/* Dinner Section */}
@@ -1706,25 +1701,20 @@ const MealCalendarPage = () => {
                           <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
                             <span className="text-white text-lg">🌙</span>
                           </div>
-                          <div>
+                          <div className="flex-1">
                             <div className="font-semibold text-gray-800">Dinner</div>
                             {dinnerMeals.length > 0 ? (
-                              <div className="space-y-2">
-                                <span className="text-sm text-gray-600">{dinnerMeals.length} {dinnerMeals.length === 1 ? 'item' : 'items'}</span>
-                                <button
-                                  onClick={() => handleMealDetailClick(date, 'dinner')}
-                                  className="px-3 py-1.5 text-xs text-white bg-purple-500 hover:bg-purple-600 rounded-md font-medium transition-colors"
-                                >
-                                  View Details
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="text-sm text-gray-500">No meals</div>
-                            )}
-                          </div>
-                        </div>
-                        {dinnerMeals.length > 0 && (
-                          <div className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                              <div className="flex items-center justify-between gap-2 mt-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm text-gray-600">{dinnerMeals.length} {dinnerMeals.length === 1 ? 'item' : 'items'}</span>
+                                  <button
+                                    onClick={() => handleMealDetailClick(date, 'dinner')}
+                                    className="px-3 py-1.5 text-xs text-white bg-purple-500 hover:bg-purple-600 rounded-md font-medium transition-colors"
+                                  >
+                                    View Details
+                                  </button>
+                                </div>
+                                <div className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
                             ${dinnerMeals.reduce((total, meal) => {
                               let price = 0;
                               if (meal.items && Array.isArray(meal.items) && meal.items.length > 0) {
@@ -1746,8 +1736,13 @@ const MealCalendarPage = () => {
                               const quantity = parseInt(meal.quantity) || 1;
                               return total + (price * quantity);
                             }, 0).toFixed(2)}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-sm text-gray-500">No meals</div>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1875,10 +1870,10 @@ const MealCalendarPage = () => {
 
         {/* Subscribe to Plan Button - Only for unsubscribed users */}
         {!isSubscribed && (
-          <div className="mt-8">
+          <div className="mt-8 px-2 sm:px-0 max-w-4xl mx-auto">
             <button
               onClick={() => navigate('/subscription')}
-              className="group w-full text-left p-6 rounded-2xl bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border-2 border-red-500 relative overflow-hidden touch-manipulation"
+              className="group w-full text-left p-4 sm:p-6 rounded-2xl bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-xl hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 border-2 border-red-500 relative overflow-hidden touch-manipulation"
             >
               {/* Highlight badge */}
               <div className="absolute top-3 right-3 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse">

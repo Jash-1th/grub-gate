@@ -6,6 +6,7 @@ import {
   faCheckCircle, 
   faSpinner, 
   faArrowLeft,
+  faArrowRight,
   faHome
 } from '@fortawesome/free-solid-svg-icons';
 import { Logo } from '@grub-gate/ui';
@@ -80,73 +81,72 @@ const OnboardingLayout = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      {/* Enhanced Header */}
+      <header className="bg-white shadow-md border-b-2 border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-16 sm:h-20">
             {/* Logo */}
             <div className="flex items-center">
-              <Logo className="h-8 w-auto" />
-              <span className="ml-3 text-xl font-semibold text-gray-900">
+              <Logo className="h-8 sm:h-9 w-auto" />
+            </div>
+            
+            {/* Centered Title */}
+            <div className="hidden sm:block absolute left-1/2 transform -translate-x-1/2">
+              <h1 className="text-gray-900 text-base sm:text-xl font-bold tracking-wide">
                 Partner Onboarding
-              </span>
+              </h1>
             </div>
 
             {/* Navigation Actions */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center">
               <button
                 onClick={handleBackToDashboard}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-2 sm:px-4 py-1.5 sm:py-2 border-2 border-gray-300 text-xs sm:text-sm font-semibold rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:border-blue-400 transition-all duration-200 shadow-sm"
               >
-                <FontAwesomeIcon icon={faArrowLeft} className="mr-2 h-4 w-4" />
-                Dashboard
-              </button>
-              
-              <button
-                onClick={handleGoHome}
-                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <FontAwesomeIcon icon={faHome} className="mr-2 h-4 w-4" />
-                Home
+                <span>Dashboard</span>
+                <FontAwesomeIcon icon={faArrowRight} className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Progress Bar */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      {/* Enhanced Progress Stepper */}
+      <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-b-2 border-blue-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <nav aria-label="Progress">
-            <ol className="flex items-center">
+            <ol className="flex items-center justify-between sm:justify-start">
               {steps.map((step, stepIdx) => (
-                <li key={step.name} className={`${stepIdx !== steps.length - 1 ? 'pr-8 sm:pr-20' : ''} relative`}>
-                  <div className="flex items-center">
+                <li key={step.name} className={`${stepIdx !== steps.length - 1 ? 'flex-1 sm:flex-none sm:pr-12 lg:pr-20' : ''} relative flex items-center`}>
+                  <div className="flex flex-col sm:flex-row items-center">
                     <div className="relative flex items-center justify-center">
                       {step.id < currentStep ? (
-                        <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
-                          <FontAwesomeIcon icon={faCheckCircle} className="h-5 w-5 text-white" />
+                        <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg transform transition-transform hover:scale-110">
+                          <FontAwesomeIcon icon={faCheckCircle} className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                         </div>
                       ) : step.id === currentStep ? (
-                        <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
-                          <span className="text-white text-sm font-medium">{step.id}</span>
+                        <div className="relative">
+                          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-lg animate-pulse">
+                            <span className="text-white text-base sm:text-lg font-bold">{step.id}</span>
+                          </div>
+                          {/* Rotating ring */}
+                          <div className="absolute inset-0 rounded-full border-2 border-blue-400 border-t-transparent animate-spin opacity-50"></div>
                         </div>
                       ) : (
-                        <div className="h-8 w-8 rounded-full border-2 border-gray-300 flex items-center justify-center">
-                          <span className="text-gray-500 text-sm font-medium">{step.id}</span>
+                        <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full border-3 border-gray-300 bg-white flex items-center justify-center shadow-sm">
+                          <span className="text-gray-400 text-base sm:text-lg font-semibold">{step.id}</span>
                         </div>
                       )}
                     </div>
-                    <span className={`ml-3 text-sm font-medium ${
-                      step.id <= currentStep ? 'text-gray-900' : 'text-gray-500'
-                    }`}>
-                      {step.name}
-                    </span>
+                    <div className="mt-2 sm:mt-0 sm:ml-3 text-center sm:text-left">
+                      <span className={`block text-xs sm:text-sm font-bold ${
+                        step.id <= currentStep ? 'text-gray-900' : 'text-gray-500'
+                      }`}>
+                        {step.name}
+                      </span>
+                    </div>
                   </div>
                   
-                  {stepIdx !== steps.length - 1 && (
-                    <div className="absolute top-4 left-4 -ml-px mt-0.5 h-full w-0.5 bg-gray-300" aria-hidden="true" />
-                  )}
                 </li>
               ))}
             </ol>
@@ -155,17 +155,22 @@ const OnboardingLayout = () => {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[600px]">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 min-h-[500px] sm:min-h-[600px] overflow-hidden">
           <Outlet context={{ currentStep, user }} />
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="text-center text-sm text-gray-500">
-            <p>Need help? Contact our support team at support@grubgate.com</p>
+      {/* Enhanced Footer */}
+      <footer className="bg-gradient-to-r from-gray-50 to-white border-t-2 border-gray-200 mt-8 sm:mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="text-center">
+            <p className="text-xs sm:text-sm text-gray-600">
+              Need help? Contact our support team at{' '}
+              <a href="mailto:support@grubgate.com" className="text-blue-600 hover:text-blue-700 font-semibold underline">
+                support@grubgate.com
+              </a>
+            </p>
           </div>
         </div>
       </footer>

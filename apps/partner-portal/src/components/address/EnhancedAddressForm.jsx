@@ -216,47 +216,6 @@ const EnhancedAddressForm = ({
 
   return (
     <div className="space-y-4">
-      {/* Country Selection - Always show when enabled */}
-      {showCountrySelection && (
-        <div>
-          <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
-            <FontAwesomeIcon icon={faGlobe} className="mr-2 text-blue-600" />
-            Country *
-            {countryDetection.detected && (
-              <span className="ml-2 text-xs text-green-600 font-medium">
-                ✓ Auto-detected from postal code
-              </span>
-            )}
-          </label>
-          <select
-            id="country"
-            name="country"
-            value={formData.country || ''}
-            onChange={(e) => handleInputChange('country', e.target.value)}
-            onBlur={(e) => onFieldBlur && onFieldBlur('country', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
-              errors.country ? 'border-red-300 bg-red-50' : 'border-gray-300'
-            } ${countryDetection.detected ? 'bg-green-50 border-green-300' : ''}`}
-            disabled={loading}
-          >
-            <option value="">Select Country</option>
-            {countries.map(country => (
-              <option key={country.code} value={country.code}>
-                {country.name}
-              </option>
-            ))}
-          </select>
-          {countryDetection.detected && (
-            <p className="mt-1 text-xs text-green-600">
-              Country auto-detected from postal code. You can change it if needed.
-            </p>
-          )}
-          {errors.country && (
-            <p className="mt-1 text-sm text-red-600">{errors.country}</p>
-          )}
-        </div>
-      )}
-
       {/* Street Address */}
       <div>
         <label htmlFor="street" className="block text-sm font-medium text-gray-700 mb-1">
@@ -280,8 +239,8 @@ const EnhancedAddressForm = ({
         )}
       </div>
 
-      {/* City, Province, Postal Code */}
-      <div className="grid grid-cols-3 gap-4">
+      {/* City, Province */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
             City *
@@ -325,9 +284,43 @@ const EnhancedAddressForm = ({
             <p className="mt-1 text-sm text-red-600">{errors.province}</p>
           )}
         </div>
-        
+      </div>
+
+      {/* Country and Postal Code - Side by side on mobile */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Country Selection */}
+        {showCountrySelection && (
+          <div>
+            <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
+              Country *
+            </label>
+            <select
+              id="country"
+              name="country"
+              value={formData.country || ''}
+              onChange={(e) => handleInputChange('country', e.target.value)}
+              onBlur={(e) => onFieldBlur && onFieldBlur('country', e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+                errors.country ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              }`}
+              disabled={loading}
+            >
+              <option value="">Select Country</option>
+              {countries.map(country => (
+                <option key={country.code} value={country.code}>
+                  {country.name}
+                </option>
+              ))}
+            </select>
+            {errors.country && (
+              <p className="mt-1 text-sm text-red-600">{errors.country}</p>
+            )}
+          </div>
+        )}
+
+        {/* Postal Code */}
         <div>
-          <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 mb-1 whitespace-nowrap">
             {countryDetection.format || 'Postal Code'} *
           </label>
           <div className="relative">
@@ -356,17 +349,6 @@ const EnhancedAddressForm = ({
               disabled={loading}
             />
             
-            {/* Country Detection Indicator */}
-            {countryDetection.detected && (
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                <FontAwesomeIcon 
-                  icon={faCheck} 
-                  className="h-4 w-4 text-green-500" 
-                  title={`${countryDetection.country} format detected`}
-                />
-              </div>
-            )}
-            
             {/* Address Validation Indicator */}
             {validatingAddress && (
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -382,19 +364,11 @@ const EnhancedAddressForm = ({
           {errors.postalCode && (
             <p className="mt-1 text-sm text-red-600">{errors.postalCode}</p>
           )}
-          
-          {/* Country Detection Success Message */}
-          {countryDetection.detected && (
-            <p className="mt-1 text-sm text-green-600 flex items-center">
-              <FontAwesomeIcon icon={faCheck} className="mr-1" />
-              {countryDetection.format} format detected - Country set to {countryDetection.country}
-            </p>
-          )}
         </div>
       </div>
 
       {/* Address Validation Status */}
-      {formData.coordinates && showCoordinateCapture && (
+      {/* {formData.coordinates && showCoordinateCapture && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-3">
           <p className="text-sm text-green-800 flex items-center">
             <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-2" />
@@ -406,7 +380,7 @@ const EnhancedAddressForm = ({
             </p>
           )}
         </div>
-      )}
+      )} */}
 
       {/* Address Validation Error */}
       {errors.address && (
@@ -419,7 +393,7 @@ const EnhancedAddressForm = ({
       )}
 
       {/* Development Info */}
-      {process.env.NODE_ENV === 'development' && formData.coordinates && (
+      {/* {process.env.NODE_ENV === 'development' && formData.coordinates && (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
           <p className="text-xs text-gray-600">
             <strong>Debug Info:</strong><br/>
@@ -427,7 +401,7 @@ const EnhancedAddressForm = ({
             Country: {formData.country || countryDetection.country || 'Not detected'}
           </p>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

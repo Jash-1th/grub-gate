@@ -22,6 +22,7 @@ const StatusUpdateButton = ({ order, onStatusUpdate, isLoading }) => {
   const [showModal, setShowModal] = useState(false);
   const [notes, setNotes] = useState('');
   const [justUpdated, setJustUpdated] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(null);
 
   // Calculate time-based availability
   const timeValidation = useMemo(() => {
@@ -146,7 +147,9 @@ const StatusUpdateButton = ({ order, onStatusUpdate, isLoading }) => {
   }
 
   const handleStatusUpdate = async (newStatus) => {
-    if (isLoading) return;
+    if (isLoading || updatingStatus) return;
+    
+    setUpdatingStatus(newStatus);
     
     try {
       await onStatusUpdate(order._id, newStatus, notes);
@@ -160,6 +163,8 @@ const StatusUpdateButton = ({ order, onStatusUpdate, isLoading }) => {
     } catch (error) {
       console.error('Status update failed:', error);
       // Error handling is done in parent component
+    } finally {
+      setUpdatingStatus(null);
     }
   };
 
@@ -307,63 +312,81 @@ const StatusUpdateButton = ({ order, onStatusUpdate, isLoading }) => {
           <div className="space-y-3">
             <h4 className="text-lg font-medium text-gray-900 mb-4">Choose New Status</h4>
             <div className="grid gap-3">
-              {statusOptions.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => handleStatusUpdate(option.value)}
-                  disabled={!option.available || isLoading}
-                  className={`group relative overflow-hidden rounded-xl border-2 p-4 transition-all duration-200 ${
-                    option.available 
-                      ? 'border-gray-200 hover:border-grub-red hover:shadow-lg bg-white hover:bg-red-50 transform hover:scale-[1.02]' 
-                      : 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-60'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className={`p-3 rounded-full transition-colors ${
-                        option.available 
-                          ? 'bg-gray-100 group-hover:bg-white shadow-sm' 
-                          : 'bg-gray-200'
-                      }`}>
-                        <FontAwesomeIcon 
-                          icon={option.icon} 
-                          className={`h-5 w-5 transition-colors ${
-                            option.available ? option.color : 'text-gray-400'
-                          }`} 
-                        />
-                      </div>
-                      <div className="text-left">
-                        <span className={`text-base font-semibold block ${
-                          option.available ? 'text-gray-900' : 'text-gray-500'
+              {statusOptions.map((option) => {
+                const isUpdating = updatingStatus === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    onClick={() => handleStatusUpdate(option.value)}
+                    disabled={!option.available || isLoading || updatingStatus !== null}
+                    className={`group relative overflow-hidden rounded-xl border-2 p-4 transition-all duration-200 ${
+                      isUpdating
+                        ? 'border-grub-red bg-red-50 shadow-lg'
+                        : option.available 
+                        ? 'border-gray-200 hover:border-grub-red hover:shadow-lg bg-white hover:bg-red-50 transform hover:scale-[1.02]' 
+                        : 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-60'
+                    } ${updatingStatus && !isUpdating ? 'opacity-50' : ''}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className={`p-3 rounded-full transition-colors ${
+                          isUpdating
+                            ? 'bg-white shadow-md'
+                            : option.available 
+                            ? 'bg-gray-100 group-hover:bg-white shadow-sm' 
+                            : 'bg-gray-200'
                         }`}>
-                          {option.label}
-                        </span>
-                        {!option.available ? (
-                          <span className="text-sm text-gray-400 flex items-center gap-1 mt-1">
-                            <FontAwesomeIcon icon={faExclamationTriangle} className="h-3 w-3" />
-                            {option.reason}
+                          {isUpdating ? (
+                            <FontAwesomeIcon 
+                              icon={faSpinner} 
+                              className="h-5 w-5 text-grub-red animate-spin" 
+                            />
+                          ) : (
+                            <FontAwesomeIcon 
+                              icon={option.icon} 
+                              className={`h-5 w-5 transition-colors ${
+                                option.available ? option.color : 'text-gray-400'
+                              }`} 
+                            />
+                          )}
+                        </div>
+                        <div className="text-left">
+                          <span className={`text-base font-semibold block ${
+                            isUpdating ? 'text-grub-red' : option.available ? 'text-gray-900' : 'text-gray-500'
+                          }`}>
+                            {isUpdating ? 'Updating...' : option.label}
                           </span>
-                        ) : (
-                          <span className="text-sm text-gray-600">
-                            Click to update to this status
-                          </span>
-                        )}
+                          {!option.available && !isUpdating ? (
+                            <span className="text-sm text-gray-400 flex items-center gap-1 mt-1">
+                              <FontAwesomeIcon icon={faExclamationTriangle} className="h-3 w-3" />
+                              {option.reason}
+                            </span>
+                          ) : isUpdating ? (
+                            <span className="text-sm text-red-600">
+                              Please wait...
+                            </span>
+                          ) : (
+                            <span className="text-sm text-gray-600">
+                              Click to update to this status
+                            </span>
+                          )}
+                        </div>
                       </div>
+                      
+                      {option.available && !isUpdating && (
+                        <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 transform group-hover:translate-x-1">
+                          <FontAwesomeIcon icon={faChevronRight} className="h-5 w-5 text-grub-red" />
+                        </div>
+                      )}
                     </div>
                     
-                    {option.available && (
-                      <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 transform group-hover:translate-x-1">
-                        <FontAwesomeIcon icon={faChevronRight} className="h-5 w-5 text-grub-red" />
-                      </div>
+                    {/* Hover effect */}
+                    {option.available && !isUpdating && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-grub-red/5 to-red-600/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
                     )}
-                  </div>
-                  
-                  {/* Hover effect */}
-                  {option.available && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-grub-red/5 to-red-600/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
-                  )}
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

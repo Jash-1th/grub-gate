@@ -116,47 +116,63 @@ const BusinessDetailsPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Logo className="h-8 w-auto" />
-              <span className="ml-3 text-xl font-semibold text-gray-900">
-                Partner Registration
-              </span>
-            </div>
-            
-            <div className="text-sm text-gray-500">
-              Step 2 of 2: Business Details
-            </div>
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          {/* Progress Indicator */}
-          <div className="px-8 py-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 bg-green-500 rounded-full">
-                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
+          {/* Enhanced Progress Indicator */}
+          <div className="relative px-4 sm:px-8 py-6 sm:py-8 bg-gradient-to-r from-green-50 via-blue-50 to-indigo-50 border-b-2 border-blue-200 overflow-hidden">
+            {/* Decorative background elements */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-200/20 rounded-full blur-3xl -translate-y-16 translate-x-16"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-green-200/20 rounded-full blur-2xl translate-y-12 -translate-x-12"></div>
+            
+            <div className="relative flex items-center justify-between max-w-2xl mx-auto">
+              {/* Step 1 - Phone Verified */}
+              <div className="flex items-center group">
+                <div className="relative">
+                  <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-full shadow-lg transform transition-transform group-hover:scale-110">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  {/* Pulse ring */}
+                  <div className="absolute inset-0 rounded-full bg-green-400 opacity-0 group-hover:opacity-30 group-hover:animate-ping"></div>
                 </div>
-                <span className="ml-3 text-sm font-medium text-gray-900">Phone Verified</span>
+                <div className="ml-3 hidden sm:block">
+                  <p className="text-xs font-medium text-green-700 uppercase tracking-wide">Step 1</p>
+                  <p className="text-sm font-bold text-gray-900">Phone Verified</p>
+                </div>
+                <span className="ml-2 sm:hidden text-xs font-semibold text-green-700">Step 1</span>
               </div>
               
-              <div className="flex-1 mx-4 h-0.5 bg-blue-600"></div>
-              
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
-                  <span className="text-white text-sm font-medium">2</span>
-                </div>
-                <span className="ml-3 text-sm font-medium text-gray-900">Business Details</span>
+              {/* Animated Connector Line */}
+              <div className="flex-1 mx-3 sm:mx-6 relative h-1 bg-gray-200 rounded-full overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-green-500 via-blue-500 to-blue-600 rounded-full animate-pulse"></div>
+                {/* Moving shimmer effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"></div>
               </div>
+              
+              {/* Step 2 - Business Details (Active) */}
+              <div className="flex items-center group">
+                <div className="relative">
+                  <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full shadow-lg animate-pulse">
+                    <span className="text-white text-base sm:text-lg font-bold">2</span>
+                  </div>
+                  {/* Rotating ring */}
+                  <div className="absolute inset-0 rounded-full border-2 border-blue-400 border-t-transparent animate-spin opacity-50"></div>
+                </div>
+                <div className="ml-3 hidden sm:block">
+                  <p className="text-xs font-medium text-blue-700 uppercase tracking-wide">Step 2</p>
+                  <p className="text-sm font-bold text-gray-900">Business Details</p>
+                </div>
+                <span className="ml-2 sm:hidden text-xs font-semibold text-blue-700">Step 2</span>
+              </div>
+            </div>
+            
+            {/* Progress percentage */}
+            <div className="mt-4 text-center">
+              <p className="text-xs sm:text-sm text-gray-600 font-medium">
+                <span className="text-blue-600 font-bold">50%</span> Complete - Almost there! 🎉
+              </p>
             </div>
           </div>
 

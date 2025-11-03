@@ -342,39 +342,43 @@ const DashboardHome = () => {
           const isPositive = stat.change > 0;
           const animationDelay = `animate-delay-${(index + 1) * 100}`;
           return (
-            <Card key={index} className={`hover:shadow-lg transition-all duration-300 hover:scale-105 animate-scaleIn ${animationDelay} shadow-sm border-0 bg-white`}>
-              <CardContent className="p-4 lg:p-6">
-                <div className="flex flex-col space-y-3">
-                  {/* Header Row */}
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-gray-600">
+            <div key={index} className={`bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-scaleIn ${animationDelay} border-2 border-gray-100 overflow-hidden group`}>
+              <div className="p-5 lg:p-6">
+                {/* Header with Title and Change */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-600 mb-1">
                       {stat.title}
                     </p>
-                    <div className="flex items-center space-x-2 flex-shrink-0">
-                      <span className={`inline-flex items-center text-xs font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`inline-flex items-center text-xs font-bold px-2 py-0.5 rounded-full ${
+                        isPositive 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-red-100 text-red-700'
+                      }`}>
                         {isPositive ? (
-                          <FontAwesomeIcon icon={faArrowUp} className="h-4 w-4 mr-0.5" />
+                          <FontAwesomeIcon icon={faArrowUp} className="h-3 w-3 mr-1" />
                         ) : (
-                          <FontAwesomeIcon icon={faArrowDown} className="h-4 w-4 mr-0.5" />
+                          <FontAwesomeIcon icon={faArrowDown} className="h-3 w-3 mr-1" />
                         )}
                         {Math.abs(stat.change)}%
                       </span>
-                      <span className="text-xs text-gray-500">vs last month</span>
-                    </div>
-                  </div>
-                  
-                  {/* Value and Icon Row */}
-                  <div className="flex items-center justify-between">
-                    <p className="text-2xl lg:text-3xl font-extrabold text-gray-900">
-                      {stat.value}
-                    </p>
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${stat.bgColor}`}>
-                      <FontAwesomeIcon icon={Icon} className={`h-5 w-5 ${stat.color}`} />
+                      <span className="text-xs text-gray-500 font-medium">vs last month</span>
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+                
+                {/* Value and Icon Row */}
+                <div className="flex items-center justify-between">
+                  <p className="text-3xl lg:text-4xl font-bold text-gray-900">
+                    {stat.value}
+                  </p>
+                  <div className={`h-12 w-12 lg:h-14 lg:w-14 rounded-2xl flex items-center justify-center ${stat.bgColor} group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+                    <FontAwesomeIcon icon={Icon} className={`h-6 w-6 lg:h-7 lg:w-7 ${stat.color}`} />
+                  </div>
+                </div>
+              </div>
+            </div>
           );
         })}
       </div>

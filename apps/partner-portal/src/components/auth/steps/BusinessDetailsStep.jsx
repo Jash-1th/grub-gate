@@ -506,12 +506,12 @@ const BusinessDetailsStep = ({
         </div>
 
         {/* Personal Contact Information */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               Personal Email *
               {data.channel === 'email' && (
-                <span className="ml-2 text-xs text-green-600 font-medium">✓ Verified</span>
+                <span className="ml-2 text-xs text-green-600 font-medium hidden sm:inline">✓ Verified</span>
               )}
             </label>
             <input
@@ -528,7 +528,7 @@ const BusinessDetailsStep = ({
               placeholder="john@example.com"
             />
             {data.channel === 'email' && (
-              <p className="mt-1 text-xs text-gray-500">This email was verified during registration</p>
+              <p className="mt-1 text-xs text-gray-500 hidden sm:block">This email was verified during registration</p>
             )}
             {errors.email && (
               <p className="mt-1 text-sm text-red-600">{errors.email}</p>
@@ -539,7 +539,7 @@ const BusinessDetailsStep = ({
             <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
               Personal Phone *
               {data.channel === 'sms' && (
-                <span className="ml-2 text-xs text-green-600 font-medium">✓ Verified</span>
+                <span className="ml-2 text-xs text-green-600 font-medium hidden sm:inline">✓ Verified</span>
               )}
             </label>
             <input
@@ -556,7 +556,7 @@ const BusinessDetailsStep = ({
               placeholder="+1-234-567-8900"
             />
             {data.channel === 'sms' && (
-              <p className="mt-1 text-xs text-gray-500">This phone was verified during registration</p>
+              <p className="mt-1 text-xs text-gray-500 hidden sm:block">This phone was verified during registration</p>
             )}
             {errors.phoneNumber && (
               <p className="mt-1 text-sm text-red-600">{errors.phoneNumber}</p>
@@ -691,7 +691,8 @@ const BusinessDetailsStep = ({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label htmlFor="deliveryRadius" className="block text-sm font-medium text-gray-700 mb-1">
-              Delivery Radius (km) *
+              <span className="inline sm:hidden">Delivery Radius *</span>
+              <span className="hidden sm:inline">Delivery Radius (km) *</span>
             </label>
             <input
               type="number"
@@ -755,7 +756,8 @@ const BusinessDetailsStep = ({
           
           <div>
             <label htmlFor="avgDeliveryTime" className="block text-sm font-medium text-gray-700 mb-1">
-              Delivery Time (minutes)
+              <span className="inline sm:hidden">Delivery Time (min)</span>
+              <span className="hidden sm:inline">Delivery Time (minutes)</span>
             </label>
             <input
               type="number"
@@ -778,12 +780,12 @@ const BusinessDetailsStep = ({
       <div className="space-y-4">
         <h3 className="text-lg font-medium text-gray-900">Contact Information</h3>
         
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="businessPhone" className="block text-sm font-medium text-gray-700 mb-1">
               Business Phone *
               {data.channel === 'sms' && (
-                <span className="ml-2 text-xs text-green-600 font-medium">✓ Auto-filled from verified phone</span>
+                <span className="ml-2 text-xs text-green-600 font-medium hidden sm:inline">✓ Auto-filled from verified phone</span>
               )}
             </label>
             <input
@@ -800,7 +802,7 @@ const BusinessDetailsStep = ({
               placeholder="+1-234-567-8900"
             />
             {data.channel === 'sms' && (
-              <p className="mt-1 text-xs text-gray-500">Auto-filled from your verified phone number</p>
+              <p className="mt-1 text-xs text-gray-500 hidden sm:block">Auto-filled from your verified phone number</p>
             )}
             {errors.businessPhone && (
               <p className="mt-1 text-sm text-red-600">{errors.businessPhone}</p>
@@ -811,7 +813,7 @@ const BusinessDetailsStep = ({
             <label htmlFor="businessEmail" className="block text-sm font-medium text-gray-700 mb-1">
               Business Email
               {data.channel === 'email' && (
-                <span className="ml-2 text-xs text-green-600 font-medium">✓ Auto-filled from verified email</span>
+                <span className="ml-2 text-xs text-green-600 font-medium hidden sm:inline">✓ Auto-filled from verified email</span>
               )}
             </label>
             <input
@@ -827,7 +829,7 @@ const BusinessDetailsStep = ({
               placeholder="restaurant@example.com"
             />
             {data.channel === 'email' && (
-              <p className="mt-1 text-xs text-gray-500">Auto-filled from your verified email address</p>
+              <p className="mt-1 text-xs text-gray-500 hidden sm:block">Auto-filled from your verified email address</p>
             )}
           </div>
         </div>
@@ -972,8 +974,8 @@ const BusinessDetailsStep = ({
         </div>
       </div>
 
-      {/* Test Validation Button (Development Only) */}
-      {process.env.NODE_ENV === 'development' && (
+      {/* Test Validation Button (Development Only) - Commented out until testValidation function is implemented */}
+      {/* {process.env.NODE_ENV === 'development' && (
         <div className="pt-4">
           <button
             type="button"
@@ -983,7 +985,7 @@ const BusinessDetailsStep = ({
             🧪 Test Validation Errors
           </button>
         </div>
-      )}
+      )} */}
       
       {/* Action Buttons */}
       <div className="flex space-x-3 pt-4">

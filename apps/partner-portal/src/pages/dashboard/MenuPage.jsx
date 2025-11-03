@@ -566,7 +566,7 @@ const MenuPage = () => {
       </Card>
 
       {/* Menu Items Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4">
         {menuItems.length === 0 ? (
           <div className="col-span-full text-center py-8 sm:py-12">
             <div className="text-gray-400 mb-4">
@@ -583,7 +583,7 @@ const MenuPage = () => {
           menuItems.map((item) => (
           <Card key={item._id || item.id} className="overflow-hidden hover:shadow-lg transition-shadow">
             {/* Image area */}
-            <div className="h-32 sm:h-36 lg:h-44 bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+            <div className="h-32 sm:h-36 lg:h-40 bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
               {item.image ? (
                 <img 
                   src={item.image} 
@@ -598,52 +598,52 @@ const MenuPage = () => {
               {/* Fallback placeholder when no image or image fails to load */}
               <div className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 ${item.image ? 'hidden' : 'flex'}`}>
                 <div className="text-center text-gray-400">
-                  <FontAwesomeIcon icon={faUpload} className="h-6 w-6 sm:h-8 sm:w-8 mb-2" />
+                  <FontAwesomeIcon icon={faUpload} className="h-6 w-6 sm:h-7 sm:w-7 mb-2" />
                   <p className="text-xs">No Image</p>
                 </div>
               </div>
-              <div className="absolute top-2 sm:top-3 right-2 sm:right-3">
-                <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium ${item.status === 'available' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+              <div className="absolute top-2 right-2">
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${item.status === 'available' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                   {item.status === 'available' ? 'Visible' : 'Hidden'}
                 </span>
               </div>
             </div>
             
-            <CardContent className="p-3 sm:p-4 lg:p-6">
-              <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2">
-                <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 line-clamp-1 min-w-0">{item.name}</h3>
-                <span className="text-sm sm:text-base lg:text-lg font-extrabold text-grub-red flex-shrink-0">${item.price}</span>
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <h3 className="text-sm sm:text-base font-semibold text-gray-900 line-clamp-1 min-w-0">{item.name}</h3>
+                <span className="text-base sm:text-lg font-extrabold text-grub-red flex-shrink-0">${item.price}</span>
               </div>
 
-              <p className="text-gray-600 text-xs sm:text-sm mb-3 line-clamp-2">{item.description}</p>
+              <p className="text-gray-600 text-xs sm:text-sm mb-2 line-clamp-2">{item.description}</p>
 
-              <div className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1 sm:gap-y-2 text-xs text-gray-500 mb-3">
-                <span className="inline-flex items-center"><FontAwesomeIcon icon={faClock} className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />{item.prepTime}min</span>
-                <span className="inline-flex items-center"><FontAwesomeIcon icon={faUsers} className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />{item.servings}</span>
-                <span className="inline-flex items-center"><FontAwesomeIcon icon={faStar} className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-yellow-400" />{item.rating}</span>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 mb-2">
+                <span className="inline-flex items-center"><FontAwesomeIcon icon={faClock} className="h-3 w-3 mr-1" />{item.prepTime}min</span>
+                <span className="inline-flex items-center"><FontAwesomeIcon icon={faUsers} className="h-3 w-3 mr-1" />{item.servings}</span>
+                <span className="inline-flex items-center"><FontAwesomeIcon icon={faStar} className="h-3 w-3 mr-1 text-yellow-400" />{item.rating}</span>
               </div>
 
-              <div className="flex flex-wrap gap-1 sm:gap-1.5 mb-3 sm:mb-4">
-                {(item.dietaryPreferences || item.dietary || []).slice(0, 3).map((diet) => (
-                  <span key={diet} className="px-1.5 sm:px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full capitalize">
+              <div className="flex flex-wrap gap-1 mb-3">
+                {(item.dietaryPreferences || item.dietary || []).slice(0, 2).map((diet) => (
+                  <span key={diet} className="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full capitalize">
                     {t(`menu.dietary.${diet}`, diet.replace('-', ' '))}
                   </span>
                 ))}
-                {(item.dietaryPreferences || item.dietary || []).length > 3 && (
-                  <span className="px-1.5 sm:px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
-                    +{(item.dietaryPreferences || item.dietary || []).length - 3}
+                {(item.dietaryPreferences || item.dietary || []).length > 2 && (
+                  <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
+                    +{(item.dietaryPreferences || item.dietary || []).length - 2}
                   </span>
                 )}
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-xs sm:text-sm text-gray-500">{item.totalOrders} orders</span>
+                <span className="text-xs text-gray-500">{item.totalOrders} orders</span>
                 <div className="flex space-x-1">
-                  <button onClick={() => handleEditItem(item)} className="p-1.5 sm:p-2 rounded-md border text-gray-600 hover:text-blue-600 hover:border-blue-200 transition-colors">
-                    <FontAwesomeIcon icon={faEdit} className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <button onClick={() => handleEditItem(item)} className="p-1.5 rounded-md border text-gray-600 hover:text-blue-600 hover:border-blue-200 transition-colors">
+                    <FontAwesomeIcon icon={faEdit} className="h-3.5 w-3.5" />
                   </button>
-                  <button onClick={() => handleDeleteItem(item._id || item.id)} className="p-1.5 sm:p-2 rounded-md border text-gray-600 hover:text-red-600 hover:border-red-200 transition-colors">
-                    <FontAwesomeIcon icon={faTrash} className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <button onClick={() => handleDeleteItem(item._id || item.id)} className="p-1.5 rounded-md border text-gray-600 hover:text-red-600 hover:border-red-200 transition-colors">
+                    <FontAwesomeIcon icon={faTrash} className="h-3.5 w-3.5" />
                   </button>
                 </div>
               </div>
@@ -1440,7 +1440,7 @@ const MenuPage = () => {
                 )}
                 
                 {/* Test Validation Button (Development Only) */}
-                {process.env.NODE_ENV === 'development' && (
+                {/* {process.env.NODE_ENV === 'development' && (
                   <Button
                     variant="secondary"
                     className="w-full bg-yellow-500 hover:bg-yellow-600 text-white text-sm py-2.5 mt-2"
@@ -1448,7 +1448,7 @@ const MenuPage = () => {
                   >
                     🧪 Test Validation Errors
                   </Button>
-                )}
+                )} */}
               </div>
             </div>
 

@@ -155,7 +155,7 @@ const LoginPage = () => {
   ];
 
   return (
-    <div className="min-h-screen auth-gradient flex relative overflow-hidden">
+    <div className="min-h-screen auth-gradient flex flex-col relative overflow-x-hidden overflow-y-auto">
       {/* Floating Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="floating-element absolute top-20 left-10 w-32 h-32 bg-gradient-to-br from-grub-red/10 to-orange-200/10 rounded-full blur-xl"></div>
@@ -163,32 +163,31 @@ const LoginPage = () => {
         <div className="floating-element absolute bottom-20 left-1/4 w-40 h-40 bg-gradient-to-br from-purple-200/10 to-pink-200/10 rounded-full blur-xl"></div>
       </div>
 
-      {/* Left Side - Features (Hidden on Mobile) */}
-      <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:pl-16 xl:pl-20 lg:pr-8 xl:pr-12 relative z-10">
-        <div className="max-w-lg">
-          <div className="mb-16">
-            <Logo size="xl" className="mb-12" />
-            <h1 className="text-4xl xl:text-5xl font-bold text-gray-900 mb-8 leading-tight drop-shadow-sm">
+      {/* Top Section - Features */}
+      <div className="px-4 sm:px-6 lg:px-8 xl:px-16 pt-4 sm:pt-6 lg:pt-6 xl:pt-8 pb-3 sm:pb-4 relative z-10">
+        <div className="w-full">
+          <div className="mb-4 sm:mb-6 lg:mb-8 text-center">
+            <h1 className="text-2xl sm:text-3xl xl:text-4xl font-bold text-gray-900 mb-2 sm:mb-3 lg:mb-4 leading-tight drop-shadow-sm">
               Welcome to GrubGate Partner Portal
             </h1>
-            <p className="text-xl xl:text-2xl text-gray-700 leading-relaxed mb-12 drop-shadow-sm">
+            <p className="text-sm sm:text-base xl:text-lg text-gray-700 leading-relaxed mb-3 sm:mb-4 lg:mb-6 drop-shadow-sm">
               Join Montreal's leading restaurant network and grow your business with predictable revenue.
             </p>
-            <div className="flex items-center space-x-3 text-grub-red">
-              <div className="w-16 h-0.5 bg-grub-red"></div>
-              <span className="text-sm font-medium uppercase tracking-wider">Trusted by 500+ Restaurants</span>
+            <div className="flex items-center justify-center space-x-3 text-grub-red">
+              <div className="w-12 h-0.5 bg-grub-red"></div>
+              <span className="text-xs font-medium uppercase tracking-wider">Trusted by 500+ Restaurants</span>
             </div>
           </div>
           
-          <div className="space-y-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-3xl mx-auto">
             {features.map((feature, index) => (
-              <div key={index} className={`feature-card flex items-start space-x-5 group p-4 rounded-2xl hover:bg-white/50 stagger-animation`}>
-                <div className="feature-icon flex-shrink-0 w-14 h-14 bg-gradient-to-br from-grub-red/10 to-grub-red/20 rounded-xl flex items-center justify-center group-hover:from-grub-red/20 group-hover:to-grub-red/30 transition-all duration-300 shadow-lg">
-                  <FontAwesomeIcon icon={feature.icon} className="w-7 h-7 text-grub-red" />
+              <div key={index} className={`feature-card flex items-start space-x-2 sm:space-x-3 group p-3 sm:p-4 rounded-xl bg-white border-2 border-gray-300 hover:border-grub-red shadow-md hover:shadow-lg transition-all duration-300`}>
+                <div className="feature-icon flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-grub-red/10 to-grub-red/20 rounded-lg flex items-center justify-center group-hover:from-grub-red/20 group-hover:to-grub-red/30 transition-all duration-300 shadow-lg">
+                  <FontAwesomeIcon icon={feature.icon} className="w-4 h-4 sm:w-5 sm:h-5 text-grub-red" />
                 </div>
-                <div className="pt-1">
-                  <h3 className="font-semibold text-gray-900 mb-2 text-lg group-hover:text-grub-red transition-colors duration-300 drop-shadow-sm">{feature.title}</h3>
-                  <p className="text-gray-700 text-base leading-relaxed drop-shadow-sm">{feature.description}</p>
+                <div className="pt-0.5">
+                  <h3 className="font-semibold text-gray-900 mb-0.5 sm:mb-1 text-xs sm:text-sm group-hover:text-grub-red transition-colors duration-300 drop-shadow-sm">{feature.title}</h3>
+                  <p className="text-gray-700 text-[10px] sm:text-xs leading-relaxed drop-shadow-sm">{feature.description}</p>
                 </div>
               </div>
             ))}
@@ -196,52 +195,33 @@ const LoginPage = () => {
         </div>
       </div>
 
-      {/* Right Side - Login Form */}
-      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-12 xl:px-16 lg:max-w-xl xl:max-w-2xl relative z-10">
-        <div className="w-full max-w-md mx-auto lg:max-w-none">
-          {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-6 px-4">
-            <Logo size="lg" className="mx-auto mb-4" />
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 drop-shadow-sm">
-              Partner Portal
-            </h1>
-            <p className="text-gray-700 text-sm sm:text-base drop-shadow-sm">
-              Sign in to manage your restaurant
-            </p>
-          </div>
-
-          {/* Desktop Header */}
-          <div className="hidden lg:block mb-12">
-            <div className="relative">
-              <div className="absolute -top-6 -left-6 w-24 h-24 bg-grub-red/5 rounded-full blur-xl"></div>
-              <div className="relative">
-                <h2 className="text-4xl xl:text-5xl font-bold text-gray-900 mb-6 leading-tight drop-shadow-sm">
-                  Sign in to your account
-                </h2>
-                <p className="text-lg xl:text-xl text-gray-700 mb-8 leading-relaxed drop-shadow-sm">
-                  Welcome back! Ready to manage your restaurant?
-                </p>
-                <div className="flex items-center space-x-4 text-sm text-gray-500">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span>Secure Login</span>
-                  </div>
-                  <div className="w-1.5 h-1.5 bg-gray-300 rounded-full"></div>
-                  <span>24/7 Support Available</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
+      {/* Bottom Section - Login Form */}
+      <div className="flex flex-col justify-center px-4 sm:px-6 lg:px-8 xl:px-16 py-3 sm:py-4 lg:py-6 pb-8 sm:pb-6 relative z-10">
+        <div className="w-full max-w-md mx-auto lg:max-w-lg xl:max-w-xl">
           {/* Login Form */}
-          <div className="glass-card rounded-3xl p-10 lg:p-12 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-grub-red/10 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-500/5 to-transparent rounded-full translate-y-12 -translate-x-12"></div>
+          <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 relative overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border-2 border-white/50 bg-white/95 backdrop-blur-xl hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.35)] transition-all duration-500">
+            {/* Enhanced decorative elements */}
+            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-grub-red/20 via-orange-300/10 to-transparent rounded-full -translate-y-20 translate-x-20 blur-2xl"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-blue-500/10 via-purple-300/10 to-transparent rounded-full translate-y-16 -translate-x-16 blur-2xl"></div>
+            <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-gradient-to-br from-grub-red/5 to-transparent rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
+            
+            {/* Card header with gradient accent */}
+            <div className="relative mb-4 sm:mb-5">
+              <div className="text-center mb-3">
+                <div className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-grub-red to-red-600 rounded-xl shadow-lg mb-2">
+                  <FontAwesomeIcon icon={faLock} className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1">Sign In</h3>
+                <p className="text-xs sm:text-sm text-gray-600">Enter your credentials to access your account</p>
+              </div>
+              <div className="h-0.5 w-12 sm:w-16 bg-gradient-to-r from-grub-red to-orange-500 rounded-full mx-auto"></div>
+            </div>
+            
             <div className="relative">
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               {/* Email Field */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-3 drop-shadow-sm">
+                <label htmlFor="email" className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-2 drop-shadow-sm">
                   Email address
                 </label>
                 <div className="relative">
@@ -255,7 +235,7 @@ const LoginPage = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="Enter your email"
-                    className={`auth-input block w-full pl-10 pr-3 py-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-0 text-base ${
+                    className={`auth-input block w-full pl-10 pr-3 py-3 sm:py-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-0 text-sm sm:text-base ${
                       errors.email 
                         ? 'error border-red-300 focus:border-red-500 focus:ring-red-500' 
                         : formData.email && !errors.email
@@ -271,7 +251,7 @@ const LoginPage = () => {
 
               {/* Password Field */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-3 drop-shadow-sm">
+                <label htmlFor="password" className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-2 drop-shadow-sm">
                   Password
                 </label>
                 <div className="relative">
@@ -285,7 +265,7 @@ const LoginPage = () => {
                     value={formData.password}
                     onChange={handleInputChange}
                     placeholder="Enter your password"
-                    className={`auth-input block w-full pl-10 pr-12 py-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-0 text-base ${
+                    className={`auth-input block w-full pl-10 pr-12 py-3 sm:py-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-0 text-sm sm:text-base ${
                       errors.password 
                         ? 'error border-red-300 focus:border-red-500 focus:ring-red-500' 
                         : formData.password && !errors.password
@@ -311,7 +291,7 @@ const LoginPage = () => {
               </div>
 
               {/* Remember Me & Forgot Password */}
-              <div className="flex items-center justify-between pt-2">
+              <div className="flex items-center justify-between pt-1">
                 <div className="flex items-center">
                   <input
                     id="rememberMe"
@@ -335,11 +315,11 @@ const LoginPage = () => {
               </div>
 
               {/* Submit Button */}
-              <div className="pt-4">
+              <div className="pt-2 sm:pt-3">
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="auth-button w-full py-4 px-6 bg-gradient-to-r from-grub-red to-red-600 text-white text-base font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
+                  className="auth-button w-full py-3 sm:py-4 px-6 bg-gradient-to-r from-grub-red to-red-600 text-white text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
                 >
                   {isLoading ? (
                     <div className="flex items-center justify-center">
@@ -367,7 +347,7 @@ const LoginPage = () => {
               </div>
 
               {/* Sign Up Link */}
-              <div className="text-center pt-6 border-t border-gray-100">
+              <div className="text-center pt-3 sm:pt-4 border-t border-gray-100">
                 <span className="text-sm text-gray-700 dark:text-gray-300 drop-shadow-sm">
                   Don't have an account?{' '}
                   <Link
@@ -382,23 +362,6 @@ const LoginPage = () => {
             </div>
           </div>
 
-          {/* Mobile Features */}
-          <div className="lg:hidden mt-8 px-4">
-            <div className="text-center text-sm text-gray-600 mb-4 font-medium">
-              Why choose GrubGate?
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {features.slice(0, 4).map((feature, index) => (
-                <div key={index} className="feature-card text-center p-4 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
-                  <div className="feature-icon w-10 h-10 bg-gradient-to-br from-grub-red/10 to-grub-red/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <FontAwesomeIcon icon={feature.icon} className="w-5 h-5 text-grub-red" />
-                  </div>
-                  <h4 className="font-semibold text-gray-900 text-sm mb-2 drop-shadow-sm">{feature.title}</h4>
-                  <p className="text-xs text-gray-700 leading-relaxed drop-shadow-sm">{feature.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </div>

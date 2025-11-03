@@ -3,7 +3,8 @@ import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Logo, Button } from '@grub-gate/ui';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faGlobe, faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { faGlobe, faChevronDown, faEnvelope, faPhone, faMapMarkerAlt } from '@fortawesome/free-solid-svg-icons';
+import { faFacebook, faTwitter, faInstagram, faLinkedin, faYoutube } from '@fortawesome/free-brands-svg-icons';
 import PublicMobileBottomNav from './PublicMobileBottomNav';
 
 const PublicLayout = ({ onLanguageChange }) => {
@@ -164,78 +165,185 @@ const PublicLayout = ({ onLanguageChange }) => {
       </main>
 
       {/* Footer */}
-      <footer className="w-full bg-gradient-to-r from-grub-red to-red-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            {/* Company Info */}
-            <div className="col-span-1 md:col-span-2">
-              <NavLink to="/" aria-label="Go to landing page" className="inline-flex mb-4">
-                <Logo size="lg" />
-              </NavLink>
-              <p className="text-gray-300 mb-4 max-w-md">
-                {t('footer.description')}
-              </p>
-              <p className="text-gray-400 text-sm">
-                {t('footer.builtWithLove')}
-              </p>
-            </div>
+      <footer className="w-full bg-grub-red text-white mb-20 lg:mb-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16">
+          {/* Company Info */}
+          <div className="mb-8">
+            <NavLink to="/" aria-label="Go to landing page" className="inline-flex mb-4">
+              <Logo size="lg" />
+            </NavLink>
+            <p className="text-white/80 mb-4 text-sm md:text-base leading-relaxed">
+              {t('footer.description', 'Join Montreal\'s leading restaurant network and grow your business with predictable revenue.')}
+            </p>
+          </div>
 
+          {/* Quick Links, Contact, and Follow Us in Same Row */}
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 md:gap-12 mb-8">
             {/* Quick Links */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">
-                {t('footer.quickLinksTitle')}
+              <h3 className="text-base md:text-lg font-bold mb-3 sm:mb-4">
+                {t('footer.quickLinksTitle', 'Quick Links')}
               </h3>
-              <ul className="space-y-2">
+              <ul className="space-y-2 sm:space-y-3">
                 <li>
                   <button 
                     onClick={(e) => handleNavigation({ type: 'scroll', href: '#benefits' }, e)}
-                    className="text-gray-300 hover:text-white transition-colors text-left"
+                    className="text-white/80 hover:text-white transition-colors text-left text-sm md:text-base hover:translate-x-1 transform transition-transform duration-200 inline-block"
                   >
-                    {t('landingPage.benefits.title')}
+                    {t('landingPage.benefits.title', 'Benefits')}
                   </button>
                 </li>
                 <li>
                   <button 
                     onClick={(e) => handleNavigation({ type: 'scroll', href: '#how-it-works' }, e)}
-                    className="text-gray-300 hover:text-white transition-colors text-left"
+                    className="text-white/80 hover:text-white transition-colors text-left text-sm md:text-base hover:translate-x-1 transform transition-transform duration-200 inline-block"
                   >
-                    {t('landingPage.howItWorks.title')}
+                    {t('landingPage.howItWorks.title', 'How It Works')}
                   </button>
                 </li>
                 <li>
                   <button 
-onClick={(e) => handleNavigation({ type: 'scroll', href: '#what-our-partners-say' }, e)}
-                    className="text-gray-300 hover:text-white transition-colors text-left"
+                    onClick={(e) => handleNavigation({ type: 'scroll', href: '#what-our-partners-say' }, e)}
+                    className="text-white/80 hover:text-white transition-colors text-left text-sm md:text-base hover:translate-x-1 transform transition-transform duration-200 inline-block"
                   >
                     {t('navigation.partnerReviews', 'Partner Reviews')}
                   </button>
                 </li>
+                <li>
+                  <NavLink 
+                    to="/faqs"
+                    className="text-white/80 hover:text-white transition-colors text-sm md:text-base hover:translate-x-1 transform transition-transform duration-200 inline-block"
+                  >
+                    {t('navigation.faqs', 'FAQs')}
+                  </NavLink>
+                </li>
               </ul>
             </div>
 
-            {/* Contact */}
+            {/* Contact Info */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">
-                {t('footer.followUsTitle')}
+              <h3 className="text-base md:text-lg font-bold mb-3 sm:mb-4">
+                {t('footer.contactTitle', 'Contact Us')}
               </h3>
-              <div className="flex space-x-4">
-                <a href="#" className="text-gray-300 hover:text-white transition-colors">
-                  Facebook
-                </a>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors">
-                  Twitter
-                </a>
-                <a href="#" className="text-gray-300 hover:text-white transition-colors">
-                  Instagram
-                </a>
+              <ul className="space-y-2 sm:space-y-3">
+                <li className="flex items-start gap-2 sm:gap-3">
+                  <FontAwesomeIcon icon={faEnvelope} className="h-4 w-4 md:h-5 md:w-5 text-white/80 mt-0.5 flex-shrink-0" />
+                  <a href="mailto:partners@grubgate.com" className="text-white/80 hover:text-white transition-colors text-xs sm:text-sm md:text-base break-all">
+                    partners@grubgate.com
+                  </a>
+                </li>
+                <li className="flex items-start gap-2 sm:gap-3">
+                  <FontAwesomeIcon icon={faPhone} className="h-4 w-4 md:h-5 md:w-5 text-white/80 mt-0.5 flex-shrink-0" />
+                  <a href="tel:+15141234567" className="text-white/80 hover:text-white transition-colors text-xs sm:text-sm md:text-base">
+                    +1 (514) 123-4567
+                  </a>
+                </li>
+                <li className="flex items-start gap-2 sm:gap-3">
+                  <FontAwesomeIcon icon={faMapMarkerAlt} className="h-4 w-4 md:h-5 md:w-5 text-white/80 mt-0.5 flex-shrink-0" />
+                  <span className="text-white/80 text-xs sm:text-sm md:text-base">
+                    Montreal, QC
+                  </span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Social Media */}
+            <div>
+              <h3 className="text-base md:text-lg font-bold mb-3 sm:mb-4">
+                {t('footer.followUsTitle', 'Follow Us')}
+              </h3>
+              <div className="flex flex-wrap lg:flex-col gap-3">
+                {/* Mobile: All in one row, Laptop: 3+2 layout */}
+                <div className="flex gap-3 lg:w-full">
+                  <a 
+                    href="https://facebook.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white hover:text-grub-red rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+                    aria-label="Facebook"
+                  >
+                    <FontAwesomeIcon icon={faFacebook} className="h-5 w-5 md:h-6 md:w-6" />
+                  </a>
+                  <a 
+                    href="https://twitter.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white hover:text-grub-red rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+                    aria-label="Twitter"
+                  >
+                    <FontAwesomeIcon icon={faTwitter} className="h-5 w-5 md:h-6 md:w-6" />
+                  </a>
+                  <a 
+                    href="https://instagram.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white hover:text-grub-red rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+                    aria-label="Instagram"
+                  >
+                    <FontAwesomeIcon icon={faInstagram} className="h-5 w-5 md:h-6 md:w-6" />
+                  </a>
+                  <a 
+                    href="https://linkedin.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white hover:text-grub-red rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 lg:hidden"
+                    aria-label="LinkedIn"
+                  >
+                    <FontAwesomeIcon icon={faLinkedin} className="h-5 w-5 md:h-6 md:w-6" />
+                  </a>
+                  <a 
+                    href="https://youtube.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white hover:text-grub-red rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 lg:hidden"
+                    aria-label="YouTube"
+                  >
+                    <FontAwesomeIcon icon={faYoutube} className="h-5 w-5 md:h-6 md:w-6" />
+                  </a>
+                </div>
+                {/* Second row - Only visible on laptop */}
+                <div className="hidden lg:flex gap-3">
+                  <a 
+                    href="https://linkedin.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white hover:text-grub-red rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+                    aria-label="LinkedIn"
+                  >
+                    <FontAwesomeIcon icon={faLinkedin} className="h-5 w-5 md:h-6 md:w-6" />
+                  </a>
+                  <a 
+                    href="https://youtube.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white hover:text-grub-red rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+                    aria-label="YouTube"
+                  >
+                    <FontAwesomeIcon icon={faYoutube} className="h-5 w-5 md:h-6 md:w-6" />
+                  </a>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center">
-            <p className="text-gray-400 text-sm">
-              {t('footer.copyright', { year: new Date().getFullYear(), company: 'GrubGate' })}
-            </p>
+          {/* Bottom Bar */}
+          <div className="border-t border-white/20 mt-6 sm:mt-8 md:mt-12 pt-4 sm:pt-6 md:pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <p className="text-white/70 text-xs md:text-sm text-center md:text-left">
+                {t('footer.copyright', { year: new Date().getFullYear(), company: 'GrubGate' }, `© ${new Date().getFullYear()} GrubGate. All rights reserved.`)}
+              </p>
+              <div className="flex flex-wrap justify-center gap-4 md:gap-6 text-xs md:text-sm">
+                <a href="#" className="text-white/70 hover:text-white transition-colors">
+                  Privacy Policy
+                </a>
+                <a href="#" className="text-white/70 hover:text-white transition-colors">
+                  Terms of Service
+                </a>
+                <a href="#" className="text-white/70 hover:text-white transition-colors">
+                  Cookie Policy
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </footer>

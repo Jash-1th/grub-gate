@@ -58,25 +58,25 @@ const GetStartedCTA = () => {
   };
 
   return (
-    <section className="py-16 px-4 bg-gray-50">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-8 md:p-12 text-center">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+    <section className="py-8 xs:py-10 sm:py-12 md:py-16 lg:py-20 px-3 xs:px-4 sm:px-6 bg-gray-50">
+      <div className="max-w-5xl mx-auto">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 p-5 xs:p-6 sm:p-8 md:p-10 lg:p-12 text-center">
+          <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 xs:mb-5 sm:mb-6">
             {t('getStartedCta.title')}
           </h2>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+          <p className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 mb-6 xs:mb-7 sm:mb-8 max-w-3xl mx-auto px-2">
             {t('getStartedCta.subtitle')}
           </p>
           <div className="flex justify-center">
             <button
               onClick={handleGetStarted}
               disabled={loading}
-              className="bg-grub-red text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-red-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-transform duration-200"
+              className="w-full xs:w-auto bg-grub-red text-white px-6 xs:px-7 sm:px-8 md:px-10 py-3 xs:py-3.5 sm:py-4 md:py-5 rounded-lg sm:rounded-xl font-semibold text-base xs:text-lg sm:text-xl hover:bg-red-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-transform duration-200"
             >
               {loading ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
-                  Loading...
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 xs:h-5 xs:w-5 border-t-2 border-b-2 border-white mr-2"></div>
+                  <span className="text-base xs:text-lg sm:text-xl">Loading...</span>
                 </div>
               ) : isAuthenticated ? (
                 hasActiveSubscription ? t('yourOrders.viewCalendar') : 'Start Planning'

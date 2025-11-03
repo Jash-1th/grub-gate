@@ -44,7 +44,7 @@ const DashboardLayout = ({ onLanguageChange }) => {
     { name: 'Customers', href: '/dashboard/customers', icon: faUsers },
     { name: 'Settings', href: '/dashboard/settings', icon: faCog },
     { name: 'Support', href: '/dashboard/support', icon: faQuestionCircle },
-    { name: '🧪 Test Notifications', href: '/dashboard/test/notifications', icon: faBell },
+    // { name: '🧪 Test Notifications', href: '/dashboard/test/notifications', icon: faBell },
   ];
 
   const isCurrentPath = (path) => {
@@ -238,7 +238,7 @@ const DashboardLayout = ({ onLanguageChange }) => {
               </div>
               
               <div className="flex items-center">
-                <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 truncate">
+                <h1 className="hidden sm:block text-base sm:text-lg lg:text-xl font-semibold text-gray-900 truncate">
                   {navigation.find(item => isCurrentPath(item.href))?.name || 'Overview'}
                 </h1>
               </div>
@@ -256,7 +256,7 @@ const DashboardLayout = ({ onLanguageChange }) => {
         </div>
 
         {/* Page content */}
-        <main className="p-3 sm:p-4 lg:p-6 xl:p-8 pb-20 sm:pb-24 lg:pb-8">
+        <main className="p-3 sm:p-4 lg:p-6 xl:p-8 pb-24 sm:pb-28 lg:pb-8">
           <div className="mx-auto w-full max-w-7xl">
             <Outlet />
           </div>

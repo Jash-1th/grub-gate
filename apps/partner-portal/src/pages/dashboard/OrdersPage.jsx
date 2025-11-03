@@ -287,48 +287,34 @@ const OrdersPage = () => {
           <div className="flex flex-col gap-4">
             <div className="flex-1">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">
-                {isClient && selectedDate ? (
-                  selectedDate.toDateString() === new Date().toDateString() 
-                    ? "Today's Orders" 
-                    : selectedDate > new Date()
-                    ? `Scheduled Orders for ${selectedDate.toLocaleDateString('en-US', { 
-                        weekday: 'long', 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                      })}`
-                    : `Orders for ${selectedDate.toLocaleDateString('en-US', { 
-                        weekday: 'long', 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                      })}`
+                {isClient ? (
+                  selectedDate 
+                    ? (selectedDate.toDateString() === new Date().toDateString()
+                      ? "Today's Orders"
+                      : `Orders for ${selectedDate.toLocaleDateString('en-US', { 
+                          weekday: 'long', 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}`)
+                    : "Orders"
                 ) : "Orders"}
               </h1>
-              <p className="text-red-100 mt-1 text-sm sm:text-base">
-                {isClient ? (
-                  orders.length > 0 
-                    ? selectedDate > new Date()
-                      ? `${orders.length} scheduled orders found for selected date`
-                      : `${orders.length} orders found for selected date`
-                    : selectedDate > new Date()
-                      ? "No scheduled orders found for this date"
-                      : "No orders found for this date"
-                ) : "Select a date to view orders"}
-              </p>
             </div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               {/* Date Picker */}
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg w-full sm:w-auto">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl w-full sm:w-auto relative z-20 shadow-lg">
                 <DatePicker
                   selectedDate={selectedDate}
                   onDateChange={handleDateChange}
                   placeholder="Select date"
-                  className="w-full sm:w-48"
+                  className="w-full sm:w-56"
                 />
               </div>
-              <div className="bg-white/20 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2">
-                <span className="text-xs sm:text-sm font-medium">{orders.length} Orders</span>
+              <div className="bg-white/20 backdrop-blur-sm rounded-full px-3 sm:px-5 py-1.5 sm:py-2.5 relative z-10 shadow-lg w-auto">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <span className="text-lg sm:text-2xl font-bold">{orders.length}</span>
+                  <span className="text-xs sm:text-sm font-medium opacity-90">Orders</span>
+                </div>
               </div>
             </div>
           </div>
@@ -445,80 +431,103 @@ const OrdersPage = () => {
             <>
               {/* Desktop Table View */}
               <div className="hidden lg:block">
-                <Card>
+                <Card className="shadow-lg border-2 border-gray-100">
                   <CardContent className="p-0">
                     <div className="overflow-x-auto">
                       <table className="w-full min-w-[1000px]">
-                        <thead className="bg-gray-50">
+                        <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
                           <tr>
-                            <th className="text-left py-3 px-4 xl:py-4 xl:px-6 font-semibold text-gray-900 text-sm xl:text-base">Order ID</th>
-                            <th className="text-left py-3 px-4 xl:py-4 xl:px-6 font-semibold text-gray-900 text-sm xl:text-base">Customer</th>
-                            <th className="text-left py-3 px-4 xl:py-4 xl:px-6 font-semibold text-gray-900 text-sm xl:text-base">Items</th>
-                            <th className="text-left py-3 px-4 xl:py-4 xl:px-6 font-semibold text-gray-900 text-sm xl:text-base">Meal Type</th>
-                            <th className="text-left py-3 px-4 xl:py-4 xl:px-6 font-semibold text-gray-900 text-sm xl:text-base">Total</th>
-                            <th className="text-left py-3 px-4 xl:py-4 xl:px-6 font-semibold text-gray-900 text-sm xl:text-base">Status</th>
-                            <th className="text-left py-3 px-4 xl:py-4 xl:px-6 font-semibold text-gray-900 text-sm xl:text-base">Delivery Time</th>
-                            <th className="text-left py-3 px-4 xl:py-4 xl:px-6 font-semibold text-gray-900 text-sm xl:text-base">Actions</th>
+                            <th className="text-left py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">Order ID</th>
+                            <th className="text-left py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">Customer</th>
+                            <th className="text-left py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">Items</th>
+                            <th className="text-left py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">Meal Type</th>
+                            <th className="text-left py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">Total</th>
+                            <th className="text-left py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">Status</th>
+                            <th className="text-left py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">Delivery</th>
+                            <th className="text-center py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">Actions</th>
                           </tr>
                         </thead>
-                        <tbody>
-                          {filteredOrders.map((order) => (
-                            <tr key={order._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                              <td className="py-3 px-4 xl:py-4 xl:px-6">
-                                <span className="font-semibold text-gray-900 text-sm xl:text-base">#{order.orderNumber}</span>
-                              </td>
-                              <td className="py-3 px-4 xl:py-4 xl:px-6">
-                                <div className="min-w-0">
-                                  <div className="font-medium text-gray-900 text-sm xl:text-base truncate">
-                                    {order.customerId?.firstName} {order.customerId?.lastName}
-                                  </div>
-                                  <div className="text-xs xl:text-sm text-gray-500 truncate">{order.customerId?.email}</div>
+                        <tbody className="divide-y divide-gray-200">
+                          {filteredOrders.map((order, index) => (
+                            <tr key={order._id} className="hover:bg-blue-50/50 transition-all duration-200 group">
+                              <td className="py-4 px-6">
+                                <div className="flex items-center gap-2">
+                                  <div className={`w-1 h-10 rounded-full ${
+                                    order.status === 'scheduled' ? 'bg-blue-500' : 
+                                    order.status === 'delivered' ? 'bg-green-500' : 
+                                    'bg-yellow-500'
+                                  }`} />
+                                  <span className="font-bold text-gray-900 text-base">#{order.orderNumber}</span>
                                 </div>
                               </td>
-                              <td className="py-3 px-4 xl:py-4 xl:px-6">
-                                <span className="text-gray-900 text-sm xl:text-base">{order.items?.length || 0} items</span>
+                              <td className="py-4 px-6">
+                                <div className="flex items-center gap-3">
+                                  <div className="bg-blue-500 rounded-full p-2 flex-shrink-0">
+                                    <FontAwesomeIcon icon={faUser} className="h-4 w-4 text-white" />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="font-semibold text-gray-900 text-sm xl:text-base truncate">
+                                      {order.customerId?.firstName} {order.customerId?.lastName}
+                                    </div>
+                                    <div className="text-xs xl:text-sm text-gray-500 truncate">{order.customerId?.email}</div>
+                                  </div>
+                                </div>
                               </td>
-                              <td className="py-3 px-4 xl:py-4 xl:px-6">
-                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                              <td className="py-4 px-6">
+                                <div className="flex items-center gap-2">
+                                  <div className="bg-gray-100 rounded-lg px-3 py-1.5">
+                                    <span className="font-semibold text-gray-900 text-sm xl:text-base">{order.items?.length || 0}</span>
+                                    <span className="text-gray-500 text-xs xl:text-sm ml-1">items</span>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-4 px-6">
+                                <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs xl:text-sm font-semibold whitespace-nowrap shadow-sm ${
                                   order.mealType === 'lunch' 
-                                    ? 'bg-yellow-100 text-yellow-800' 
+                                    ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' 
                                     : order.mealType === 'dinner'
-                                    ? 'bg-purple-100 text-purple-800'
-                                    : 'bg-gray-100 text-gray-800'
+                                    ? 'bg-purple-100 text-purple-800 border border-purple-200'
+                                    : 'bg-gray-100 text-gray-800 border border-gray-200'
                                 }`}>
                                   {order.mealType === 'lunch' ? '🍽️ Lunch' : 
-                                   order.mealType === 'dinner' ? '🍽️ Dinner' : 
+                                   order.mealType === 'dinner' ? '🌙 Dinner' : 
                                    '🍽️ Order'}
                                 </span>
                               </td>
-                              <td className="py-3 px-4 xl:py-4 xl:px-6">
-                                <span className="font-bold text-base xl:text-lg text-grub-red">${order.total?.toFixed(2)}</span>
+                              <td className="py-4 px-6">
+                                <div className="bg-red-50 rounded-lg px-3 py-2 inline-block border border-red-100">
+                                  <span className="font-bold text-lg xl:text-xl text-grub-red">${order.total?.toFixed(2)}</span>
+                                </div>
                               </td>
-                              <td className="py-3 px-4 xl:py-4 xl:px-6">
+                              <td className="py-4 px-6">
                                 <StatusUpdateButton
                                   order={order}
                                   onStatusUpdate={handleUpdateStatus}
                                   isLoading={updateStatusLoading === order._id}
                                 />
                               </td>
-                              <td className="py-3 px-4 xl:py-4 xl:px-6">
-                                <span className="text-gray-900 text-sm xl:text-base whitespace-nowrap">
-                                  {order.deliveryTime?.estimated ? 
-                                    new Date(order.deliveryTime.estimated).toLocaleTimeString('en-US', {
-                                      hour: '2-digit',
-                                      minute: '2-digit'
-                                    }) : 
-                                    'TBD'
-                                  }
-                                </span>
+                              <td className="py-4 px-6">
+                                <div className="flex items-center gap-2">
+                                  <FontAwesomeIcon icon={faClock} className="h-4 w-4 text-gray-400" />
+                                  <span className="font-medium text-gray-900 text-sm xl:text-base whitespace-nowrap">
+                                    {order.deliveryTime?.estimated ? 
+                                      new Date(order.deliveryTime.estimated).toLocaleTimeString('en-US', {
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      }) : 
+                                      'TBD'
+                                    }
+                                  </span>
+                                </div>
                               </td>
-                              <td className="py-3 px-4 xl:py-4 xl:px-6">
-                                <div className="flex items-center space-x-2">
+                              <td className="py-4 px-6">
+                                <div className="flex items-center justify-center">
                                   <button
                                     onClick={() => handleViewOrder(order)}
-                                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                    className="p-2.5 text-blue-600 hover:text-blue-700 hover:bg-blue-100 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
+                                    title="View Order Details"
                                   >
-                                    <FontAwesomeIcon icon={faEye} className="h-4 w-4" />
+                                    <FontAwesomeIcon icon={faEye} className="h-5 w-5" />
                                   </button>
                                 </div>
                               </td>
@@ -534,20 +543,20 @@ const OrdersPage = () => {
               {/* Mobile and Tablet Card View */}
               <div className="lg:hidden space-y-3">
                 {filteredOrders.map((order) => (
-                  <Card key={order._id} className="hover:shadow-md transition-all duration-200 border-l-4" style={{borderLeftColor: order.status === 'scheduled' ? '#3B82F6' : order.status === 'delivered' ? '#10B981' : '#F59E0B'}}>
-                    <CardContent className="p-3">
-                      <div className="space-y-2.5">
-                        {/* Header Row - Compact */}
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-gray-900 text-sm">#{order.orderNumber}</span>
-                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold ${getStatusColor(order.status)}`}>
+                  <Card key={order._id} className="hover:shadow-lg transition-all duration-200 border-l-4 overflow-hidden" style={{borderLeftColor: order.status === 'scheduled' ? '#3B82F6' : order.status === 'delivered' ? '#10B981' : '#F59E0B'}}>
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
+                        {/* Header Row */}
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex flex-col gap-2 flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-bold text-gray-900 text-base">#{order.orderNumber}</span>
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}`}>
                                 {getStatusIcon(order.status)}
                                 <span className="ml-1 capitalize">{order.status}</span>
                               </span>
                             </div>
-                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium w-fit ${
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium w-fit ${
                               order.mealType === 'lunch' 
                                 ? 'bg-yellow-100 text-yellow-800' 
                                 : order.mealType === 'dinner'
@@ -560,23 +569,23 @@ const OrdersPage = () => {
                             </span>
                           </div>
                           <div className="text-right flex-shrink-0">
-                            <div className="font-bold text-base text-grub-red">${order.total?.toFixed(2)}</div>
-                            <div className="text-[10px] text-gray-500">{order.items?.length || 0} items</div>
+                            <div className="font-bold text-xl text-grub-red">${order.total?.toFixed(2)}</div>
+                            <div className="text-xs text-gray-500 mt-0.5">{order.items?.length || 0} items</div>
                           </div>
                         </div>
 
-                        {/* Customer Info - Compact */}
-                        <div className="flex items-center justify-between gap-2 bg-gray-50 rounded-lg p-2">
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <div className="bg-blue-100 rounded-full p-1.5 flex-shrink-0">
-                              <FontAwesomeIcon icon={faUser} className="h-3 w-3 text-blue-600" />
+                        {/* Customer Info */}
+                        <div className="flex items-center justify-between gap-3 bg-gray-50 rounded-xl p-3">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="bg-blue-500 rounded-full p-2 flex-shrink-0">
+                              <FontAwesomeIcon icon={faUser} className="h-4 w-4 text-white" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="font-semibold text-gray-900 text-xs truncate">
+                              <div className="font-semibold text-gray-900 text-sm truncate">
                                 {order.customerId?.firstName} {order.customerId?.lastName}
                               </div>
-                              <div className="text-[10px] text-gray-500 flex items-center gap-1">
-                                <FontAwesomeIcon icon={faClock} className="h-2.5 w-2.5" />
+                              <div className="text-xs text-gray-500 flex items-center gap-1.5 mt-1">
+                                <FontAwesomeIcon icon={faClock} className="h-3 w-3" />
                                 {order.deliveryTime?.estimated ? 
                                   new Date(order.deliveryTime.estimated).toLocaleTimeString('en-US', {
                                     hour: '2-digit',
@@ -588,22 +597,24 @@ const OrdersPage = () => {
                             </div>
                           </div>
                           
-                          {/* Actions - Compact */}
+                          {/* View Button */}
                           <button
                             onClick={() => handleViewOrder(order)}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex-shrink-0"
+                            className="p-2.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors flex-shrink-0"
                             title="View Details"
                           >
-                            <FontAwesomeIcon icon={faEye} className="h-3.5 w-3.5" />
+                            <FontAwesomeIcon icon={faEye} className="h-5 w-5" />
                           </button>
                         </div>
                         
                         {/* Status Button - Full Width */}
-                        <StatusUpdateButton
-                          order={order}
-                          onStatusUpdate={handleUpdateStatus}
-                          isLoading={updateStatusLoading === order._id}
-                        />
+                        <div className="pt-1">
+                          <StatusUpdateButton
+                            order={order}
+                            onStatusUpdate={handleUpdateStatus}
+                            isLoading={updateStatusLoading === order._id}
+                          />
+                        </div>
                       </div>
                     </CardContent>
                   </Card>

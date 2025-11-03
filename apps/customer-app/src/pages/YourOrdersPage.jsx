@@ -36,6 +36,7 @@ const YourOrdersPage = () => {
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterLoading, setFilterLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all');
@@ -134,25 +135,9 @@ const YourOrdersPage = () => {
     }
     
     try {
-      // Build API URL with appropriate parameters
-      let apiUrl = `/orders?page=${pageNum}&limit=10&includeScheduled=true`;
-      
-      // If we're fetching for delivered orders, use status filter
-      if (filter === 'delivered') {
-        apiUrl = `/orders?status=delivered&page=${pageNum}&limit=50`;
-      }
-      
-      // If we're fetching for confirmed orders, use status filter
-      if (filter === 'confirmed') {
-        apiUrl = `/orders?status=confirmed&page=${pageNum}&limit=50`;
-      }
-      
-      // If no filter is specified but we want to see all orders including delivered ones,
-      // we might need to fetch delivered orders separately
-      const shouldFetchDelivered = !filter && activeFilter === 'delivered';
-      if (shouldFetchDelivered) {
-        apiUrl = `/orders?status=delivered&page=${pageNum}&limit=50`;
-      }
+      // Fetch all orders at once for faster client-side filtering
+      // Increase limit to get more orders in one request
+      let apiUrl = `/orders?page=${pageNum}&limit=50&includeScheduled=true`;
       
       // Use apiClient instead of fetch to ensure proper baseURL and headers
       const response = await apiClient.get(apiUrl);
@@ -165,59 +150,50 @@ const YourOrdersPage = () => {
         throw new Error(data.message || 'Failed to fetch orders');
       }
       
-      // Fetch meal calendar items
-      const mealCalendarItems = await fetchMealCalendarItems();
-      setMealItems(mealCalendarItems);
-      
       // Combine regular orders with meal calendar items
-      // Fix: Use data.data instead of data.orders since the API returns paginated data
       const ordersArray = Array.isArray(data.data) ? data.data : [];
       
-      // Only update the main orders state if we're NOT fetching delivered or confirmed orders specifically
-      // When fetching delivered or confirmed orders, we only want to update the filtered display
-      if (filter !== 'delivered' && filter !== 'confirmed') {
-        const allOrders = [...(pageNum === 1 ? [] : orders), ...ordersArray, ...mealCalendarItems];
-        
-        // Sort all orders by date and time (newest first)
-        const sortedOrders = allOrders.sort((a, b) => {
-          const dateA = new Date(`${a.scheduledDate}T${a.scheduledTime || '00:00'}`);
-          const dateB = new Date(`${b.scheduledDate}T${b.scheduledTime || '00:00'}`);
-          return dateB - dateA; // Descending order (newest first)
-        });
-        
-        setOrders(sortedOrders);
-        
-        // Apply current filter to new orders
-        if (activeFilter === 'all') {
-          setFilteredOrders(sortedOrders);
-        } else {
-          const filtered = sortedOrders.filter(order => {
-            const orderStatus = order.status || 'unknown';
-            const matchesFilter = orderStatus === activeFilter;
-            return matchesFilter;
-          });
-          setFilteredOrders(filtered);
-        }
-        
-        // For all orders, check if there are more pages
-        const hasMoreItems = ordersArray.length === 10;
-        setHasMore(hasMoreItems);
-      } else {
-        // When fetching delivered or confirmed orders specifically, only update the filtered display
-        // Don't update the main orders state
-        const specificOrders = [...(pageNum === 1 ? [] : filteredOrders), ...ordersArray];
-        const sortedSpecificOrders = specificOrders.sort((a, b) => {
-          const dateA = new Date(`${a.scheduledDate}T${a.scheduledTime || '00:00'}`);
-          const dateB = new Date(`${b.scheduledDate}T${b.scheduledTime || '00:00'}`);
-          return dateB - dateA; // Descending order (newest first)
-        });
-        
-        setFilteredOrders(sortedSpecificOrders);
-        
-        // For specific orders, check if there are more pages
-        const hasMoreItems = ordersArray.length === 50;
-        setHasMore(hasMoreItems);
+      // Only fetch meal calendar items on first page load
+      let mealCalendarItems = [];
+      if (pageNum === 1) {
+        mealCalendarItems = await fetchMealCalendarItems();
+        setMealItems(mealCalendarItems);
       }
+      
+      // Combine with existing orders if loading more pages
+      let allOrders;
+      if (pageNum === 1) {
+        // First page: combine new orders with meal calendar items
+        allOrders = [...ordersArray, ...mealCalendarItems];
+      } else {
+        // Subsequent pages: append to existing orders (don't add meal items again)
+        allOrders = [...orders, ...ordersArray];
+      }
+      
+      // Sort all orders by date and time (newest first)
+      const sortedOrders = allOrders.sort((a, b) => {
+        const dateA = new Date(`${a.scheduledDate}T${a.scheduledTime || '00:00'}`);
+        const dateB = new Date(`${b.scheduledDate}T${b.scheduledTime || '00:00'}`);
+        return dateB - dateA; // Descending order (newest first)
+      });
+      
+      setOrders(sortedOrders);
+      
+      // Apply current filter to new orders
+      if (activeFilter === 'all') {
+        setFilteredOrders(sortedOrders);
+      } else {
+        const filtered = sortedOrders.filter(order => {
+          const orderStatus = order.status || 'unknown';
+          return orderStatus === activeFilter;
+        });
+        setFilteredOrders(filtered);
+      }
+      
+      // Check if there are more pages
+      // If we got a full page (50 items), there might be more
+      const hasMoreItems = ordersArray.length >= 50;
+      setHasMore(hasMoreItems);
       
       setLoading(false);
       setFilterLoading(false); // Hide filter loading indicator
@@ -235,53 +211,28 @@ const YourOrdersPage = () => {
     // Show loading indicator when switching filters
     setFilterLoading(true);
     
-    // Apply the filter to current orders
+    // Apply the filter to current orders (client-side filtering - instant!)
     if (filter === 'all') {
       setFilteredOrders(orders);
       // For "all" filter, determine if we have more orders based on pagination
-      // If we have exactly N*10 orders, there might be more (assuming 10 per page)
       const mightHaveMore = orders.length > 0 && orders.length % 10 === 0;
       setHasMore(mightHaveMore);
-      
-      // Hide loading indicator after a short delay to ensure UI update
-      setTimeout(() => {
-        setFilterLoading(false);
-      }, 300);
     } else {
+      // Filter from already loaded orders - no API call needed
       const filtered = orders.filter(order => {
         const orderStatus = order.status || 'unknown';
-        const matchesFilter = orderStatus === filter;
-        return matchesFilter;
+        return orderStatus === filter;
       });
       setFilteredOrders(filtered);
       
-      // If we're filtering by delivered and don't have many results, fetch more delivered orders
-      if (filter === 'delivered' && filtered.length < 10) {
-        fetchOrders(1, 'delivered');
-        // Don't hide loading indicator yet, fetchOrders will handle it
-        return;
-      }
-      
-      // If we're filtering by confirmed and don't have many results, fetch more confirmed orders
-      if (filter === 'confirmed' && filtered.length < 10) {
-        fetchOrders(1, 'confirmed');
-        // Don't hide loading indicator yet, fetchOrders will handle it
-        return;
-      }
-      
-      // For other filters, hide load more button (they show all matching orders)
-      // Exception: Show load more for confirmed filter if there are many results
-      if (filter === 'confirmed' && filtered.length >= 10) {
-        setHasMore(true);
-      } else {
-        setHasMore(false);
-      }
-      
-      // Hide loading indicator after a short delay to ensure UI update
-      setTimeout(() => {
-        setFilterLoading(false);
-      }, 300);
+      // Don't show "load more" for filtered views since we're showing all matching orders from cache
+      setHasMore(false);
     }
+    
+    // Hide loading indicator immediately since filtering is instant
+    setTimeout(() => {
+      setFilterLoading(false);
+    }, 100);
   };
 
   useEffect(() => {
@@ -312,11 +263,13 @@ const YourOrdersPage = () => {
     }
   }, [authLoading, user, token, isAuthenticated]);
 
-  const handleLoadMore = () => {
+  const handleLoadMore = async () => {
+    setLoadingMore(true);
     const nextPage = page + 1;
     setPage(nextPage);
-    // Preserve the active filter when loading more
-    fetchOrders(nextPage, activeFilter === 'delivered' || activeFilter === 'confirmed' ? activeFilter : null);
+    // Fetch more orders (no filter needed, we filter client-side)
+    await fetchOrders(nextPage);
+    setLoadingMore(false);
   };
 
   // Group orders by date
@@ -442,38 +395,43 @@ const YourOrdersPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Hero Section */}
-      <section className="relative py-16 bg-gradient-to-r from-grub-red to-red-700">
+      <section className="relative py-8 xs:py-10 sm:py-12 md:py-16 bg-gradient-to-r from-grub-red via-red-600 to-red-700">
         <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItMnptMC0ydjJoLTJ2LTJoMnptLTItMmgydjJoLTJ2LTJ6bTItMmgydjJoLTJ2LTJ6bTAtMmgydjJoLTJ2LTJ6bTItMmgydjJoLTJ2LTJ6bTAtMmgydjJoLTJ2LTJ6bTItMmgydjJoLTJ2LTJ6bTAtMmgydjJoLTJ2LTJ6bTItMmgydjJoLTJ2LTJ6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-30"></div>
+        <div className="relative z-10 max-w-7xl mx-auto px-3 xs:px-4 sm:px-6 md:px-8 lg:px-10 text-center">
+          <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2 xs:mb-3 sm:mb-4">
             {t('yourOrders.title')}
           </h1>
-          <p className="text-lg md:text-xl text-gray-100 max-w-2xl mx-auto">
+          <p className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl text-gray-100 max-w-3xl mx-auto px-2">
             {t('yourOrders.subtitle')}
           </p>
         </div>
       </section>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 sm:px-6 py-8 -mt-16 relative z-20">
+      <div className="container mx-auto px-3 xs:px-4 sm:px-6 md:px-8 py-6 xs:py-8 -mt-8 xs:-mt-10 sm:-mt-12 md:-mt-16 relative z-20">
         {/* Filter options */}
-        <div className="mb-8 bg-white rounded-xl shadow-lg p-5">
-          <div className="flex flex-wrap gap-2">
+        <div className="mb-6 xs:mb-8 bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 xs:p-5 sm:p-6">
+          <div className="flex items-center gap-2 xs:gap-3 mb-3 xs:mb-4">
+            <FontAwesomeIcon icon={faFilter} className="text-grub-red text-lg xs:text-xl" />
+            <h2 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900">{t('yourOrders.filterBy') || 'Filter Orders'}</h2>
+          </div>
+          <div className="flex flex-wrap gap-2 xs:gap-2.5 sm:gap-3">
             {['all', 'scheduled', 'pending', 'confirmed', 'preparing', 'delivered', 'cancelled'].map((filter) => (
               <button
                 key={filter}
                 onClick={() => applyFilter(filter)}
                 disabled={filterLoading}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                className={`px-3 xs:px-4 sm:px-5 py-2 xs:py-2.5 rounded-full text-xs xs:text-sm sm:text-base font-semibold transition-all duration-300 transform hover:scale-105 ${
                   activeFilter === filter 
-                    ? 'bg-grub-red text-white shadow-md' 
-                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                    ? 'bg-gradient-to-r from-grub-red to-red-600 text-white shadow-lg' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-md'
                 } ${filterLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
               >
                 {filterLoading && activeFilter === filter ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white inline-block mr-2"></div>
+                  <div className="animate-spin rounded-full h-3 w-3 xs:h-4 xs:w-4 border-t-2 border-b-2 border-white inline-block mr-1.5 xs:mr-2"></div>
                 ) : null}
                 {t(`yourOrders.filters.${filter}`) || filter.charAt(0).toUpperCase() + filter.slice(1)}
               </button>
@@ -482,144 +440,168 @@ const YourOrdersPage = () => {
         </div>
         
         {filteredOrders.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-8 xs:p-10 sm:p-12 md:p-16 text-center">
             <div className="mx-auto max-w-md">
-              <div className="w-24 h-24 mx-auto mb-6 text-gray-300">
-                <FontAwesomeIcon icon={faReceipt} size="3x" />
+              <div className="w-16 h-16 xs:w-20 xs:h-20 sm:w-24 sm:h-24 mx-auto mb-4 xs:mb-5 sm:mb-6 text-gray-300">
+                <FontAwesomeIcon icon={faReceipt} className="w-full h-full" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('yourOrders.noOrdersTitle') || 'No Orders Found'}</h3>
-              <p className="text-gray-600 mb-8 text-lg">{t('yourOrders.noOrders')}</p>
+              <h3 className="text-xl xs:text-2xl sm:text-3xl font-bold text-gray-900 mb-3 xs:mb-4">{t('yourOrders.noOrdersTitle') || 'No Orders Found'}</h3>
+              <p className="text-sm xs:text-base sm:text-lg text-gray-600 mb-6 xs:mb-7 sm:mb-8 leading-relaxed">{t('yourOrders.noOrders')}</p>
               <button 
                 onClick={() => navigate('/')}
-                className="bg-grub-red hover:bg-red-700 text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold text-lg"
+                className="bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 xs:px-7 sm:px-8 py-3 xs:py-3.5 sm:py-4 rounded-lg sm:rounded-xl hover:shadow-xl transition-all duration-300 font-semibold text-sm xs:text-base sm:text-lg transform hover:scale-105"
               >
                 {t('yourOrders.browseRestaurants') || 'Browse Restaurants'}
               </button>
             </div>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-6 xs:space-y-8">
             {filterLoading ? (
               // Show loading skeleton when filter is loading
               <div className="flex flex-col items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-grub-red mb-4"></div>
-                <p className="text-gray-600">{t('common.loading')}</p>
+                <div className="animate-spin rounded-full h-8 w-8 xs:h-10 xs:w-10 border-t-2 border-b-2 border-grub-red mb-4"></div>
+                <p className="text-sm xs:text-base text-gray-600">{t('common.loading')}</p>
               </div>
             ) : (
               <>
                 {/* Grouped orders by date */}
                 {Object.keys(groupedOrders).sort((a, b) => new Date(b) - new Date(a)).map(dateKey => (
-                  <div key={dateKey} className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                  <div key={dateKey} className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden">
                     <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
                       <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-3">
                         <FontAwesomeIcon icon={faCalendarAlt} className="text-grub-red" />
                         {formatDate(dateKey)}
                       </h3>
                     </div>
-                    <div className="divide-y divide-gray-100">
+                    <div className="p-3 xs:p-4 sm:p-5 md:p-6 space-y-4 xs:space-y-5 sm:space-y-6">
                       {groupedOrders[dateKey].map(order => (
                         <div 
                           key={order._id} 
-                          className="p-6 hover:bg-gray-50 transition-all duration-300 cursor-pointer border-l-4 border-l-grub-red rounded-r-lg shadow-sm hover:shadow-md bg-white"
-                          onClick={() => {
-                            // Navigate to order details page
-                            navigate(`/order/${order._id}`);
-                          }}
+                          className="bg-white border-2 border-gray-200 rounded-xl sm:rounded-2xl overflow-hidden hover:border-grub-red hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
                         >
-                          <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
-                            <div className="flex-1">
-                              <div className="flex flex-wrap items-center gap-3 mb-3">
-                                <div className="flex items-center gap-2">
-                                  <FontAwesomeIcon icon={faReceipt} className="text-grub-red" />
-                                  <span className="font-bold text-gray-900">#{order.orderNumber || 'N/A'}</span>
-                                </div>
+                          {/* Order Header */}
+                          <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 xs:px-5 sm:px-6 py-3 xs:py-4 border-b-2 border-gray-200">
+                            <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 xs:gap-3">
+                              <div className="flex items-center gap-2 xs:gap-3">
+                                <FontAwesomeIcon icon={faReceipt} className="text-grub-red text-base xs:text-lg" />
+                                <span className="font-bold text-gray-900 text-sm xs:text-base sm:text-lg">Order #{order.orderNumber || 'N/A'}</span>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-2">
                                 {order.status && (
-                                  <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm ${getStatusColor(order.status)}`}>
-                                    <FontAwesomeIcon icon={getStatusIcon(order.status)} className="text-sm" />
-                                    {order.status ? t(`yourOrders.status.${order.status}`) : 'Unknown Status'}
+                                  <span className={`inline-flex items-center gap-1 xs:gap-1.5 px-2 xs:px-3 py-1 xs:py-1.5 rounded-full text-xs xs:text-sm font-bold ${getStatusColor(order.status)}`}>
+                                    <FontAwesomeIcon icon={getStatusIcon(order.status)} className="text-xs" />
+                                    {order.status ? t(`yourOrders.status.${order.status}`) : 'Unknown'}
                                   </span>
                                 )}
                                 {order.isSubscriptionMeal && (
-                                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-blue-100 text-blue-800 shadow-sm">
-                                    <FontAwesomeIcon icon={faCalendarAlt} className="text-sm" />
-                                    {t('yourOrders.subscriptionMeal')}
+                                  <span className="inline-flex items-center gap-1 xs:gap-1.5 px-2 xs:px-3 py-1 xs:py-1.5 rounded-full text-xs xs:text-sm font-bold bg-blue-100 text-blue-800">
+                                    <FontAwesomeIcon icon={faCalendarAlt} className="text-xs" />
+                                    Subscription
                                   </span>
                                 )}
                               </div>
-                              
-                              {/* Main Order Items Display */}
-                              <div className="mb-4">
-                                <div className="font-semibold text-gray-900 mb-2 text-lg">
-                                  {order.items?.length > 1 
-                                    ? `${order.items?.length} items ordered` 
-                                    : order.items?.[0]?.name || 'Order items'}
-                                </div>
-                                {order.items?.length > 1 ? (
-                                  <div className="flex flex-wrap gap-2 mb-3">
-                                    {order.items?.slice(0, 3).map((item, index) => (
-                                      <span key={index} className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
-                                        {item.name}
-                                      </span>
-                                    ))}
-                                    {order.items?.length > 3 && (
-                                      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
-                                        +{order.items.length - 3} more
-                                      </span>
+                            </div>
+                          </div>
+
+                          {/* Order Body */}
+                          <div className="p-4 xs:p-5 sm:p-6">
+                            <div className="flex flex-col lg:flex-row lg:justify-between gap-4 sm:gap-5 lg:gap-6">
+                              {/* Left Section - Order Details */}
+                              <div className="flex-1 space-y-3 xs:space-y-4">
+                                {/* Restaurant Info */}
+                                <div className="flex items-start gap-3">
+                                  <div className="flex-shrink-0 w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-grub-red to-red-600 rounded-xl flex items-center justify-center text-white font-bold text-lg xs:text-xl sm:text-2xl shadow-md">
+                                    {(order.restaurantId?.name || order.restaurantName || order.restaurant?.name || 'R').charAt(0).toUpperCase()}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <h3 className="font-bold text-gray-900 text-base xs:text-lg sm:text-xl mb-1 truncate">
+                                      {order.restaurantId?.name || order.restaurantName || order.restaurant?.name || 'Restaurant'}
+                                    </h3>
+                                    {(order.restaurantId?.rating || order.restaurant?.rating) && (
+                                      <div className="flex items-center gap-1.5 xs:gap-2">
+                                        <div className="flex text-yellow-400">
+                                          {renderStars(order.restaurantId?.rating || order.restaurant?.rating)}
+                                        </div>
+                                        <span className="font-semibold text-gray-700 text-xs xs:text-sm">{(order.restaurantId?.rating || order.restaurant?.rating || 0).toFixed(1)}</span>
+                                        <span className="text-gray-400 text-xs">({order.restaurantId?.reviewCount || order.restaurant?.reviewCount || 0})</span>
+                                      </div>
                                     )}
                                   </div>
-                                ) : order.items?.length === 1 ? (
-                                  <div className="flex items-center gap-3 text-gray-700 mb-3 bg-gray-50 p-3 rounded-lg">
-                                    <div className="bg-gray-200 border-2 border-dashed rounded-xl w-12 h-12" />
-                                    <div>
-                                      <div className="font-bold text-gray-900">{order.items[0].name}</div>
-                                      <div className="flex items-center gap-2 mt-1">
-                                        <span className="font-medium">Qty: {order.items[0].quantity || 1}</span>
-                                        <span>•</span>
-                                        <span>${typeof order.items[0].price === 'number' ? order.items[0].price.toFixed(2) : '0.00'} each</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ) : null}
-                              </div>
-                              
-                              {/* Restaurant and Rating Information */}
-                              <div className="flex flex-wrap items-center gap-4 text-gray-600 pt-3 border-t border-gray-100">
-                                <div className="flex items-center gap-2">
-                                  <FontAwesomeIcon icon={faUtensils} className="text-gray-400" />
-                                  <span className="font-medium">{order.restaurantId?.name || order.restaurantName || order.restaurant?.name || 'Restaurant'}</span>
                                 </div>
-                                {/* Debug: Show what rating data is available */}
-                                {/* <div className="text-xs text-gray-500">
-                                  Rating: {order.restaurantId?.rating || 'N/A'}, 
-                                  Restaurant Rating: {order.restaurant?.rating || 'N/A'},
-                                  RestaurantId: {order.restaurantId ? 'Yes' : 'No'},
-                                  Restaurant: {order.restaurant ? 'Yes' : 'No'}
-                                </div> */}
-                                {(order.restaurantId?.rating || order.restaurant?.rating) && (
-                                  <div className="flex items-center gap-1">
-                                    <div className="flex text-yellow-400">
-                                      {renderStars(order.restaurantId?.rating || order.restaurant?.rating)}
+
+                                {/* Order Items */}
+                                <div className="bg-gray-50 rounded-lg sm:rounded-xl p-3 xs:p-4">
+                                  <h4 className="font-semibold text-gray-700 text-xs xs:text-sm mb-2 xs:mb-3">Order Items:</h4>
+                                  {order.items?.length > 0 ? (
+                                    <div className="space-y-2">
+                                      {order.items.slice(0, 2).map((item, index) => {
+                                        const itemRating = item.menuItemId?.rating || item.rating || 0;
+                                        return (
+                                          <div key={index} className="flex items-center justify-between bg-white p-2 xs:p-3 rounded-lg">
+                                            <div className="flex items-center gap-2 xs:gap-3 flex-1 min-w-0">
+                                              <div className="w-10 h-10 xs:w-12 xs:h-12 bg-gray-200 rounded-lg flex-shrink-0"></div>
+                                              <div className="flex-1 min-w-0">
+                                                <p className="font-semibold text-gray-900 text-xs xs:text-sm sm:text-base truncate">{item.name}</p>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                  <p className="text-gray-500 text-xs">Qty: {item.quantity || 1}</p>
+                                                  {itemRating > 0 && (
+                                                    <div className="flex items-center gap-1">
+                                                      <div className="flex">
+                                                        {[1, 2, 3, 4, 5].map((star) => (
+                                                          <svg
+                                                            key={star}
+                                                            className={`w-3 h-3 ${star <= itemRating ? 'text-yellow-400' : 'text-gray-300'}`}
+                                                            fill="currentColor"
+                                                            viewBox="0 0 20 20"
+                                                          >
+                                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                          </svg>
+                                                        ))}
+                                                      </div>
+                                                      <span className="text-xs text-gray-600 font-medium">{itemRating.toFixed(1)}</span>
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              </div>
+                                            </div>
+                                            {item.price && (
+                                              <span className="font-bold text-gray-900 text-xs xs:text-sm ml-2">${(item.price * (item.quantity || 1)).toFixed(2)}</span>
+                                            )}
+                                          </div>
+                                        );
+                                      })}
+                                      {order.items.length > 2 && (
+                                        <div className="text-center py-2 text-xs xs:text-sm text-gray-600 font-medium">
+                                          +{order.items.length - 2} more item{order.items.length - 2 > 1 ? 's' : ''}
+                                        </div>
+                                      )}
                                     </div>
-                                    <span className="font-medium text-gray-700">{(order.restaurantId?.rating || order.restaurant?.rating || 0).toFixed(1)}</span>
-                                    <span className="text-gray-400">({order.restaurantId?.reviewCount || order.restaurant?.reviewCount || 0} reviews)</span>
+                                  ) : (
+                                    <p className="text-gray-500 text-sm">No items</p>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Right Section - Price & Time */}
+                              <div className="lg:w-44 xl:w-48 flex flex-row lg:flex-col justify-between lg:justify-start gap-3 xs:gap-4 lg:gap-5">
+                                {/* Total Price */}
+                                <div className="flex-1 lg:flex-none bg-gradient-to-br from-grub-red to-red-700 rounded-xl p-3 xs:p-4 text-white text-center lg:text-left">
+                                  <p className="text-xs opacity-90 mb-1">Total Amount</p>
+                                  <p className="text-xl xs:text-2xl sm:text-3xl font-bold">${(order.total || 0).toFixed(2)}</p>
+                                </div>
+
+                                {/* Delivery Time */}
+                                {order.scheduledTime && (
+                                  <div className="flex-1 lg:flex-none bg-blue-50 border-2 border-blue-200 rounded-xl p-3 xs:p-4 text-center lg:text-left">
+                                    <p className="text-xs text-blue-600 font-semibold mb-1">Delivery Time</p>
+                                    <div className="flex items-center justify-center lg:justify-start gap-1.5 xs:gap-2">
+                                      <FontAwesomeIcon icon={faClock} className="text-blue-600 text-sm xs:text-base" />
+                                      <span className="font-bold text-blue-900 text-sm xs:text-base sm:text-lg">{order.scheduledTime}</span>
+                                    </div>
                                   </div>
                                 )}
                               </div>
-                            </div>
-                            
-                            <div className="text-right">
-                              <div className="text-2xl font-bold text-gray-900 mb-2">
-                                ${(order.total || 0).toFixed(2)}
-                              </div>
-                              <div className="text-gray-600 mb-3">
-                                {formatDate(order.scheduledDate || order.deliveryDate)}
-                              </div>
-                              {order.scheduledTime && (
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
-                                  <FontAwesomeIcon icon={faClock} className="text-gray-500" />
-                                  <span>{order.scheduledTime}</span>
-                                </div>
-                              )}
                             </div>
                           </div>
                         </div>
@@ -628,14 +610,14 @@ const YourOrdersPage = () => {
                   </div>
                 ))}
                 
-                {hasMore && (activeFilter === 'all' || activeFilter === 'delivered' || activeFilter === 'confirmed') && (
+                {hasMore && activeFilter === 'all' && (
                   <div className="text-center py-8">
                     <button
                       onClick={handleLoadMore}
-                      disabled={loading}
+                      disabled={loadingMore}
                       className="bg-grub-red hover:bg-red-700 text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {loading ? (
+                      {loadingMore ? (
                         <div className="flex items-center justify-center">
                           <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
                           {t('common.loading')}

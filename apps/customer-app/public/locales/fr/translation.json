@@ -551,7 +551,11 @@
   },
   "common": {
     "subscription": "Plan de Repas par Abonnement",
-    "loadMore": "Charger Plus"
+    "loadMore": "Charger Plus",
+    "loading": "Chargement...",
+    "restaurant": "Restaurant",
+    "error": "Quelque chose s'est mal passé",
+    "retry": "Réessayer"
   },
   "deliveredOrders": {
     "title": "Commandes Livrées",
@@ -560,6 +564,7 @@
   "yourOrders": {
     "title": "Vos Commandes",
     "subtitle": "Suivez vos livraisons de repas et gérez votre abonnement",
+    "filterBy": "Filtrer Par",
     "ordersFound": "{{count}} commande trouvée",
     "ordersFound_plural": "{{count}} commandes trouvées",
     "filterOrders": "Filtrer les Commandes",
@@ -579,7 +584,13 @@
     "checkScheduledMeals": "Vérifier vos repas planifiés et l'état de livraison",
     "subscriptionMeal": "Repas d'Abonnement",
     "status": {
-      "scheduled": "Planifié"
+      "scheduled": "Planifié",
+      "pending": "En Attente",
+      "confirmed": "Confirmé",
+      "preparing": "En Préparation",
+      "ready": "Prêt",
+      "delivered": "Livré",
+      "cancelled": "Annulé"
     },
     "mealTypes": {
       "dinner": "Dîner"

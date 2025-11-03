@@ -189,105 +189,96 @@ const SetupWizard = () => {
     switch (currentWizardStep) {
       case 1:
         return (
-          <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">
-              <FontAwesomeIcon icon={faClock} className="mr-2 text-blue-600" />
-              Set Your Operating Hours
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Set your lunch and dinner service hours. Since your restaurant details and delivery settings are already configured, this is the final step to complete your setup.
-            </p>
-            <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-3 sm:space-y-4">
               {Object.entries(setupData.operatingHours).map(([day, hours]) => (
-                <div key={day} className="p-4 border border-gray-200 rounded-lg">
+                <div key={day} className="p-4 sm:p-5 border-2 border-gray-200 rounded-xl hover:border-grub-red/30 hover:shadow-lg transition-all duration-200 bg-white">
                   {/* Day Header */}
                   <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-3">
                       <input
                         type="checkbox"
                         checked={!hours.closed}
                         onChange={(e) => handleOperatingHoursChange(day, 'closed', !e.target.checked)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-6 w-6 text-grub-red focus:ring-grub-red border-gray-300 rounded cursor-pointer"
                       />
-                      <span className="font-medium text-gray-900 capitalize text-lg">
+                      <span className="font-bold text-gray-900 capitalize text-lg sm:text-xl">
                         {day}
                       </span>
                     </div>
                     {hours.closed && (
-                      <span className="text-gray-500 italic">Closed</span>
+                      <span className="text-gray-500 italic text-sm sm:text-base font-medium bg-gray-100 px-3 py-1 rounded-full">Closed</span>
                     )}
                   </div>
 
                   {/* Lunch and Dinner Times */}
                   {!hours.closed && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4">
                       {/* Lunch Hours */}
-                      <div className="bg-orange-50 p-3 rounded-lg">
+                      <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-3 rounded-xl border-2 border-orange-200">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium text-orange-800 flex items-center">
-                            🍽️ Lunch Service
+                          <h4 className="font-bold text-orange-800 text-sm">
+                            🍽️ Lunch
                           </h4>
                           <input
                             type="checkbox"
                             checked={hours.lunch.available}
                             onChange={(e) => handleOperatingHoursChange(day, 'available', e.target.checked, 'lunch')}
-                            className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                            className="h-5 w-5 text-orange-600 focus:ring-orange-500 border-gray-300 rounded cursor-pointer"
                           />
                         </div>
-                        {hours.lunch.available && (
-                          <div className="flex items-center space-x-2">
+                        {hours.lunch.available ? (
+                          <div className="flex items-center justify-between gap-2">
                             <input
                               type="time"
                               value={hours.lunch.open}
                               onChange={(e) => handleOperatingHoursChange(day, 'open', e.target.value, 'lunch')}
-                              className="px-2 py-1 text-sm border border-orange-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                              className="w-[45%] px-2 py-2 text-sm font-medium border-2 border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white"
                             />
-                            <span className="text-orange-600 text-sm">to</span>
+                            <span className="text-orange-700 text-xs font-bold">to</span>
                             <input
                               type="time"
                               value={hours.lunch.close}
                               onChange={(e) => handleOperatingHoursChange(day, 'close', e.target.value, 'lunch')}
-                              className="px-2 py-1 text-sm border border-orange-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                              className="w-[45%] px-2 py-2 text-sm font-medium border-2 border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white"
                             />
                           </div>
-                        )}
-                        {!hours.lunch.available && (
-                          <span className="text-orange-600 text-sm italic">No lunch service</span>
+                        ) : (
+                          <span className="text-orange-700 text-xs italic font-medium">Not available</span>
                         )}
                       </div>
 
                       {/* Dinner Hours */}
-                      <div className="bg-purple-50 p-3 rounded-lg">
+                      <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-3 rounded-xl border-2 border-purple-200">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium text-purple-800 flex items-center">
-                            🌙 Dinner Service
+                          <h4 className="font-bold text-purple-800 text-sm">
+                            🌙 Dinner
                           </h4>
                           <input
                             type="checkbox"
                             checked={hours.dinner.available}
                             onChange={(e) => handleOperatingHoursChange(day, 'available', e.target.checked, 'dinner')}
-                            className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                            className="h-5 w-5 text-purple-600 focus:ring-purple-500 border-gray-300 rounded cursor-pointer"
                           />
                         </div>
-                        {hours.dinner.available && (
-                          <div className="flex items-center space-x-2">
+                        {hours.dinner.available ? (
+                          <div className="flex items-center justify-between gap-2">
                             <input
                               type="time"
                               value={hours.dinner.open}
                               onChange={(e) => handleOperatingHoursChange(day, 'open', e.target.value, 'dinner')}
-                              className="px-2 py-1 text-sm border border-purple-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                              className="w-[45%] px-2 py-2 text-sm font-medium border-2 border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"
                             />
-                            <span className="text-purple-600 text-sm">to</span>
+                            <span className="text-purple-700 text-xs font-bold">to</span>
                             <input
                               type="time"
                               value={hours.dinner.close}
                               onChange={(e) => handleOperatingHoursChange(day, 'close', e.target.value, 'dinner')}
-                              className="px-2 py-1 text-sm border border-purple-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                              className="w-[45%] px-2 py-2 text-sm font-medium border-2 border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"
                             />
                           </div>
-                        )}
-                        {!hours.dinner.available && (
-                          <span className="text-purple-600 text-sm italic">No dinner service</span>
+                        ) : (
+                          <span className="text-purple-700 text-xs italic font-medium">Not available</span>
                         )}
                       </div>
                     </div>
@@ -307,64 +298,70 @@ const SetupWizard = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6 bg-white rounded-lg shadow-md mt-8">
+    <div className="max-w-5xl mx-auto p-3 sm:p-8 lg:p-10">
       {/* Progress Bar */}
-      <div className="mb-8">
-        <div className="flex items-center">
-          {wizardSteps.map((step, index) => (
-            <React.Fragment key={step.id}>
-              <div className="flex flex-col items-center">
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors duration-300 ${
-                    currentWizardStep > step.id ? 'bg-green-500 border-green-500 text-white' :
-                    currentWizardStep === step.id ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 text-gray-500'
-                }`}>
-                  <FontAwesomeIcon icon={currentWizardStep > step.id ? faCheck : step.icon} />
+      <div className="mb-10">
+        <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-100">
+          <div className="flex items-center justify-center">
+            {wizardSteps.map((step, index) => (
+              <React.Fragment key={step.id}>
+                <div className="flex flex-col items-center">
+                  <div className={`flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full border-4 transition-all duration-300 shadow-lg ${
+                      currentWizardStep > step.id ? 'bg-gradient-to-br from-green-500 to-green-600 border-green-500 text-white scale-110' :
+                      currentWizardStep === step.id ? 'bg-gradient-to-br from-grub-red to-red-600 border-grub-red text-white scale-110 animate-pulse' : 'border-gray-300 text-gray-400 bg-white'
+                  }`}>
+                    <FontAwesomeIcon icon={currentWizardStep > step.id ? faCheck : step.icon} className="text-xl sm:text-2xl" />
+                  </div>
+                   <p className={`mt-3 text-xs sm:text-sm text-center font-semibold ${currentWizardStep >= step.id ? 'text-gray-900' : 'text-gray-500'}`}>
+                      {step.title}
+                   </p>
                 </div>
-                 <p className={`mt-2 text-xs sm:text-sm text-center font-medium ${currentWizardStep >= step.id ? 'text-gray-800' : 'text-gray-500'}`}>
-                    {step.title}
-                 </p>
-              </div>
-              {index < wizardSteps.length - 1 && (
-                <div className={`flex-1 h-1 mx-2 sm:mx-4 transition-colors duration-500 ${currentWizardStep > step.id ? 'bg-green-500' : 'bg-gray-300'}`} />
-              )}
-            </React.Fragment>
-          ))}
+                {index < wizardSteps.length - 1 && (
+                  <div className={`flex-1 h-2 mx-4 sm:mx-6 rounded-full transition-all duration-500 ${currentWizardStep > step.id ? 'bg-gradient-to-r from-green-500 to-green-600' : 'bg-gray-200'}`} />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Step Content */}
-      <div className="mb-8 p-1">
-        {renderStepContent()}
+      <div className="mb-10">
+        <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-8 lg:p-10 border-2 border-gray-100">
+          {renderStepContent()}
+        </div>
       </div>
 
       {/* Navigation */}
-      <div className="flex justify-between items-center pt-6 border-t border-gray-200">
-        <Button
-          onClick={handlePrevious}
-          disabled={currentWizardStep === 1 || isLoading}
-          variant="outline"
-          className="flex items-center"
-        >
-          <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
-          Previous
-        </Button>
-        <div className="text-sm text-gray-500">
-           Step {currentWizardStep} of {wizardSteps.length}
+      <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 border-2 border-gray-100">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-0">
+          <Button
+            onClick={handlePrevious}
+            disabled={currentWizardStep === 1 || isLoading}
+            variant="outline"
+            className="flex items-center justify-center px-4 sm:px-6 py-3 sm:py-3 text-sm sm:text-base font-semibold border-2 border-gray-300 hover:border-grub-red hover:text-grub-red transition-all duration-200 order-2 sm:order-1"
+          >
+            <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
+            Previous
+          </Button>
+          <div className="text-xs sm:text-base font-bold text-gray-700 bg-gradient-to-r from-gray-100 to-gray-200 px-4 py-2 sm:py-2 rounded-lg text-center order-1 sm:order-2">
+             Step {currentWizardStep} of {wizardSteps.length}
+          </div>
+          <Button
+            onClick={handleNext}
+            disabled={isLoading}
+            className="flex items-center justify-center min-w-full sm:min-w-[160px] px-4 sm:px-6 py-3 sm:py-3 text-sm sm:text-base font-bold bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 order-3"
+          >
+            {isLoading ? (
+              <FontAwesomeIcon icon={faSpinner} className="mr-2 animate-spin" />
+            ) : currentWizardStep === wizardSteps.length ? (
+              <FontAwesomeIcon icon={faCheck} className="mr-2" />
+            ) : (
+              <FontAwesomeIcon icon={faArrowRight} className="mr-2" />
+            )}
+            {isLoading ? 'Saving...' : currentWizardStep === wizardSteps.length ? 'Complete Setup' : 'Next Step'}
+          </Button>
         </div>
-        <Button
-          onClick={handleNext}
-          disabled={isLoading}
-          className="flex items-center min-w-[120px] justify-center"
-        >
-          {isLoading ? (
-            <FontAwesomeIcon icon={faSpinner} className="mr-2 animate-spin" />
-          ) : currentWizardStep === wizardSteps.length ? (
-            <FontAwesomeIcon icon={faCheck} className="mr-2" />
-          ) : (
-            <FontAwesomeIcon icon={faArrowRight} className="mr-2" />
-          )}
-          {isLoading ? 'Saving...' : currentWizardStep === wizardSteps.length ? 'Complete' : 'Next'}
-        </Button>
       </div>
     </div>
   );

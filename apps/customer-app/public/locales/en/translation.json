@@ -38,6 +38,7 @@
   "yourOrders": {
     "title": "Your Orders",
     "subtitle": "Track your meal deliveries and manage your subscription",
+    "filterBy": "Filter By",
     "filterOrders": "Filter Orders",
     "filters": {
       "all": "All Orders",
@@ -59,7 +60,13 @@
     "deliveryStatus": "Delivery Status",
     "subscriptionMeal": "Subscription Meal",
     "status": {
-      "scheduled": "Scheduled"
+      "scheduled": "Scheduled",
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "preparing": "Preparing",
+      "ready": "Ready",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
     },
     "mealTypes": {
       "dinner": "Dinner"

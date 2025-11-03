@@ -53,21 +53,21 @@ const Header = () => {
   return (
     <header className="w-full bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="w-full">
-        <div className="flex justify-between items-center h-18 m:h-18 md:h-17 px-4 mx-auto">
+        <div className="flex justify-between items-center h-16 xs:h-17 sm:h-18 md:h-19 lg:h-20 px-3 xs:px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 mx-auto max-w-[1920px]">
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link to="/" className="flex items-center">
               <img
                 src={logoImage}
                 alt={siteInfo.logoText}
-                className="h-14 w-28 sm:h-16 sm:w-32 md:h-20 md:w-40 object-contain ml-2.5 rounded-lg transition-all duration-300 ease-in-out"
+                className="h-12 w-24 xs:h-14 xs:w-28 sm:h-16 sm:w-32 md:h-18 md:w-36 lg:h-20 lg:w-40 xl:h-22 xl:w-44 object-contain rounded-lg transition-all duration-300 ease-in-out"
                 loading="lazy"
               />
             </Link>
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-4">
+          <nav className="hidden md:flex items-center space-x-2 lg:space-x-3 xl:space-x-4">
             {navigation.main
               .filter(item => !item.protected || isAuthenticated)
               .map((item) => (
@@ -75,7 +75,7 @@ const Header = () => {
                 key={item.name}
                 to={item.href}
                 className={({ isActive }) => 
-                  `flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors duration-200 rounded-md
+                  `flex items-center gap-1.5 lg:gap-2 px-2 lg:px-3 py-1.5 lg:py-2 text-xs lg:text-sm xl:text-base font-medium transition-colors duration-200 rounded-md
                   ${isActive 
                     ? 'text-grub-red bg-red-50' 
                     : 'text-gray-700 hover:text-grub-red hover:bg-gray-50'}`
@@ -86,7 +86,7 @@ const Header = () => {
                     <span className={`inline-flex items-center justify-center flex-shrink-0 ${isActive ? 'text-grub-red' : 'text-gray-500'}`}>
                       <NavIcon name={item.name} />
                     </span>
-                    <span className="truncate max-w-[10rem]" title={t(`nav.${item.name}`)}>
+                    <span className="truncate max-w-[8rem] lg:max-w-[10rem] xl:max-w-[12rem]" title={t(`nav.${item.name}`)}>
                       {t(`nav.${item.name}`)}
                     </span>
                   </>
@@ -96,27 +96,27 @@ const Header = () => {
           </nav>
 
           {/* Desktop Auth Buttons & Language Switcher */}
-          <div className="hidden md:flex items-center space-x-6">
-            <div className="border-r border-gray-200 pr-6 h-8 flex items-center">
+          <div className="hidden md:flex items-center space-x-3 lg:space-x-4 xl:space-x-6">
+            <div className="border-r border-gray-200 pr-3 lg:pr-4 xl:pr-6 h-8 flex items-center">
               <LanguageSwitcher />
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 lg:space-x-3">
               <AuthButtons />
             </div>
           </div>
 
           {/* Mobile User Greeting & Menu Button */}
-          <div className="md:hidden flex items-center space-x-3">
+          <div className="md:hidden flex items-center space-x-2 xs:space-x-3">
             {/* Mobile User Greeting */}
             {isAuthenticated && user && (
-              <div className="flex items-center space-x-2 max-w-[200px] sm:max-w-none">
-                <div className="w-8 h-8 bg-gradient-to-r from-grub-red to-red-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-white text-sm font-semibold">
+              <div className="flex items-center space-x-1.5 xs:space-x-2 max-w-[140px] xs:max-w-[180px] sm:max-w-none">
+                <div className="w-7 h-7 xs:w-8 xs:h-8 bg-gradient-to-r from-grub-red to-red-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-xs xs:text-sm font-semibold">
                     {(user.firstName || user.name || user.email.split('@')[0]).charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="text-sm font-medium text-gray-900 truncate">
+                  <span className="text-xs xs:text-sm font-medium text-gray-900 truncate">
                     Hi, {user.firstName || user.name || user.email.split('@')[0]}! 👋
                   </span>
                 </div>
@@ -126,12 +126,12 @@ const Header = () => {
             {/* Mobile Menu Button */}
             <button
               onClick={toggleMobileMenu}
-              className="p-2 text-gray-700 hover:text-grub-red hover:bg-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-grub-red"
+              className="p-1.5 xs:p-2 text-gray-700 hover:text-grub-red hover:bg-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-grub-red"
               aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={isMobileMenuOpen}
             >
               <svg
-                className="h-6 w-6"
+                className="h-5 w-5 xs:h-6 xs:w-6"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"

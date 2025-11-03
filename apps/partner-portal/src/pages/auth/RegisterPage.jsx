@@ -322,7 +322,7 @@ const RegisterPage = () => {
 
   return (
     <>
-    <div className="min-h-screen auth-gradient flex relative overflow-hidden">
+    <div className="min-h-screen auth-gradient flex flex-col relative overflow-x-hidden overflow-y-auto">
       {/* Floating Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="floating-element absolute top-32 left-16 w-28 h-28 bg-gradient-to-br from-green-200/10 to-grub-red/10 rounded-full blur-xl"></div>
@@ -330,63 +330,57 @@ const RegisterPage = () => {
         <div className="floating-element absolute bottom-32 left-1/3 w-32 h-32 bg-gradient-to-br from-orange-200/10 to-pink-200/10 rounded-full blur-xl"></div>
       </div>
 
-      {/* Left Side - Benefits (Hidden on Mobile) */}
-      <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-12 xl:px-16 relative z-10">
-        <div className="max-w-md mx-auto">
-          <div className="mb-8">
-            <Logo size="xl" className="mb-6" />
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Join GrubGate Partner Network
-            </h1>
-            <p className="text-xl text-gray-600 leading-relaxed">
-              Start growing your restaurant business with Montreal's leading food delivery platform.
-            </p>
-          </div>
+      {/* Top Section - Header */}
+      <div className="px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-4 sm:pb-6 relative z-10">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">
+            Join GrubGate Partner Network
+          </h1>
+          <p className="text-base sm:text-lg lg:text-xl text-gray-700 leading-relaxed mb-6">
+            Start growing your restaurant business with Montreal's leading food delivery platform.
+          </p>
           
-          <div className="space-y-6">
+          {/* Benefits Grid */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto">
             {benefits.map((benefit, index) => (
-              <div key={index} className={`feature-card flex items-start space-x-4 group p-4 rounded-2xl hover:bg-white/50 stagger-animation`}>
-                <div className="feature-icon flex-shrink-0 w-12 h-12 bg-gradient-to-br from-grub-red/10 to-grub-red/20 rounded-xl flex items-center justify-center group-hover:from-grub-red/20 group-hover:to-grub-red/30 transition-all duration-300 shadow-lg">
-                  <FontAwesomeIcon icon={benefit.icon} className="w-6 h-6 text-grub-red" />
+              <div key={index} className="bg-white border-2 border-gray-200 rounded-xl p-3 sm:p-4 hover:border-grub-red hover:shadow-md transition-all duration-300">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-grub-red/10 to-grub-red/20 rounded-lg flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                  <FontAwesomeIcon icon={benefit.icon} className="w-5 h-5 sm:w-6 sm:h-6 text-grub-red" />
                 </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-grub-red transition-colors duration-300">{benefit.title}</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed">{benefit.description}</p>
-                </div>
+                <h3 className="font-semibold text-gray-900 text-xs sm:text-sm mb-1">{benefit.title}</h3>
+                <p className="text-gray-600 text-[10px] sm:text-xs leading-relaxed">{benefit.description}</p>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Right Side - Registration Form */}
-      <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-8 lg:max-w-2xl xl:max-w-3xl relative z-10 min-h-screen py-8">
-        <div className="w-full max-w-lg mx-auto">
+      {/* Registration Form Section */}
+      <div className="flex flex-col px-4 sm:px-6 lg:px-8 py-4 sm:py-6 pb-8 relative z-10">
+        <div className="w-full max-w-2xl mx-auto">
           {!isOTPAuthModalOpen && (
-            <div className="glass-card rounded-3xl p-6 sm:p-8 lg:p-10 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-grub-red/10 to-transparent rounded-full -translate-y-14 translate-x-14"></div>
-              <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-blue-500/5 to-transparent rounded-full translate-y-10 -translate-x-10"></div>
+            <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 relative overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border-2 border-white/50 bg-white/95 backdrop-blur-xl">
+              {/* Enhanced decorative elements */}
+              <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-grub-red/20 via-orange-300/10 to-transparent rounded-full -translate-y-20 translate-x-20 blur-2xl"></div>
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-blue-500/10 via-purple-300/10 to-transparent rounded-full translate-y-16 -translate-x-16 blur-2xl"></div>
+              <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-gradient-to-br from-grub-red/5 to-transparent rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
+              
               <div className="relative">
-              <div className="text-center mb-6 lg:mb-8">
-                <Logo className="mx-auto mb-4" size="lg" />
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Join as Partner</h1>
-                <p className="text-gray-600 text-sm sm:text-base px-2">Create your partner account to manage your restaurant</p>
+              {/* Card Header */}
+              <div className="text-center mb-4 sm:mb-6">
+                <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-grub-red to-red-600 rounded-xl shadow-lg mb-3">
+                  <FontAwesomeIcon icon={faKey} className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                </div>
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Create Partner Account</h2>
+                <p className="text-gray-600 text-xs sm:text-sm lg:text-base">Fill in your details to get started</p>
+                <div className="h-0.5 w-16 bg-gradient-to-r from-grub-red to-orange-500 rounded-full mx-auto mt-3"></div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-              {/* Form Header - Desktop Only */}
-              <div className="hidden lg:block pb-6 border-b border-gray-100">
-                <h3 className="text-2xl font-semibold text-gray-900 mb-2">
-                  Restaurant Information
-                </h3>
-                <p className="text-gray-600">
-                  Please provide your restaurant and contact details to get started.
-                </p>
-              </div>
+              <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
 
               {/* Restaurant Name */}
               <div>
-                <label htmlFor="restaurantName" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="restaurantName" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                   Restaurant Name
                 </label>
                 <div className="relative">
@@ -400,7 +394,7 @@ const RegisterPage = () => {
                     value={formData.restaurantName}
                     onChange={handleInputChange}
                     placeholder="Your Restaurant Name"
-                    className={`auth-input block w-full pl-10 pr-3 py-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-0 text-base ${
+                    className={`auth-input block w-full pl-10 pr-3 py-3 sm:py-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-0 text-sm sm:text-base ${
                       errors.restaurantName 
                         ? 'error border-red-300 focus:border-red-500 focus:ring-red-500' 
                         : formData.restaurantName && !errors.restaurantName
@@ -416,7 +410,7 @@ const RegisterPage = () => {
 
               {/* Owner Name */}
               <div>
-                <label htmlFor="ownerName" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="ownerName" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                   Owner Name
                 </label>
                 <div className="relative">
@@ -430,7 +424,7 @@ const RegisterPage = () => {
                     value={formData.ownerName}
                     onChange={handleInputChange}
                     placeholder="Your Full Name"
-                    className={`block w-full pl-10 pr-3 py-3 lg:py-4 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 text-base lg:text-lg ${
+                    className={`block w-full pl-10 pr-3 py-3 sm:py-4 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 text-sm sm:text-base ${
                       errors.ownerName 
                         ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
                         : 'border-gray-300 focus:border-grub-red focus:ring-grub-red hover:border-gray-400'
@@ -442,10 +436,10 @@ const RegisterPage = () => {
                 )}
               </div>
 
-              {/* Email & Phone Row */}
-              <div className="space-y-4 sm:grid sm:grid-cols-2 sm:gap-4 lg:gap-6 sm:space-y-0">
+              {/* Email Field */}
+              <div>
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="email" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     Email
                   </label>
                   <div className="relative">
@@ -459,7 +453,7 @@ const RegisterPage = () => {
                       value={formData.email}
                       onChange={handleInputChange}
                       placeholder="your@email.com"
-                      className={`block w-full pl-10 pr-3 py-3 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 text-base ${
+                      className={`block w-full pl-10 pr-3 py-3 sm:py-3.5 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 text-sm sm:text-base ${
                         errors.email 
                           ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
                           : 'border-gray-300 focus:border-grub-red focus:ring-grub-red hover:border-gray-400'
@@ -470,39 +464,40 @@ const RegisterPage = () => {
                     <p className="mt-2 text-sm text-red-600">{errors.email}</p>
                   )}
                 </div>
+              </div>
 
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+              {/* Phone Field */}
+              <div>
+                <label htmlFor="phone" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     Phone
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <FontAwesomeIcon icon={faPhone} className="h-5 w-5 text-gray-400" />
                     </div>
-                    <input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      placeholder="+1 (555) 123-4567"
-                      className={`block w-full pl-10 pr-3 py-3 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 text-base ${
-                        errors.phone 
-                          ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
-                          : 'border-gray-300 focus:border-grub-red focus:ring-grub-red hover:border-gray-400'
-                      }`}
-                    />
-                  </div>
-                  {errors.phone && (
-                    <p className="mt-2 text-sm text-red-600">{errors.phone}</p>
-                  )}
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    placeholder="+1 (555) 123-4567"
+                    className={`block w-full pl-10 pr-3 py-3 sm:py-3.5 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 text-sm sm:text-base ${
+                      errors.phone 
+                        ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                        : 'border-gray-300 focus:border-grub-red focus:ring-grub-red hover:border-gray-400'
+                    }`}
+                  />
                 </div>
+                {errors.phone && (
+                  <p className="mt-2 text-sm text-red-600">{errors.phone}</p>
+                )}
               </div>
 
-              {/* Password Fields */}
-              <div className="space-y-4 sm:grid sm:grid-cols-2 sm:gap-4 lg:gap-6 sm:space-y-0">
+              {/* Password Field */}
+              <div>
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="password" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     Password
                   </label>
                   <div className="relative">
@@ -516,7 +511,7 @@ const RegisterPage = () => {
                       value={formData.password}
                       onChange={handleInputChange}
                       placeholder="Create password"
-                      className={`block w-full pl-10 pr-12 py-3 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 text-base ${
+                      className={`block w-full pl-10 pr-12 py-3 sm:py-3.5 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 text-sm sm:text-base ${
                         errors.password 
                           ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
                           : 'border-gray-300 focus:border-grub-red focus:ring-grub-red hover:border-gray-400'
@@ -538,48 +533,49 @@ const RegisterPage = () => {
                     <p className="mt-2 text-sm text-red-600">{errors.password}</p>
                   )}
                 </div>
+              </div>
 
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+              {/* Confirm Password Field */}
+              <div>
+                <label htmlFor="confirmPassword" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     Confirm Password
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <FontAwesomeIcon icon={faLock} className="h-5 w-5 text-gray-400" />
                     </div>
-                    <input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      value={formData.confirmPassword}
-                      onChange={handleInputChange}
-                      placeholder="Confirm password"
-                      className={`block w-full pl-10 pr-12 py-3 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 text-base ${
-                        errors.confirmPassword 
-                          ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
-                          : 'border-gray-300 focus:border-grub-red focus:ring-grub-red hover:border-gray-400'
-                      }`}
-                    />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center hover:bg-gray-50 rounded-r-xl transition-colors"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                      {showConfirmPassword ? (
-                        <FontAwesomeIcon icon={faEyeSlash} className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                      ) : (
-                        <FontAwesomeIcon icon={faEye} className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                      )}
-                    </button>
-                  </div>
-                  {errors.confirmPassword && (
-                    <p className="mt-2 text-sm text-red-600">{errors.confirmPassword}</p>
-                  )}
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    placeholder="Confirm password"
+                    className={`block w-full pl-10 pr-12 py-3 sm:py-3.5 border rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 text-sm sm:text-base ${
+                      errors.confirmPassword 
+                        ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                        : 'border-gray-300 focus:border-grub-red focus:ring-grub-red hover:border-gray-400'
+                    } sm:mt-2`}
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center hover:bg-gray-50 rounded-r-xl transition-colors"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? (
+                      <FontAwesomeIcon icon={faEyeSlash} className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    ) : (
+                      <FontAwesomeIcon icon={faEye} className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    )}
+                  </button>
                 </div>
+                {errors.confirmPassword && (
+                  <p className="mt-2 text-sm text-red-600">{errors.confirmPassword}</p>
+                )}
               </div>
 
               {/* Terms Agreement */}
-              <div className="flex items-start space-x-3 pt-2">
+              <div className="flex items-start space-x-2 sm:space-x-3 pt-1 sm:pt-2">
                 <input
                   id="agreeTerms"
                   name="agreeTerms"
@@ -604,11 +600,11 @@ const RegisterPage = () => {
               )}
 
               {/* Submit Button */}
-              <div className="pt-2">
+              <div className="pt-2 sm:pt-3">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="auth-button w-full py-4 px-6 bg-gradient-to-r from-grub-red to-red-600 text-white text-base font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
+                  className="auth-button w-full py-3 sm:py-4 px-6 bg-gradient-to-r from-grub-red to-red-600 text-white text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
                 >
                 {loading ? (
                   <div className="flex items-center justify-center">
@@ -622,8 +618,8 @@ const RegisterPage = () => {
               </div>
 
               {/* Sign In Link */}
-              <div className="text-center pt-4 border-t border-gray-100">
-                <span className="text-sm text-gray-600">
+              <div className="text-center pt-3 sm:pt-4 border-t border-gray-100">
+                <span className="text-xs sm:text-sm text-gray-600">
                   Already have an account?{' '}
                   <Link
                     to="/login"
@@ -638,23 +634,6 @@ const RegisterPage = () => {
             </div>
           )}
 
-          {/* Mobile Benefits */}
-          <div className="lg:hidden mt-6 px-2">
-            <div className="text-center text-sm text-gray-600 mb-4 font-medium">
-              Why join GrubGate?
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {benefits.map((benefit, index) => (
-                <div key={index} className="feature-card text-center p-4 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300">
-                  <div className="feature-icon w-10 h-10 bg-gradient-to-br from-grub-red/10 to-grub-red/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <FontAwesomeIcon icon={benefit.icon} className="w-5 h-5 text-grub-red" />
-                  </div>
-                  <h4 className="font-semibold text-gray-900 text-sm mb-2">{benefit.title}</h4>
-                  <p className="text-xs text-gray-600 leading-relaxed">{benefit.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </div>

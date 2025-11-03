@@ -74,25 +74,25 @@ const RoleCards = () => {
   ];
 
   return (
-    <section className="py-16 bg-gradient-to-br from-gray-50 to-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-8 xs:py-10 sm:py-12 md:py-16 lg:py-20 bg-gradient-to-br from-gray-50 to-white">
+      <div className="max-w-7xl mx-auto px-3 xs:px-4 sm:px-6 md:px-8 lg:px-10">
         {/* Section Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+        <div className="text-center mb-8 xs:mb-10 sm:mb-12 md:mb-14 lg:mb-16">
+          <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 xs:mb-5 sm:mb-6">
             Join the GrubGate Community
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 max-w-4xl mx-auto px-2">
             Whether you're looking to order food, grow your restaurant business, or earn as a delivery partner, 
             we have the perfect solution for you.
           </p>
         </div>
 
         {/* Role Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 xs:gap-6 sm:gap-7 md:gap-8">
           {roleCards.map((card) => (
             <div
               key={card.id}
-              className={`group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden ${
+              className={`group relative bg-white rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1 sm:hover:-translate-y-2 overflow-hidden ${
                 card.disabled ? 'opacity-75' : 'cursor-pointer'
               }`}
               onClick={!card.disabled ? card.onClick : undefined}
@@ -101,27 +101,27 @@ const RoleCards = () => {
               <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} ${card.hoverGradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
               
               {/* Card Content */}
-              <div className="relative p-8">
+              <div className="relative p-5 xs:p-6 sm:p-7 md:p-8">
                 {/* Icon */}
-                <div className="text-center mb-6">
-                  <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br ${card.gradient} text-white text-3xl mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                <div className="text-center mb-4 xs:mb-5 sm:mb-6">
+                  <div className={`inline-flex items-center justify-center w-16 h-16 xs:w-18 xs:h-18 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br ${card.gradient} text-white text-2xl xs:text-3xl mb-3 xs:mb-4 group-hover:scale-110 transition-transform duration-300`}>
                     {card.icon}
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{card.title}</h3>
-                  <p className="text-lg font-medium text-gray-600">{card.subtitle}</p>
+                  <h3 className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900 mb-1.5 xs:mb-2">{card.title}</h3>
+                  <p className="text-base xs:text-lg font-medium text-gray-600">{card.subtitle}</p>
                 </div>
 
                 {/* Description */}
-                <p className="text-gray-600 text-center mb-6 leading-relaxed">
+                <p className="text-xs xs:text-sm sm:text-base text-gray-600 text-center mb-4 xs:mb-5 sm:mb-6 leading-relaxed">
                   {card.description}
                 </p>
 
                 {/* Features */}
-                <div className="mb-8">
-                  <ul className="space-y-3">
+                <div className="mb-5 xs:mb-6 sm:mb-7 md:mb-8">
+                  <ul className="space-y-2 xs:space-y-2.5 sm:space-y-3">
                     {card.features.map((feature, index) => (
-                      <li key={index} className="flex items-center text-sm text-gray-700">
-                        <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${card.gradient} mr-3 flex-shrink-0`}></div>
+                      <li key={index} className="flex items-center text-xs xs:text-sm text-gray-700">
+                        <div className={`w-1.5 h-1.5 xs:w-2 xs:h-2 rounded-full bg-gradient-to-r ${card.gradient} mr-2 xs:mr-3 flex-shrink-0`}></div>
                         {feature}
                       </li>
                     ))}
@@ -133,7 +133,7 @@ const RoleCards = () => {
                   <button
                     onClick={card.onClick}
                     disabled={card.disabled}
-                    className={`w-full px-6 py-4 rounded-xl font-semibold text-white transition-all duration-300 transform group-hover:scale-105 ${card.buttonStyle} ${
+                    className={`w-full px-4 xs:px-5 sm:px-6 py-3 xs:py-3.5 sm:py-4 rounded-lg sm:rounded-xl font-semibold text-sm xs:text-base text-white transition-all duration-300 transform group-hover:scale-105 ${card.buttonStyle} ${
                       card.disabled ? '' : 'shadow-lg hover:shadow-xl'
                     }`}
                   >
@@ -166,20 +166,20 @@ const RoleCards = () => {
         </div>
 
         {/* Bottom CTA */}
-        <div className="text-center mt-16">
-          <p className="text-lg text-gray-600 mb-6">
+        <div className="text-center mt-10 xs:mt-12 sm:mt-14 md:mt-16">
+          <p className="text-base xs:text-lg sm:text-xl text-gray-600 mb-4 xs:mb-5 sm:mb-6 px-2">
             Ready to be part of the GrubGate family?
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="flex flex-col sm:flex-row gap-3 xs:gap-4 justify-center items-center px-3">
             <button
               onClick={handleCustomerClick}
-              className="bg-grub-red text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-red-700 transition-colors duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+              className="w-full sm:w-auto bg-grub-red text-white px-6 xs:px-7 sm:px-8 py-3 xs:py-3.5 sm:py-4 rounded-lg sm:rounded-xl font-semibold text-base xs:text-lg hover:bg-red-700 transition-colors duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
             >
               {isAuthenticated ? '🚀 Start Planning' : '✨ Join as Customer'}
             </button>
             <button
               onClick={handlePartnerClick}
-              className="border-2 border-grub-red text-grub-red px-8 py-4 rounded-xl font-semibold text-lg hover:bg-grub-red hover:text-white transition-all duration-300"
+              className="w-full sm:w-auto border-2 border-grub-red text-grub-red px-6 xs:px-7 sm:px-8 py-3 xs:py-3.5 sm:py-4 rounded-lg sm:rounded-xl font-semibold text-base xs:text-lg hover:bg-grub-red hover:text-white transition-all duration-300"
             >
               🏪 Become a Partner
             </button>

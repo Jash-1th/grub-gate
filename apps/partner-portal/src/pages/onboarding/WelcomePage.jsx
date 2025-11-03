@@ -186,44 +186,94 @@ const WelcomePage = () => {
   ];
 
   return (
-    <div className="p-8">
-      {/* Welcome Header */}
-      <div className="text-center mb-12">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-6">
-          <FontAwesomeIcon icon={faRocket} className="text-2xl text-blue-600" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      {/* Hero Section with Confetti Effect */}
+      <div className="relative overflow-hidden bg-grub-red text-white">
+        {/* Decorative Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-10 right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-yellow-400/20 rounded-full blur-2xl animate-bounce"></div>
         </div>
         
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Welcome to GrubGate, {user?.firstName || 'Partner'}! 🎉
-        </h1>
+        <div className="relative px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 pb-20 sm:pb-24">
+          <div className="max-w-4xl mx-auto text-center">
+            {/* Animated Icon */}
+            <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-white/20 backdrop-blur-sm rounded-full mb-6 sm:mb-8 shadow-2xl animate-bounce">
+              <FontAwesomeIcon icon={faRocket} className="text-3xl sm:text-4xl text-white" />
+            </div>
+            
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
+              Welcome to GrubGate,<br className="sm:hidden" /> {user?.firstName || 'Partner'}! 🎉
+            </h1>
+            
+            <p className="text-lg sm:text-xl lg:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed mb-8">
+              Congratulations on joining our platform! You're now part of a growing network of successful restaurants.
+            </p>
+            
+            {/* Quick Stats Banner */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 max-w-3xl mx-auto">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/20">
+                <div className="text-2xl sm:text-3xl font-bold mb-1">1200+</div>
+                <div className="text-xs sm:text-sm text-white/80">Partners</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/20">
+                <div className="text-2xl sm:text-3xl font-bold mb-1">25K+</div>
+                <div className="text-xs sm:text-sm text-white/80">Orders/Month</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/20">
+                <div className="text-2xl sm:text-3xl font-bold mb-1">4.9★</div>
+                <div className="text-xs sm:text-sm text-white/80">Rating</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/20">
+                <div className="text-2xl sm:text-3xl font-bold mb-1">+40%</div>
+                <div className="text-xs sm:text-sm text-white/80">Revenue</div>
+              </div>
+            </div>
+          </div>
+        </div>
         
-        <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-          Congratulations on joining our platform! You're now part of a growing network of successful restaurants. 
-          Let's get your restaurant set up and ready to receive orders.
-        </p>
+        {/* Wave Divider */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
+            <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="url(#wave-gradient)" />
+            <defs>
+              <linearGradient id="wave-gradient" x1="0" y1="0" x2="1440" y2="0" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="rgb(239, 246, 255)" />
+                <stop offset="50%" stopColor="rgb(238, 242, 255)" />
+                <stop offset="100%" stopColor="rgb(243, 232, 255)" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
       </div>
+      
+      <div className="px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
 
       {/* Benefits Section */}
-      <div className="mb-12">
-        <h2 className="text-2xl font-semibold text-gray-900 text-center mb-8">
-          What You'll Get as a GrubGate Partner
-        </h2>
+      <div className="max-w-6xl mx-auto mb-12 sm:mb-16">
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
+            What You'll Get as a GrubGate Partner
+          </h2>
+          <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+            Everything you need to grow your restaurant business
+          </p>
+        </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {benefits.map((benefit, index) => (
-            <div key={index} className="bg-gray-50 rounded-xl p-6 hover:shadow-md transition-shadow duration-200">
-              <div className="flex items-start space-x-4">
-                <div className={`flex-shrink-0 w-12 h-12 rounded-lg bg-white flex items-center justify-center ${benefit.color}`}>
-                  <FontAwesomeIcon icon={benefit.icon} className="text-xl" />
+            <div key={index} className="group bg-white rounded-2xl p-5 sm:p-6 hover:shadow-2xl transition-all duration-300 border-2 border-gray-100 hover:border-blue-200 hover:-translate-y-2">
+              <div className="flex flex-col items-center text-center">
+                <div className={`flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center ${benefit.color} mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+                  <FontAwesomeIcon icon={benefit.icon} className="text-2xl sm:text-3xl" />
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {benefit.title}
-                  </h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    {benefit.description}
-                  </p>
-                </div>
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">
+                  {benefit.title}
+                </h3>
+                <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                  {benefit.description}
+                </p>
               </div>
             </div>
           ))}
@@ -231,34 +281,40 @@ const WelcomePage = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="mb-12">
-        <h2 className="text-2xl font-semibold text-gray-900 text-center mb-8">
-          Choose Your Next Step
-        </h2>
+      <div className="max-w-5xl mx-auto mb-12 sm:mb-16">
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
+            Choose Your Next Step
+          </h2>
+          <p className="text-base sm:text-lg text-gray-600">
+            Let's get your restaurant up and running
+          </p>
+        </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
           {quickActions.map((action, index) => (
             <div 
               key={index} 
-              className={`relative rounded-xl p-6 border-2 transition-all duration-200 hover:shadow-lg ${
+              className={`relative rounded-2xl p-6 sm:p-8 border-2 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${
                 action.primary 
-                  ? 'border-blue-500 bg-blue-50 hover:bg-blue-100' 
-                  : 'border-gray-200 bg-white hover:border-gray-300'
+                  ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50' 
+                  : 'border-gray-200 bg-white hover:border-blue-200'
               }`}
             >
               {action.primary && (
-                <div className="absolute -top-3 left-6">
-                  <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                <div className="absolute -top-3 sm:-top-4 left-4 sm:left-6">
+                  <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold shadow-lg flex items-center">
+                    <FontAwesomeIcon icon={faStar} className="mr-1.5" />
                     Recommended
                   </span>
                 </div>
               )}
               
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <div className="mb-6">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">
                   {action.title}
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
                   {action.description}
                 </p>
               </div>
@@ -266,10 +322,10 @@ const WelcomePage = () => {
               <Button
                 onClick={action.onClick}
                 disabled={isLoading}
-                className={`w-full ${
+                className={`w-full py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-xl transition-all duration-300 ${
                   action.primary 
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                    : 'bg-white hover:bg-gray-50 text-gray-900 border border-gray-300'
+                    ? 'bg-grub-red hover:bg-red-700 text-white shadow-lg hover:shadow-xl' 
+                    : 'bg-grub-red hover:bg-red-700 text-white shadow-lg hover:shadow-xl'
                 }`}
               >
                 {isLoading && action.primary ? (
@@ -290,12 +346,12 @@ const WelcomePage = () => {
       </div>
 
       {/* Enhanced Success Partners Section */}
-      <div className="bg-gradient-to-r from-green-50 via-blue-50 to-purple-50 rounded-2xl p-8 mb-8">
-        <div className="text-center mb-8">
-          <h3 className="text-2xl font-bold text-gray-900 mb-3">
+      <div className="max-w-6xl mx-auto bg-gradient-to-r from-green-50 via-blue-50 to-purple-50 rounded-3xl p-6 sm:p-8 lg:p-12 mb-8 sm:mb-12 shadow-xl border-2 border-white">
+        <div className="text-center mb-8 sm:mb-12">
+          <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
             Join Successful Partners Already on GrubGate
           </h3>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base lg:text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
             Thousands of restaurants are already growing their business with us. See what they've achieved and join the success story.
           </p>
         </div>
@@ -449,16 +505,18 @@ const WelcomePage = () => {
       </div>
 
       {/* Alternative Actions */}
-      <div className="text-center">
-        <p className="text-gray-500 mb-4">
+      <div className="max-w-4xl mx-auto text-center bg-white rounded-2xl p-6 sm:p-8 shadow-lg border-2 border-gray-100">
+        <p className="text-base sm:text-lg text-gray-600 mb-4">
           Already familiar with the platform?
         </p>
         <button
           onClick={handleGoToDashboard}
-          className="text-blue-600 hover:text-blue-700 font-medium underline"
+          className="inline-flex items-center text-blue-600 hover:text-blue-700 font-semibold text-base sm:text-lg transition-colors duration-200 group"
         >
           Go directly to dashboard
+          <FontAwesomeIcon icon={faArrowRight} className="ml-2 group-hover:translate-x-1 transition-transform duration-200" />
         </button>
+      </div>
       </div>
     </div>
   );

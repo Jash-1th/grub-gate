@@ -69,21 +69,21 @@ const PopularDishes = () => {
   if (!isClient) {
     // SSR-friendly static version - matches client structure exactly
     return (
-      <div className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+      <div className="py-8 xs:py-10 sm:py-12 md:py-16 lg:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-3 xs:px-4 sm:px-6 md:px-8 lg:px-10">
+          <div className="text-center mb-8 xs:mb-10 sm:mb-12">
+            <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900">
               Last Week's Most Ordered
             </h2>
-            <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
+            <p className="mt-2 xs:mt-3 sm:mt-4 max-w-3xl mx-auto text-sm xs:text-base sm:text-lg md:text-xl text-gray-500">
               Discover what everyone was ordering last week from our top restaurants
             </p>
           </div>
           
-          <div className="relative h-[500px] md:h-[400px] w-full">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="bg-white rounded-xl overflow-hidden shadow-xl max-w-3xl w-full flex flex-col md:flex-row h-full">
-                <div className="md:w-1/2 h-64 md:h-auto">
+          <div className="relative h-auto min-h-[400px] xs:min-h-[450px] sm:min-h-[500px] md:h-[400px] lg:h-[450px] w-full">
+            <div className="flex items-center justify-center">
+              <div className="bg-white rounded-lg sm:rounded-xl overflow-hidden shadow-xl max-w-4xl w-full flex flex-col md:flex-row">
+                <div className="md:w-1/2 h-48 xs:h-56 sm:h-64 md:h-auto">
                   <img 
                     src={dishes[0]?.image || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80'} 
                     alt={dishes[0]?.name || 'Gourmet Burger'} 
@@ -91,18 +91,18 @@ const PopularDishes = () => {
                     loading="lazy"
                   />
                 </div>
-                <div className="p-8 md:w-1/2 flex flex-col justify-center">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-2xl font-bold text-gray-900">Last Week's Most Ordered</h3>
+                <div className="p-4 xs:p-5 sm:p-6 md:p-8 md:w-1/2 flex flex-col justify-center">
+                  <div className="flex justify-between items-start mb-3 xs:mb-4">
+                    <h3 className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900">Last Week's Most Ordered</h3>
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                       🔥 Most Ordered
                     </span>
                   </div>
                   
-                  <p className="text-gray-600 mb-4">Discover what everyone was ordering last week from our top restaurants</p>
+                  <p className="text-xs xs:text-sm sm:text-base text-gray-600 mb-3 xs:mb-4">Discover what everyone was ordering last week from our top restaurants</p>
                   
                   {/* Restaurant info placeholder */}
-                  <div className="flex items-center mb-4">
+                  <div className="flex items-center mb-3 xs:mb-4">
                     <div className="w-8 h-8 bg-grub-red rounded-full flex items-center justify-center mr-3">
                       <span className="text-white text-sm font-bold">R</span>
                     </div>
@@ -114,19 +114,19 @@ const PopularDishes = () => {
                   
                   {/* Loading state */}
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-grub-red">Loading...</span>
-                    <span className="text-xs text-blue-600 font-medium">⭐ Featured</span>
+                    <span className="text-lg xs:text-xl sm:text-2xl font-bold text-grub-red">Loading...</span>
+                    <span className="text-xs sm:text-sm text-blue-600 font-medium">⭐ Featured</span>
                   </div>
                 </div>
               </div>
             </div>
             
-            <div className="flex justify-center mt-8 space-x-2">
+            <div className="flex justify-center mt-6 xs:mt-7 sm:mt-8 space-x-2">
               {dishes.map((_, index) => (
                 <button
                   key={index}
-                  className={`w-3 h-3 rounded-full transition-colors ${
-                    index === 0 ? 'bg-grub-red w-6' : 'bg-gray-300'
+                  className={`w-2.5 h-2.5 xs:w-3 xs:h-3 rounded-full transition-colors ${
+                    index === 0 ? 'bg-grub-red w-5 xs:w-6' : 'bg-gray-300'
                   }`}
                   aria-label={`Go to slide ${index + 1}`}
                 />
@@ -159,18 +159,18 @@ const PopularDishes = () => {
   };
 
   return (
-    <div ref={sectionRef} className="py-16 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+    <div ref={sectionRef} className="py-8 xs:py-10 sm:py-12 md:py-16 lg:py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-3 xs:px-4 sm:px-6 md:px-8 lg:px-10">
+        <div className="text-center mb-8 xs:mb-10 sm:mb-12">
+          <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900">
             Last Week's Most Ordered
           </h2>
-          <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
+          <p className="mt-2 xs:mt-3 sm:mt-4 max-w-3xl mx-auto text-sm xs:text-base sm:text-lg md:text-xl text-gray-500">
             Discover what everyone was ordering last week from our top restaurants
           </p>
         </div>
         
-        <div className="relative h-[500px] md:h-[400px] w-full">
+        <div className="relative h-auto min-h-[400px] xs:min-h-[450px] sm:min-h-[500px] md:h-[400px] lg:h-[450px] w-full">
           <AnimatePresence mode="wait">
             {dishes.map((dish, index) => (
               index === currentIndex && (
@@ -181,10 +181,10 @@ const PopularDishes = () => {
                   exit="exit"
                   variants={dishVariants}
                   viewport={{ once: true, amount: 0.2 }}
-                  className="absolute inset-0 flex items-center justify-center"
+                  className="flex items-center justify-center"
                 >
-                  <div className="bg-white rounded-xl overflow-hidden shadow-xl max-w-3xl w-full flex flex-col md:flex-row h-full">
-                    <div className="md:w-1/2 h-64 md:h-auto">
+                  <div className="bg-white rounded-lg sm:rounded-xl overflow-hidden shadow-xl max-w-4xl w-full flex flex-col md:flex-row">
+                    <div className="md:w-1/2 h-48 xs:h-56 sm:h-64 md:h-auto">
                       <img 
                         src={dish.image} 
                         alt={dish.name} 
@@ -192,9 +192,9 @@ const PopularDishes = () => {
                         loading="lazy"
                       />
                     </div>
-                    <div className="p-8 md:w-1/2 flex flex-col justify-center">
-                      <div className="flex justify-between items-start mb-4">
-                        <h3 className="text-2xl font-bold text-gray-900">{dish.name}</h3>
+                    <div className="p-4 xs:p-5 sm:p-6 md:p-8 md:w-1/2 flex flex-col justify-center">
+                      <div className="flex flex-col xs:flex-row justify-between items-start mb-3 xs:mb-4 gap-2">
+                        <h3 className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900">{dish.name}</h3>
                         {dish.totalOrders > 0 && (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                             🔥 {dish.totalOrders} orders last week
@@ -202,10 +202,10 @@ const PopularDishes = () => {
                         )}
                       </div>
                       
-                      <p className="text-gray-600 mb-4">{dish.description}</p>
+                      <p className="text-xs xs:text-sm sm:text-base text-gray-600 mb-3 xs:mb-4">{dish.description}</p>
                       
                       {/* Restaurant info */}
-                      <div className="flex items-center mb-4">
+                      <div className="flex items-center mb-3 xs:mb-4">
                         <div className="w-8 h-8 bg-grub-red rounded-full flex items-center justify-center mr-3">
                           <span className="text-white text-sm font-bold">
                             {dish.restaurant?.name?.charAt(0) || 'R'}
@@ -221,7 +221,7 @@ const PopularDishes = () => {
                       
                       {/* Price and popularity */}
                       <div className="flex items-center justify-between">
-                        <span className="text-2xl font-bold text-grub-red">
+                        <span className="text-lg xs:text-xl sm:text-2xl font-bold text-grub-red">
                           ${typeof dish.price === 'number' ? dish.price.toFixed(2) : dish.price}
                         </span>
                         <div className="flex items-center space-x-2">
@@ -240,13 +240,13 @@ const PopularDishes = () => {
             ))}
           </AnimatePresence>
           
-          <div className="flex justify-center mt-8 space-x-2">
+          <div className="flex justify-center mt-6 xs:mt-7 sm:mt-8 space-x-2">
             {dishes.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentIndex(index)}
-                className={`w-3 h-3 rounded-full transition-colors ${
-                  index === currentIndex ? 'bg-grub-red w-6' : 'bg-gray-300'
+                className={`w-2.5 h-2.5 xs:w-3 xs:h-3 rounded-full transition-colors ${
+                  index === currentIndex ? 'bg-grub-red w-5 xs:w-6' : 'bg-gray-300'
                 }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
