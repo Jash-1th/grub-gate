@@ -89,13 +89,50 @@ const LandingPage = () => {
     { label: t('landingPage.hero.stats.satisfaction'), value: '98%' }
   ];
 
+  // Handle intersection observer for scroll animations
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate-fadeInUp');
+          // Make sure the element stays visible after animation
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px' // Trigger slightly before element is in view
+    });
+
+    // Observe all sections with the 'scroll-animate' class
+    const animateElements = document.querySelectorAll('.scroll-animate');
+    animateElements.forEach((el) => observer.observe(el));
+    
+    // Force trigger animation for hero section immediately
+    const heroSection = document.querySelector('.hero-section');
+    if (heroSection) {
+      heroSection.classList.add('animate-fadeInUp');
+      heroSection.style.opacity = '1';
+      heroSection.style.transform = 'translateY(0)';
+    }
+    
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-hidden">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-grub-red to-grub-red-dark text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
+      <section className="bg-gradient-to-br from-grub-red to-grub-red-dark text-white py-12 md:py-20 relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute inset-0 overflow-hidden opacity-10">
+          <div className="absolute -top-20 -right-20 w-64 h-64 bg-white rounded-full"></div>
+          <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-white rounded-full"></div>
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div className="hero-section scroll-animate opacity-0 translate-y-6 transition-all duration-500 ease-out">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
                 {t('landingPage.hero.headline')}
               </h1>

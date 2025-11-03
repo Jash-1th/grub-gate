@@ -560,6 +560,8 @@
   "yourOrders": {
     "title": "Vos Commandes",
     "subtitle": "Suivez vos livraisons de repas et gérez votre abonnement",
+    "ordersFound": "{{count}} commande trouvée",
+    "ordersFound_plural": "{{count}} commandes trouvées",
     "filterOrders": "Filtrer les Commandes",
     "filters": {
       "all": "Toutes les Commandes",
@@ -590,6 +592,7 @@
     "deliveryAddress": "Adresse de livraison",
     "quantity": "Quantité",
     "items": "Articles de la commande",
+    "orderSummary": "Résumé de la commande",
     "restaurantNameMissing": "Informations sur le restaurant indisponibles"
   },
   "reviews": {

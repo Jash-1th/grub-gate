@@ -50,6 +50,8 @@
     },
     "noOrdersTitle": "No Orders Found",
     "noOrders": "You haven't placed any orders yet. Start exploring restaurants and subscribe to meal plans to get delicious meals delivered to your door.",
+    "ordersFound": "{{count}} order found",
+    "ordersFound_plural": "{{count}} orders found",
     "browseRestaurants": "Browse Restaurants",
     "viewCalendar": "View My Meal Calendar",
     "checkScheduledMeals": "Check your scheduled meals & delivery status",
@@ -70,6 +72,7 @@
     "deliveryAddress": "Delivery Address",
     "quantity": "Quantity",
     "items": "Order Items",
+    "orderSummary": "Order Summary",
     "restaurantNameMissing": "Restaurant Information Unavailable"
   },
   "reviews": {

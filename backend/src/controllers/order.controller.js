@@ -3,6 +3,7 @@ const Order = require('../models/Order');
 const Restaurant = require('../models/Restaurant');
 const MenuItem = require('../models/MenuItem');
 const User = require('../models/User');
+const mongoose = require('mongoose');
 const { 
   successResponse, 
   errorResponse,
@@ -156,10 +157,31 @@ const getOrders = asyncHandler(async (req, res) => {
     .limit(parseInt(limit))
     .sort(sort)
     .populate('customerId', 'firstName lastName email phone')
-    .populate('restaurantId', 'name cuisine phone address')
-    .populate('weeklyPlanId', 'planType startDate endDate');
+    .populate('restaurantId', 'name cuisine phone address rating reviewCount')
+    .populate('weeklyPlanId', 'planType startDate endDate')
+    .populate('items.menuItemId', 'name description image rating reviewCount');
+  
+  // Log specific item data to debug
+  if (orders.length > 0 && orders[0].items) {
+    console.log('DEBUG: First order items after population:', orders[0].items.map(item => ({
+      name: item.name,
+      menuItemIdExists: !!item.menuItemId,
+      menuItemIdType: typeof item.menuItemId,
+      menuItemIdRating: item.menuItemId?.rating,
+      menuItemIdReviewCount: item.menuItemId?.reviewCount
+    })));
+  }
 
   const total = await Order.countDocuments(query);
+
+  // Debug log to see what data is being sent
+  if (orders.length > 0) {
+    console.log('DEBUG: First order items structure:', orders[0].items.map(item => ({
+      name: item.name,
+      menuItemIdRating: item.menuItemId?.rating,
+      menuItemIdReviewCount: item.menuItemId?.reviewCount
+    })));
+  }
 
   // Debug logging for partner orders
   if (req.user?.roles?.includes('partner') || req.user?.role === 'partner') {
@@ -236,13 +258,34 @@ const getOrder = asyncHandler(async (req, res) => {
 
   const order = await Order.findOne(query)
     .populate('customerId', 'firstName lastName email phone')
-    .populate('restaurantId', 'name cuisine phone address operatingHours')
+    .populate('restaurantId', 'name cuisine phone address operatingHours rating reviewCount')
     .populate('weeklyPlanId', 'planType startDate endDate')
-    .populate('items.menuItemId', 'name description image');
+    .populate('items.menuItemId', 'name description image rating reviewCount');
+  
+  // Log specific item data to debug
+  if (order && order.items) {
+    console.log('DEBUG: Order items after population:', order.items.map(item => ({
+      name: item.name,
+      menuItemIdExists: !!item.menuItemId,
+      menuItemIdType: typeof item.menuItemId,
+      menuItemIdRating: item.menuItemId?.rating,
+      menuItemIdReviewCount: item.menuItemId?.reviewCount
+    })));
+  }
 
   if (!order) {
     return notFoundResponse(res, 'Order not found');
   }
+
+  // Debug log to see what data is being sent
+  console.log('DEBUG: Order data being sent to frontend - Order ID:', order._id);
+  
+  // Log just the items to see the structure
+  console.log('DEBUG: Order items structure:', order.items.map(item => ({
+    name: item.name,
+    menuItemIdRating: item.menuItemId?.rating,
+    menuItemIdReviewCount: item.menuItemId?.reviewCount
+  })));
 
   successResponse(res, { order }, 'Order retrieved successfully');
 });
@@ -388,8 +431,27 @@ const createOrder = asyncHandler(async (req, res) => {
   await order.populate([
     { path: 'customerId', select: 'firstName lastName email phone phoneNumber' },
     { path: 'restaurantId', select: 'name cuisine phone address' },
-    { path: 'items.menuItemId', select: 'name description image category' }
+    { path: 'items.menuItemId', select: 'name description image category rating reviewCount' }
   ]);
+  
+  // Log specific item data to debug
+  if (order && order.items) {
+    console.log('DEBUG: New order items after population:', order.items.map(item => ({
+      name: item.name,
+      menuItemIdExists: !!item.menuItemId,
+      menuItemIdType: typeof item.menuItemId,
+      menuItemIdRating: item.menuItemId?.rating,
+      menuItemIdReviewCount: item.menuItemId?.reviewCount
+    })));
+  }
+
+  // Debug log to see what data is being sent
+  console.log('DEBUG: New order data being sent to frontend - Order ID:', order._id);
+  console.log('DEBUG: New order items structure:', order.items.map(item => ({
+    name: item.name,
+    menuItemIdRating: item.menuItemId?.rating,
+    menuItemIdReviewCount: item.menuItemId?.reviewCount
+  })));
 
   // Send push notifications for new order
   await sendNewOrderNotifications(order);
