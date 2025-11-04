@@ -285,8 +285,8 @@ const LandingPage = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {/* Feature 1 */}
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-2xl p-6 md:p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 scroll-animate">
-              <div className="w-12 h-12 md:w-14 md:h-14 bg-blue-600 rounded-xl flex items-center justify-center mb-4 md:mb-6">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-2xl p-6 md:p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 scroll-animate text-center">
+              <div className="w-12 h-12 md:w-14 md:h-14 bg-blue-600 rounded-xl flex items-center justify-center mb-4 md:mb-6 mx-auto">
                 <FontAwesomeIcon icon={faMobileAlt} className="h-6 w-6 md:h-7 md:w-7 text-white" />
               </div>
               <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">Mobile-First Dashboard</h3>
@@ -296,8 +296,8 @@ const LandingPage = () => {
             </div>
 
             {/* Feature 2 */}
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-2xl p-6 md:p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 scroll-animate">
-              <div className="w-12 h-12 md:w-14 md:h-14 bg-purple-600 rounded-xl flex items-center justify-center mb-4 md:mb-6">
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-2xl p-6 md:p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 scroll-animate text-center">
+              <div className="w-12 h-12 md:w-14 md:h-14 bg-purple-600 rounded-xl flex items-center justify-center mb-4 md:mb-6 mx-auto">
                 <FontAwesomeIcon icon={faChartLine} className="h-6 w-6 md:h-7 md:w-7 text-white" />
               </div>
               <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">Real-Time Analytics</h3>
@@ -307,8 +307,8 @@ const LandingPage = () => {
             </div>
 
             {/* Feature 3 */}
-            <div className="bg-gradient-to-br from-green-50 to-green-100/50 rounded-2xl p-6 md:p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 scroll-animate">
-              <div className="w-12 h-12 md:w-14 md:h-14 bg-green-600 rounded-xl flex items-center justify-center mb-4 md:mb-6">
+            <div className="bg-gradient-to-br from-green-50 to-green-100/50 rounded-2xl p-6 md:p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 scroll-animate text-center">
+              <div className="w-12 h-12 md:w-14 md:h-14 bg-green-600 rounded-xl flex items-center justify-center mb-4 md:mb-6 mx-auto">
                 <FontAwesomeIcon icon={faBell} className="h-6 w-6 md:h-7 md:w-7 text-white" />
               </div>
               <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">Instant Notifications</h3>
@@ -318,8 +318,8 @@ const LandingPage = () => {
             </div>
 
             {/* Feature 4 */}
-            <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-2xl p-6 md:p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 scroll-animate">
-              <div className="w-12 h-12 md:w-14 md:h-14 bg-orange-600 rounded-xl flex items-center justify-center mb-4 md:mb-6">
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-2xl p-6 md:p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 scroll-animate text-center">
+              <div className="w-12 h-12 md:w-14 md:h-14 bg-orange-600 rounded-xl flex items-center justify-center mb-4 md:mb-6 mx-auto">
                 <FontAwesomeIcon icon={faUtensils} className="h-6 w-6 md:h-7 md:w-7 text-white" />
               </div>
               <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">Easy Menu Management</h3>
@@ -329,8 +329,8 @@ const LandingPage = () => {
             </div>
 
             {/* Feature 5 */}
-            <div className="bg-gradient-to-br from-red-50 to-red-100/50 rounded-2xl p-6 md:p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 scroll-animate">
-              <div className="w-12 h-12 md:w-14 md:h-14 bg-red-600 rounded-xl flex items-center justify-center mb-4 md:mb-6">
+            <div className="bg-gradient-to-br from-red-50 to-red-100/50 rounded-2xl p-6 md:p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 scroll-animate text-center">
+              <div className="w-12 h-12 md:w-14 md:h-14 bg-red-600 rounded-xl flex items-center justify-center mb-4 md:mb-6 mx-auto">
                 <FontAwesomeIcon icon={faShieldAlt} className="h-6 w-6 md:h-7 md:w-7 text-white" />
               </div>
               <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">Secure Payments</h3>
@@ -340,8 +340,8 @@ const LandingPage = () => {
             </div>
 
             {/* Feature 6 */}
-            <div className="bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-2xl p-6 md:p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 scroll-animate">
-              <div className="w-12 h-12 md:w-14 md:h-14 bg-indigo-600 rounded-xl flex items-center justify-center mb-4 md:mb-6">
+            <div className="bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-2xl p-6 md:p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 scroll-animate text-center">
+              <div className="w-12 h-12 md:w-14 md:h-14 bg-indigo-600 rounded-xl flex items-center justify-center mb-4 md:mb-6 mx-auto">
                 <FontAwesomeIcon icon={faGlobe} className="h-6 w-6 md:h-7 md:w-7 text-white" />
               </div>
               <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">Multi-Language Support</h3>

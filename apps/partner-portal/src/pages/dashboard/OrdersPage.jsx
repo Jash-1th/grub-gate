@@ -639,82 +639,77 @@ const OrdersPage = () => {
       >
         {selectedOrder && (
           <div className="flex flex-col h-full bg-gray-50">
-            {/* Modern Header with Gradient */}
-            <div className="bg-gradient-to-br from-grub-red via-red-600 to-red-700 text-white p-6 -m-6 mb-6 rounded-t-2xl">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="bg-white/20 backdrop-blur-sm rounded-full p-2">
-                      <FontAwesomeIcon icon={faBox} className="h-5 w-5" />
+            {/* Modern Header with Gradient - Mobile Optimized */}
+            <div className="bg-gradient-to-br from-grub-red via-red-600 to-red-700 text-white p-4 sm:p-6 -m-4 sm:-m-6 mb-4 sm:mb-6 rounded-t-2xl">
+              <div className="flex flex-col gap-3 sm:gap-4">
+                {/* Order Number and Type */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-full p-1.5 sm:p-2 flex-shrink-0">
+                      <FontAwesomeIcon icon={faBox} className="h-4 w-4 sm:h-5 sm:w-5" />
                     </div>
-                    <div>
-                      <h2 className="text-2xl font-bold">
+                    <div className="flex-1 min-w-0">
+                      <h2 className="text-lg sm:text-2xl font-bold truncate">
                         Order #{selectedOrder.orderNumber}
                       </h2>
-                      <p className="text-red-100 text-sm">
+                      <p className="text-red-100 text-xs sm:text-sm">
                         {selectedOrder.type === 'weekly-plan' ? 'Weekly Plan Order' : 'Single Order'}
                       </p>
                     </div>
                   </div>
                   
-                  <div className="flex flex-wrap items-center gap-3 mt-4">
-                    <div className="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
-                      <FontAwesomeIcon icon={faClock} className="h-4 w-4 mr-2" />
-                      <span className="text-sm font-medium">
-                        Delivery: {selectedOrder.deliveryTime?.estimated ? 
-                          new Date(selectedOrder.deliveryTime.estimated).toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          }) : 
-                          'TBD'
-                        }
-                      </span>
-                    </div>
-                    
-                    {selectedOrder.mealType && (
-                      <div className="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
-                        <span className="text-sm font-medium">
-                          {selectedOrder.mealType === 'lunch' ? '🍽️ Lunch' : 
-                           selectedOrder.mealType === 'dinner' ? '🌙 Dinner' : 
-                           '🍽️ Meal'}
-                        </span>
-                      </div>
-                    )}
+                  {/* Total Price - Mobile */}
+                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 sm:p-3 text-right flex-shrink-0">
+                    <div className="text-xl sm:text-2xl font-bold">${selectedOrder.total?.toFixed(2)}</div>
+                    <div className="text-red-100 text-xs">{selectedOrder.items?.length || 0} items</div>
                   </div>
                 </div>
                 
-                <div className="text-right lg:text-center">
-                  <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
-                    <div className="text-3xl font-bold mb-1">${selectedOrder.total?.toFixed(2)}</div>
-                    <div className="text-red-100 text-sm">
-                      {selectedOrder.items?.length || 0} items total
-                    </div>
+                {/* Delivery Time and Meal Type */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-full px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm">
+                    <FontAwesomeIcon icon={faClock} className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+                    <span className="font-medium">
+                      {selectedOrder.deliveryTime?.estimated ? 
+                        new Date(selectedOrder.deliveryTime.estimated).toLocaleTimeString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) : 
+                        'TBD'
+                      }
+                    </span>
                   </div>
+                  
+                  {selectedOrder.mealType && (
+                    <div className="bg-white/20 backdrop-blur-sm rounded-full px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium">
+                      {selectedOrder.mealType === 'lunch' ? '🍽️ Lunch' : 
+                       selectedOrder.mealType === 'dinner' ? '🌙 Dinner' : 
+                       '🍽️ Meal'}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto space-y-6 px-6 pb-6">
+            <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 px-3 sm:px-6 pb-20 sm:pb-6 pt-2 sm:pt-4">
 
               {/* Status and Actions Card */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-3 rounded-full ${getStatusColor(selectedOrder.status).replace('text-', 'bg-').replace('800', '100')}`}>
-                        {getStatusIcon(selectedOrder.status)}
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Order Status</h3>
-                        <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${getStatusColor(selectedOrder.status)}`}>
-                          <span className="capitalize">{selectedOrder.status.replace('_', ' ')}</span>
-                        </span>
-                      </div>
+              <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-6">
+                <div className="flex flex-col gap-3 sm:gap-4">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className={`p-2 sm:p-3 rounded-full flex-shrink-0 ${getStatusColor(selectedOrder.status).replace('text-', 'bg-').replace('800', '100')}`}>
+                      {getStatusIcon(selectedOrder.status)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm sm:text-lg font-semibold text-gray-900">Order Status</h3>
+                      <span className={`inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium ${getStatusColor(selectedOrder.status)}`}>
+                        <span className="capitalize">{selectedOrder.status.replace('_', ' ')}</span>
+                      </span>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
                     {selectedOrder.status === 'pending' && (
                       <Button
                         onClick={() => {
@@ -723,7 +718,7 @@ const OrdersPage = () => {
                           setSelectedOrder(null);
                         }}
                         disabled={updateStatusLoading === selectedOrder._id}
-                        className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+                        className="bg-green-600 hover:bg-green-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-sm sm:text-base font-medium transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
                       >
                         {updateStatusLoading === selectedOrder._id ? (
                           <>
@@ -746,7 +741,7 @@ const OrdersPage = () => {
                           setSelectedOrder(null);
                         }}
                         disabled={updateStatusLoading === selectedOrder._id}
-                        className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+                        className="bg-orange-600 hover:bg-orange-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-sm sm:text-base font-medium transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
                       >
                         {updateStatusLoading === selectedOrder._id ? (
                           <>
@@ -769,7 +764,7 @@ const OrdersPage = () => {
                           setSelectedOrder(null);
                         }}
                         disabled={updateStatusLoading === selectedOrder._id}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-sm sm:text-base font-medium transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
                       >
                         {updateStatusLoading === selectedOrder._id ? (
                           <>
@@ -789,14 +784,14 @@ const OrdersPage = () => {
               </div>
 
               {/* Customer Information Card */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="bg-blue-100 rounded-full p-3">
+              <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                  <div className="bg-blue-100 rounded-full p-2 sm:p-3 flex-shrink-0">
                     <FontAwesomeIcon icon={faUser} className="h-5 w-5 text-blue-600" />
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Customer Information</h3>
-                    <p className="text-sm text-gray-600">Delivery details and contact information</p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm sm:text-lg font-semibold text-gray-900">Customer Information</h3>
+                    <p className="text-xs sm:text-sm text-gray-600">Delivery details and contact</p>
                   </div>
                 </div>
                 
@@ -847,7 +842,7 @@ const OrdersPage = () => {
               </div>
 
               {/* Order Items Card */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+              <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-6">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="bg-green-100 rounded-full p-3">
                     <FontAwesomeIcon icon={faBox} className="h-5 w-5 text-green-600" />
@@ -899,7 +894,7 @@ const OrdersPage = () => {
             </div>
             
             {/* Modal Footer */}
-            <div className="border-t bg-white px-6 py-4 flex flex-col sm:flex-row sm:justify-end gap-3 mt-6 flex-shrink-0 -mx-6 -mb-6 rounded-b-2xl">
+            <div className="border-t bg-white px-6 py-4 pb-20 sm:pb-4 flex flex-col sm:flex-row sm:justify-end gap-3 mt-6 flex-shrink-0 -mx-6 -mb-6 rounded-b-2xl">
               <Button
                 variant="secondary"
                 onClick={() => {

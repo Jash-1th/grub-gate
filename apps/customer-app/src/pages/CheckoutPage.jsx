@@ -85,6 +85,11 @@ const CheckoutPage = () => {
     loadCheckoutData();
   }, [isAuthenticated, location.state, weeklyPlans]);
 
+  // Scroll to top when step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentStep]);
+
   // Load checkout data
   const loadCheckoutData = () => {
     try {

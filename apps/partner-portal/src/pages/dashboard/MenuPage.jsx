@@ -154,6 +154,30 @@ const MenuPage = () => {
     }
   }, [restaurant?.cuisine, editingItem]);
 
+  // Scroll to top when modal opens
+  useEffect(() => {
+    if (showAddModal) {
+      setTimeout(() => {
+        const modalContent = document.querySelector('[role="dialog"]');
+        if (modalContent) {
+          modalContent.scrollTop = 0;
+        }
+      }, 100);
+    }
+  }, [showAddModal]);
+
+  // Scroll to top when tab changes
+  useEffect(() => {
+    if (showAddModal) {
+      setTimeout(() => {
+        const modalContent = document.querySelector('[role="dialog"]');
+        if (modalContent) {
+          modalContent.scrollTop = 0;
+        }
+      }, 100);
+    }
+  }, [activeTab, showAddModal]);
+
   // Reset form when modal closes
   const resetForm = () => {
     setFormData({
@@ -1357,7 +1381,7 @@ const MenuPage = () => {
           </div>
           
           {/* Footer actions - Outside scrollable area - Responsive */}
-          <div className="border-t bg-white px-0 py-3 sm:py-4 mt-4 flex-shrink-0">
+          <div className="border-t bg-white px-0 py-3 sm:py-4 mt-4 flex-shrink-0 pb-20 sm:pb-3">
             {/* Mobile Layout - Stacked */}
             <div className="block sm:hidden space-y-3">
               {/* Top row - Cancel and Back */}

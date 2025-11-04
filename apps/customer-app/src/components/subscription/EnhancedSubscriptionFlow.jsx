@@ -64,6 +64,21 @@ const EnhancedSubscriptionFlow = ({ selectedPlan, onComplete, onCancel }) => {
     }
   }, [selectedPlan]);
 
+  // Scroll to top when step changes
+  useEffect(() => {
+    // Small delay to ensure content is rendered
+    setTimeout(() => {
+      // Try to find the modal container with overflow-y-auto
+      const modalContainer = document.querySelector('.overflow-y-auto');
+      if (modalContainer && modalContainer.classList.contains('max-w-4xl')) {
+        modalContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // Fallback to window scroll if not in modal
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 100);
+  }, [currentStep]);
+
   // Steps configuration (removed plan selection - already done)
   const steps = [
     {
@@ -400,7 +415,7 @@ const PaymentStep = ({ subscriptionData, onNext, onPrevious, isLoading }) => {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-3 sm:justify-between">
+      <div className="flex flex-col sm:flex-row gap-3 sm:justify-between pb-20 sm:pb-0">
         <button
           onClick={onPrevious}
           disabled={isLoading}

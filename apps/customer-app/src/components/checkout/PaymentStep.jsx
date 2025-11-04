@@ -400,11 +400,11 @@ const PaymentStep = ({ checkoutData, onNext, onPrevious, isLoading, setLoading }
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-between">
+      <div className="flex flex-col sm:flex-row justify-between gap-3 pb-20 sm:pb-0">
         <button
           onClick={onPrevious}
           disabled={isLoading}
-          className="flex items-center px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+          className="w-full sm:w-auto flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
         >
           <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
           Back to Address
@@ -414,7 +414,7 @@ const PaymentStep = ({ checkoutData, onNext, onPrevious, isLoading, setLoading }
           onClick={handlePayment}
           disabled={isLoading}
           className={`
-            flex items-center px-8 py-3 font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+            w-full sm:w-auto flex items-center justify-center px-8 py-3 font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
             ${isLoading
               ? 'bg-gray-400 text-white cursor-not-allowed'
               : 'bg-green-600 text-white hover:bg-green-700 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl'

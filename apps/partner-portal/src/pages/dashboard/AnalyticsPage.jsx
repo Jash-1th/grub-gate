@@ -62,10 +62,11 @@ const ChartComponent = ({ data, type = 'line' }) => {
   if (type === 'line') {
     return (
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
+        <LineChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis 
             dataKey="date" 
+            tick={{ fontSize: 12 }}
             tickFormatter={(value) => {
               if (!isClient) return value;
               try {
@@ -80,6 +81,8 @@ const ChartComponent = ({ data, type = 'line' }) => {
             }}
           />
           <YAxis 
+            tick={{ fontSize: 12 }}
+            width={45}
             tickFormatter={(value) => {
               if (!isClient) return value;
               return `$${value.toLocaleString()}`;
@@ -105,7 +108,7 @@ const ChartComponent = ({ data, type = 'line' }) => {
               }
             }}
           />
-          <Line type="monotone" dataKey="value" stroke="#800020" strokeWidth={2} />
+          <Line type="monotone" dataKey="value" stroke="#800020" strokeWidth={3} dot={{ r: 4, fill: '#800020' }} activeDot={{ r: 6 }} />
         </LineChart>
       </ResponsiveContainer>
     );
@@ -134,13 +137,13 @@ const ChartComponent = ({ data, type = 'line' }) => {
             cx="50%"
             cy="50%"
             labelLine={false}
-            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+            label={false}
             outerRadius={80}
             fill="#8884d8"
             dataKey="orders"
           >
             {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+              <Cell key={`cell-${index}`} fill={entry.color || colors[index % colors.length]} />
             ))}
           </Pie>
           <Tooltip />
@@ -809,9 +812,39 @@ const AnalyticsPage = () => {
                   <CardTitle className="text-lg font-semibold">Order Status Distribution</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-6">
+                  <div className="space-y-4 sm:space-y-6">
+                    {/* Status Summary Boxes - Top */}
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                      {orderStatusData.map((status, index) => (
+                        <div 
+                          key={index} 
+                          className="p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all hover:shadow-md"
+                          style={{ 
+                            backgroundColor: `${status.color}15`,
+                            borderColor: status.color
+                          }}
+                        >
+                          <div className="flex items-center justify-between mb-1 sm:mb-2">
+                            <div 
+                              className="w-3 h-3 sm:w-4 sm:h-4 rounded-full flex-shrink-0" 
+                              style={{ backgroundColor: status.color }}
+                            ></div>
+                            <span className="text-lg sm:text-2xl font-bold" style={{ color: status.color }}>
+                              {status.value}
+                            </span>
+                          </div>
+                          <div className="text-xs sm:text-sm font-semibold text-gray-700 truncate">
+                            {status.name}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            {((status.value / totalOrders) * 100).toFixed(0)}%
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
                     {/* Pie Chart Visualization */}
-                    <div className="h-64">
+                    <div className="h-64 sm:h-72">
                       <ChartComponent 
                         data={orderStatusData.map(status => ({
                           name: status.name,

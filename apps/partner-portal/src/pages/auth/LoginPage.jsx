@@ -235,7 +235,7 @@ const LoginPage = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="Enter your email"
-                    className={`auth-input block w-full pl-10 pr-3 py-3 sm:py-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-0 text-sm sm:text-base ${
+                    className={`auth-input block w-full pl-10 pr-3 py-3 sm:py-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-0 text-sm sm:text-base text-gray-600 ${
                       errors.email 
                         ? 'error border-red-300 focus:border-red-500 focus:ring-red-500' 
                         : formData.email && !errors.email
@@ -265,7 +265,7 @@ const LoginPage = () => {
                     value={formData.password}
                     onChange={handleInputChange}
                     placeholder="Enter your password"
-                    className={`auth-input block w-full pl-10 pr-12 py-3 sm:py-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-0 text-sm sm:text-base ${
+                    className={`auth-input block w-full pl-10 pr-12 py-3 sm:py-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-0 text-sm sm:text-base text-gray-600 ${
                       errors.password 
                         ? 'error border-red-300 focus:border-red-500 focus:ring-red-500' 
                         : formData.password && !errors.password
@@ -301,7 +301,7 @@ const LoginPage = () => {
                     onChange={handleInputChange}
                     className="h-4 w-4 text-grub-red focus:ring-grub-red border-gray-300 rounded transition-colors"
                   />
-                  <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-800 dark:text-gray-200 drop-shadow-sm">
+                  <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-600 drop-shadow-sm">
                     Remember me
                   </label>
                 </div>
@@ -348,7 +348,7 @@ const LoginPage = () => {
 
               {/* Sign Up Link */}
               <div className="text-center pt-3 sm:pt-4 border-t border-gray-100">
-                <span className="text-sm text-gray-700 dark:text-gray-300 drop-shadow-sm">
+                <span className="text-sm text-gray-600 drop-shadow-sm">
                   Don't have an account?{' '}
                   <Link
                     to="/register"

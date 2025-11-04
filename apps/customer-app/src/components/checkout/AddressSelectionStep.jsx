@@ -502,7 +502,7 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
       )}
 
       {/* Action Buttons */}
-      <div className={`flex flex-col sm:flex-row gap-3 ${onPrevious ? 'sm:justify-between' : 'sm:justify-end'}`}>
+      <div className={`flex flex-col sm:flex-row gap-3 pb-20 sm:pb-0 ${onPrevious ? 'sm:justify-between' : 'sm:justify-end'}`}>
         {onPrevious && (
           <button
             onClick={onPrevious}

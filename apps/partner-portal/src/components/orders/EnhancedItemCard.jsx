@@ -99,11 +99,11 @@ const EnhancedItemCard = ({ item, index }) => {
         </div>
         
         {/* Category */}
-        <div className="bg-purple-50 rounded-xl p-3 flex items-center">
-          <FontAwesomeIcon icon={faUtensils} className="h-4 w-4 text-purple-600 mr-2" />
-          <div>
+        <div className="bg-purple-50 rounded-xl p-3 flex items-center min-w-0">
+          <FontAwesomeIcon icon={faUtensils} className="h-4 w-4 text-purple-600 mr-2 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
             <div className="text-xs text-purple-600 font-medium uppercase tracking-wide">Category</div>
-            <div className="text-sm font-bold text-gray-900">{item.category || 'Main Course'}</div>
+            <div className="text-sm font-bold text-gray-900 truncate">{item.category || 'Main Course'}</div>
           </div>
         </div>
         

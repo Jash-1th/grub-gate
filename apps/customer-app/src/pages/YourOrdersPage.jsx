@@ -343,9 +343,110 @@ const YourOrdersPage = () => {
     }
   };
 
-  // Show loading spinner while auth is loading or our component is loading
+  // Show loading skeleton while auth is loading or our component is loading
   if (authLoading || loading) {
-    return <Loading />;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        {/* Hero Section Skeleton */}
+        <section className="relative py-8 xs:py-10 sm:py-12 md:py-16 bg-gradient-to-r from-grub-red via-red-600 to-red-700">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItMnptMC0ydjJoLTJ2LTJoMnptLTItMmgydjJoLTJ2LTJ6bTItMmgydjJoLTJ2LTJ6bTAtMmgydjJoLTJ2LTJ6bTItMmgydjJoLTJ2LTJ6bTAtMmgydjJoLTJ2LTJ6bTItMmgydjJoLTJ2LTJ6bTAtMmgydjJoLTJ2LTJ6bTItMmgydjJoLTJ2LTJ6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-30"></div>
+          <div className="relative z-10 max-w-7xl mx-auto px-3 xs:px-4 sm:px-6 md:px-8 lg:px-10 text-center">
+            <div className="h-10 xs:h-12 sm:h-14 md:h-16 bg-white/20 rounded-lg mx-auto mb-2 xs:mb-3 sm:mb-4 max-w-md animate-pulse"></div>
+            <div className="h-6 xs:h-7 sm:h-8 bg-white/10 rounded-lg mx-auto max-w-2xl animate-pulse"></div>
+          </div>
+        </section>
+
+        {/* Main Content Skeleton */}
+        <div className="container mx-auto px-3 xs:px-4 sm:px-6 md:px-8 py-6 xs:py-8 -mt-8 xs:-mt-10 sm:-mt-12 md:-mt-16 relative z-20">
+          {/* Filter Skeleton */}
+          <div className="mb-6 xs:mb-8 bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 xs:p-5 sm:p-6 animate-pulse">
+            <div className="h-6 bg-gray-200 rounded w-32 mb-3 xs:mb-4"></div>
+            <div className="flex flex-wrap gap-2 xs:gap-2.5 sm:gap-3">
+              {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                <div key={i} className="h-10 bg-gray-200 rounded-full w-20 xs:w-24"></div>
+              ))}
+            </div>
+          </div>
+
+          {/* Orders Skeleton */}
+          <div className="space-y-6 xs:space-y-8">
+            {[1, 2].map((group) => (
+              <div key={group} className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden animate-pulse">
+                <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                  <div className="h-6 bg-gray-200 rounded w-48"></div>
+                </div>
+                <div className="p-3 xs:p-4 sm:p-5 md:p-6 space-y-4 xs:space-y-5 sm:space-y-6">
+                  {[1, 2].map((order) => (
+                    <div key={order} className="bg-white border-2 border-gray-200 rounded-xl sm:rounded-2xl overflow-hidden">
+                      {/* Order Header Skeleton */}
+                      <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 xs:px-5 sm:px-6 py-3 xs:py-4 border-b-2 border-gray-200">
+                        <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 xs:gap-3">
+                          <div className="h-6 bg-gray-200 rounded w-32"></div>
+                          <div className="flex gap-2">
+                            <div className="h-8 bg-gray-200 rounded-full w-24"></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Order Body Skeleton */}
+                      <div className="p-4 xs:p-5 sm:p-6">
+                        <div className="flex flex-col lg:flex-row lg:justify-between gap-4 sm:gap-5 lg:gap-6">
+                          <div className="flex-1 space-y-3 xs:space-y-4">
+                            {/* Restaurant Info Skeleton */}
+                            <div className="flex items-start gap-3">
+                              <div className="w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 bg-gray-200 rounded-xl"></div>
+                              <div className="flex-1">
+                                <div className="h-6 bg-gray-200 rounded w-40 mb-2"></div>
+                                <div className="h-4 bg-gray-200 rounded w-24"></div>
+                              </div>
+                            </div>
+
+                            {/* Order Items Skeleton */}
+                            <div className="bg-gray-50 rounded-lg sm:rounded-xl p-3 xs:p-4">
+                              <div className="h-4 bg-gray-200 rounded w-24 mb-3"></div>
+                              <div className="space-y-2">
+                                {[1, 2].map((item) => (
+                                  <div key={item} className="flex items-center justify-between bg-white p-2 xs:p-3 rounded-lg">
+                                    <div className="flex items-center gap-2 xs:gap-3 flex-1">
+                                      <div className="w-10 h-10 xs:w-12 xs:h-12 bg-gray-200 rounded-lg"></div>
+                                      <div className="flex-1">
+                                        <div className="h-4 bg-gray-200 rounded w-32 mb-1"></div>
+                                        <div className="h-3 bg-gray-200 rounded w-16"></div>
+                                      </div>
+                                    </div>
+                                    <div className="h-4 bg-gray-200 rounded w-12"></div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Right Section Skeleton */}
+                          <div className="lg:w-44 xl:w-48 flex flex-row lg:flex-col justify-between lg:justify-start gap-3 xs:gap-4 lg:gap-5">
+                            <div className="flex-1 lg:flex-none bg-gray-200 rounded-xl h-24"></div>
+                            <div className="flex-1 lg:flex-none bg-gray-200 rounded-xl h-24"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Loading Indicator */}
+          <div className="flex flex-col items-center justify-center py-12 mt-8">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-gray-200 border-t-grub-red rounded-full animate-spin"></div>
+              <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-b-red-400 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1s' }}></div>
+            </div>
+            <p className="mt-6 text-gray-600 font-medium text-lg animate-pulse">Loading your orders...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Group filtered orders by date
