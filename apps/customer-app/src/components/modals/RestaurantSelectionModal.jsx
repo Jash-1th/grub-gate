@@ -1,11 +1,14 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 const RestaurantSelectionModal = ({ isOpen, onClose, onConfirm, day, mealType, week, hasExistingRestaurant = false, existingRestaurant = null }) => {
+  const { t } = useTranslation();
+  
   if (!isOpen) return null;
 
-  const weekText = week === 0 ? 'This Week' : 'Next Week';
+  const weekText = week === 0 ? t('continueModal.thisWeek') : t('continueModal.nextWeek');
   const dayText = day ? day.charAt(0).toUpperCase() + day.slice(1) : '';
-  const mealText = mealType ? mealType.charAt(0).toUpperCase() + mealType.slice(1) : '';
+  const mealText = mealType === 'lunch' ? t('weeklyMenu.lunch') : mealType === 'dinner' ? t('weeklyMenu.dinner') : '';
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -18,12 +21,12 @@ const RestaurantSelectionModal = ({ isOpen, onClose, onConfirm, day, mealType, w
             </svg>
           </div>
           <h3 className="text-xl font-bold mb-2">
-            {hasExistingRestaurant ? 'Add Another Restaurant?' : 'Select a Restaurant First'}
+            {hasExistingRestaurant ? t('selectionModal.addAnotherRestaurant') : t('selectionModal.selectRestaurantFirst')}
           </h3>
           <p className="text-blue-100 text-sm">
             {hasExistingRestaurant 
-              ? 'You can select up to 2 restaurants for your meal plan'
-              : 'Choose from nearby restaurants to start planning your meals'
+              ? t('selectionModal.canSelectUpTo2')
+              : t('selectionModal.chooseFromNearby')
             }
           </p>
         </div>
@@ -49,17 +52,16 @@ const RestaurantSelectionModal = ({ isOpen, onClose, onConfirm, day, mealType, w
                     <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="text-sm font-medium text-green-800">Current: {existingRestaurant?.name}</span>
+                    <span className="text-sm font-medium text-green-800">{t('selectionModal.current')}: {existingRestaurant?.name}</span>
                   </div>
                 </div>
                 <p className="text-gray-600 text-sm leading-relaxed">
-                  You can add a second restaurant to your meal plan. This gives you more variety in your weekly menu.
+                  {t('selectionModal.canAddSecond')}
                 </p>
               </div>
             ) : (
               <p className="text-gray-600 text-sm leading-relaxed">
-                To add meals to your <strong>{weekText}</strong> plan, you need to first select a restaurant. 
-                We'll show you highly-rated restaurants in your area.
+                {t('selectionModal.toAddMeals', { week: weekText })}
               </p>
             )}
           </div>
@@ -70,13 +72,13 @@ const RestaurantSelectionModal = ({ isOpen, onClose, onConfirm, day, mealType, w
               onClick={onClose}
               className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium"
             >
-              Cancel
+              {t('selectionModal.cancel')}
             </button>
             <button
               onClick={onConfirm}
               className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
             >
-              {hasExistingRestaurant ? 'Add Second Restaurant' : 'Browse Restaurants'}
+              {hasExistingRestaurant ? t('selectionModal.addSecondRestaurant') : t('selectionModal.browseRestaurants')}
             </button>
           </div>
         </div>

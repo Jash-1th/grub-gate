@@ -1,5 +1,6 @@
 // FILE: apps/customer-app/src/components/subscription/EnhancedSubscriptionFlow.jsx
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faCheck, 
@@ -26,6 +27,7 @@ import {
  * Multi-step subscription process including address selection
  */
 const EnhancedSubscriptionFlow = ({ selectedPlan, onComplete, onCancel }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { showSuccess, showError } = useToast();
   const { selectedRestaurantId, selectedRestaurantName } = useMealPlan();
@@ -83,15 +85,15 @@ const EnhancedSubscriptionFlow = ({ selectedPlan, onComplete, onCancel }) => {
   const steps = [
     {
       id: 1,
-      title: 'Delivery Address',
+      title: t('subscription.deliveryAddress'),
       icon: faMapMarkerAlt,
-      description: 'Where should we deliver?'
+      description: t('subscription.whereShouldWeDeliver')
     },
     {
       id: 2,
-      title: 'Schedule & Payment',
+      title: t('subscription.scheduleAndPayment'),
       icon: faCreditCard,
-      description: 'Set delivery schedule and payment'
+      description: t('subscription.setDeliverySchedule')
     }
   ];
 
@@ -223,7 +225,7 @@ const EnhancedSubscriptionFlow = ({ selectedPlan, onComplete, onCancel }) => {
       {selectedPlan && (
         <div className="mb-4 sm:mb-6 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-200 rounded-xl p-4 sm:p-5 shadow-sm">
           <div className="text-center mb-3">
-            <p className="text-xs sm:text-sm text-gray-600 mb-1">Selected Plan:</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-1">{t('subscription.selectedPlan')}</p>
             <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">
               {selectedPlan.name || `${selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1)} Plan`}
             </h3>
@@ -232,12 +234,12 @@ const EnhancedSubscriptionFlow = ({ selectedPlan, onComplete, onCancel }) => {
                 ${selectedPlan.price || 'N/A'}
               </div>
               <div className="text-xs sm:text-sm text-gray-500 font-medium">
-                / {selectedPlan.duration || 'period'}
+                / {selectedPlan.duration || t('subscription.period')}
               </div>
             </div>
           </div>
           <p className="text-center text-xs sm:text-sm text-gray-600 bg-white bg-opacity-60 rounded-lg py-2 px-3">
-            Complete your subscription setup below
+            {t('subscription.completeSetup')}
           </p>
         </div>
       )}
@@ -301,7 +303,7 @@ const EnhancedSubscriptionFlow = ({ selectedPlan, onComplete, onCancel }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-4 sm:p-6 flex flex-col sm:flex-row items-center gap-3 sm:gap-4 max-w-sm">
             <FontAwesomeIcon icon={faSpinner} className="animate-spin text-xl sm:text-2xl text-blue-600" />
-            <span className="text-base sm:text-lg font-medium text-center sm:text-left">Creating your subscription...</span>
+            <span className="text-base sm:text-lg font-medium text-center sm:text-left">{t('subscription.creatingYourSubscription')}</span>
           </div>
         </div>
       )}
@@ -311,6 +313,7 @@ const EnhancedSubscriptionFlow = ({ selectedPlan, onComplete, onCancel }) => {
 
 // Payment Step Component
 const PaymentStep = ({ subscriptionData, onNext, onPrevious, isLoading }) => {
+  const { t } = useTranslation();
   const [paymentMethod, setPaymentMethod] = useState('card');
 
   const handleContinue = () => {
@@ -326,10 +329,10 @@ const PaymentStep = ({ subscriptionData, onNext, onPrevious, isLoading }) => {
           <FontAwesomeIcon icon={faCreditCard} className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
         </div>
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">
-          Payment Details
+          {t('subscription.paymentDetails')}
         </h2>
         <p className="text-sm sm:text-base text-gray-600">
-          Choose your payment method to complete your subscription
+          {t('subscription.choosePaymentMethod')}
         </p>
       </div>
 
@@ -337,7 +340,7 @@ const PaymentStep = ({ subscriptionData, onNext, onPrevious, isLoading }) => {
       <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-200 rounded-xl p-4 sm:p-5 mb-4 sm:mb-6 shadow-sm">
         <div className="flex items-center justify-center mb-3">
           <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs sm:text-sm font-semibold">
-            Selected Plan
+            {t('subscription.selectedPlan').replace(':', '')}
           </div>
         </div>
         <div className="text-center">
@@ -348,7 +351,7 @@ const PaymentStep = ({ subscriptionData, onNext, onPrevious, isLoading }) => {
               ${subscriptionData.planData?.price}
             </p>
             <p className="text-xs sm:text-sm text-gray-500 font-medium">
-              / {subscriptionData.planData?.duration}
+              / {subscriptionData.planData?.duration || t('subscription.period')}
             </p>
           </div>
         </div>
@@ -359,7 +362,7 @@ const PaymentStep = ({ subscriptionData, onNext, onPrevious, isLoading }) => {
         <div className="flex items-center justify-center mb-3">
           <div className="flex items-center gap-2 bg-green-600 text-white px-3 py-1 rounded-full text-xs sm:text-sm font-semibold">
             <FontAwesomeIcon icon={faMapMarkerAlt} className="w-3 h-3" />
-            <span>Delivery Address</span>
+            <span>{t('subscription.deliveryAddress')}</span>
           </div>
         </div>
         {subscriptionData.deliveryAddress ? (
@@ -372,15 +375,15 @@ const PaymentStep = ({ subscriptionData, onNext, onPrevious, isLoading }) => {
             </p>
           </div>
         ) : (
-          <p className="text-center text-gray-500 text-xs sm:text-sm italic">Address will be selected in previous step</p>
+          <p className="text-center text-gray-500 text-xs sm:text-sm italic">{t('subscription.addressWillBeSelected')}</p>
         )}
       </div>
 
       {/* Payment Method */}
       <div className="mb-6 sm:mb-8">
         <div className="text-center mb-4">
-          <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">Choose Payment Method</h3>
-          <p className="text-xs sm:text-sm text-gray-600">Select how you'd like to pay</p>
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">{t('subscription.choosePaymentMethodTitle')}</h3>
+          <p className="text-xs sm:text-sm text-gray-600">{t('subscription.selectHowToPay')}</p>
         </div>
         <div className="space-y-3">
           <label className={`flex items-center p-4 sm:p-5 border-2 rounded-xl cursor-pointer transition-all duration-200 touch-manipulation shadow-sm ${
@@ -401,8 +404,8 @@ const PaymentStep = ({ subscriptionData, onNext, onPrevious, isLoading }) => {
                 <FontAwesomeIcon icon={faCreditCard} className="text-white text-lg sm:text-xl" />
               </div>
               <div className="flex-1">
-                <p className="font-bold text-gray-900 text-sm sm:text-base">Credit/Debit Card</p>
-                <p className="text-xs sm:text-sm text-gray-600">Secure payment with your card</p>
+                <p className="font-bold text-gray-900 text-sm sm:text-base">{t('subscription.creditDebitCard')}</p>
+                <p className="text-xs sm:text-sm text-gray-600">{t('subscription.securePayment')}</p>
               </div>
               {paymentMethod === 'card' && (
                 <div className="bg-blue-600 text-white rounded-full p-1.5">
@@ -422,7 +425,7 @@ const PaymentStep = ({ subscriptionData, onNext, onPrevious, isLoading }) => {
           className="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation order-2 sm:order-1 shadow-sm hover:shadow-md"
         >
           <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
-          <span className="text-sm sm:text-base">Back to Address</span>
+          <span className="text-sm sm:text-base">{t('subscription.backToAddress')}</span>
         </button>
 
         <button
@@ -439,12 +442,12 @@ const PaymentStep = ({ subscriptionData, onNext, onPrevious, isLoading }) => {
           {isLoading ? (
             <>
               <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
-              <span>Creating Subscription...</span>
+              <span>{t('subscription.creatingSubscription')}</span>
             </>
           ) : (
             <>
               <FontAwesomeIcon icon={faCheck} className="mr-2" />
-              <span>Complete Subscription</span>
+              <span>{t('subscription.completeSubscription')}</span>
             </>
           )}
         </button>

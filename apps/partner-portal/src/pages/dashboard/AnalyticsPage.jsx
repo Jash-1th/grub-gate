@@ -167,16 +167,16 @@ const AnalyticsPage = () => {
   const [error, setError] = useState(null);
 
   const timeRanges = [
-    { value: '7d', label: 'Last 7 Days' },
-    { value: '30d', label: 'Last 30 Days' },
-    { value: '90d', label: 'Last 3 Months' }
+    { value: '7d', label: t('analytics.last7Days') },
+    { value: '30d', label: t('analytics.last30Days') },
+    { value: '90d', label: t('analytics.last3Months') }
   ];
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: faChartBar },
-    { id: 'revenue', label: 'Revenue', icon: faDollarSign },
-    { id: 'customers', label: 'Customers', icon: faUsers },
-    { id: 'performance', label: 'Performance', icon: faBullseye }
+    { id: 'overview', label: t('analytics.tabs.overview'), icon: faChartBar },
+    { id: 'revenue', label: t('analytics.tabs.revenue'), icon: faDollarSign },
+    { id: 'customers', label: t('analytics.tabs.customers'), icon: faUsers },
+    { id: 'performance', label: t('analytics.tabs.performance'), icon: faBullseye }
   ];
 
   // Fetch analytics data
@@ -329,7 +329,7 @@ const AnalyticsPage = () => {
 
   const metrics = [
     {
-      title: 'Total Revenue',
+      title: t('analytics.metrics.totalRevenue'),
       value: `$${totalRevenue.toLocaleString()}`,
       change: overview.totalRevenue?.growth || 0,
       icon: faDollarSign,
@@ -338,7 +338,7 @@ const AnalyticsPage = () => {
       borderColor: 'border-green-200'
     },
     {
-      title: 'Monthly Recurring Revenue',
+      title: t('analytics.metrics.monthlyRecurringRevenue'),
       value: `$${(subscriptionOverviewData.monthlyRecurringRevenue?.current || 0).toLocaleString()}`,
       change: subscriptionOverviewData.monthlyRecurringRevenue?.growth || 0,
       icon: faRedo,
@@ -347,7 +347,7 @@ const AnalyticsPage = () => {
       borderColor: 'border-emerald-200'
     },
     {
-      title: 'Total Orders',
+      title: t('analytics.metrics.totalOrders'),
       value: totalOrders.toLocaleString(),
       change: overview.totalOrders?.growth || 0,
       icon: faShoppingBag,
@@ -356,7 +356,7 @@ const AnalyticsPage = () => {
       borderColor: 'border-blue-200'
     },
     {
-      title: 'Active Customers',
+      title: t('analytics.metrics.activeCustomers'),
       value: totalCustomers.toLocaleString(),
       change: customerOverviewData.activeCustomers?.growth || 0,
       icon: faUsers,
@@ -365,7 +365,7 @@ const AnalyticsPage = () => {
       borderColor: 'border-purple-200'
     },
     {
-      title: 'Subscription Conversion',
+      title: t('analytics.metrics.subscriptionConversion'),
       value: `${(subscriptionOverviewData.subscriptionConversionRate?.current || 0).toFixed(1)}%`,
       change: subscriptionOverviewData.subscriptionConversionRate?.growth || 0,
       icon: faUserCheck,
@@ -374,7 +374,7 @@ const AnalyticsPage = () => {
       borderColor: 'border-indigo-200'
     },
     {
-      title: 'Avg Revenue Per User',
+      title: t('analytics.metrics.avgRevenuePerUser'),
       value: `$${(subscriptionOverviewData.averageRevenuePerUser?.current || 0).toFixed(2)}`,
       change: subscriptionOverviewData.averageRevenuePerUser?.growth || 0,
       icon: faChartBar,
@@ -383,7 +383,7 @@ const AnalyticsPage = () => {
       borderColor: 'border-orange-200'
     },
     {
-      title: 'Customer Lifetime Value',
+      title: t('analytics.metrics.customerLifetimeValue'),
       value: `$${(subscriptionOverviewData.customerLifetimeValue?.current || 0).toFixed(0)}`,
       change: subscriptionOverviewData.customerLifetimeValue?.growth || 0,
       icon: faCreditCard,
@@ -392,7 +392,7 @@ const AnalyticsPage = () => {
       borderColor: 'border-rose-200'
     },
     {
-      title: 'Avg Prep Time',
+      title: t('analytics.metrics.avgPrepTime'),
       value: `${avgPrepTime} min`,
       change: overview.avgPrepTime?.growth || 0,
       icon: faClock,
@@ -401,7 +401,7 @@ const AnalyticsPage = () => {
       borderColor: 'border-teal-200'
     },
     {
-      title: 'On-Time Delivery',
+      title: t('analytics.metrics.onTimeDelivery'),
       value: `${safePerformanceData.deliveryPerformance.onTimeDeliveryRate?.current?.toFixed(1) || 0}%`,
       change: safePerformanceData.deliveryPerformance.onTimeDeliveryRate?.growth || 0,
       icon: faBullseye,
@@ -410,7 +410,7 @@ const AnalyticsPage = () => {
       borderColor: 'border-green-200'
     },
     {
-      title: 'Churn Rate',
+      title: t('analytics.metrics.churnRate'),
       value: `${(subscriptionOverviewData.churnRate?.current || 0).toFixed(1)}%`,
       change: subscriptionOverviewData.churnRate?.growth || 0,
       icon: faArrowTrendDown,
@@ -481,7 +481,7 @@ const AnalyticsPage = () => {
                               <FontAwesomeIcon icon={faArrowDown} className="h-4 w-4 mr-1" />
                             )}
                             <span className="font-medium">{Math.abs(metric.change)}%</span>
-                            <span className="text-gray-500 ml-1 text-xs">vs last period</span>
+                            <span className="text-gray-500 ml-1 text-xs">{t('analytics.vsLastPeriod')}</span>
                           </div>
                         </div>
                       </div>
@@ -496,7 +496,7 @@ const AnalyticsPage = () => {
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg font-semibold flex items-center">
                   <FontAwesomeIcon icon={faChartPie} className="h-5 w-5 mr-2 text-grub-red" />
-                  Revenue Breakdown
+                  {t('analytics.revenueBreakdown.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -506,12 +506,12 @@ const AnalyticsPage = () => {
                     <ChartComponent 
                       data={[
                         { 
-                          name: 'Subscription Revenue', 
+                          name: t('analytics.revenueBreakdown.subscriptionRevenue'), 
                           orders: revenueBreakdownData.subscriptionRevenue,
                           color: '#10B981'
                         },
                         { 
-                          name: 'One-time Orders', 
+                          name: t('analytics.revenueBreakdown.oneTimeOrders'), 
                           orders: revenueBreakdownData.oneTimeRevenue,
                           color: '#3B82F6'
                         }
@@ -527,18 +527,18 @@ const AnalyticsPage = () => {
                         <div className="text-2xl font-bold text-green-600">
                           ${revenueBreakdownData.subscriptionRevenue?.toLocaleString() || 0}
                         </div>
-                        <div className="text-sm text-gray-600">Subscription Revenue</div>
+                        <div className="text-sm text-gray-600">{t('analytics.revenueBreakdown.subscriptionRevenue')}</div>
                         <div className="text-xs text-green-600 font-medium">
-                          {revenueBreakdownData.subscriptionPercentage?.toFixed(1) || 0}% of total
+                          {revenueBreakdownData.subscriptionPercentage?.toFixed(1) || 0}% {t('analytics.ofTotal')}
                         </div>
                       </div>
                       <div className="text-center p-4 bg-blue-50 rounded-lg">
                         <div className="text-2xl font-bold text-blue-600">
                           ${revenueBreakdownData.oneTimeRevenue?.toLocaleString() || 0}
                         </div>
-                        <div className="text-sm text-gray-600">One-time Orders</div>
+                        <div className="text-sm text-gray-600">{t('analytics.revenueBreakdown.oneTimeOrders')}</div>
                         <div className="text-xs text-blue-600 font-medium">
-                          {revenueBreakdownData.oneTimePercentage?.toFixed(1) || 0}% of total
+                          {revenueBreakdownData.oneTimePercentage?.toFixed(1) || 0}% {t('analytics.ofTotal')}
                         </div>
                       </div>
                     </div>
@@ -546,7 +546,7 @@ const AnalyticsPage = () => {
                       <div className="text-3xl font-bold text-gray-900">
                         ${revenueBreakdownData.totalRevenue?.toLocaleString() || 0}
                       </div>
-                      <div className="text-sm text-gray-600">Total Revenue</div>
+                      <div className="text-sm text-gray-600">{t('analytics.revenueBreakdown.totalRevenue')}</div>
                     </div>
                   </div>
                 </div>
@@ -586,7 +586,7 @@ const AnalyticsPage = () => {
                               <FontAwesomeIcon icon={faArrowDown} className="h-4 w-4 mr-1" />
                             )}
                             <span className="font-medium">{Math.abs(metric.change)}%</span>
-                            <span className="text-gray-500 ml-1 text-xs">vs last period</span>
+                            <span className="text-gray-500 ml-1 text-xs">{t('analytics.vsLastPeriod')}</span>
                           </div>
                         </div>
                       </div>
@@ -599,7 +599,7 @@ const AnalyticsPage = () => {
             {/* Revenue Chart */}
             <Card>
               <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-semibold">Revenue Trend Analysis</CardTitle>
+                <CardTitle className="text-lg font-semibold">{t('analytics.charts.revenueTrendAnalysis')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ChartComponent 
@@ -642,7 +642,7 @@ const AnalyticsPage = () => {
                               <FontAwesomeIcon icon={faArrowDown} className="h-4 w-4 mr-1" />
                             )}
                             <span className="font-medium">{Math.abs(metric.change)}%</span>
-                            <span className="text-gray-500 ml-1 text-xs">vs last period</span>
+                            <span className="text-gray-500 ml-1 text-xs">{t('analytics.vsLastPeriod')}</span>
                           </div>
                         </div>
                       </div>
@@ -656,7 +656,7 @@ const AnalyticsPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-lg font-semibold">Customer Segments</CardTitle>
+                  <CardTitle className="text-lg font-semibold">{t('analytics.sections.customerSegments')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -665,13 +665,13 @@ const AnalyticsPage = () => {
                         <div className="text-2xl font-bold text-blue-600">
                           {customerSegmentsData.active}
                         </div>
-                        <div className="text-sm text-gray-600">Active Customers</div>
+                        <div className="text-sm text-gray-600">{t('analytics.metrics.activeCustomers')}</div>
                       </div>
                       <div className="text-center p-4 bg-green-50 rounded-lg">
                         <div className="text-2xl font-bold text-green-600">
                           {customerSegmentsData.loyal}
                         </div>
-                        <div className="text-sm text-gray-600">Loyal Customers</div>
+                        <div className="text-sm text-gray-600">{t('analytics.sections.loyalCustomers')}</div>
                       </div>
                     </div>
                   </div>
@@ -680,7 +680,7 @@ const AnalyticsPage = () => {
 
               <Card>
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-lg font-semibold">Top Customers</CardTitle>
+                  <CardTitle className="text-lg font-semibold">{t('analytics.sections.topCustomers')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -779,7 +779,7 @@ const AnalyticsPage = () => {
                               <FontAwesomeIcon icon={faArrowDown} className="h-4 w-4 mr-1" />
                             )}
                             <span className="font-medium">{Math.abs(metric.change)}%</span>
-                            <span className="text-gray-500 ml-1 text-xs">vs last period</span>
+                            <span className="text-gray-500 ml-1 text-xs">{t('analytics.vsLastPeriod')}</span>
                           </div>
                         </div>
                       </div>
@@ -792,7 +792,7 @@ const AnalyticsPage = () => {
             {/* Delivery Performance Trend Chart */}
             <Card>
               <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-semibold">Delivery Performance Trend</CardTitle>
+                <CardTitle className="text-lg font-semibold">{t('analytics.charts.deliveryPerformanceTrend')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ChartComponent 
@@ -809,7 +809,7 @@ const AnalyticsPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-lg font-semibold">Order Status Distribution</CardTitle>
+                  <CardTitle className="text-lg font-semibold">{t('analytics.sections.orderStatusDistribution')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4 sm:space-y-6">
@@ -867,11 +867,11 @@ const AnalyticsPage = () => {
                             <div>
                               <span className="text-sm font-medium text-gray-700">{status.name}</span>
                               <div className="text-xs text-gray-500">
-                                {status.name === 'Scheduled' && 'Future orders planned'}
-                                {status.name === 'Pending' && 'Awaiting confirmation'}
-                                {status.name === 'Preparing' && 'In kitchen'}
-                                {status.name === 'Ready' && 'Ready for pickup/delivery'}
-                                {status.name === 'Delivered' && 'Successfully completed'}
+                                {status.name === 'Scheduled' && t('analytics.statusDescriptions.scheduled')}
+                                {status.name === 'Pending' && t('analytics.statusDescriptions.pending')}
+                                {status.name === 'Preparing' && t('analytics.statusDescriptions.preparing')}
+                                {status.name === 'Ready' && t('analytics.statusDescriptions.ready')}
+                                {status.name === 'Delivered' && t('analytics.statusDescriptions.delivered')}
                               </div>
                             </div>
                           </div>
@@ -971,8 +971,8 @@ const AnalyticsPage = () => {
         <div className="bg-gradient-to-r from-grub-red to-red-600 rounded-2xl p-6 text-white">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold">Analytics Dashboard</h1>
-              <p className="text-red-100 mt-1">Track your restaurant's performance and growth</p>
+              <h1 className="text-2xl sm:text-3xl font-bold">{t('analytics.title')}</h1>
+              <p className="text-red-100 mt-1">{t('analytics.subtitle')}</p>
             </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
               <select
@@ -993,11 +993,11 @@ const AnalyticsPage = () => {
                   className="bg-white/20 hover:bg-white/30 text-white border-white/30 disabled:opacity-50"
                 >
                   <FontAwesomeIcon icon={faSync} className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                  Refresh
+                  {t('analytics.refresh')}
                 </Button>
                 <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30">
                   <FontAwesomeIcon icon={faDownload} className="h-4 w-4 mr-2" />
-                  Export
+                  {t('analytics.export')}
                 </Button>
               </div>
             </div>

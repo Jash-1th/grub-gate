@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 // Static data removed - now uses dynamic API data
 import { DAYS_OF_WEEK } from '../utils/filteringAlgorithms';
 import { applyPreferenceFilter } from '../utils/filteringHelpers';
@@ -25,6 +26,7 @@ import UserTypeSelectionModal from '../components/shared/UserTypeSelectionModal'
 // RestaurantSwitchModal removed - now supports multi-restaurant selection
 
 const RestaurantDetailPage = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -784,7 +786,7 @@ const RestaurantDetailPage = () => {
                   isItemInPlan={isItemInPlan}
                   getItemPlanEntries={getItemPlanEntries}
                   title="Menu Items"
-                  subtitle={isMealPlanningEnabled ? "Click any item to add to your plan" : "Browse our delicious menu items"}
+                  subtitle={isMealPlanningEnabled ? t('restaurantDetail.clickAnyItem') : t('restaurantDetail.browseDeliciousMenu')}
                     emptyStateMessage="No menu items available"
                     isFromMenuSelection={isFromMenuSelection}
                     isMealPlanningEnabled={isMealPlanningEnabled}
@@ -836,7 +838,7 @@ const RestaurantDetailPage = () => {
                 isItemInPlan={isItemInPlan}
                 getItemPlanEntries={getItemPlanEntries}
                 title={`${selectedMealType === 'lunch' ? 'Lunch' : 'Dinner'} Planning`}
-                subtitle={isMealPlanningEnabled ? `Planning for ${DAYS_OF_WEEK.find(d => d.id === activeDay)?.name}` : "Browse our delicious menu items"}
+                subtitle={isMealPlanningEnabled ? t('restaurantDetail.planningFor', { day: DAYS_OF_WEEK.find(d => d.id === activeDay)?.name }) : t('restaurantDetail.browseDeliciousMenu')}
                 emptyStateMessage={`No ${selectedMealType} items available for ${DAYS_OF_WEEK.find(d => d.id === activeDay)?.name}`}
                 showProBadges={true}
                 isMealPlanningEnabled={isMealPlanningEnabled}
@@ -863,18 +865,18 @@ const RestaurantDetailPage = () => {
           >
             {contextSource === 'menu-browse' ? (
               <>
-                <span>Back to Weekly Menu</span>
+                <span>{t('restaurantDetail.backToWeeklyMenu')}</span>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
               </>
             ) : isRestaurantSelected(restaurant.id) ? (
               <>
-                <span>Selected Restaurant</span>
+                <span>{t('restaurantDetail.selectedRestaurant')}</span>
               </>
             ) : (
               <>
-                <span>Select This Restaurant</span>
+                <span>{t('restaurantDetail.selectThisRestaurant')}</span>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
@@ -890,7 +892,7 @@ const RestaurantDetailPage = () => {
           {/* Quick Day/Slot Indicator - Top right corner */}
           <div className="fixed top-20 right-4 z-[60]">
             <div className="bg-white rounded-lg shadow-lg border border-gray-200 px-4 py-2 text-center">
-              <div className="text-xs text-gray-600">Currently planning</div>
+              <div className="text-xs text-gray-600">{t('restaurantDetail.currentlyPlanning')}</div>
               <div className="text-sm font-semibold text-grub-red">
                 {DAYS_OF_WEEK.find(d => d.id === activeDay)?.name} {selectedMealType.charAt(0).toUpperCase() + selectedMealType.slice(1)}
               </div>
@@ -903,7 +905,7 @@ const RestaurantDetailPage = () => {
               onClick={() => navigate('/weekly-menu')}
               className={getButtonClasses(false, false)}
             >
-              <span>Back to Weekly Planning</span>
+              <span>{t('restaurantDetail.backToWeeklyPlanning')}</span>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>

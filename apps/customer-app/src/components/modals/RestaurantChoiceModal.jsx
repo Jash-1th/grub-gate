@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 const RestaurantChoiceModal = ({ 
   isOpen, 
@@ -9,11 +10,13 @@ const RestaurantChoiceModal = ({
   mealType, 
   week 
 }) => {
+  const { t } = useTranslation();
+  
   if (!isOpen || restaurants.length === 0) return null;
 
-  const weekText = week === 0 ? 'This Week' : 'Next Week';
+  const weekText = week === 0 ? t('continueModal.thisWeek') : t('continueModal.nextWeek');
   const dayText = day ? day.charAt(0).toUpperCase() + day.slice(1) : '';
-  const mealText = mealType ? mealType.charAt(0).toUpperCase() + mealType.slice(1) : '';
+  const mealText = mealType === 'lunch' ? t('weeklyMenu.lunch') : mealType === 'dinner' ? t('weeklyMenu.dinner') : '';
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -25,9 +28,9 @@ const RestaurantChoiceModal = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012 2v2M7 7h10" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold mb-2">Choose Restaurant</h3>
+          <h3 className="text-xl font-bold mb-2">{t('choiceModal.chooseRestaurant')}</h3>
           <p className="text-purple-100 text-sm">
-            Select which restaurant to add items from
+            {t('choiceModal.selectWhichRestaurant')}
           </p>
         </div>
 
@@ -46,7 +49,7 @@ const RestaurantChoiceModal = ({
             </div>
             
             <p className="text-gray-600 text-sm leading-relaxed mb-4">
-              You have multiple restaurants selected. Choose which one to add items from:
+              {t('choiceModal.multipleRestaurantsSelected')}
             </p>
           </div>
 
@@ -89,7 +92,7 @@ const RestaurantChoiceModal = ({
             onClick={onClose}
             className="w-full px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium"
           >
-            Cancel
+            {t('choiceModal.cancel')}
           </button>
         </div>
       </div>

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useMealPlan } from '../../contexts/MealPlanContext_SSR_FIXED';
 
 const FoodItemCard = ({ 
@@ -17,6 +18,10 @@ const FoodItemCard = ({
   isMealPlanningEnabled = true,
   week = 0 // Add week parameter for week-aware meal plan checks
 }) => {
+  const { t } = useTranslation();
+  const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
   const mealPlanContext = useMealPlan();
   
   // Safely extract functions with fallbacks during loading
@@ -388,7 +393,7 @@ const FoodItemCard = ({
         {/* Click Hint for Normal Users */}
         {showClickHint && hideAddButton && (
           <div className="text-center py-2">
-            <span className="text-xs text-gray-500 italic">Click to view details</span>
+            <span className="text-xs text-gray-500 italic">{t('foodItemCard.clickToViewDetails')}</span>
           </div>
         )}
       </div>

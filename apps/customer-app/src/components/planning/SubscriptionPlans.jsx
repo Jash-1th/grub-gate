@@ -151,35 +151,35 @@ const SubscriptionPlans = () => {
   const plans = [
     {
       id: 'bi-weekly',
-      name: 'Bi-Weekly Plan',
+      name: t('subscription.biWeeklyPlan'),
       price: '$19.99',
-      period: 'every 2 weeks',
-      description: 'Perfect for regular meal planning',
+      period: t('subscription.everyTwoWeeks'),
+      description: t('subscription.perfectForRegular'),
       features: [
-        '14 days of meal planning',
-        'Restaurant recommendations',
-        'Dietary preferences support',
-        'Mobile app access',
-        'Email support',
-        'Flexible scheduling'
+        t('subscription.daysOfPlanning14'),
+        t('subscription.restaurantRecommendations'),
+        t('subscription.dietaryPreferencesSupport'),
+        t('subscription.mobileAppAccess'),
+        t('subscription.emailSupport'),
+        t('subscription.flexibleScheduling')
       ],
       popular: false,
       color: 'blue'
     },
     {
       id: 'monthly',
-      name: '1 Month Plan',
+      name: t('subscription.monthlyPlan'),
       price: '$39.99',
-      period: 'every month',
-      description: 'Best value for consistent planning',
+      period: t('subscription.everyMonth'),
+      description: t('subscription.bestValueConsistent'),
       features: [
-        'Everything in Bi-Weekly',
-        '30 days of meal planning',
-        'Advanced nutritional tracking',
-        'Multiple dietary profiles',
-        'Priority support',
-        'Exclusive restaurant deals',
-        '10% savings vs bi-weekly'
+        t('subscription.everythingInBiWeekly'),
+        t('subscription.daysOfPlanning30'),
+        t('subscription.advancedNutritionalTracking'),
+        t('subscription.multipleDietaryProfiles'),
+        t('subscription.prioritySupport'),
+        t('subscription.exclusiveRestaurantDeals'),
+        t('subscription.savingsVsBiweekly10')
       ],
       popular: true,
       color: 'grub-red'
@@ -248,10 +248,10 @@ const SubscriptionPlans = () => {
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
         <div className="text-center mb-6 sm:mb-12">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">
-            Choose Your Plan
+            {t('subscription.chooseYourPlanTitle')}
           </h2>
           <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto px-2">
-            Select the perfect plan for your meal planning needs. All plans include access to our restaurant network.
+            {t('subscription.selectPerfectPlanDesc')}
           </p>
         </div>
 
@@ -260,8 +260,8 @@ const SubscriptionPlans = () => {
           <div className="mb-6 sm:mb-12">
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 sm:p-6 border border-blue-200">
               <div className="text-center mb-4 sm:mb-6">
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Your Total Cost Breakdown</h3>
-                <p className="text-sm sm:text-base text-gray-600">Based on your current {totalItems} selected meal{totalItems !== 1 ? 's' : ''} for {getPlanDurationText(selectedPlan)} plan</p>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">{t('subscription.yourTotalCostBreakdown')}</h3>
+                <p className="text-sm sm:text-base text-gray-600">{totalItems === 1 ? t('subscription.basedOnMeals', { count: totalItems, duration: getPlanDurationText(selectedPlan) }) : t('subscription.basedOnMealsPlural', { count: totalItems, duration: getPlanDurationText(selectedPlan) })}</p>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6 max-w-4xl mx-auto">
@@ -272,9 +272,9 @@ const SubscriptionPlans = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">Service Fee</h4>
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{t('subscription.serviceFee')}</h4>
                   <p className="text-xl sm:text-2xl font-bold text-blue-600">${currentServiceFee.toFixed(2)}</p>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-1">GrubGate platform access</p>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-1">{t('subscription.grubGatePlatformAccess')}</p>
                 </div>
 
                 {/* Meal Costs */}
@@ -284,9 +284,9 @@ const SubscriptionPlans = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                     </svg>
                   </div>
-                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">Meal Costs</h4>
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{t('subscription.mealCosts')}</h4>
                   <p className="text-xl sm:text-2xl font-bold text-green-600">${currentMealCost.toFixed(2)}</p>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-1">Restaurant food costs</p>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-1">{t('subscription.restaurantFoodCosts')}</p>
                 </div>
 
                 {/* Total Cost */}
@@ -296,9 +296,9 @@ const SubscriptionPlans = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">Total {getPlanDurationText(selectedPlan)}</h4>
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{t('subscription.total', { duration: getPlanDurationText(selectedPlan) })}</h4>
                   <p className="text-xl sm:text-2xl font-bold text-red-700">${currentTotalCost.toFixed(2)}</p>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-1">Service + meals</p>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-1">{t('subscription.servicePlusMeals')}</p>
                 </div>
               </div>
 
@@ -309,13 +309,13 @@ const SubscriptionPlans = () => {
                     <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    Meal costs vary by restaurant and selections
+                    {t('subscription.mealCostsVary')}
                   </span>
                   <span className="flex items-center">
                     <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                     </svg>
-                    Service fee is fixed per plan
+                    {t('subscription.serviceFeeFixed')}
                   </span>
                 </div>
               </div>
@@ -336,7 +336,7 @@ const SubscriptionPlans = () => {
                 {plan.popular && (
                   <div className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2">
                     <span className="bg-grub-red text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-semibold">
-                      Most Popular
+                      {t('subscription.mostPopular')}
                     </span>
                   </div>
                 )}
@@ -380,7 +380,7 @@ const SubscriptionPlans = () => {
                   disabled={isProcessing}
                   className={`w-full py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold text-white text-sm sm:text-base transition-colors duration-200 ${colors.button} mt-auto hover:transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation`}
                 >
-                  {isProcessing ? 'Processing...' : 'Get Started'}
+                  {isProcessing ? t('subscription.processing') : t('subscription.getStarted')}
                 </button>
               </div>
             );
@@ -403,7 +403,7 @@ const SubscriptionPlans = () => {
           <div className="bg-white rounded-xl sm:rounded-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
             <div className="p-4 sm:p-6">
               <div className="flex items-center justify-between mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-2xl font-bold text-gray-900">Complete Your Subscription</h2>
+                <h2 className="text-lg sm:text-2xl font-bold text-gray-900">{t('subscription.completeYourSubscription')}</h2>
                 <button
                   onClick={handleEnhancedFlowCancel}
                   className="text-gray-400 hover:text-gray-600 transition-colors p-1 touch-manipulation"

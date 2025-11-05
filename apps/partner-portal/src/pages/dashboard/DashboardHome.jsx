@@ -99,11 +99,11 @@ const DashboardHome = () => {
       setLastUpdated(new Date());
       
       // Show success notification
-      setNotification({ type: 'success', message: 'Dashboard updated successfully' });
+      setNotification({ type: 'success', message: t('dashboard.notifications.updateSuccess') });
       setTimeout(() => setNotification(null), 3000);
     } catch (error) {
       console.error('Dashboard refresh error:', error);
-      setNotification({ type: 'error', message: 'Failed to refresh dashboard data' });
+      setNotification({ type: 'error', message: t('dashboard.notifications.updateError') });
       setTimeout(() => setNotification(null), 5000);
     } finally {
       setRefreshing(false);
@@ -286,16 +286,16 @@ const DashboardHome = () => {
         <div className="flex justify-between items-start mb-2">
           <h1 className="text-xl lg:text-2xl font-bold">
             {loading ? (
-              'Loading Dashboard...'
+              t('dashboard.loadingDashboard')
             ) : (
-              `Welcome back, ${getRestaurantName()}!`
+              t('dashboard.welcome', { name: getRestaurantName() })
             )}
           </h1>
           {!loading && (
             <div className="flex items-center space-x-3">
               {lastUpdated && (
                 <div className="text-right">
-                  <p className="text-red-100 text-xs">Last updated</p>
+                  <p className="text-red-100 text-xs">{t('dashboard.lastUpdated')}</p>
                   <p className="text-white text-xs font-medium">
                     {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
@@ -305,7 +305,7 @@ const DashboardHome = () => {
                 onClick={handleRefresh}
                 disabled={refreshing}
                 className="p-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all duration-200 disabled:opacity-50"
-                title="Refresh dashboard data"
+                title={t('dashboard.refreshData')}
               >
                 <FontAwesomeIcon icon={faSync} className={`h-4 w-4 text-white ${refreshing ? 'animate-spin' : ''}`} />
               </button>
@@ -314,22 +314,22 @@ const DashboardHome = () => {
         </div>
         <p className="text-red-100 text-sm lg:text-base">
           {loading ? (
-            'Setting up your restaurant dashboard...'
+            t('dashboard.settingUp')
           ) : (
-            restaurantInfo?.description || 'Manage your restaurant operations and track performance'
+            restaurantInfo?.description || t('dashboard.manageOperations')
           )}
         </p>
         {restaurantInfo?.status === 'active' && (
           <div className="mt-3 bg-green-500 bg-opacity-20 border border-green-300 rounded-lg p-3">
             <p className="text-green-100 text-sm">
-              ✅ Your restaurant is active and ready to receive orders!
+              ✅ {t('dashboard.status.active')}
             </p>
           </div>
         )}
         {restaurantInfo?.status === 'pending' && (
           <div className="mt-3 bg-yellow-500 bg-opacity-20 border border-yellow-300 rounded-lg p-3">
             <p className="text-yellow-100 text-sm">
-              📝 Your restaurant is pending approval. You'll be notified once it's approved.
+              📝 {t('dashboard.status.pending')}
             </p>
           </div>
         )}
@@ -363,7 +363,7 @@ const DashboardHome = () => {
                         )}
                         {Math.abs(stat.change)}%
                       </span>
-                      <span className="text-xs text-gray-500 font-medium">vs last month</span>
+                      <span className="text-xs text-gray-500 font-medium">{t('dashboard.vsLastMonth')}</span>
                     </div>
                   </div>
                 </div>
@@ -388,12 +388,12 @@ const DashboardHome = () => {
         <Card className="animate-fadeInUp animate-delay-200 shadow-sm border-0 bg-white hover:shadow-lg transition-all duration-300">
           <CardHeader className="pb-3 lg:pb-4">
             <div className="flex justify-between items-center">
-              <CardTitle className="text-lg lg:text-xl font-bold text-gray-900">Recent Orders</CardTitle>
+              <CardTitle className="text-lg lg:text-xl font-bold text-gray-900">{t('dashboard.recentOrders')}</CardTitle>
               <button 
                 onClick={() => navigate('/dashboard/orders')}
                 className="text-sm text-grub-red hover:text-grub-red-light font-medium transition-colors"
               >
-                View all →
+                {t('dashboard.viewAll')} →
               </button>
             </div>
           </CardHeader>
@@ -430,7 +430,7 @@ const DashboardHome = () => {
                           {order.customer.name}
                         </p>
                         <p className="text-xs lg:text-sm text-gray-500">
-                          {order.items.length} {order.items.length === 1 ? 'item' : 'items'}
+                          {order.items.length} {order.items.length === 1 ? t('dashboard.item') : t('dashboard.items')}
                         </p>
                       </div>
                     </div>
@@ -456,13 +456,13 @@ const DashboardHome = () => {
                   <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <FontAwesomeIcon icon={faShoppingBag} className="h-6 w-6 text-gray-400" />
                   </div>
-                  <p className="text-gray-500 text-sm mb-2">No recent orders yet</p>
-                  <p className="text-gray-400 text-xs mb-3">Orders will appear here once customers start placing them</p>
+                  <p className="text-gray-500 text-sm mb-2">{t('dashboard.emptyStates.noOrders')}</p>
+                  <p className="text-gray-400 text-xs mb-3">{t('dashboard.emptyStates.noOrdersDesc')}</p>
                   <button 
                     onClick={() => navigate('/dashboard/orders')}
                     className="text-grub-red text-sm font-medium hover:text-grub-red-light transition-colors"
                   >
-                    View all orders →
+                    {t('dashboard.emptyStates.viewAllOrders')} →
                   </button>
                 </div>
               )}
@@ -473,7 +473,7 @@ const DashboardHome = () => {
         {/* Top Menu Items */}
         <Card className="animate-fadeInUp animate-delay-300 shadow-sm border-0 bg-white hover:shadow-lg transition-all duration-300">
           <CardHeader className="pb-3 lg:pb-4">
-            <CardTitle className="text-lg lg:text-xl font-bold text-gray-900">Top Selling Items</CardTitle>
+            <CardTitle className="text-lg lg:text-xl font-bold text-gray-900">{t('dashboard.topSellingItems')}</CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-3 lg:space-y-4">
@@ -503,7 +503,7 @@ const DashboardHome = () => {
                         {item.totalOrders}
                       </p>
                       <p className="text-xs lg:text-sm text-gray-500">
-                        orders
+                        {t('dashboard.orders')}
                       </p>
                     </div>
                   </div>
@@ -513,13 +513,13 @@ const DashboardHome = () => {
                   <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <FontAwesomeIcon icon={faShoppingBag} className="h-6 w-6 text-gray-400" />
                   </div>
-                  <p className="text-gray-500 text-sm mb-2">No menu items yet</p>
-                  <p className="text-gray-400 text-xs mb-3">Add menu items to start receiving orders</p>
+                  <p className="text-gray-500 text-sm mb-2">{t('dashboard.emptyStates.noMenuItems')}</p>
+                  <p className="text-gray-400 text-xs mb-3">{t('dashboard.emptyStates.noMenuItemsDesc')}</p>
                   <button 
                     onClick={() => navigate('/dashboard/menu')}
                     className="text-grub-red text-sm font-medium hover:text-grub-red-light transition-colors"
                   >
-                    Add your first menu item →
+                    {t('dashboard.emptyStates.addFirstItem')} →
                   </button>
                 </div>
               )}
@@ -531,7 +531,7 @@ const DashboardHome = () => {
       {/* Quick Actions */}
       <Card className="animate-fadeInUp animate-delay-400 shadow-sm border-0 bg-white hover:shadow-lg transition-all duration-300">
         <CardHeader className="pb-3 lg:pb-4">
-          <CardTitle className="text-lg lg:text-xl font-bold text-gray-900">Quick Actions</CardTitle>
+          <CardTitle className="text-lg lg:text-xl font-bold text-gray-900">{t('dashboard.quickActions')}</CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-4">
@@ -544,8 +544,8 @@ const DashboardHome = () => {
                   <FontAwesomeIcon icon={faPlus} className="h-4 w-4 lg:h-5 lg:w-5 text-blue-600" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-medium text-gray-900 text-sm lg:text-base group-hover:text-grub-red transition-colors">Add Menu Item</p>
-                  <p className="text-xs lg:text-sm text-gray-500">Create a new dish</p>
+                  <p className="font-medium text-gray-900 text-sm lg:text-base group-hover:text-grub-red transition-colors">{t('dashboard.actions.addMenuItem')}</p>
+                  <p className="text-xs lg:text-sm text-gray-500">{t('dashboard.actions.addMenuItemDesc')}</p>
                 </div>
               </div>
             </button>
@@ -559,8 +559,8 @@ const DashboardHome = () => {
                   <FontAwesomeIcon icon={faArrowTrendUp} className="h-4 w-4 lg:h-5 lg:w-5 text-green-600" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-medium text-gray-900 text-sm lg:text-base group-hover:text-grub-red transition-colors">View Analytics</p>
-                  <p className="text-xs lg:text-sm text-gray-500">Check performance</p>
+                  <p className="font-medium text-gray-900 text-sm lg:text-base group-hover:text-grub-red transition-colors">{t('dashboard.actions.viewAnalytics')}</p>
+                  <p className="text-xs lg:text-sm text-gray-500">{t('dashboard.actions.viewAnalyticsDesc')}</p>
                 </div>
               </div>
             </button>
@@ -574,8 +574,8 @@ const DashboardHome = () => {
                   <FontAwesomeIcon icon={faUsers} className="h-4 w-4 lg:h-5 lg:w-5 text-purple-600" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-medium text-gray-900 text-sm lg:text-base group-hover:text-grub-red transition-colors">Manage Customers</p>
-                  <p className="text-xs lg:text-sm text-gray-500">View customer data</p>
+                  <p className="font-medium text-gray-900 text-sm lg:text-base group-hover:text-grub-red transition-colors">{t('dashboard.actions.manageCustomers')}</p>
+                  <p className="text-xs lg:text-sm text-gray-500">{t('dashboard.actions.manageCustomersDesc')}</p>
                 </div>
               </div>
             </button>

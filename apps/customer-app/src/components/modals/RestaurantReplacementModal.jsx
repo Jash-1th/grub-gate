@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const RestaurantReplacementModal = ({ 
   isOpen, 
@@ -8,6 +9,7 @@ const RestaurantReplacementModal = ({
   newRestaurant,
   getItemCountForRestaurant
 }) => {
+  const { t } = useTranslation();
   const [modalStep, setModalStep] = useState('remove'); // 'remove' or 'add'
   const [selectedRestaurantsToRemove, setSelectedRestaurantsToRemove] = useState([]);
   const [removedRestaurants, setRemovedRestaurants] = useState([]);
@@ -82,12 +84,12 @@ const RestaurantReplacementModal = ({
             </svg>
           </div>
           <h3 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2">
-            {modalStep === 'remove' ? 'Remove Restaurant' : 'Add New Restaurant'}
+            {modalStep === 'remove' ? t('restaurantModal.removeRestaurant') : t('restaurantModal.addNewRestaurant')}
           </h3>
           <p className="text-orange-100 text-xs sm:text-sm leading-relaxed">
             {modalStep === 'remove' 
-              ? 'Step 1: Select restaurants to remove from your meal plan'
-              : 'Step 2: Choose a new restaurant to add to your meal plan'
+              ? t('restaurantModal.step1SelectRemove')
+              : t('restaurantModal.step2ChooseNew')
             }
           </p>
         </div>
@@ -99,15 +101,15 @@ const RestaurantReplacementModal = ({
             <>
               <div className="text-center mb-4 sm:mb-6">
                 <p className="text-gray-800 text-sm sm:text-base font-medium mb-2">
-                  You have reached the maximum of 2 restaurants.
+                  {t('restaurantModal.maxRestaurantsReached')}
                 </p>
                 <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-3 sm:mb-4">
-                  ☑️ <strong>Check the restaurants below</strong> that you want to remove:
+                  ☑️ <strong>{t('restaurantModal.checkRestaurantsBelow')}</strong> {t('restaurantModal.thatYouWantRemove')}:
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 text-xs">
                   <div className="flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-gray-400 bg-white rounded-sm flex-shrink-0"></div>
-                    <span className="text-gray-500">Not selected</span>
+                    <span className="text-gray-500">{t('restaurantModal.notSelected')}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-red-500 bg-red-500 rounded-sm flex items-center justify-center flex-shrink-0">
@@ -115,14 +117,14 @@ const RestaurantReplacementModal = ({
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     </div>
-                    <span className="text-red-600 font-medium">Selected for removal</span>
+                    <span className="text-red-600 font-medium">{t('restaurantModal.selectedForRemoval')}</span>
                   </div>
                 </div>
               </div>
 
               {/* Current Restaurants - Side by Side */}
               <div className="mb-4 sm:mb-6">
-                <h4 className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">Current Restaurants:</h4>
+                <h4 className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">{t('restaurantModal.currentRestaurants')}:</h4>
                 <div className="grid grid-cols-1 gap-3 sm:gap-4">
                 {selectedRestaurants.map((restaurant, index) => {
               const itemCount = getItemCount(restaurant);
@@ -174,7 +176,7 @@ const RestaurantReplacementModal = ({
                           </h4>
                           {isSelected && (
                             <span className="px-2 py-0.5 text-xs font-bold bg-red-600 text-white rounded-full animate-pulse inline-block w-fit">
-                              TO REMOVE
+                              {t('restaurantModal.toRemove')}
                             </span>
                           )}
                         </div>
@@ -199,11 +201,11 @@ const RestaurantReplacementModal = ({
                             ? 'bg-gray-600 text-white'
                             : 'bg-gray-100 text-gray-600'
                       }`}>
-                        {itemCount} meal{itemCount !== 1 ? 's' : ''}
+                        {itemCount} {itemCount === 1 ? t('restaurantModal.meal') : t('restaurantModal.meals')}
                       </div>
                       {itemCount > 0 && isSelected && (
                         <p className="text-xs mt-0 sm:mt-1 font-medium text-red-700 transition-colors duration-200">
-                          ⚠️ Will be deleted
+                          ⚠️ {t('restaurantModal.willBeDeleted')}
                         </p>
                       )}
                     </div>
@@ -224,10 +226,10 @@ const RestaurantReplacementModal = ({
             <>
               <div className="text-center mb-6">
                 <p className="text-gray-800 text-base font-medium mb-2">
-                  Perfect! Restaurant removed successfully.
+                  {t('restaurantModal.restaurantRemovedSuccess')}
                 </p>
                 <p className="text-gray-600 text-sm leading-relaxed mb-4">
-                  🍽️ <strong>Click below</strong> to browse and add a new restaurant to your meal plan:
+                  🍽️ <strong>{t('restaurantModal.clickBelow')}</strong> {t('restaurantModal.toBrowseAndAdd')}:
                 </p>
               </div>
 
@@ -250,8 +252,8 @@ const RestaurantReplacementModal = ({
                         </svg>
                       </div>
                       <div className="text-left sm:text-center">
-                        <h4 className="text-base sm:text-xl font-bold mb-0.5 sm:mb-1">Browse Restaurants</h4>
-                        <p className="text-green-100 text-xs sm:text-sm">Click to explore and add a new restaurant</p>
+                        <h4 className="text-base sm:text-xl font-bold mb-0.5 sm:mb-1">{t('restaurantModal.browseRestaurants')}</h4>
+                        <p className="text-green-100 text-xs sm:text-sm">{t('restaurantModal.clickToExplore')}</p>
                       </div>
                     </div>
                     <div className="text-white flex-shrink-0">
@@ -274,7 +276,7 @@ const RestaurantReplacementModal = ({
                 return remainingRestaurants && remainingRestaurants.length > 0 && (
                   <div className="mb-6">
                     <h4 className="text-sm font-medium text-gray-700 mb-3">
-                      {remainingRestaurants.length === 1 ? 'Your Remaining Restaurant:' : 'Your Remaining Restaurants:'}
+                      {remainingRestaurants.length === 1 ? t('restaurantModal.yourRemainingRestaurant') : t('restaurantModal.yourRemainingRestaurants')}
                     </h4>
                     <div className="grid grid-cols-1 gap-4">
                       {remainingRestaurants.map((restaurant, index) => (
@@ -294,7 +296,7 @@ const RestaurantReplacementModal = ({
                             )}
                             <div className="flex items-center mt-2">
                               <span className="px-2 py-1 text-xs font-medium bg-green-200 text-green-800 rounded-full">
-                                ✅ Active in your plan
+                                ✅ {t('restaurantModal.activeInPlan')}
                               </span>
                             </div>
                           </div>
@@ -316,7 +318,7 @@ const RestaurantReplacementModal = ({
             onClick={onClose}
             className="flex-1 px-4 py-2.5 sm:py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors duration-200 text-sm sm:text-base touch-manipulation"
           >
-            Cancel
+            {t('restaurantModal.cancel')}
           </button>
           
           {modalStep === 'remove' ? (
@@ -335,12 +337,12 @@ const RestaurantReplacementModal = ({
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  <span>Removing...</span>
+                  <span>{t('restaurantModal.removing')}</span>
                 </div>
               ) : selectedRestaurantsToRemove.length > 0 ? (
-                `Remove ${selectedRestaurantsToRemove.length} Restaurant${selectedRestaurantsToRemove.length > 1 ? 's' : ''}`
+                t('restaurantModal.removeCount', { count: selectedRestaurantsToRemove.length })
               ) : (
-                'Select to Remove'
+                t('restaurantModal.selectToRemove')
               )}
             </button>
           ) : (
@@ -348,7 +350,7 @@ const RestaurantReplacementModal = ({
               onClick={onClose}
               className="flex-1 px-4 py-2.5 sm:py-2 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-blue-700 transition-all duration-200 shadow-lg text-sm sm:text-base touch-manipulation active:scale-95"
             >
-              Done
+              {t('restaurantModal.done')}
             </button>
           )}
         </div>

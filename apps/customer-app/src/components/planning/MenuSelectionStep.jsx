@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { usePlanning } from '../../contexts/PlanningContext';
 import { useMealPlan } from '../../contexts/MealPlanContext_SSR_FIXED';
 import RestaurantCard from './RestaurantCard';
 import { getRestaurantsByPostalCode, getRestaurants } from '../../services/restaurantService';
 
 const MenuSelectionStep = ({ onNext, onBack }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { postalCode, selectedPreferences, isClient } = usePlanning();
@@ -136,7 +138,7 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                <span className="text-blue-800 font-medium">Finding restaurants near {effectivePostalCode}...</span>
+                <span className="text-blue-800 font-medium">{t('menuSelection.findingRestaurantsNear', { postalCode: effectivePostalCode })}</span>
               </div>
             </div>
           )}
@@ -177,7 +179,7 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              <span className="text-blue-800 font-medium">Restaurants near {effectivePostalCode}</span>
+              <span className="text-blue-800 font-medium">{t('menuSelection.restaurantsNear', { postalCode: effectivePostalCode })}</span>
             </div>
           </div>
         )}
@@ -246,20 +248,20 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
             <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4 leading-tight px-2 sm:px-0">
               {isFromPlan ? (
                 <>
-                  <span className="block sm:inline">Restaurants near</span>
-                  <span className="block sm:inline font-black text-red-200"> {effectivePostalCode?.toUpperCase() || 'you'}</span>
+                  <span className="block sm:inline">{t('menuSelection.restaurantsNear', { postalCode: '' })}</span>
+                  <span className="block sm:inline font-black text-red-200"> {effectivePostalCode?.toUpperCase() || t('menuSelection.you')}</span>
                 </>
               ) : (
                 <>
-                  <span className="block text-base sm:text-2xl">Top meals for</span>
+                  <span className="block text-base sm:text-2xl">{t('menuSelection.topMealsFor')}</span>
                   <span className="block text-lg sm:text-3xl font-black">{capitalizeFirst(day)}'s {capitalizeFirst(slot)}</span>
                 </>
               )}
             </h1>
             <p className="text-red-100 text-xs sm:text-base lg:text-lg mb-4 sm:mb-8 px-4 sm:px-0 max-w-lg mx-auto">
               {isFromPlan 
-                ? `Highly-rated restaurants in your area`
-                : `Best ${slot} options available`
+                ? t('menuSelection.highlyRatedRestaurants')
+                : t('menuSelection.bestOptionsAvailable', { slot })
               }
             </p>
             
@@ -280,7 +282,7 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z" />
                   </svg>
-                  <span className="font-medium">{week === '0' ? 'This Week' : 'Next Week'} • {capitalizeFirst(day)} {capitalizeFirst(slot)}</span>
+                  <span className="font-medium">{week === '0' ? t('menuSelection.thisWeek') : t('menuSelection.nextWeek')} • {capitalizeFirst(day)} {capitalizeFirst(slot)}</span>
                 </div>
               )}
             </div>
@@ -298,7 +300,7 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <span className="ml-1 sm:ml-2 text-xs sm:text-sm font-medium text-gray-900">Location</span>
+              <span className="ml-1 sm:ml-2 text-xs sm:text-sm font-medium text-gray-900">{t('menuSelection.location')}</span>
             </div>
             
             <div className="w-4 sm:w-8 h-0.5 bg-gray-300"></div>
@@ -308,7 +310,7 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
                 <span className="text-white text-xs sm:text-sm font-bold">2</span>
               </div>
               <span className="ml-1 sm:ml-2 text-xs sm:text-sm font-medium text-gray-900">
-                {isFromPlan ? 'Restaurants' : 'Menu Selection'}
+                {isFromPlan ? t('menuSelection.restaurants') : t('menuSelection.menuSelection')}
               </span>
             </div>
             
@@ -318,7 +320,7 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
               <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-300 rounded-full flex items-center justify-center">
                 <span className="text-gray-600 text-xs sm:text-sm font-bold">3</span>
               </div>
-              <span className="ml-1 sm:ml-2 text-xs sm:text-sm font-medium text-gray-500">Subscribe</span>
+              <span className="ml-1 sm:ml-2 text-xs sm:text-sm font-medium text-gray-500">{t('menuSelection.subscribe')}</span>
             </div>
           </div>
         </div>
@@ -340,7 +342,7 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
                 <svg className="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span>Ready to continue your meal planning journey</span>
+                <span>{t('menuSelection.readyToContinue')}</span>
               </div>
 
               {/* Action Buttons */}
@@ -362,7 +364,7 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
                   <span className="font-semibold">
-                    {isFromWeeklyMenu ? 'Back to Weekly Menu' : 'Change Location'}
+                    {isFromWeeklyMenu ? t('menuSelection.backToWeeklyMenu') : t('menuSelection.changeLocation')}
                   </span>
                 </button>
 
@@ -384,13 +386,13 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
                   <span className="relative z-10">
                     {isFromWeeklyMenu ? (
                       <>
-                        <span className="hidden sm:inline">Back to Weekly Menu</span>
-                        <span className="sm:hidden">Back to Menu</span>
+                        <span className="hidden sm:inline">{t('menuSelection.backToWeeklyMenu')}</span>
+                        <span className="sm:hidden">{t('menuSelection.backToMenu')}</span>
                       </>
                     ) : (
                       <>
-                        <span className="hidden sm:inline">Continue to Weekly Menu</span>
-                        <span className="sm:hidden">Continue</span>
+                        <span className="hidden sm:inline">{t('menuSelection.continueToWeeklyMenu')}</span>
+                        <span className="sm:hidden">{t('menuSelection.continue')}</span>
                       </>
                     )}
                   </span>

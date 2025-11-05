@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import FoodItemCard from './FoodItemCard';
 
 const MenuItemsGrid = ({
@@ -20,6 +21,7 @@ const MenuItemsGrid = ({
   isMealPlanningEnabled = true,
   week = 0 // Add week parameter for week-aware meal plan checks
 }) => {
+  const { t } = useTranslation();
   const isPro = userType === 'pro';
 
   if (!items || items.length === 0) {
@@ -31,7 +33,7 @@ const MenuItemsGrid = ({
           </svg>
         </div>
         <p className="text-gray-600">
-          {emptyStateMessage || 'No menu items available'}
+          {emptyStateMessage || t('restaurantDetail.noMenuItemsAvailable')}
         </p>
       </div>
     );
@@ -51,10 +53,10 @@ const MenuItemsGrid = ({
           </div>
           <div>
             <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
-              {title || 'Menu Items'}
+              {title || t('restaurantDetail.menuItems')}
             </h3>
             <span className="text-xs sm:text-sm text-gray-500">
-              ({items.length} items available)
+              ({items.length} {t('restaurantDetail.itemsAvailable')})
             </span>
           </div>
         </div>

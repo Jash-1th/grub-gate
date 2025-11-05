@@ -116,7 +116,7 @@ const OrdersPage = () => {
   };
 
   const statuses = [
-    { value: 'all', label: 'All Statuses' },
+    { value: 'all', label: t('orders.allStatuses') },
     { value: 'pending', label: t('orders.statuses.pending') },
     { value: 'confirmed', label: t('orders.statuses.confirmed') },
     { value: 'preparing', label: t('orders.statuses.preparing') },
@@ -227,7 +227,7 @@ const OrdersPage = () => {
         <div className="max-w-7xl mx-auto">
           <LoadingSpinner 
             size="large" 
-            text="Loading orders..." 
+            text={t('orders.loadingOrders')} 
             className="mt-20"
           />
         </div>
@@ -245,7 +245,7 @@ const OrdersPage = () => {
             error={error}
             onRetry={refreshOrders}
             onDismiss={clearError}
-            title="Failed to load orders"
+            title={t('orders.failedToLoad')}
             showRetry={true}
             showDismiss={true}
           />
@@ -290,14 +290,14 @@ const OrdersPage = () => {
                 {isClient ? (
                   selectedDate 
                     ? (selectedDate.toDateString() === new Date().toDateString()
-                      ? "Today's Orders"
-                      : `Orders for ${selectedDate.toLocaleDateString('en-US', { 
+                      ? t('orders.todaysOrders')
+                      : `${t('orders.ordersFor')} ${selectedDate.toLocaleDateString('en-US', { 
                           weekday: 'long', 
                           month: 'short', 
                           day: 'numeric' 
                         })}`)
-                    : "Orders"
-                ) : "Orders"}
+                    : t('orders.orders')
+                ) : t('orders.orders')}
               </h1>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -306,14 +306,14 @@ const OrdersPage = () => {
                 <DatePicker
                   selectedDate={selectedDate}
                   onDateChange={handleDateChange}
-                  placeholder="Select date"
+                  placeholder={t('orders.selectDate')}
                   className="w-full sm:w-56"
                 />
               </div>
               <div className="bg-white/20 backdrop-blur-sm rounded-full px-3 sm:px-5 py-1.5 sm:py-2.5 relative z-10 shadow-lg w-auto">
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   <span className="text-lg sm:text-2xl font-bold">{orders.length}</span>
-                  <span className="text-xs sm:text-sm font-medium opacity-90">Orders</span>
+                  <span className="text-xs sm:text-sm font-medium opacity-90">{t('orders.orders')}</span>
                 </div>
               </div>
             </div>
@@ -324,28 +324,28 @@ const OrdersPage = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
           {[
             { 
-              label: 'Pending', 
+              label: t('orders.statuses.pending'), 
               count: filteredOrders.filter(o => o.status === 'pending').length, 
               color: 'bg-yellow-500', 
               bgColor: 'bg-yellow-50',
               icon: faClock 
             },
             { 
-              label: 'Preparing', 
+              label: t('orders.statuses.preparing'), 
               count: filteredOrders.filter(o => o.status === 'preparing').length, 
               color: 'bg-orange-500', 
               bgColor: 'bg-orange-50',
               icon: faBox 
             },
             { 
-              label: 'Ready', 
+              label: t('orders.statuses.ready'), 
               count: filteredOrders.filter(o => o.status === 'ready').length, 
               color: 'bg-green-500', 
               bgColor: 'bg-green-50',
               icon: faCheckCircle 
             },
             { 
-              label: 'Delivered', 
+              label: t('orders.statuses.delivered'), 
               count: filteredOrders.filter(o => o.status === 'delivered').length, 
               color: 'bg-blue-500', 
               bgColor: 'bg-blue-50',
@@ -379,7 +379,7 @@ const OrdersPage = () => {
                 <div className="relative">
                   <FontAwesomeIcon icon={faSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
-                    placeholder="Search orders by customer name..."
+                    placeholder={t('orders.searchPlaceholder')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 text-sm sm:text-base w-full"
@@ -409,7 +409,7 @@ const OrdersPage = () => {
             <CardContent className="p-8">
               <LoadingSpinner 
                 size="large" 
-                text="Loading today's orders..." 
+                text={t('orders.loadingOrders')} 
                 className="py-8"
               />
             </CardContent>
@@ -423,8 +423,8 @@ const OrdersPage = () => {
             <Card>
               <CardContent className="p-8 text-center">
                 <FontAwesomeIcon icon={faBox} className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No weekly plan orders for today</h3>
-                <p className="text-gray-500">No lunch or dinner orders from weekly meal plans scheduled for {getCurrentDayName()}.</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('orders.emptyState.title')}</h3>
+                <p className="text-gray-500">{t('orders.emptyState.description', { day: getCurrentDayName() })}</p>
               </CardContent>
             </Card>
           ) : (
@@ -437,14 +437,14 @@ const OrdersPage = () => {
                       <table className="w-full min-w-[1000px]">
                         <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
                           <tr>
-                            <th className="text-left py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">Order ID</th>
-                            <th className="text-left py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">Customer</th>
-                            <th className="text-left py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">Items</th>
-                            <th className="text-left py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">Meal Type</th>
-                            <th className="text-left py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">Total</th>
-                            <th className="text-left py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">Status</th>
-                            <th className="text-left py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">Delivery</th>
-                            <th className="text-center py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">Actions</th>
+                            <th className="text-left py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">{t('orders.tableHeaders.orderId')}</th>
+                            <th className="text-left py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">{t('orders.tableHeaders.customer')}</th>
+                            <th className="text-left py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">{t('orders.tableHeaders.items')}</th>
+                            <th className="text-left py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">{t('orders.tableHeaders.mealType')}</th>
+                            <th className="text-left py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">{t('orders.tableHeaders.total')}</th>
+                            <th className="text-left py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">{t('orders.tableHeaders.status')}</th>
+                            <th className="text-left py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">{t('orders.tableHeaders.delivery')}</th>
+                            <th className="text-center py-4 px-6 font-bold text-gray-900 text-sm xl:text-base uppercase tracking-wide">{t('orders.tableHeaders.actions')}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
@@ -477,7 +477,7 @@ const OrdersPage = () => {
                                 <div className="flex items-center gap-2">
                                   <div className="bg-gray-100 rounded-lg px-3 py-1.5">
                                     <span className="font-semibold text-gray-900 text-sm xl:text-base">{order.items?.length || 0}</span>
-                                    <span className="text-gray-500 text-xs xl:text-sm ml-1">items</span>
+                                    <span className="text-gray-500 text-xs xl:text-sm ml-1">{t('orders.tableHeaders.items').toLowerCase()}</span>
                                   </div>
                                 </div>
                               </td>
@@ -489,8 +489,8 @@ const OrdersPage = () => {
                                     ? 'bg-purple-100 text-purple-800 border border-purple-200'
                                     : 'bg-gray-100 text-gray-800 border border-gray-200'
                                 }`}>
-                                  {order.mealType === 'lunch' ? '🍽️ Lunch' : 
-                                   order.mealType === 'dinner' ? '🌙 Dinner' : 
+                                  {order.mealType === 'lunch' ? `🍽️ ${t('orders.mealTypes.lunch')}` : 
+                                   order.mealType === 'dinner' ? `🌙 ${t('orders.mealTypes.dinner')}` : 
                                    '🍽️ Order'}
                                 </span>
                               </td>
@@ -525,7 +525,7 @@ const OrdersPage = () => {
                                   <button
                                     onClick={() => handleViewOrder(order)}
                                     className="p-2.5 text-blue-600 hover:text-blue-700 hover:bg-blue-100 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
-                                    title="View Order Details"
+                                    title={t('orders.actions.view')}
                                   >
                                     <FontAwesomeIcon icon={faEye} className="h-5 w-5" />
                                   </button>
@@ -563,14 +563,14 @@ const OrdersPage = () => {
                                 ? 'bg-purple-100 text-purple-800'
                                 : 'bg-gray-100 text-gray-800'
                             }`}>
-                              {order.mealType === 'lunch' ? '🍽️ Lunch' : 
-                               order.mealType === 'dinner' ? '🌙 Dinner' : 
+                              {order.mealType === 'lunch' ? `🍽️ ${t('orders.mealTypes.lunch')}` : 
+                               order.mealType === 'dinner' ? `🌙 ${t('orders.mealTypes.dinner')}` : 
                                '🍽️ Order'}
                             </span>
                           </div>
                           <div className="text-right flex-shrink-0">
                             <div className="font-bold text-xl text-grub-red">${order.total?.toFixed(2)}</div>
-                            <div className="text-xs text-gray-500 mt-0.5">{order.items?.length || 0} items</div>
+                            <div className="text-xs text-gray-500 mt-0.5">{order.items?.length || 0} {t('orders.tableHeaders.items').toLowerCase()}</div>
                           </div>
                         </div>
 
@@ -650,10 +650,10 @@ const OrdersPage = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h2 className="text-lg sm:text-2xl font-bold truncate">
-                        Order #{selectedOrder.orderNumber}
+                        {t('orders.modal.order')} #{selectedOrder.orderNumber}
                       </h2>
                       <p className="text-red-100 text-xs sm:text-sm">
-                        {selectedOrder.type === 'weekly-plan' ? 'Weekly Plan Order' : 'Single Order'}
+                        {selectedOrder.type === 'weekly-plan' ? t('orders.modal.weeklyPlanOrder') : t('orders.modal.singleOrder')}
                       </p>
                     </div>
                   </div>
@@ -661,7 +661,7 @@ const OrdersPage = () => {
                   {/* Total Price - Mobile */}
                   <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 sm:p-3 text-right flex-shrink-0">
                     <div className="text-xl sm:text-2xl font-bold">${selectedOrder.total?.toFixed(2)}</div>
-                    <div className="text-red-100 text-xs">{selectedOrder.items?.length || 0} items</div>
+                    <div className="text-red-100 text-xs">{selectedOrder.items?.length || 0} {t('orders.tableHeaders.items').toLowerCase()}</div>
                   </div>
                 </div>
                 
@@ -682,8 +682,8 @@ const OrdersPage = () => {
                   
                   {selectedOrder.mealType && (
                     <div className="bg-white/20 backdrop-blur-sm rounded-full px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium">
-                      {selectedOrder.mealType === 'lunch' ? '🍽️ Lunch' : 
-                       selectedOrder.mealType === 'dinner' ? '🌙 Dinner' : 
+                      {selectedOrder.mealType === 'lunch' ? `🍽️ ${t('orders.mealTypes.lunch')}` : 
+                       selectedOrder.mealType === 'dinner' ? `🌙 ${t('orders.mealTypes.dinner')}` : 
                        '🍽️ Meal'}
                     </div>
                   )}
@@ -702,7 +702,7 @@ const OrdersPage = () => {
                       {getStatusIcon(selectedOrder.status)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-sm sm:text-lg font-semibold text-gray-900">Order Status</h3>
+                      <h3 className="text-sm sm:text-lg font-semibold text-gray-900">{t('orders.modal.orderStatus')}</h3>
                       <span className={`inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium ${getStatusColor(selectedOrder.status)}`}>
                         <span className="capitalize">{selectedOrder.status.replace('_', ' ')}</span>
                       </span>
@@ -723,12 +723,12 @@ const OrdersPage = () => {
                         {updateStatusLoading === selectedOrder._id ? (
                           <>
                             <FontAwesomeIcon icon={faSync} className="h-4 w-4 mr-2 animate-spin" />
-                            Confirming...
+                            {t('orders.modal.confirming')}
                           </>
                         ) : (
                           <>
                             <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4 mr-2" />
-                            Confirm Order
+                            {t('orders.modal.confirmOrder')}
                           </>
                         )}
                       </Button>
@@ -746,12 +746,12 @@ const OrdersPage = () => {
                         {updateStatusLoading === selectedOrder._id ? (
                           <>
                             <FontAwesomeIcon icon={faSync} className="h-4 w-4 mr-2 animate-spin" />
-                            Starting...
+                            {t('orders.modal.starting')}
                           </>
                         ) : (
                           <>
                             <FontAwesomeIcon icon={faClock} className="h-4 w-4 mr-2" />
-                            Start Preparation
+                            {t('orders.modal.startPreparation')}
                           </>
                         )}
                       </Button>
@@ -769,12 +769,12 @@ const OrdersPage = () => {
                         {updateStatusLoading === selectedOrder._id ? (
                           <>
                             <FontAwesomeIcon icon={faSync} className="h-4 w-4 mr-2 animate-spin" />
-                            Updating...
+                            {t('orders.modal.updating')}
                           </>
                         ) : (
                           <>
                             <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4 mr-2" />
-                            Mark as Ready
+                            {t('orders.modal.markAsReady')}
                           </>
                         )}
                       </Button>
@@ -790,22 +790,22 @@ const OrdersPage = () => {
                     <FontAwesomeIcon icon={faUser} className="h-5 w-5 text-blue-600" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm sm:text-lg font-semibold text-gray-900">Customer Information</h3>
-                    <p className="text-xs sm:text-sm text-gray-600">Delivery details and contact</p>
+                    <h3 className="text-sm sm:text-lg font-semibold text-gray-900">{t('orders.modal.customerInformation')}</h3>
+                    <p className="text-xs sm:text-sm text-gray-600">{t('orders.modal.deliveryDetailsContact')}</p>
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Customer Name</label>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">{t('orders.modal.customerName')}</label>
                       <div className="mt-1 text-lg font-semibold text-gray-900">
                         {selectedOrder.customerId?.firstName} {selectedOrder.customerId?.lastName}
                       </div>
                     </div>
                     
                     <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Email Address</label>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">{t('orders.modal.emailAddress')}</label>
                       <div className="mt-1 flex items-center gap-2">
                         <FontAwesomeIcon icon={faEnvelope} className="h-4 w-4 text-blue-500" />
                         <span className="text-gray-900">{selectedOrder.customerId?.email}</span>
@@ -813,16 +813,16 @@ const OrdersPage = () => {
                     </div>
                     
                     <div>
-                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Phone Number</label>
+                      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">{t('orders.modal.phoneNumber')}</label>
                       <div className="mt-1 flex items-center gap-2">
                         <FontAwesomeIcon icon={faPhone} className="h-4 w-4 text-blue-500" />
-                        <span className="text-gray-900">{selectedOrder.customerId?.phone || 'Not provided'}</span>
+                        <span className="text-gray-900">{selectedOrder.customerId?.phone || t('orders.modal.notProvided')}</span>
                       </div>
                     </div>
                   </div>
                   
                   <div>
-                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">Delivery Address</label>
+                    <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">{t('orders.modal.deliveryAddress')}</label>
                     <div className="mt-1 flex items-start gap-2">
                       <FontAwesomeIcon icon={faMapMarkerAlt} className="h-4 w-4 text-blue-500 mt-1 flex-shrink-0" />
                       <div className="text-gray-900 leading-relaxed">
@@ -833,7 +833,7 @@ const OrdersPage = () => {
                             <div className="font-medium">{selectedOrder.deliveryAddress.postalCode}</div>
                           </>
                         ) : (
-                          <span className="text-gray-500 italic">Address not available</span>
+                          <span className="text-gray-500 italic">{t('orders.modal.addressNotAvailable')}</span>
                         )}
                       </div>
                     </div>
@@ -848,11 +848,11 @@ const OrdersPage = () => {
                     <FontAwesomeIcon icon={faBox} className="h-5 w-5 text-green-600" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900">Order Items</h3>
-                    <p className="text-sm text-gray-600">{selectedOrder.items?.length || 0} items in this order</p>
+                    <h3 className="text-lg font-semibold text-gray-900">{t('orders.modal.orderItems')}</h3>
+                    <p className="text-sm text-gray-600">{t('orders.modal.itemsInOrder', { count: selectedOrder.items?.length || 0 })}</p>
                   </div>
                   <div className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm font-medium">
-                    {selectedOrder.items?.length || 0} items
+                    {selectedOrder.items?.length || 0} {t('orders.tableHeaders.items').toLowerCase()}
                   </div>
                 </div>
                 
@@ -870,7 +870,7 @@ const OrdersPage = () => {
                 <div className="mt-6 pt-6 border-t border-gray-200">
                   <div className="bg-gray-50 rounded-xl p-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-lg font-semibold text-gray-900">Order Total:</span>
+                      <span className="text-lg font-semibold text-gray-900">{t('orders.modal.orderTotal')}</span>
                       <span className="text-2xl font-bold text-grub-red">${selectedOrder.total?.toFixed(2)}</span>
                     </div>
                   </div>
@@ -885,7 +885,7 @@ const OrdersPage = () => {
                       <FontAwesomeIcon icon={faExclamationCircle} className="h-5 w-5 text-amber-600" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Special Instructions</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('orders.modal.specialInstructions')}</h3>
                       <p className="text-gray-700 leading-relaxed">{selectedOrder.specialInstructions}</p>
                     </div>
                   </div>
@@ -903,14 +903,14 @@ const OrdersPage = () => {
                 }}
                 className="w-full sm:w-auto px-6 py-3 rounded-xl font-medium"
               >
-                Close
+                {t('orders.modal.close')}
               </Button>
               <Button
                 onClick={() => window.print()}
                 className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:scale-105"
               >
                 <FontAwesomeIcon icon={faBox} className="h-4 w-4 mr-2" />
-                Print Order
+                {t('orders.modal.printOrder')}
               </Button>
             </div>
           </div>

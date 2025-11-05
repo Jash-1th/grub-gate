@@ -1,10 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useMealPlan } from '../contexts/MealPlanContext_SSR_FIXED';
 import { useToast } from '../contexts/ToastContext';
 import SubscriptionPlans from '../components/planning/SubscriptionPlans';
 
 const SubscriptionPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { getTotalItemsCount, isLoading } = useMealPlan();
   const { showError } = useToast();
@@ -90,13 +92,13 @@ const SubscriptionPage = () => {
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-                Back to Weekly Menu
+                {t('subscription.backToWeeklyMenu')}
               </button>
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">
-                Choose Your Subscription Plan
+                {t('subscription.chooseYourPlan')}
               </h1>
               <p className="text-red-100 text-sm sm:text-base">
-                Select the perfect plan for your meal planning needs
+                {t('subscription.selectPerfectPlan')}
               </p>
             </div>
           </div>

@@ -20,12 +20,12 @@ const SupportPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   const faqCategories = [
-    { value: 'all', label: 'All Topics' },
-    { value: 'getting-started', label: 'Getting Started' },
-    { value: 'menu-management', label: 'Menu Management' },
-    { value: 'orders', label: 'Orders & Delivery' },
-    { value: 'payments', label: 'Payments & Billing' },
-    { value: 'account', label: 'Account Settings' }
+    { value: 'all', label: t('support.allTopics') },
+    { value: 'getting-started', label: t('support.gettingStarted') },
+    { value: 'menu-management', label: t('support.menuManagement') },
+    { value: 'orders', label: t('support.ordersDelivery') },
+    { value: 'payments', label: t('support.paymentsBilling') },
+    { value: 'account', label: t('support.accountSettings') }
   ];
 
   const faqItems = [
@@ -70,26 +70,26 @@ const SupportPage = () => {
 
   const supportOptions = [
     {
-      title: 'Contact Support',
-      description: 'Get help from our support team',
+      title: t('support.contact'),
+      description: t('support.contactDescription'),
       icon: faCommentDots,
       action: 'contact'
     },
     {
-      title: 'Documentation',
-      description: 'Browse our comprehensive guides',
+      title: t('support.documentation'),
+      description: t('support.documentationDescription'),
       icon: faBook,
       action: 'docs'
     },
     {
-      title: 'Video Tutorials',
-      description: 'Watch step-by-step tutorials',
+      title: t('support.tutorials'),
+      description: t('support.tutorialsDescription'),
       icon: faPlay,
       action: 'tutorials'
     },
     {
-      title: 'System Status',
-      description: 'Check platform status and updates',
+      title: t('support.status'),
+      description: t('support.statusDescription'),
       icon: faCheckCircle,
       action: 'status'
     }
@@ -132,7 +132,7 @@ const SupportPage = () => {
       {/* Contact Information */}
       <Card>
         <CardHeader>
-          <CardTitle>Contact Information</CardTitle>
+          <CardTitle>{t('support.contactInformation')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -141,9 +141,9 @@ const SupportPage = () => {
                 <FontAwesomeIcon icon={faEnvelope} className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <p className="font-medium text-gray-900">Email Support</p>
+                <p className="font-medium text-gray-900">{t('support.emailSupport')}</p>
                 <p className="text-sm text-gray-600">support@grubgate.com</p>
-                <p className="text-xs text-gray-500">Response within 24 hours</p>
+                <p className="text-xs text-gray-500">{t('support.responseTime')}</p>
               </div>
             </div>
             
@@ -152,9 +152,9 @@ const SupportPage = () => {
                 <FontAwesomeIcon icon={faPhone} className="h-6 w-6 text-green-600" />
               </div>
               <div>
-                <p className="font-medium text-gray-900">Phone Support</p>
+                <p className="font-medium text-gray-900">{t('support.phoneSupport')}</p>
                 <p className="text-sm text-gray-600">+1 (514) 555-0123</p>
-                <p className="text-xs text-gray-500">Mon-Fri 9AM-6PM EST</p>
+                <p className="text-xs text-gray-500">{t('support.phoneHours')}</p>
               </div>
             </div>
             
@@ -163,9 +163,9 @@ const SupportPage = () => {
                 <FontAwesomeIcon icon={faClock} className="h-6 w-6 text-purple-600" />
               </div>
               <div>
-                <p className="font-medium text-gray-900">Live Chat</p>
-                <p className="text-sm text-gray-600">Available 24/7</p>
-                <p className="text-xs text-gray-500">Instant support</p>
+                <p className="font-medium text-gray-900">{t('support.liveChat')}</p>
+                <p className="text-sm text-gray-600">{t('support.available247')}</p>
+                <p className="text-xs text-gray-500">{t('support.instantSupport')}</p>
               </div>
             </div>
           </div>

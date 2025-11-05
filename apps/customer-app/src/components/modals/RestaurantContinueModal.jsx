@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 const RestaurantContinueModal = ({ 
   isOpen, 
@@ -10,11 +11,13 @@ const RestaurantContinueModal = ({
   mealType, 
   week 
 }) => {
+  const { t } = useTranslation();
+  
   if (!isOpen) return null;
 
-  const weekText = week === 0 ? 'This Week' : 'Next Week';
+  const weekText = week === 0 ? t('continueModal.thisWeek') : t('continueModal.nextWeek');
   const dayText = day ? day.charAt(0).toUpperCase() + day.slice(1) : '';
-  const mealText = mealType ? mealType.charAt(0).toUpperCase() + mealType.slice(1) : '';
+  const mealText = mealType === 'lunch' ? t('weeklyMenu.lunch') : mealType === 'dinner' ? t('weeklyMenu.dinner') : '';
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -26,9 +29,9 @@ const RestaurantContinueModal = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold mb-2">Continue with Current Restaurant?</h3>
+          <h3 className="text-xl font-bold mb-2">{t('continueModal.continueWithCurrent')}</h3>
           <p className="text-green-100 text-sm">
-            You already have a restaurant selected for your meal plan
+            {t('continueModal.alreadyHaveRestaurant')}
           </p>
         </div>
 
@@ -64,8 +67,7 @@ const RestaurantContinueModal = ({
             </div>
             
             <p className="text-gray-600 text-sm leading-relaxed">
-              You can continue adding meals from <strong>{existingRestaurant?.name}</strong> or 
-              add a second restaurant for more variety (maximum 2 restaurants).
+              {t('continueModal.canContinueAdding', { name: existingRestaurant?.name })}
             </p>
           </div>
 
@@ -76,7 +78,7 @@ const RestaurantContinueModal = ({
               onClick={onContinueExisting}
               className="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
             >
-              Continue with {existingRestaurant?.name}
+              {t('continueModal.continueWith', { name: existingRestaurant?.name })}
             </button>
             
             {/* Add second restaurant */}
@@ -84,7 +86,7 @@ const RestaurantContinueModal = ({
               onClick={onAddNew}
               className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
             >
-              Add Second Restaurant
+              {t('continueModal.addSecondRestaurant')}
             </button>
             
             {/* Cancel */}
@@ -92,7 +94,7 @@ const RestaurantContinueModal = ({
               onClick={onClose}
               className="w-full px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium"
             >
-              Cancel
+              {t('continueModal.cancel')}
             </button>
           </div>
         </div>

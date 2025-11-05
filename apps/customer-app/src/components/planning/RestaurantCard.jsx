@@ -1,7 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore, isSelected = false }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   
   // Debug logging
@@ -106,7 +108,7 @@ const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore, isSel
                 <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="hidden xs:inline">✅ SELECTED</span>
+                <span className="hidden xs:inline">✅ {t('restaurantCard.selected')}</span>
                 <span className="inline xs:hidden">✅</span>
               </span>
             </div>
@@ -122,12 +124,12 @@ const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore, isSel
             <div className="absolute top-3 left-3 flex gap-2">
               {restaurant.isPopular && (
                 <span className="px-2 py-1 bg-grub-red text-white text-xs font-semibold rounded-full shadow-lg">
-                  Popular
+                  {t('restaurantCard.popular')}
                 </span>
               )}
               {restaurant.isTopRated && (
                 <span className="px-2 py-1 bg-yellow-500 text-white text-xs font-semibold rounded-full shadow-lg">
-                  Top Rated
+                  {t('restaurantCard.topRated')}
                 </span>
               )}
             </div>
@@ -190,7 +192,7 @@ const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore, isSel
               ))}
               {(restaurant.preferences || []).length > 3 && (
                 <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                  +{(restaurant.preferences || []).length - 3} more
+                  +{(restaurant.preferences || []).length - 3} {t('restaurantCard.more')}
                 </span>
               )}
             </div>
@@ -214,14 +216,14 @@ const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore, isSel
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      <span>View Menu</span>
+                      <span>{t('restaurantCard.viewMenu')}</span>
                     </>
                   ) : (
                     <>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span>View Menu</span>
+                      <span>{t('restaurantCard.viewMenu')}</span>
                     </>
                   );
                 })()}

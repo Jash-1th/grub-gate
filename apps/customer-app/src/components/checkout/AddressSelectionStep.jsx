@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faSpinner, 
@@ -21,6 +22,7 @@ import { useToast } from '../../contexts/ToastContext';
  * Validates delivery zone for selected restaurant
  */
 const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, setLoading }) => {
+  const { t } = useTranslation();
   const { showSuccess, showError, showWarning } = useToast();
   
   const [addresses, setAddresses] = useState([]);
@@ -62,7 +64,7 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
       }
     } catch (error) {
       console.error('Error loading addresses:', error);
-      showError('Load Failed', 'Unable to load your addresses. You can still add a new address.');
+      showError(t('subscription.loadFailed'), t('subscription.unableToLoadAddresses'));
       setAddresses([]);
     } finally {
       setLoadingAddresses(false);
@@ -199,12 +201,12 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
   // Handle continue to next step
   const handleContinue = () => {
     if (!selectedAddress) {
-      showError('Address Required', 'Please select a delivery address to continue.');
+      showError(t('subscription.addressRequired'), t('subscription.pleaseSelectAddress'));
       return;
     }
 
     if (deliveryValidation && !deliveryValidation.canDeliver) {
-      showError('Delivery Not Available', 'Please select an address within the delivery zone.');
+      showError(t('subscription.deliveryNotAvailable'), t('subscription.selectAddressInZone'));
       return;
     }
 
@@ -220,21 +222,21 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
     <div className="p-6">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Select Delivery Address
+          {t('subscription.selectDeliveryAddress')}
         </h2>
         <p className="text-gray-600">
-          Choose where you'd like your order delivered
+          {t('subscription.chooseWhereDelivered')}
         </p>
       </div>
 
       {/* Current Location Option */}
       <div className="mb-6">
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-          <h3 className="font-semibold text-blue-900 mb-3">Quick Options</h3>
+          <h3 className="font-semibold text-blue-900 mb-3">{t('subscription.quickOptions')}</h3>
           <div className="flex flex-col sm:flex-row gap-3">
             <CurrentLocationButton
               onLocationFound={handleLocationFound}
-              onError={(error) => showError('Location Error', error)}
+              onError={(error) => showError(t('subscription.locationError'), error)}
               size="medium"
               className="flex-1"
             />
@@ -243,7 +245,7 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
               className="flex-1 flex items-center justify-center px-4 py-3 bg-white border border-blue-300 text-blue-700 font-medium rounded-lg hover:bg-blue-50 transition-colors duration-200"
             >
               <FontAwesomeIcon icon={faPlus} className="mr-2" />
-              Add New Address
+              {t('subscription.addNewAddress')}
             </button>
           </div>
         </div>
@@ -253,7 +255,7 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
       {showAddForm && (
         <div className="mb-6 bg-gray-50 rounded-xl p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Add New Address
+            {t('subscription.addNewAddress')}
           </h3>
           <AddressForm
             onSave={handleAddAddress}
@@ -268,24 +270,24 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
       {/* Saved Addresses */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Your Saved Addresses
+          {t('subscription.yourSavedAddresses')}
         </h3>
 
         {loadingAddresses ? (
           <div className="flex items-center justify-center py-8">
             <FontAwesomeIcon icon={faSpinner} className="animate-spin text-2xl text-blue-600 mr-3" />
-            <span className="text-gray-600">Loading your addresses...</span>
+            <span className="text-gray-600">{t('subscription.loadingAddresses')}</span>
           </div>
         ) : addresses.length === 0 ? (
           <div className="text-center py-8 bg-gray-50 rounded-xl">
             <FontAwesomeIcon icon={faMapMarkerAlt} className="text-4xl text-gray-300 mb-3" />
-            <p className="text-gray-600 mb-4">No saved addresses found</p>
+            <p className="text-gray-600 mb-4">{t('subscription.noSavedAddresses')}</p>
             <button
               onClick={() => setShowAddForm(true)}
               className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
             >
               <FontAwesomeIcon icon={faPlus} className="mr-2" />
-              Add Your First Address
+              {t('subscription.addFirstAddress')}
             </button>
           </div>
         ) : (
@@ -309,7 +311,7 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
       {selectedAddress && (
         <div className="mb-6">
           <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
-            Selected Address
+            {t('subscription.selectedAddress')}
           </h3>
           
           <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-3 sm:p-4">
@@ -317,7 +319,7 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
               <div className="flex-1">
                 <div className="flex items-center justify-between sm:justify-start mb-2">
                   <p className="font-semibold text-blue-900 capitalize text-sm sm:text-base">
-                    {selectedAddress.type} {selectedAddress.isTemporary && '(Current Location)'}
+                    {selectedAddress.type} {selectedAddress.isTemporary && `(${t('subscription.currentLocation')})`}
                   </p>
                   
                   {/* Remove Button - Mobile (top right) */}
@@ -335,7 +337,7 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
                 </p>
                 {selectedAddress.instructions && (
                   <p className="text-xs sm:text-sm text-blue-700 mt-2 bg-blue-100 rounded-lg p-2">
-                    <strong>Instructions:</strong> {selectedAddress.instructions}
+                    <strong>{t('subscription.instructions')}:</strong> {selectedAddress.instructions}
                   </p>
                 )}
               </div>
@@ -356,21 +358,21 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
                   {validatingDelivery ? (
                   <div className="flex items-center text-blue-600">
                     <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
-                    <span className="text-sm">Checking delivery...</span>
+                    <span className="text-sm">{t('subscription.checkingDelivery')}</span>
                   </div>
                 ) : deliveryValidation ? (
                   deliveryValidation.canDeliver ? (
                     <div className="flex items-center text-green-600">
                       <FontAwesomeIcon icon={faCheckCircle} className="mr-2" />
                       <div className="text-sm">
-                        <div>Delivery Available</div>
+                        <div>{t('subscription.deliveryAvailable')}</div>
                         {deliveryValidation.distance && deliveryValidation.distance > 0 ? (
                           <div className="text-xs text-green-700 font-medium">
-                            📍 {Math.round(deliveryValidation.distance * 10) / 10} km away
+                            📍 {Math.round(deliveryValidation.distance * 10) / 10} {t('subscription.kmAway')}
                           </div>
                         ) : (
                           <div className="text-xs text-green-600">
-                            📍 5 km away (estimated)
+                            📍 5 {t('subscription.kmEstimated')}
                           </div>
                         )}
                       </div>
@@ -379,14 +381,14 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
                     <div className="flex items-center text-red-600">
                       <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2" />
                       <div className="text-sm">
-                        <div>Outside delivery zone</div>
+                        <div>{t('subscription.outsideDeliveryZone')}</div>
                         {deliveryValidation.distance && deliveryValidation.distance > 0 ? (
                           <div className="text-xs text-red-700 font-medium">
-                            📍 {Math.round(deliveryValidation.distance * 10) / 10} km away (Max: {deliveryValidation.maxDistance || 'N/A'} km)
+                            📍 {Math.round(deliveryValidation.distance * 10) / 10} {t('subscription.kmAway')} ({t('subscription.maxKm', { max: deliveryValidation.maxDistance || 'N/A' })})
                           </div>
                         ) : (
                           <div className="text-xs text-red-600">
-                            📍 5 km away (estimated)
+                            📍 5 {t('subscription.kmEstimated')}
                           </div>
                         )}
                       </div>
@@ -401,7 +403,7 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
                 {validatingDelivery ? (
                   <div className="flex items-center justify-center text-blue-600 bg-blue-100 rounded-lg p-2.5">
                     <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
-                    <span className="text-sm font-medium">Checking delivery...</span>
+                    <span className="text-sm font-medium">{t('subscription.checkingDelivery')}</span>
                   </div>
                 ) : deliveryValidation ? (
                   deliveryValidation.canDeliver ? (
@@ -409,14 +411,14 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
                       <div className="flex items-center text-green-700">
                         <FontAwesomeIcon icon={faCheckCircle} className="mr-2 text-lg" />
                         <div className="text-sm font-medium">
-                          <div>Delivery Available</div>
+                          <div>{t('subscription.deliveryAvailable')}</div>
                           {deliveryValidation.distance && deliveryValidation.distance > 0 ? (
                             <div className="text-xs text-green-600">
-                              {Math.round(deliveryValidation.distance * 10) / 10} km away
+                              {Math.round(deliveryValidation.distance * 10) / 10} {t('subscription.kmAway')}
                             </div>
                           ) : (
                             <div className="text-xs text-green-600">
-                              5 km (estimated)
+                              5 {t('subscription.kmEstimated')}
                             </div>
                           )}
                         </div>
@@ -426,10 +428,10 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
                     <div className="flex items-center bg-red-100 rounded-lg p-2.5">
                       <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2 text-red-600 text-lg" />
                       <div className="text-sm text-red-700">
-                        <div className="font-medium">Outside delivery zone</div>
+                        <div className="font-medium">{t('subscription.outsideDeliveryZone')}</div>
                         {deliveryValidation.distance && deliveryValidation.distance > 0 && (
                           <div className="text-xs">
-                            {Math.round(deliveryValidation.distance * 10) / 10} km away (Max: {deliveryValidation.maxDistance || 'N/A'} km)
+                            {Math.round(deliveryValidation.distance * 10) / 10} {t('subscription.kmAway')} ({t('subscription.maxKm', { max: deliveryValidation.maxDistance || 'N/A' })})
                           </div>
                         )}
                       </div>
@@ -448,12 +450,12 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
                     {deliveryValidation.canDeliver ? (
                       <>
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-sm text-green-700 font-medium">Delivery Available</span>
+                        <span className="text-sm text-green-700 font-medium">{t('subscription.deliveryAvailable')}</span>
                       </>
                     ) : (
                       <>
                         <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                        <span className="text-sm text-red-700 font-medium">Outside Delivery Zone</span>
+                        <span className="text-sm text-red-700 font-medium">{t('subscription.outsideDeliveryZone')}</span>
                       </>
                     )}
                   </div>
@@ -464,11 +466,11 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
                       <>
                         <span className="font-medium">{Math.round(deliveryValidation.distance * 10) / 10} km</span>
                         {deliveryValidation.maxDistance && (
-                          <span className="text-gray-500"> / {deliveryValidation.maxDistance} km max</span>
+                          <span className="text-gray-500"> / {deliveryValidation.maxDistance} {t('subscription.maxKm', { max: '' }).replace('Max: ', 'max')}</span>
                         )}
                       </>
                     ) : (
-                      <span className="text-gray-500 italic">5 km (estimated)</span>
+                      <span className="text-gray-500 italic">5 {t('subscription.kmEstimated')}</span>
                     )}
                   </div>
                 </div>
@@ -478,7 +480,7 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     {deliveryValidation.fee && (
                       <div>
-                        <span className="text-blue-700">Delivery Fee:</span>
+                        <span className="text-blue-700">{t('subscription.deliveryFee')}</span>
                         <span className="font-medium text-blue-900 ml-1">
                           ${deliveryValidation.fee.toFixed(2)}
                         </span>
@@ -487,9 +489,9 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
                     
                     {deliveryValidation.estimatedTime && (
                       <div>
-                        <span className="text-blue-700">Est. Time:</span>
+                        <span className="text-blue-700">{t('subscription.estTime')}</span>
                         <span className="font-medium text-blue-900 ml-1">
-                          {deliveryValidation.estimatedTime} mins
+                          {deliveryValidation.estimatedTime} {t('subscription.mins')}
                         </span>
                       </div>
                     )}
@@ -508,7 +510,7 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
             onClick={onPrevious}
             className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 border-2 border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 touch-manipulation"
           >
-            Back
+            {t('subscription.back')}
           </button>
         )}
         
@@ -526,10 +528,10 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
           {validatingDelivery ? (
             <>
               <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
-              Validating...
+              {t('subscription.validating')}
             </>
           ) : (
-            'Continue to Payment'
+            t('subscription.continueToPayment')
           )}
         </button>
       </div>

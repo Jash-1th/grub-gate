@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useMealPlan } from '../contexts/MealPlanContext_SSR_FIXED';
 import mealCalendarApi from '../api/mealCalendarApi';
@@ -8,6 +9,8 @@ import Loading from '../components/common/Loading';
 import MealDetailModal from '../components/calendar/MealDetailModal';
 
 const MealCalendarPage = () => {
+  const { t } = useTranslation();
+  
   // SSR-safe state initialization
   const [isClient, setIsClient] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -408,7 +411,7 @@ const MealCalendarPage = () => {
 
   const handleSubscribe = () => {
     console.log('🔄 MealCalendarPage: Redirecting to subscription...');
-    navigate('/weekly-plan');
+    navigate('/subscription');
   };
 
   const handleMealStatusUpdate = async (mealId, newStatus) => {
@@ -1087,13 +1090,13 @@ const MealCalendarPage = () => {
                   </svg>
                 </div>
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight">
-                  {calendarMode === 'PREVIEW' ? 'Meal Plan Preview' : 'My Meal Calendar'}
+                  {calendarMode === 'PREVIEW' ? t('mealCalendar.mealPlanPreview') : t('mealCalendar.myMealCalendar')}
                 </h1>
               </div>
               <p className="text-red-100 text-sm sm:text-base leading-relaxed max-w-2xl">
                 {calendarMode === 'PREVIEW' 
-                  ? 'Preview your planned meals schedule before subscribing'
-                  : 'Track your scheduled meals and delivery status'
+                  ? t('mealCalendar.previewSchedule')
+                  : t('mealCalendar.trackMeals')
                 }
               </p>
             </div>
@@ -1106,7 +1109,7 @@ const MealCalendarPage = () => {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                <span>Back to Menu</span>
+                <span>{t('mealCalendar.backToMenu')}</span>
               </button>
               
               {!subscriptionStatus?.hasActiveSubscription && (
@@ -1114,7 +1117,7 @@ const MealCalendarPage = () => {
                   onClick={handleSubscribe}
                   className="bg-white text-grub-red px-4 py-2.5 sm:py-2 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm sm:text-base"
                 >
-                  Subscribe to Plan
+                  {t('mealCalendar.subscribeToPlan')}
                 </button>
               )}
             </div>
@@ -1143,10 +1146,10 @@ const MealCalendarPage = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h2 className="text-lg sm:text-xl font-bold text-gray-900 truncate">
-                    {calendarMode === 'PREVIEW' ? 'Meal Plan Preview' : 'Active Subscription'}
+                    {calendarMode === 'PREVIEW' ? t('mealCalendar.mealPlanPreview') : t('mealCalendar.activeSubscription')}
                   </h2>
                   <p className="text-xs sm:text-sm text-gray-500">
-                    Plan Type: {displayData.calendar.subscriptionPeriod?.planType || 'Bi-Weekly'}
+                    {t('mealCalendar.planType')}: {displayData.calendar.subscriptionPeriod?.planType || t('mealCalendar.biWeekly')}
                   </p>
                 </div>
               </div>
@@ -1158,7 +1161,7 @@ const MealCalendarPage = () => {
                   {calendarMode === 'PREVIEW' ? displayData.calendar.totalMeals : displayData.calendar.progressPercentage + '%'}
                 </div>
                 <p className="text-xs text-gray-500">
-                  {calendarMode === 'PREVIEW' ? 'Total Meals' : 'Complete'}
+                  {calendarMode === 'PREVIEW' ? t('mealCalendar.totalMeals') : t('mealCalendar.complete')}
                 </p>
               </div>
             </div>
@@ -1168,19 +1171,19 @@ const MealCalendarPage = () => {
               <div className="bg-gray-50 rounded-xl p-3 sm:p-4 mb-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-center">
                   <div className="bg-white rounded-lg p-3 shadow-sm">
-                    <p className="text-xs text-gray-500 mb-1 font-medium">Start Date</p>
+                    <p className="text-xs text-gray-500 mb-1 font-medium">{t('mealCalendar.startDate')}</p>
                     <p className="font-bold text-gray-900 text-sm sm:text-base">
                       {new Date(displayData.calendar.subscriptionPeriod.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </p>
                   </div>
                   <div className="bg-white rounded-lg p-3 shadow-sm">
-                    <p className="text-xs text-gray-500 mb-1 font-medium">End Date</p>
+                    <p className="text-xs text-gray-500 mb-1 font-medium">{t('mealCalendar.endDate')}</p>
                     <p className="font-bold text-gray-900 text-sm sm:text-base">
                       {new Date(displayData.calendar.subscriptionPeriod.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </p>
                   </div>
                   <div className="bg-white rounded-lg p-3 shadow-sm">
-                    <p className="text-xs text-gray-500 mb-1 font-medium">Days Left</p>
+                    <p className="text-xs text-gray-500 mb-1 font-medium">{t('mealCalendar.daysLeft')}</p>
                     <p className="font-bold text-grub-red text-sm sm:text-base">
                       {displayData.calendar.remainingDays}
                     </p>
@@ -1193,12 +1196,12 @@ const MealCalendarPage = () => {
             <div>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium text-gray-700">
-                  {calendarMode === 'PREVIEW' ? 'Meal Planning' : 'Meal Progress'}
+                  {calendarMode === 'PREVIEW' ? t('mealCalendar.mealPlanning') : t('mealCalendar.mealProgress')}
                 </span>
                 <span className="text-sm text-gray-600">
                   {calendarMode === 'PREVIEW' 
-                    ? `${displayData.calendar.totalMeals} meals planned`
-                    : `${displayData.calendar.deliveredMeals} of ${displayData.calendar.totalMeals} delivered`
+                    ? `${displayData.calendar.totalMeals} ${t('mealCalendar.mealsPlanned')}`
+                    : t('mealCalendar.deliveredOf', { delivered: displayData.calendar.deliveredMeals, total: displayData.calendar.totalMeals })
                   }
                 </span>
               </div>
@@ -1230,7 +1233,7 @@ const MealCalendarPage = () => {
                     <svg className="w-5 h-5 text-grub-red flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
-                    <span>{isSubscribed ? 'Subscription Meal Schedule' : 'Weekly Meal Schedule'}</span>
+                    <span>{isSubscribed ? t('mealCalendar.subscriptionMealSchedule') : t('mealCalendar.weeklyMealSchedule')}</span>
                   </h2>
                   <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
                     {isSubscribed && calendarData?.calendar?.subscriptionPeriod
@@ -1247,7 +1250,7 @@ const MealCalendarPage = () => {
                     <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    <span>Jump to date:</span>
+                    <span>{t('mealCalendar.jumpToDate')}:</span>
                   </label>
                   <input
                     type="date"
@@ -1290,7 +1293,7 @@ const MealCalendarPage = () => {
                         console.log('🚫 Date picker: Date not clickable:', newDate);
                         // Reset to current selected date if invalid
                         e.target.value = selectedDate;
-                        alert('This date is not available for your subscription period.');
+                        alert(t('mealCalendar.dateNotAvailable'));
                       }
                     }}
                     className="border border-gray-300 rounded-lg px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors cursor-pointer bg-white"
@@ -1313,8 +1316,8 @@ const MealCalendarPage = () => {
                           </svg>
                         </div>
                         <div>
-                          <div className="text-sm font-bold">Meal Type</div>
-                          <div className="text-xs text-gray-600">Daily Schedule</div>
+                          <div className="text-sm font-bold">{t('mealCalendar.mealType')}</div>
+                          <div className="text-xs text-gray-600">{t('mealCalendar.dailySchedule')}</div>
                         </div>
                       </div>
                     </th>
@@ -1372,7 +1375,7 @@ const MealCalendarPage = () => {
                             </div>
                             {!isClickable && (
                               <div className="text-xs text-red-500 font-medium">
-                                Unavailable
+                                {t('mealCalendar.unavailable')}
                               </div>
                             )}
                           </div>
@@ -1391,8 +1394,8 @@ const MealCalendarPage = () => {
                           <span className="text-white text-lg">🍽️</span>
                         </div>
                         <div>
-                          <div className="text-lg font-bold text-gray-800">Lunch</div>
-                          <div className="text-xs text-gray-500 font-medium">Midday Meals</div>
+                          <div className="text-lg font-bold text-gray-800">{t('mealCalendar.lunch')}</div>
+                          <div className="text-xs text-gray-500 font-medium">{t('mealCalendar.middayMeals')}</div>
                         </div>
                       </div>
                     </td>
@@ -1412,7 +1415,7 @@ const MealCalendarPage = () => {
                                   <span className="text-white text-xs font-bold">{mealCount}</span>
                                 </div>
                                 <div className="text-xs font-medium text-gray-600">
-                                  {mealCount === 1 ? 'Item' : 'Items'}
+                                  {mealCount === 1 ? t('mealCalendar.item') : t('mealCalendar.items')}
                                 </div>
                               </div>
                               <div className="flex items-center justify-between gap-2">
@@ -1420,7 +1423,7 @@ const MealCalendarPage = () => {
                                   onClick={() => handleMealDetailClick(date, 'lunch')}
                                   className="flex-1 px-2 py-1 text-xs text-white bg-blue-500 hover:bg-blue-600 rounded-md font-medium transition-colors whitespace-nowrap"
                                 >
-                                  View Details
+                                  {t('mealCalendar.viewDetails')}
                                 </button>
                                 <div className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
                                 ${lunchMeals.reduce((total, meal) => {
@@ -1473,7 +1476,7 @@ const MealCalendarPage = () => {
                             </div>
                           ) : (
                             <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 h-full flex items-center justify-center min-h-[80px]">
-                              <div className="text-gray-500 text-xs font-medium">No meals</div>
+                              <div className="text-gray-500 text-xs font-medium">{t('mealCalendar.noMeals')}</div>
                             </div>
                           )}
                         </td>
@@ -1489,8 +1492,8 @@ const MealCalendarPage = () => {
                           <span className="text-white text-lg">🌙</span>
                         </div>
                         <div>
-                          <div className="text-lg font-bold text-gray-800">Dinner</div>
-                          <div className="text-xs text-gray-500 font-medium">Evening Meals</div>
+                          <div className="text-lg font-bold text-gray-800">{t('mealCalendar.dinner')}</div>
+                          <div className="text-xs text-gray-500 font-medium">{t('mealCalendar.eveningMeals')}</div>
                         </div>
                       </div>
                     </td>
@@ -1510,7 +1513,7 @@ const MealCalendarPage = () => {
                                   <span className="text-white text-xs font-bold">{mealCount}</span>
                                 </div>
                                 <div className="text-xs font-medium text-gray-600">
-                                  {mealCount === 1 ? 'Item' : 'Items'}
+                                  {mealCount === 1 ? t('mealCalendar.item') : t('mealCalendar.items')}
                                 </div>
                               </div>
                               <div className="flex items-center justify-between gap-2">
@@ -1518,7 +1521,7 @@ const MealCalendarPage = () => {
                                   onClick={() => handleMealDetailClick(date, 'dinner')}
                                   className="flex-1 px-2 py-1 text-xs text-white bg-purple-500 hover:bg-purple-600 rounded-md font-medium transition-colors whitespace-nowrap"
                                 >
-                                  View Details
+                                  {t('mealCalendar.viewDetails')}
                                 </button>
                                 <div className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
                                 ${dinnerMeals.reduce((total, meal) => {
@@ -1571,7 +1574,7 @@ const MealCalendarPage = () => {
                             </div>
                           ) : (
                             <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 h-full flex items-center justify-center min-h-[80px]">
-                              <div className="text-gray-500 text-xs font-medium">No meals</div>
+                              <div className="text-gray-500 text-xs font-medium">{t('mealCalendar.noMeals')}</div>
                             </div>
                           )}
                         </td>
@@ -1637,7 +1640,7 @@ const MealCalendarPage = () => {
                         </div>
                         {!isClickable && (
                           <div className="text-xs text-red-500 font-medium bg-red-50 px-2 py-1 rounded-full">
-                            Unavailable
+                            {t('mealCalendar.unavailable')}
                           </div>
                         )}
                       </div>
@@ -1652,44 +1655,44 @@ const MealCalendarPage = () => {
                             <span className="text-white text-lg">🍽️</span>
                           </div>
                           <div className="flex-1">
-                            <div className="font-semibold text-gray-800">Lunch</div>
+                            <div className="font-semibold text-gray-800">{t('mealCalendar.lunch')}</div>
                             {lunchMeals.length > 0 ? (
                               <div className="flex items-center justify-between gap-2 mt-1">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-sm text-gray-600">{lunchMeals.length} {lunchMeals.length === 1 ? 'item' : 'items'}</span>
+                                  <span className="text-sm text-gray-600">{lunchMeals.length} {lunchMeals.length === 1 ? t('mealCalendar.item') : t('mealCalendar.items')}</span>
                                   <button
                                     onClick={() => handleMealDetailClick(date, 'lunch')}
                                     className="px-3 py-1.5 text-xs text-white bg-blue-500 hover:bg-blue-600 rounded-md font-medium transition-colors"
                                   >
-                                    View Details
+                                    {t('mealCalendar.viewDetails')}
                                   </button>
                                 </div>
                                 <div className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                            ${lunchMeals.reduce((total, meal) => {
-                              let price = 0;
-                              if (meal.items && Array.isArray(meal.items) && meal.items.length > 0) {
-                                price = meal.items.reduce((itemTotal, item) => {
-                                  return itemTotal + (parseFloat(item.subtotal) || parseFloat(item.price) || parseFloat(item.total) || 0);
-                                }, 0);
-                              } else {
-                                price = parseFloat(meal.subtotal) || parseFloat(meal.price) || parseFloat(meal.total) || 0;
-                              }
-                              if (price === 0 && meal.mealName) {
-                                if (meal.mealName.toLowerCase().includes('chicken')) {
-                                  price = 12.99;
-                                } else if (meal.mealName.toLowerCase().includes('mutton')) {
-                                  price = 15.99;
-                                } else {
-                                  price = 10.99;
-                                }
-                              }
-                              const quantity = parseInt(meal.quantity) || 1;
-                              return total + (price * quantity);
-                            }, 0).toFixed(2)}
+                                ${lunchMeals.reduce((total, meal) => {
+                                  let price = 0;
+                                  if (meal.items && Array.isArray(meal.items) && meal.items.length > 0) {
+                                    price = meal.items.reduce((itemTotal, item) => {
+                                      return itemTotal + (parseFloat(item.subtotal) || parseFloat(item.price) || parseFloat(item.total) || 0);
+                                    }, 0);
+                                  } else {
+                                    price = parseFloat(meal.subtotal) || parseFloat(meal.price) || parseFloat(meal.total) || 0;
+                                  }
+                                  if (price === 0 && meal.mealName) {
+                                    if (meal.mealName.toLowerCase().includes('chicken')) {
+                                      price = 12.99;
+                                    } else if (meal.mealName.toLowerCase().includes('mutton')) {
+                                      price = 15.99;
+                                    } else {
+                                      price = 10.99;
+                                    }
+                                  }
+                                  const quantity = parseInt(meal.quantity) || 1;
+                                  return total + (price * quantity);
+                                }, 0).toFixed(2)}
                                 </div>
                               </div>
                             ) : (
-                              <div className="text-sm text-gray-500">No meals</div>
+                              <div className="text-sm text-gray-500">{t('mealCalendar.noMeals')}</div>
                             )}
                           </div>
                         </div>
@@ -1702,44 +1705,44 @@ const MealCalendarPage = () => {
                             <span className="text-white text-lg">🌙</span>
                           </div>
                           <div className="flex-1">
-                            <div className="font-semibold text-gray-800">Dinner</div>
+                            <div className="font-semibold text-gray-800">{t('mealCalendar.dinner')}</div>
                             {dinnerMeals.length > 0 ? (
                               <div className="flex items-center justify-between gap-2 mt-1">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-sm text-gray-600">{dinnerMeals.length} {dinnerMeals.length === 1 ? 'item' : 'items'}</span>
+                                  <span className="text-sm text-gray-600">{dinnerMeals.length} {dinnerMeals.length === 1 ? t('mealCalendar.item') : t('mealCalendar.items')}</span>
                                   <button
                                     onClick={() => handleMealDetailClick(date, 'dinner')}
                                     className="px-3 py-1.5 text-xs text-white bg-purple-500 hover:bg-purple-600 rounded-md font-medium transition-colors"
                                   >
-                                    View Details
+                                    {t('mealCalendar.viewDetails')}
                                   </button>
                                 </div>
                                 <div className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                            ${dinnerMeals.reduce((total, meal) => {
-                              let price = 0;
-                              if (meal.items && Array.isArray(meal.items) && meal.items.length > 0) {
-                                price = meal.items.reduce((itemTotal, item) => {
-                                  return itemTotal + (parseFloat(item.subtotal) || parseFloat(item.price) || parseFloat(item.total) || 0);
-                                }, 0);
-                              } else {
-                                price = parseFloat(meal.subtotal) || parseFloat(meal.price) || parseFloat(meal.total) || 0;
-                              }
-                              if (price === 0 && meal.mealName) {
-                                if (meal.mealName.toLowerCase().includes('chicken')) {
-                                  price = meal.mealType === 'dinner' ? 14.99 : 12.99;
-                                } else if (meal.mealName.toLowerCase().includes('mutton')) {
-                                  price = meal.mealType === 'dinner' ? 17.99 : 15.99;
-                                } else {
-                                  price = meal.mealType === 'dinner' ? 14.99 : 12.99;
-                                }
-                              }
-                              const quantity = parseInt(meal.quantity) || 1;
-                              return total + (price * quantity);
-                            }, 0).toFixed(2)}
+                                ${dinnerMeals.reduce((total, meal) => {
+                                  let price = 0;
+                                  if (meal.items && Array.isArray(meal.items) && meal.items.length > 0) {
+                                    price = meal.items.reduce((itemTotal, item) => {
+                                      return itemTotal + (parseFloat(item.subtotal) || parseFloat(item.price) || parseFloat(item.total) || 0);
+                                    }, 0);
+                                  } else {
+                                    price = parseFloat(meal.subtotal) || parseFloat(meal.price) || parseFloat(meal.total) || 0;
+                                  }
+                                  if (price === 0 && meal.mealName) {
+                                    if (meal.mealName.toLowerCase().includes('chicken')) {
+                                      price = meal.mealType === 'dinner' ? 14.99 : 12.99;
+                                    } else if (meal.mealName.toLowerCase().includes('mutton')) {
+                                      price = meal.mealType === 'dinner' ? 17.99 : 15.99;
+                                    } else {
+                                      price = meal.mealType === 'dinner' ? 14.99 : 12.99;
+                                    }
+                                  }
+                                  const quantity = parseInt(meal.quantity) || 1;
+                                  return total + (price * quantity);
+                                }, 0).toFixed(2)}
                                 </div>
                               </div>
                             ) : (
-                              <div className="text-sm text-gray-500">No meals</div>
+                              <div className="text-sm text-gray-500">{t('mealCalendar.noMeals')}</div>
                             )}
                           </div>
                         </div>
@@ -1763,7 +1766,7 @@ const MealCalendarPage = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900">Meal Breakdown</h3>
+                <h3 className="text-lg font-bold text-gray-900">{t('mealCalendar.mealBreakdown')}</h3>
               </div>
               <div className="space-y-3">
                 {Object.entries(displayData.summary.byMealType).map(([type, count]) => {
@@ -1776,7 +1779,7 @@ const MealCalendarPage = () => {
                     <div key={type} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div className="flex items-center space-x-2">
                         <span className="text-lg">{mealIcons[type] || '🍴'}</span>
-                        <span className="capitalize font-medium text-gray-700">{type}</span>
+                        <span className="capitalize font-medium text-gray-700">{type === 'lunch' ? t('mealCalendar.lunch') : type === 'dinner' ? t('mealCalendar.dinner') : type}</span>
                       </div>
                       <span className="text-xl font-bold text-grub-red">{count}</span>
                     </div>
@@ -1793,7 +1796,7 @@ const MealCalendarPage = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900">Delivery Status</h3>
+                <h3 className="text-lg font-bold text-gray-900">{t('mealCalendar.deliveryStatus')}</h3>
               </div>
               <div className="space-y-3">
                 {Object.entries(displayData.summary.byStatus).map(([status, count]) => {
@@ -1811,7 +1814,7 @@ const MealCalendarPage = () => {
                     <div key={status} className={`flex items-center justify-between p-3 ${config.bg} rounded-lg`}>
                       <div className="flex items-center space-x-2">
                         <span className="text-sm">{config.icon}</span>
-                        <span className={`capitalize font-medium ${config.color}`}>{status}</span>
+                        <span className={`capitalize font-medium ${config.color}`}>{t(`mealCalendar.${status}`)}</span>
                       </div>
                       <span className={`text-xl font-bold ${config.color}`}>{count}</span>
                     </div>
@@ -1828,7 +1831,7 @@ const MealCalendarPage = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900">Quick Actions</h3>
+                <h3 className="text-lg font-bold text-gray-900">{t('mealCalendar.quickActions')}</h3>
               </div>
               <div className="space-y-3">
                 <button
@@ -1838,7 +1841,7 @@ const MealCalendarPage = () => {
                   <svg className="w-4 h-4 text-grub-red flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
-                  <span className="text-sm font-medium text-grub-red group-hover:text-red-700">Plan New Meals</span>
+                  <span className="text-sm font-medium text-grub-red group-hover:text-red-700">{t('mealCalendar.planNewMeals')}</span>
                 </button>
                 
                 <button
@@ -1851,7 +1854,7 @@ const MealCalendarPage = () => {
                   <svg className="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
-                  <span className="text-sm font-medium text-blue-600 group-hover:text-blue-700">Refresh Calendar</span>
+                  <span className="text-sm font-medium text-blue-600 group-hover:text-blue-700">{t('mealCalendar.refreshCalendar')}</span>
                 </button>
                 
                 <button
@@ -1861,7 +1864,7 @@ const MealCalendarPage = () => {
                   <svg className="w-4 h-4 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
-                  <span className="text-sm font-medium text-gray-600 group-hover:text-gray-700">Account Settings</span>
+                  <span className="text-sm font-medium text-gray-600 group-hover:text-gray-700">{t('mealCalendar.accountSettings')}</span>
                 </button>
               </div>
             </div>
@@ -1877,7 +1880,7 @@ const MealCalendarPage = () => {
             >
               {/* Highlight badge */}
               <div className="absolute top-3 right-3 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse">
-                START NOW
+                {t('mealCalendar.startNow')}
               </div>
               
               {/* Animated background effect */}
@@ -1890,9 +1893,9 @@ const MealCalendarPage = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                     </svg>
                   </div>
-                  Subscribe to Plan
+                  {t('mealCalendar.subscribeNow')}
                 </div>
-                <div className="text-red-100 ml-11">Ready to start your meal journey? Subscribe now to get fresh, delicious meals delivered to your door!</div>
+                <div className="text-red-100 ml-11">{t('mealCalendar.readyToStart')}</div>
               </div>
             </button>
           </div>
@@ -1916,7 +1919,7 @@ const MealCalendarPage = () => {
                     onClick={() => setError(null)}
                     className="inline-flex bg-red-50 rounded-md p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600"
                   >
-                    <span className="sr-only">Dismiss</span>
+                    <span className="sr-only">{t('mealCalendar.dismiss')}</span>
                     <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>

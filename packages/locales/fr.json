@@ -31,18 +31,26 @@
   },
   "landingPage": {
     "hero": {
+      "badge": "Rejoignez 500+ Restaurants Partenaires",
       "headline": "Partenaire avec GrubGate. Transformez les Dîneurs Locaux en Clients Fidèles Hebdomadaires.",
       "subheadline": "Rejoignez notre réseau exclusif des meilleurs restaurants de Montréal et développez votre entreprise avec des revenus récurrents et prévisibles grâce aux plans de repas par abonnement.",
       "cta": "Devenir Partenaire",
+      "signIn": "Se Connecter",
       "learnMore": "En savoir plus",
       "stats": {
         "partners": "Restaurants Partenaires",
         "customers": "Abonnés Actifs",
         "revenue": "Augmentation Moyenne des Revenus Mensuels",
         "satisfaction": "Taux de Satisfaction des Partenaires"
+      },
+      "trust": {
+        "free": "Gratuit pour commencer",
+        "noCard": "Aucune carte de crédit requise",
+        "cancel": "Annuler à tout moment"
       }
     },
     "benefits": {
+      "badge": "Pourquoi Choisir GrubGate",
       "title": "Pourquoi Partenariat avec GrubGate?",
       "subtitle": "Nous fournissons tout ce dont vous avez besoin pour développer votre restaurant avec des plans de repas par abonnement.",
       "items": {
@@ -64,7 +72,39 @@
         }
       }
     },
+    "features": {
+      "badge": "Fonctionnalités Puissantes",
+      "title": "Tout ce dont Vous Avez Besoin pour Réussir",
+      "subtitle": "Des outils et fonctionnalités complets conçus pour aider votre restaurant à prospérer",
+      "items": {
+        "mobile": {
+          "title": "Tableau de Bord Mobile-First",
+          "description": "Gérez votre restaurant en déplacement avec notre tableau de bord intuitif optimisé pour mobile. Acceptez les commandes, mettez à jour les menus et suivez les performances de n'importe où."
+        },
+        "analytics": {
+          "title": "Analyses en Temps Réel",
+          "description": "Obtenez des informations instantanées sur vos ventes, plats populaires et préférences des clients. Prenez des décisions basées sur les données pour développer votre entreprise."
+        },
+        "notifications": {
+          "title": "Notifications Instantanées",
+          "description": "Ne manquez jamais une commande avec des notifications push en temps réel. Restez connecté avec vos clients et répondez rapidement à leurs besoins."
+        },
+        "menu": {
+          "title": "Gestion Facile du Menu",
+          "description": "Mettez à jour vos articles de menu, prix et disponibilité en quelques secondes. Ajoutez des photos, descriptions et informations diététiques facilement."
+        },
+        "payments": {
+          "title": "Paiements Sécurisés",
+          "description": "Acceptez les paiements en toute sécurité avec notre système de paiement intégré. Soyez payé plus rapidement avec des règlements automatisés et des rapports de transactions détaillés."
+        },
+        "multilang": {
+          "title": "Support Multilingue",
+          "description": "Atteignez plus de clients avec le support de plusieurs langues. Notre plateforme s'adapte à votre marché local et aux préférences de vos clients."
+        }
+      }
+    },
     "howItWorks": {
+      "badge": "Processus Simple",
       "title": "Comment ça Marche",
       "subtitle": "Commencer est simple. Rejoignez notre réseau en quelques étapes.",
       "steps": {
@@ -96,27 +136,71 @@
       "subtitle": "Découvrez comment GrubGate a aidé les meilleurs restaurants de Montréal à développer leur entreprise avec des revenus prévisibles et des clients fidèles."
     },
     "cta": {
+      "badge": "Commencez Votre Voyage Aujourd'hui",
       "title": "Prêt à Développer votre Restaurant?",
       "subtitle": "Rejoignez le réseau de restaurants leader de Montréal et commencez à gagner des revenus prévisibles dès aujourd'hui.",
       "button": "Postuler Maintenant",
+      "signIn": "Se Connecter",
       "contact": "Contacter les Ventes"
     }
   },
   "auth": {
+    "partnerAccount": "Compte Partenaire",
     "login": {
-      "title": "Bon Retour",
-      "subtitle": "Connectez-vous à votre tableau de bord partenaire",
-      "email": "Adresse Email",
-      "password": "Mot de Passe",
+      "welcomeTitle": "Bienvenue au Portail Partenaire GrubGate",
+      "welcomeSubtitle": "Rejoignez le réseau de restaurants leader de Montréal et développez votre entreprise avec des revenus prévisibles.",
+      "trustedBy": "Approuvé par 500+ Restaurants",
+      "title": "Se Connecter",
+      "subtitle": "Entrez vos identifiants pour accéder à votre compte",
+      "email": "Adresse email",
+      "emailPlaceholder": "Entrez votre email",
+      "password": "Mot de passe",
+      "passwordPlaceholder": "Entrez votre mot de passe",
       "rememberMe": "Se souvenir de moi",
       "forgotPassword": "Mot de passe oublié?",
-      "signIn": "Se Connecter",
+      "signIn": "Se connecter au tableau de bord",
+      "signingIn": "Connexion en cours...",
       "noAccount": "Vous n'avez pas de compte?",
-      "signUp": "Inscrivez-vous ici"
+      "signUp": "Inscrivez-vous gratuitement",
+      "features": {
+        "menu": {
+          "title": "Gérez Votre Menu",
+          "description": "Créez et mettez à jour le menu de votre restaurant facilement"
+        },
+        "customers": {
+          "title": "Suivez les Clients",
+          "description": "Surveillez les commandes et préférences des clients"
+        },
+        "revenue": {
+          "title": "Augmentez les Revenus",
+          "description": "Développez votre entreprise avec des plans de repas par abonnement"
+        },
+        "security": {
+          "title": "Plateforme Sécurisée",
+          "description": "Vos données sont protégées par une sécurité de niveau entreprise"
+        }
+      },
+      "validation": {
+        "emailRequired": "L'adresse email est requise",
+        "emailInvalid": "Veuillez entrer une adresse email valide (ex: utilisateur@exemple.com)",
+        "passwordRequired": "Le mot de passe est requis",
+        "passwordMinLength": "Le mot de passe doit contenir au moins 6 caractères"
+      }
     },
     "register": {
-      "title": "Rejoindre GrubGate",
-      "subtitle": "Créez votre compte partenaire pour commencer",
+      "title": "Rejoindre en tant que Partenaire",
+      "subtitle": "Créez votre compte partenaire pour gérer votre restaurant",
+      "otpTitle": "Entrez le Code de Vérification",
+      "otpSubtitle": "Nous avons envoyé un code à votre",
+      "businessTitle": "Détails de l'Entreprise",
+      "businessSubtitle": "Complétez les informations de votre restaurant",
+      "billingTitle": "Facturation et Configuration Finale",
+      "billingSubtitle": "Téléchargez le logo, les images et complétez les informations de facturation",
+      "identifierLabel": "Email ou Numéro de Téléphone",
+      "identifierPlaceholder": "Entrez votre email ou numéro de téléphone",
+      "sendCode": "Envoyer le Code de Vérification",
+      "sendingCode": "Envoi du Code...",
+      "helpText": "Nous vous enverrons un code de vérification pour confirmer votre identité",
       "restaurantName": "Nom du Restaurant",
       "ownerName": "Nom du Propriétaire",
       "email": "Adresse Email",
@@ -126,7 +210,11 @@
       "agreeTerms": "J'accepte les Conditions de Service et la Politique de Confidentialité",
       "createAccount": "Créer un Compte",
       "haveAccount": "Vous avez déjà un compte?",
-      "signIn": "Connectez-vous ici"
+      "signIn": "Connectez-vous ici",
+      "validation": {
+        "identifierRequired": "L'email ou le numéro de téléphone est requis",
+        "identifierInvalid": "Veuillez entrer une adresse email ou un numéro de téléphone valide"
+      }
     },
     "forgotPassword": {
       "title": "Réinitialiser le Mot de Passe",
@@ -141,6 +229,11 @@
   },
   "dashboard": {
     "welcome": "Bon retour, {{name}}!",
+    "loadingDashboard": "Chargement du Tableau de Bord...",
+    "settingUp": "Configuration de votre tableau de bord restaurant...",
+    "manageOperations": "Gérez les opérations de votre restaurant et suivez les performances",
+    "lastUpdated": "Dernière mise à jour",
+    "refreshData": "Actualiser les données du tableau de bord",
     "overview": "Aperçu du Tableau de Bord",
     "quickStats": "Statistiques Rapides",
     "recentOrders": "Commandes Récentes",
@@ -148,6 +241,13 @@
     "analytics": "Analyses",
     "settings": "Paramètres",
     "logout": "Déconnexion",
+    "vsLastMonth": "vs mois dernier",
+    "viewAll": "Voir tout",
+    "topSellingItems": "Articles les Plus Vendus",
+    "orders": "commandes",
+    "item": "article",
+    "items": "articles",
+    "quickActions": "Actions Rapides",
     "navigation": {
       "dashboard": "Tableau de Bord",
       "menu": "Gestion du Menu",
@@ -166,6 +266,30 @@
       "lastWeek": "Semaine Dernière",
       "thisMonth": "Ce Mois",
       "lastMonth": "Mois Dernier"
+    },
+    "status": {
+      "active": "Votre restaurant est actif et prêt à recevoir des commandes!",
+      "pending": "Votre restaurant est en attente d'approbation. Vous serez notifié une fois approuvé."
+    },
+    "emptyStates": {
+      "noOrders": "Aucune commande récente",
+      "noOrdersDesc": "Les commandes apparaîtront ici une fois que les clients commenceront à les passer",
+      "viewAllOrders": "Voir toutes les commandes",
+      "noMenuItems": "Aucun article au menu",
+      "noMenuItemsDesc": "Ajoutez des articles au menu pour commencer à recevoir des commandes",
+      "addFirstItem": "Ajoutez votre premier article au menu"
+    },
+    "actions": {
+      "addMenuItem": "Ajouter un Article au Menu",
+      "addMenuItemDesc": "Créer un nouveau plat",
+      "viewAnalytics": "Voir les Analyses",
+      "viewAnalyticsDesc": "Vérifier les performances",
+      "manageCustomers": "Gérer les Clients",
+      "manageCustomersDesc": "Voir les données des clients"
+    },
+    "notifications": {
+      "updateSuccess": "Tableau de bord mis à jour avec succès",
+      "updateError": "Échec de l'actualisation des données du tableau de bord"
     }
   },
   "menu": {
@@ -225,6 +349,14 @@
   "orders": {
     "title": "Gestion des Commandes",
     "subtitle": "Voir et gérer toutes les commandes clients",
+    "todaysOrders": "Commandes d'Aujourd'hui",
+    "ordersFor": "Commandes pour",
+    "orders": "Commandes",
+    "allStatuses": "Tous les Statuts",
+    "searchPlaceholder": "Rechercher des commandes par nom de client...",
+    "selectDate": "Sélectionner la date",
+    "loadingOrders": "Chargement des commandes...",
+    "failedToLoad": "Échec du chargement des commandes",
     "filterBy": "Filtrer par",
     "status": "Statut",
     "dateRange": "Plage de Dates",
@@ -233,18 +365,25 @@
       "orderId": "ID de Commande",
       "customer": "Client",
       "items": "Articles",
+      "mealType": "Type de Repas",
       "total": "Total",
       "status": "Statut",
       "date": "Date",
+      "delivery": "Livraison",
       "actions": "Actions"
     },
     "statuses": {
       "pending": "En Attente",
       "confirmed": "Confirmé",
       "preparing": "En Préparation",
-      "ready": "Prêt à Récupérer",
+      "ready": "Prêt",
       "delivered": "Livré",
       "cancelled": "Annulé"
+    },
+    "mealTypes": {
+      "breakfast": "Petit-déjeuner",
+      "lunch": "Déjeuner",
+      "dinner": "Dîner"
     },
     "actions": {
       "view": "Voir les Détails",
@@ -259,17 +398,69 @@
       "total": "Total de la Commande",
       "notes": "Instructions Spéciales",
       "deliveryInfo": "Informations de Livraison"
+    },
+    "emptyState": {
+      "title": "Aucune commande de plan hebdomadaire pour aujourd'hui",
+      "description": "Aucune commande de déjeuner ou dîner des plans de repas hebdomadaires prévue pour {{day}}."
+    },
+    "modal": {
+      "order": "Commande",
+      "weeklyPlanOrder": "Commande de Plan Hebdomadaire",
+      "singleOrder": "Commande Unique",
+      "orderStatus": "Statut de la Commande",
+      "customerInformation": "Informations Client",
+      "deliveryDetailsContact": "Détails de livraison et contact",
+      "customerName": "Nom du Client",
+      "emailAddress": "Adresse Email",
+      "phoneNumber": "Numéro de Téléphone",
+      "notProvided": "Non fourni",
+      "deliveryAddress": "Adresse de Livraison",
+      "addressNotAvailable": "Adresse non disponible",
+      "orderItems": "Articles de la Commande",
+      "itemsInOrder": "{{count}} articles dans cette commande",
+      "orderTotal": "Total de la Commande:",
+      "specialInstructions": "Instructions Spéciales",
+      "close": "Fermer",
+      "printOrder": "Imprimer la Commande",
+      "confirmOrder": "Confirmer la Commande",
+      "confirming": "Confirmation...",
+      "startPreparation": "Commencer la Préparation",
+      "starting": "Démarrage...",
+      "markAsReady": "Marquer comme Prêt",
+      "updating": "Mise à jour...",
+      "prepTime": "Temps de Préparation",
+      "category": "Catégorie"
     }
   },
   "analytics": {
-    "title": "Analyses et Rapports",
+    "title": "Tableau de Bord Analytique",
     "subtitle": "Suivez les performances et la croissance de votre restaurant",
     "timeRange": "Plage de Temps",
     "last7Days": "7 Derniers Jours",
     "last30Days": "30 Derniers Jours",
     "last3Months": "3 Derniers Mois",
     "lastYear": "Dernière Année",
+    "refresh": "Actualiser",
+    "export": "Exporter",
+    "vsLastPeriod": "vs période précédente",
+    "ofTotal": "du total",
+    "tabs": {
+      "overview": "Aperçu",
+      "revenue": "Revenus",
+      "customers": "Clients",
+      "performance": "Performance"
+    },
     "metrics": {
+      "totalRevenue": "Revenus Totaux",
+      "monthlyRecurringRevenue": "Revenus Récurrents Mensuels",
+      "totalOrders": "Total des Commandes",
+      "activeCustomers": "Clients Actifs",
+      "subscriptionConversion": "Conversion d'Abonnement",
+      "avgRevenuePerUser": "Revenu Moyen par Utilisateur",
+      "customerLifetimeValue": "Valeur Vie Client",
+      "avgPrepTime": "Temps de Préparation Moyen",
+      "onTimeDelivery": "Livraison à Temps",
+      "churnRate": "Taux d'Attrition",
       "revenue": "Revenus",
       "orders": "Commandes",
       "customers": "Clients",
@@ -278,25 +469,57 @@
       "customerGrowth": "Croissance des Clients",
       "revenueGrowth": "Croissance des Revenus"
     },
-    "charts": {
-      "revenueChart": "Revenus dans le Temps",
-      "ordersChart": "Commandes dans le Temps",
-      "topItemsChart": "Articles les Plus Vendus",
-      "customerChart": "Croissance des Clients"
+    "revenueBreakdown": {
+      "title": "Répartition des Revenus",
+      "subscriptionRevenue": "Revenus d'Abonnement",
+      "oneTimeOrders": "Commandes Uniques",
+      "totalRevenue": "Revenus Totaux"
     },
-    "export": "Exporter le Rapport"
+    "charts": {
+      "revenueChart": "Revenus au Fil du Temps",
+      "ordersChart": "Commandes au Fil du Temps",
+      "topItemsChart": "Articles les Plus Vendus",
+      "customerChart": "Croissance des Clients",
+      "revenueTrendAnalysis": "Analyse des Tendances de Revenus",
+      "deliveryPerformanceTrend": "Tendance de Performance de Livraison"
+    },
+    "sections": {
+      "customerSegments": "Segments de Clients",
+      "topCustomers": "Meilleurs Clients",
+      "orderStatusDistribution": "Répartition des Statuts de Commande",
+      "loyalCustomers": "Clients Fidèles"
+    },
+    "statusDescriptions": {
+      "scheduled": "Commandes futures planifiées",
+      "pending": "En attente de confirmation",
+      "preparing": "En cuisine",
+      "ready": "Prêt pour ramassage/livraison",
+      "delivered": "Complété avec succès"
+    }
   },
   "customers": {
     "title": "Gestion des Clients",
     "subtitle": "Voir et gérer votre base de clients",
     "searchCustomers": "Rechercher des clients...",
+    "totalCustomers": "Total des Clients",
+    "totalRevenue": "Revenus Totaux",
+    "totalOrders": "Total des Commandes",
+    "avgCustomerValue": "Valeur Moyenne par Client",
+    "customers": "Clients",
+    "joined": "Inscrit",
+    "noOrders": "Aucune commande",
     "tableHeaders": {
+      "customer": "Client",
+      "contact": "Contact",
       "name": "Nom",
       "email": "Email",
       "phone": "Téléphone",
       "orders": "Total des Commandes",
+      "ordersAtRestaurant": "Commandes dans Ce Restaurant",
       "totalSpent": "Total Dépensé",
+      "spentAtRestaurant": "Dépensé dans Ce Restaurant",
       "lastOrder": "Dernière Commande",
+      "avgOrderValue": "Valeur Moyenne de Commande",
       "status": "Statut"
     },
     "statuses": {
@@ -314,6 +537,8 @@
       "description": "Description",
       "cuisine": "Type de Cuisine",
       "address": "Adresse",
+      "restaurantAddress": "Adresse du Restaurant",
+      "addressDescription": "Système d'adresse amélioré avec support global, détection automatique du pays et validation des coordonnées pour des livraisons précises.",
       "phone": "Numéro de Téléphone",
       "email": "Adresse Email",
       "website": "Site Web",
@@ -348,9 +573,27 @@
     "subtitle": "Obtenez de l'aide et du support pour votre restaurant",
     "faq": "Questions Fréquemment Posées",
     "contact": "Contacter le Support",
+    "contactDescription": "Obtenez de l'aide de notre équipe de support",
     "documentation": "Documentation",
+    "documentationDescription": "Parcourez nos guides complets",
     "tutorials": "Tutoriels Vidéo",
-    "status": "Statut du Système"
+    "tutorialsDescription": "Regardez des tutoriels étape par étape",
+    "status": "Statut du Système",
+    "statusDescription": "Vérifiez l'état de la plateforme et les mises à jour",
+    "contactInformation": "Informations de Contact",
+    "emailSupport": "Support par Email",
+    "responseTime": "Réponse sous 24 heures",
+    "phoneSupport": "Support Téléphonique",
+    "phoneHours": "Lun-Ven 9h-18h EST",
+    "liveChat": "Chat en Direct",
+    "available247": "Disponible 24/7",
+    "instantSupport": "Support instantané",
+    "allTopics": "Tous les Sujets",
+    "gettingStarted": "Démarrage",
+    "menuManagement": "Gestion du Menu",
+    "ordersDelivery": "Commandes et Livraison",
+    "paymentsBilling": "Paiements et Facturation",
+    "accountSettings": "Paramètres du Compte"
   },
   "footer": {
     "description": "GrubGate connecte les meilleurs restaurants de Montréal avec les clients grâce aux plans de repas par abonnement. Rejoignez notre réseau et développez votre entreprise avec des revenus récurrents prévisibles.",

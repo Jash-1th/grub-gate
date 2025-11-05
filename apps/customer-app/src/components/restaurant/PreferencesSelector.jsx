@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { foodPreferences } from '../../utils/filteringHelpers';
 
 const PreferencesSelector = ({
@@ -8,6 +9,7 @@ const PreferencesSelector = ({
   onTogglePreferences,
   userType = 'normal'
 }) => {
+  const { t } = useTranslation();
   // Get icon for preference type
   const getPreferenceIcon = (preferenceId) => {
     const icons = {
@@ -59,7 +61,7 @@ const PreferencesSelector = ({
             <div className="flex-1 min-w-0">
               <div className="flex items-center flex-wrap gap-2">
                 <h3 className={`text-base sm:text-lg font-bold text-gray-900 ${isPro ? 'text-purple-900' : ''}`}>
-                  Food Preferences
+                  {t('restaurantDetail.foodPreferences')}
                 </h3>
                 {isPro && (
                   <span className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs px-2 py-1 rounded-full font-bold flex items-center">
@@ -69,8 +71,8 @@ const PreferencesSelector = ({
               </div>
               <p className="text-xs sm:text-sm text-gray-600">
                 {selectedPreferences.length > 0 
-                  ? `${selectedPreferences.length} ${isPro ? 'preferences selected - Advanced filtering active' : 'dietary preferences selected'}` 
-                  : `Tap to select your dietary preferences and ${isPro ? 'get smart recommendations' : 'filter menu items'}`
+                  ? `${selectedPreferences.length} ${isPro ? t('restaurantDetail.preferencesSelectedAdvanced') : t('restaurantDetail.dietaryPreferencesSelected')}` 
+                  : `${isPro ? t('restaurantDetail.tapToSelectAdvanced') : t('restaurantDetail.tapToSelectDietary')}`
                 }
               </p>
             </div>
@@ -98,15 +100,15 @@ const PreferencesSelector = ({
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center">
-            Select your dietary preferences
+            {t('restaurantDetail.selectDietaryPreferences')}
             {isPro && (
               <span className="ml-2 bg-purple-600 text-white text-xs px-2 py-1 rounded-full">PRO</span>
             )}
           </h3>
           <p className="text-sm text-gray-600">
             {isPro 
-              ? 'Advanced filtering to show you the best-rated items that match your needs.'
-              : "We'll show you menu items that match your needs."
+              ? t('restaurantDetail.advancedFilteringDescription')
+              : t('restaurantDetail.filteringDescription')
             }
           </p>
         </div>
@@ -151,13 +153,13 @@ const PreferencesSelector = ({
           onClick={handleClearAll}
           className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
         >
-          Clear All
+          {t('restaurantDetail.clearAll')}
         </button>
         <div className="flex items-center space-x-3">
           <span className="text-xs text-gray-500">
             {selectedPreferences.length > 0 
-              ? `${selectedPreferences.length} preference${selectedPreferences.length > 1 ? 's' : ''} selected` 
-              : 'No preferences selected'
+              ? t('restaurantDetail.preferencesSelected', { count: selectedPreferences.length })
+              : t('restaurantDetail.noPreferencesSelected')
             }
           </span>
           <button
@@ -168,7 +170,7 @@ const PreferencesSelector = ({
                 : 'bg-gray-500 hover:bg-gray-600 text-white'
             }`}
           >
-            Apply {selectedPreferences.length > 0 ? `(${selectedPreferences.length})` : ''}
+            {t('restaurantDetail.apply')} {selectedPreferences.length > 0 ? `(${selectedPreferences.length})` : ''}
           </button>
         </div>
       </div>

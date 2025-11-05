@@ -1,0 +1,106 @@
+{
+  "landingPage": {
+    "hero": {
+      "badge": "Rejoignez 500+ Restaurants Partenaires",
+      "headline": "Partenaire avec GrubGate. Transformez les Dîneurs Locaux en Clients Fidèles Hebdomadaires.",
+      "subheadline": "Rejoignez notre réseau exclusif des meilleurs restaurants de Montréal et développez votre entreprise avec des revenus récurrents et prévisibles grâce aux plans de repas par abonnement.",
+      "cta": "Devenir Partenaire",
+      "signIn": "Se Connecter",
+      "stats": {
+        "partners": "Restaurants Partenaires",
+        "customers": "Abonnés Actifs",
+        "revenue": "Augmentation Moyenne des Revenus Mensuels",
+        "satisfaction": "Taux de Satisfaction des Partenaires"
+      },
+      "trust": {
+        "free": "Gratuit pour commencer",
+        "noCard": "Aucune carte de crédit requise",
+        "cancel": "Annuler à tout moment"
+      }
+    },
+    "benefits": {
+      "badge": "Pourquoi Choisir GrubGate",
+      "title": "Pourquoi Partenariat avec GrubGate?",
+      "subtitle": "Nous fournissons tout ce dont vous avez besoin pour développer votre restaurant avec des plans de repas par abonnement.",
+      "items": {
+        "revenue": {
+          "title": "Revenus Prévisibles",
+          "description": "Obtenez des commandes hebdomadaires garanties et un flux de trésorerie stable grâce aux clients abonnés."
+        },
+        "growth": {
+          "title": "Croissance de l'Entreprise",
+          "description": "Élargissez votre base de clients et augmentez la fréquence des commandes avec notre plateforme."
+        },
+        "support": {
+          "title": "Support Complet",
+          "description": "Nous gérons le marketing, le service client et la logistique pour que vous puissiez vous concentrer sur la cuisine."
+        },
+        "analytics": {
+          "title": "Analyses Détaillées",
+          "description": "Suivez vos performances avec des rapports et des informations complètes."
+        }
+      }
+    },
+    "features": {
+      "badge": "Fonctionnalités Puissantes",
+      "title": "Tout ce dont Vous Avez Besoin pour Réussir",
+      "subtitle": "Des outils et fonctionnalités complets conçus pour aider votre restaurant à prospérer",
+      "items": {
+        "mobile": {
+          "title": "Tableau de Bord Mobile-First",
+          "description": "Gérez votre restaurant en déplacement avec notre tableau de bord intuitif optimisé pour mobile. Acceptez les commandes, mettez à jour les menus et suivez les performances de n'importe où."
+        },
+        "analytics": {
+          "title": "Analyses en Temps Réel",
+          "description": "Obtenez des informations instantanées sur vos ventes, plats populaires et préférences des clients. Prenez des décisions basées sur les données pour développer votre entreprise."
+        },
+        "notifications": {
+          "title": "Notifications Instantanées",
+          "description": "Ne manquez jamais une commande avec des notifications push en temps réel. Restez connecté avec vos clients et répondez rapidement à leurs besoins."
+        },
+        "menu": {
+          "title": "Gestion Facile du Menu",
+          "description": "Mettez à jour vos articles de menu, prix et disponibilité en quelques secondes. Ajoutez des photos, descriptions et informations diététiques facilement."
+        },
+        "payments": {
+          "title": "Paiements Sécurisés",
+          "description": "Acceptez les paiements en toute sécurité avec notre système de paiement intégré. Soyez payé plus rapidement avec des règlements automatisés et des rapports de transactions détaillés."
+        },
+        "multilang": {
+          "title": "Support Multilingue",
+          "description": "Atteignez plus de clients avec le support de plusieurs langues. Notre plateforme s'adapte à votre marché local et aux préférences de vos clients."
+        }
+      }
+    },
+    "howItWorks": {
+      "badge": "Processus Simple",
+      "title": "Comment ça Marche",
+      "subtitle": "Commencer est simple. Rejoignez notre réseau en quelques étapes.",
+      "steps": {
+        "1": {
+          "title": "Postuler pour Rejoindre",
+          "description": "Soumettez les détails de votre restaurant et les informations du menu pour révision."
+        },
+        "2": {
+          "title": "Obtenir l'Approbation",
+          "description": "Notre équipe examine votre candidature et configure votre compte partenaire."
+        },
+        "3": {
+          "title": "Créer des Plans de Menu",
+          "description": "Concevez des plans de repas par abonnement qui fonctionnent pour votre cuisine et vos clients."
+        },
+        "4": {
+          "title": "Commencer à Gagner",
+          "description": "Commencez à recevoir des commandes et développez votre entreprise avec GrubGate."
+        }
+      }
+    },
+    "cta": {
+      "badge": "Commencez Votre Voyage Aujourd'hui",
+      "title": "Prêt à Développer votre Restaurant?",
+      "subtitle": "Rejoignez le réseau de restaurants leader de Montréal et commencez à gagner des revenus prévisibles dès aujourd'hui.",
+      "button": "Postuler Maintenant",
+      "signIn": "Se Connecter"
+    }
+  }
+}

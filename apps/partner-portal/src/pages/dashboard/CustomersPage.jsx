@@ -208,7 +208,7 @@ const CustomersPage = () => {
                   <FontAwesomeIcon icon={faUsers} className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                 </div>
                 <div className="ml-3 sm:ml-4">
-                  <p className="text-xs sm:text-sm font-medium text-gray-600">Total Customers</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">{t('customers.totalCustomers')}</p>
                   <p className="text-xl sm:text-2xl font-bold text-gray-900">{summary.totalCustomers}</p>
                 </div>
               </div>
@@ -222,7 +222,7 @@ const CustomersPage = () => {
                   <FontAwesomeIcon icon={faDollarSign} className="h-5 w-5 sm:h-6 sm:w-6 text-grub-red" />
                 </div>
                 <div className="ml-3 sm:ml-4">
-                  <p className="text-xs sm:text-sm font-medium text-gray-600">Total Revenue</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">{t('customers.totalRevenue')}</p>
                   <p className="text-xl sm:text-2xl font-bold text-grub-red">${summary.totalRevenue.toFixed(2)}</p>
                 </div>
               </div>
@@ -236,7 +236,7 @@ const CustomersPage = () => {
                   <FontAwesomeIcon icon={faShoppingBag} className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                 </div>
                 <div className="ml-3 sm:ml-4">
-                  <p className="text-xs sm:text-sm font-medium text-gray-600">Total Orders</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">{t('customers.totalOrders')}</p>
                   <p className="text-xl sm:text-2xl font-bold text-gray-900">{summary.totalOrders}</p>
                 </div>
               </div>
@@ -250,7 +250,7 @@ const CustomersPage = () => {
                   <FontAwesomeIcon icon={faChartLine} className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
                 </div>
                 <div className="ml-3 sm:ml-4">
-                  <p className="text-xs sm:text-sm font-medium text-gray-600">Avg Customer Value</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">{t('customers.avgCustomerValue')}</p>
                   <p className="text-xl sm:text-2xl font-bold text-gray-900">${summary.averageCustomerValue?.toFixed(2) || '0.00'}</p>
                 </div>
               </div>
@@ -304,13 +304,13 @@ const CustomersPage = () => {
                     <table className="w-full">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="text-left py-4 px-6 font-semibold text-gray-900">Customer</th>
-                          <th className="text-left py-4 px-6 font-semibold text-gray-900">Contact</th>
-                          <th className="text-left py-4 px-6 font-semibold text-gray-900">Orders at This Restaurant</th>
-                          <th className="text-left py-4 px-6 font-semibold text-gray-900">Spent at This Restaurant</th>
-                          <th className="text-left py-4 px-6 font-semibold text-gray-900">Last Order</th>
-                          <th className="text-left py-4 px-6 font-semibold text-gray-900">Avg Order Value</th>
-                          <th className="text-left py-4 px-6 font-semibold text-gray-900">Status</th>
+                          <th className="text-left py-4 px-6 font-semibold text-gray-900">{t('customers.tableHeaders.customer')}</th>
+                          <th className="text-left py-4 px-6 font-semibold text-gray-900">{t('customers.tableHeaders.contact')}</th>
+                          <th className="text-left py-4 px-6 font-semibold text-gray-900">{t('customers.tableHeaders.ordersAtRestaurant')}</th>
+                          <th className="text-left py-4 px-6 font-semibold text-gray-900">{t('customers.tableHeaders.spentAtRestaurant')}</th>
+                          <th className="text-left py-4 px-6 font-semibold text-gray-900">{t('customers.tableHeaders.lastOrder')}</th>
+                          <th className="text-left py-4 px-6 font-semibold text-gray-900">{t('customers.tableHeaders.avgOrderValue')}</th>
+                          <th className="text-left py-4 px-6 font-semibold text-gray-900">{t('customers.tableHeaders.status')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -325,7 +325,7 @@ const CustomersPage = () => {
                                 </div>
                                 <div>
                                   <div className="font-medium text-gray-900">{customer.fullName || `${customer.firstName} ${customer.lastName}`}</div>
-                                  <div className="text-sm text-gray-500">Joined {formatDate(customer.createdAt)}</div>
+                                  <div className="text-sm text-gray-500">{t('customers.joined')} {formatDate(customer.createdAt)}</div>
                                 </div>
                               </div>
                             </td>
@@ -354,8 +354,6 @@ const CustomersPage = () => {
                             </td>
                             <td className="py-4 px-6">
                               <div className="flex items-center text-sm text-gray-600">
-                                <FontAwesomeIcon icon={faCalendar} className="h-4 w-4 mr-2" />
-                                {customer.lastOrderDate ? formatDate(customer.lastOrderDate) : 'No orders'}
                               </div>
                             </td>
                             <td className="py-4 px-6">
@@ -365,7 +363,7 @@ const CustomersPage = () => {
                             </td>
                             <td className="py-4 px-6">
                               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(customer.status)}`}>
-                                {customer.status}
+                                {t(`customers.statuses.${customer.status}`)}
                               </span>
                             </td>
                           </tr>
@@ -393,11 +391,11 @@ const CustomersPage = () => {
                         </div>
                         <div>
                           <div className="font-semibold text-gray-900">{customer.fullName || `${customer.firstName} ${customer.lastName}`}</div>
-                          <div className="text-xs text-gray-500">Joined {formatDate(customer.createdAt)}</div>
+                          <div className="text-xs text-gray-500">{t('customers.joined')} {formatDate(customer.createdAt)}</div>
                         </div>
                       </div>
                       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(customer.status)}`}>
-                        {customer.status}
+                        {t(`customers.statuses.${customer.status}`)}
                       </span>
                     </div>
 
@@ -436,7 +434,7 @@ const CustomersPage = () => {
                         <div className="font-medium text-gray-900 text-xs">
                           {customer.lastOrderDate ? formatDate(customer.lastOrderDate) : 'No orders'}
                         </div>
-                        <div className="text-xs text-gray-500">Last Order</div>
+                        <div className="text-xs text-gray-500">{t('customers.tableHeaders.lastOrder')}</div>
                       </div>
                     </div>
                   </div>

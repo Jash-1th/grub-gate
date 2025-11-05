@@ -870,10 +870,10 @@ const SettingsPage = () => {
                       <div>
                         <h3 className="text-lg font-medium text-gray-900 flex items-center">
                           <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-2 text-grub-red" />
-                          Restaurant Address
+                          {t('settings.profile.restaurantAddress')}
                         </h3>
                         <p className="text-sm text-gray-600 mt-1">
-                          Enhanced address system with global support, automatic country detection, and coordinate validation for accurate deliveries.
+                          {t('settings.profile.addressDescription')}
                         </p>
                       </div>
                       {/* {process.env.NODE_ENV === 'development' && (

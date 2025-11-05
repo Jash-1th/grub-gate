@@ -146,7 +146,7 @@ const LandingPage = () => {
           <div className={`text-center transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <div className="inline-flex items-center gap-2 bg-red-800/40 backdrop-blur-sm px-4 py-2 rounded-full mb-6 text-sm font-medium">
               <FontAwesomeIcon icon={faRocket} className="h-4 w-4" />
-              <span>Join 500+ Partner Restaurants</span>
+              <span>{t('landingPage.hero.badge')}</span>
             </div>
             
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 mx-auto max-w-4xl">
@@ -174,7 +174,7 @@ const LandingPage = () => {
                 onClick={() => navigate('/login')}
                 className="bg-transparent text-white border-2 border-white hover:!bg-white hover:!text-grub-red px-10 py-4 rounded-xl font-bold transition-all duration-300 text-base sm:text-lg"
               >
-                Sign In
+                {t('landingPage.hero.signIn')}
               </Button>
             </div>
             
@@ -201,15 +201,15 @@ const LandingPage = () => {
               <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-6 text-white/90">
                 <div className="flex items-center gap-2">
                   <FontAwesomeIcon icon={faCheckCircle} className="h-5 w-5 text-green-400 flex-shrink-0" />
-                  <span className="text-sm font-medium whitespace-nowrap">Free to get started</span>
+                  <span className="text-sm font-medium whitespace-nowrap">{t('landingPage.hero.trust.free')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <FontAwesomeIcon icon={faCheckCircle} className="h-5 w-5 text-green-400 flex-shrink-0" />
-                  <span className="text-sm font-medium whitespace-nowrap">No credit card required</span>
+                  <span className="text-sm font-medium whitespace-nowrap">{t('landingPage.hero.trust.noCard')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <FontAwesomeIcon icon={faCheckCircle} className="h-5 w-5 text-green-400 flex-shrink-0" />
-                  <span className="text-sm font-medium whitespace-nowrap">Cancel anytime</span>
+                  <span className="text-sm font-medium whitespace-nowrap">{t('landingPage.hero.trust.cancel')}</span>
                 </div>
               </div>
             </div>
@@ -230,7 +230,7 @@ const LandingPage = () => {
           <div className="text-center mb-12 md:mb-16 scroll-animate">
             <div className="inline-flex items-center gap-2 bg-grub-red/10 text-grub-red px-4 py-2 rounded-full mb-4 text-sm font-semibold">
               <FontAwesomeIcon icon={faStar} className="h-4 w-4" />
-              <span>Why Choose GrubGate</span>
+              <span>{t('landingPage.benefits.badge')}</span>
             </div>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 md:mb-6">
               {t('landingPage.benefits.title')}
@@ -273,13 +273,13 @@ const LandingPage = () => {
           <div className="text-center mb-12 md:mb-16">
             <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-600 px-4 py-2 rounded-full mb-4 text-sm font-semibold">
               <FontAwesomeIcon icon={faRocket} className="h-4 w-4" />
-              <span>Powerful Features</span>
+              <span>{t('landingPage.features.badge')}</span>
             </div>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 md:mb-6">
-              Everything You Need to Succeed
+              {t('landingPage.features.title')}
             </h2>
             <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Comprehensive tools and features designed to help your restaurant thrive
+              {t('landingPage.features.subtitle')}
             </p>
           </div>
 
@@ -289,9 +289,9 @@ const LandingPage = () => {
               <div className="w-12 h-12 md:w-14 md:h-14 bg-blue-600 rounded-xl flex items-center justify-center mb-4 md:mb-6 mx-auto">
                 <FontAwesomeIcon icon={faMobileAlt} className="h-6 w-6 md:h-7 md:w-7 text-white" />
               </div>
-              <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">Mobile-First Dashboard</h3>
+              <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">{t('landingPage.features.items.mobile.title')}</h3>
               <p className="text-sm md:text-base text-gray-600 leading-relaxed">
-                Manage your restaurant on the go with our intuitive mobile-optimized dashboard. Accept orders, update menus, and track performance from anywhere.
+                {t('landingPage.features.items.mobile.description')}
               </p>
             </div>
 
@@ -300,9 +300,9 @@ const LandingPage = () => {
               <div className="w-12 h-12 md:w-14 md:h-14 bg-purple-600 rounded-xl flex items-center justify-center mb-4 md:mb-6 mx-auto">
                 <FontAwesomeIcon icon={faChartLine} className="h-6 w-6 md:h-7 md:w-7 text-white" />
               </div>
-              <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">Real-Time Analytics</h3>
+              <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">{t('landingPage.features.items.analytics.title')}</h3>
               <p className="text-sm md:text-base text-gray-600 leading-relaxed">
-                Get instant insights into your sales, popular dishes, and customer preferences. Make data-driven decisions to grow your business.
+                {t('landingPage.features.items.analytics.description')}
               </p>
             </div>
 
@@ -311,9 +311,9 @@ const LandingPage = () => {
               <div className="w-12 h-12 md:w-14 md:h-14 bg-green-600 rounded-xl flex items-center justify-center mb-4 md:mb-6 mx-auto">
                 <FontAwesomeIcon icon={faBell} className="h-6 w-6 md:h-7 md:w-7 text-white" />
               </div>
-              <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">Instant Notifications</h3>
+              <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">{t('landingPage.features.items.notifications.title')}</h3>
               <p className="text-sm md:text-base text-gray-600 leading-relaxed">
-                Never miss an order with real-time push notifications. Stay connected with your customers and respond quickly to their needs.
+                {t('landingPage.features.items.notifications.description')}
               </p>
             </div>
 
@@ -322,9 +322,9 @@ const LandingPage = () => {
               <div className="w-12 h-12 md:w-14 md:h-14 bg-orange-600 rounded-xl flex items-center justify-center mb-4 md:mb-6 mx-auto">
                 <FontAwesomeIcon icon={faUtensils} className="h-6 w-6 md:h-7 md:w-7 text-white" />
               </div>
-              <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">Easy Menu Management</h3>
+              <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">{t('landingPage.features.items.menu.title')}</h3>
               <p className="text-sm md:text-base text-gray-600 leading-relaxed">
-                Update your menu items, prices, and availability in seconds. Add photos, descriptions, and dietary information with ease.
+                {t('landingPage.features.items.menu.description')}
               </p>
             </div>
 
@@ -333,9 +333,9 @@ const LandingPage = () => {
               <div className="w-12 h-12 md:w-14 md:h-14 bg-red-600 rounded-xl flex items-center justify-center mb-4 md:mb-6 mx-auto">
                 <FontAwesomeIcon icon={faShieldAlt} className="h-6 w-6 md:h-7 md:w-7 text-white" />
               </div>
-              <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">Secure Payments</h3>
+              <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">{t('landingPage.features.items.payments.title')}</h3>
               <p className="text-sm md:text-base text-gray-600 leading-relaxed">
-                Accept payments securely with our integrated payment system. Get paid faster with automated settlements and detailed transaction reports.
+                {t('landingPage.features.items.payments.description')}
               </p>
             </div>
 
@@ -344,9 +344,9 @@ const LandingPage = () => {
               <div className="w-12 h-12 md:w-14 md:h-14 bg-indigo-600 rounded-xl flex items-center justify-center mb-4 md:mb-6 mx-auto">
                 <FontAwesomeIcon icon={faGlobe} className="h-6 w-6 md:h-7 md:w-7 text-white" />
               </div>
-              <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">Multi-Language Support</h3>
+              <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">{t('landingPage.features.items.multilang.title')}</h3>
               <p className="text-sm md:text-base text-gray-600 leading-relaxed">
-                Reach more customers with support for multiple languages. Our platform adapts to your local market and customer preferences.
+                {t('landingPage.features.items.multilang.description')}
               </p>
             </div>
           </div>
@@ -359,7 +359,7 @@ const LandingPage = () => {
           <div className="text-center mb-12 md:mb-16">
             <div className="inline-flex items-center gap-2 bg-green-100 text-green-600 px-4 py-2 rounded-full mb-4 text-sm font-semibold">
               <FontAwesomeIcon icon={faClock} className="h-4 w-4" />
-              <span>Simple Process</span>
+              <span>{t('landingPage.howItWorks.badge')}</span>
             </div>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 md:mb-6">
               {t('landingPage.howItWorks.title')}
@@ -416,7 +416,7 @@ const LandingPage = () => {
             <div className="p-6 sm:p-8 md:p-12 lg:p-16 text-center relative z-10">
               <div className="inline-flex items-center gap-2 bg-red-800/40 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-full mb-4 sm:mb-6 text-xs sm:text-sm font-semibold text-white">
                 <FontAwesomeIcon icon={faRocket} className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span>Start Your Journey Today</span>
+                <span>{t('landingPage.cta.badge')}</span>
               </div>
               
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6 px-2">
@@ -442,7 +442,7 @@ const LandingPage = () => {
                   onClick={() => navigate('/login')}
                   className="bg-transparent border-2 border-white text-white px-8 sm:px-10 py-4 sm:py-5 rounded-xl font-bold hover:!bg-white hover:!text-grub-red transition-all duration-300 text-sm sm:text-base md:text-lg w-full sm:w-auto"
                 >
-                  Sign In
+                  {t('landingPage.cta.signIn')}
                 </Button>
               </div>
               
@@ -451,15 +451,15 @@ const LandingPage = () => {
                 <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-6 text-white/90 text-xs sm:text-sm">
                   <div className="flex items-center gap-2">
                     <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4 sm:h-5 sm:w-5 text-green-400 flex-shrink-0" />
-                    <span className="font-medium whitespace-nowrap">Free to get started</span>
+                    <span className="font-medium whitespace-nowrap">{t('landingPage.hero.trust.free')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4 sm:h-5 sm:w-5 text-green-400 flex-shrink-0" />
-                    <span className="font-medium whitespace-nowrap">No credit card required</span>
+                    <span className="font-medium whitespace-nowrap">{t('landingPage.hero.trust.noCard')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4 sm:h-5 sm:w-5 text-green-400 flex-shrink-0" />
-                    <span className="font-medium whitespace-nowrap">Cancel anytime</span>
+                    <span className="font-medium whitespace-nowrap">{t('landingPage.hero.trust.cancel')}</span>
                   </div>
                 </div>
               </div>

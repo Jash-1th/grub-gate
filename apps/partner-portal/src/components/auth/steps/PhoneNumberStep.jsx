@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * PhoneNumberStep Component
@@ -14,6 +15,7 @@ const PhoneNumberStep = ({
   errors, 
   setErrors 
 }) => {
+  const { t } = useTranslation();
   
   // Handle input changes
   const handleInputChange = (e) => {
@@ -42,14 +44,14 @@ const PhoneNumberStep = ({
     // Validate input
     const validationErrors = {};
     if (!data.identifier) {
-      validationErrors.identifier = 'Email or phone number is required';
+      validationErrors.identifier = t('auth.register.validation.identifierRequired');
     } else {
       // Check if it's a valid email or phone
       const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.identifier);
       const isPhone = /^[+]?[1-9]\d{1,14}$/.test(data.identifier.replace(/[\s()-]/g, ''));
       
       if (!isEmail && !isPhone) {
-        validationErrors.identifier = 'Please enter a valid email address or phone number';
+        validationErrors.identifier = t('auth.register.validation.identifierInvalid');
       } else {
         // Set channel based on identifier type
         onDataChange(prev => ({
@@ -150,7 +152,7 @@ const PhoneNumberStep = ({
     <form onSubmit={handleRequestOTP} className="space-y-4">
       <div>
         <label htmlFor="identifier" className="block text-sm font-semibold text-gray-700 mb-2">
-          Email or Phone Number
+          {t('auth.register.identifierLabel')}
         </label>
         <input
           type="text"
@@ -158,7 +160,7 @@ const PhoneNumberStep = ({
           name="identifier"
           value={data.identifier}
           onChange={handleInputChange}
-          placeholder="Enter your email or phone number"
+          placeholder={t('auth.register.identifierPlaceholder')}
           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
             errors.identifier ? 'border-red-300 bg-red-50' : 'border-gray-300'
           }`}
@@ -209,10 +211,10 @@ const PhoneNumberStep = ({
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              Sending Code...
+              {t('auth.register.sendingCode')}
             </div>
           ) : (
-            'Send Verification Code'
+            t('auth.register.sendCode')
           )}
         </button>
       </div>
@@ -220,7 +222,7 @@ const PhoneNumberStep = ({
       {/* Help Text */}
       <div className="text-center">
         <p className="text-xs text-gray-500">
-          We'll send you a verification code to confirm your identity
+          {t('auth.register.helpText')}
         </p>
       </div>
     </form>

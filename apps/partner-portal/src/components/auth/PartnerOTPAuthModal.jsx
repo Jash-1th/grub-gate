@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useToast } from '../../contexts/ToastContext.jsx';
 import PhoneNumberStep from './steps/PhoneNumberStep.jsx';
@@ -13,6 +14,7 @@ import BillingDetailsStep from './steps/BillingDetailsStep.jsx';
  * SSR-safe and works with new nested User model structure
  */
 const PartnerOTPAuthModal = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { setAuthenticatedUser } = useAuth();
   const { showSuccess, showError } = useToast();
@@ -158,17 +160,17 @@ const PartnerOTPAuthModal = ({ isOpen, onClose }) => {
           </button>
           
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2" style={{color: '#800020'}}>
-            {currentStep === 'identifier' && 'Join as Partner'}
-            {currentStep === 'verification' && 'Enter Verification Code'}
-            {currentStep === 'business-details' && 'Business Details'}
-            {currentStep === 'billing-details' && 'Billing & Final Setup'}
+            {currentStep === 'identifier' && t('auth.register.title')}
+            {currentStep === 'verification' && t('auth.register.otpTitle')}
+            {currentStep === 'business-details' && t('auth.register.businessTitle')}
+            {currentStep === 'billing-details' && t('auth.register.billingTitle')}
           </h1>
           
           <p className="text-base text-gray-600 mb-4">
-            {currentStep === 'identifier' && 'Create your partner account to manage your restaurant'}
-            {currentStep === 'verification' && `We sent a code to your ${sharedData.channel === 'email' ? 'email' : 'phone number'}`}
-            {currentStep === 'business-details' && 'Complete your restaurant information'}
-            {currentStep === 'billing-details' && 'Upload logo, images and complete billing information'}
+            {currentStep === 'identifier' && t('auth.register.subtitle')}
+            {currentStep === 'verification' && `${t('auth.register.otpSubtitle')} ${sharedData.channel === 'email' ? 'email' : t('auth.register.phone').toLowerCase()}`}
+            {currentStep === 'business-details' && t('auth.register.businessSubtitle')}
+            {currentStep === 'billing-details' && t('auth.register.billingSubtitle')}
           </p>
 
           {/* Progress Indicator */}

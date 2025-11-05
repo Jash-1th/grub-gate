@@ -37,13 +37,13 @@ const DashboardLayout = ({ onLanguageChange }) => {
   };
 
   const navigation = [
-    { name: 'Overview', href: '/dashboard', icon: faTachometerAlt },
-    { name: 'Menu Management', href: '/dashboard/menu', icon: faBars },
-    { name: 'Orders', href: '/dashboard/orders', icon: faShoppingBag },
-    { name: 'Analytics', href: '/dashboard/analytics', icon: faChartBar },
-    { name: 'Customers', href: '/dashboard/customers', icon: faUsers },
-    { name: 'Settings', href: '/dashboard/settings', icon: faCog },
-    { name: 'Support', href: '/dashboard/support', icon: faQuestionCircle },
+    { name: t('dashboard.navigation.dashboard'), href: '/dashboard', icon: faTachometerAlt },
+    { name: t('dashboard.navigation.menu'), href: '/dashboard/menu', icon: faBars },
+    { name: t('dashboard.navigation.orders'), href: '/dashboard/orders', icon: faShoppingBag },
+    { name: t('dashboard.navigation.analytics'), href: '/dashboard/analytics', icon: faChartBar },
+    { name: t('dashboard.navigation.customers'), href: '/dashboard/customers', icon: faUsers },
+    { name: t('dashboard.navigation.settings'), href: '/dashboard/settings', icon: faCog },
+    { name: t('dashboard.navigation.support'), href: '/dashboard/support', icon: faQuestionCircle },
     // { name: '🧪 Test Notifications', href: '/dashboard/test/notifications', icon: faBell },
   ];
 
@@ -118,7 +118,7 @@ const DashboardLayout = ({ onLanguageChange }) => {
                     {getRestaurantName()}
                   </p>
                   <p className="text-sm font-medium text-gray-500 group-hover:text-gray-700">
-                    Partner Account
+                    {t('auth.partnerAccount')}
                   </p>
                 </div>
               </div>
@@ -190,7 +190,7 @@ const DashboardLayout = ({ onLanguageChange }) => {
                   {getRestaurantName()}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
-                  Partner Account
+                  {t('auth.partnerAccount')}
                 </p>
               </div>
             </div>
@@ -239,7 +239,7 @@ const DashboardLayout = ({ onLanguageChange }) => {
               
               <div className="flex items-center">
                 <h1 className="hidden sm:block text-base sm:text-lg lg:text-xl font-semibold text-gray-900 truncate">
-                  {navigation.find(item => isCurrentPath(item.href))?.name || 'Overview'}
+                  {navigation.find(item => isCurrentPath(item.href))?.name || t('dashboard.navigation.dashboard')}
                 </h1>
               </div>
             </div>

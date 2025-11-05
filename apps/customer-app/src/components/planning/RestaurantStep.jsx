@@ -24,8 +24,8 @@ const RestaurantStep = ({ onNext, onBack }) => {
       
       if (totalItems === 0) {
         showError(
-          'No Meals Selected',
-          'Please select at least one meal item from the restaurants below before proceeding to subscription plans.'
+          t('restaurantStep.noMealsSelected'),
+          t('restaurantStep.noMealsSelectedMessage')
         );
         return;
       }
@@ -81,7 +81,7 @@ const RestaurantStep = ({ onNext, onBack }) => {
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              Back to Location
+              {t('restaurantStep.backToLocation')}
             </button>
 
             {/* Progress Indicator */}
@@ -92,7 +92,7 @@ const RestaurantStep = ({ onNext, onBack }) => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <span className="ml-2 text-sm font-medium text-gray-900">Location</span>
+                <span className="ml-2 text-sm font-medium text-gray-900">{t('restaurantStep.location')}</span>
               </div>
               
               <div className="w-8 h-0.5 bg-gray-300"></div>
@@ -101,7 +101,7 @@ const RestaurantStep = ({ onNext, onBack }) => {
                 <div className="w-8 h-8 bg-grub-red rounded-full flex items-center justify-center">
                   <span className="text-white text-sm font-bold">2</span>
                 </div>
-                <span className="ml-2 text-sm font-medium text-gray-900">Restaurants</span>
+                <span className="ml-2 text-sm font-medium text-gray-900">{t('restaurantStep.restaurants')}</span>
               </div>
               
               <div className="w-8 h-0.5 bg-gray-300"></div>
@@ -110,7 +110,7 @@ const RestaurantStep = ({ onNext, onBack }) => {
                 <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
                   <span className="text-gray-600 text-sm font-bold">3</span>
                 </div>
-                <span className="ml-2 text-sm font-medium text-gray-500">Subscribe</span>
+                <span className="ml-2 text-sm font-medium text-gray-500">{t('restaurantStep.subscribe')}</span>
               </div>
             </div>
 
@@ -124,7 +124,7 @@ const RestaurantStep = ({ onNext, onBack }) => {
                   : 'bg-grub-red hover:bg-red-700'
               }`}
             >
-              {isProcessing ? 'Processing...' : 'Continue to Plans'}
+              {isProcessing ? t('restaurantStep.processing') : t('restaurantStep.continueToPlans')}
               <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
@@ -145,7 +145,7 @@ const RestaurantStep = ({ onNext, onBack }) => {
             <div className="flex items-center space-x-4">
               {/* Current Filters Display */}
               <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium text-gray-700">Current filters:</span>
+                <span className="text-sm font-medium text-gray-700">{t('restaurantStep.currentFilters')}</span>
                 {postalCode && (
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                     <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,7 +155,7 @@ const RestaurantStep = ({ onNext, onBack }) => {
                   </span>
                 )}
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                  Sorted by rating
+                  {t('restaurantStep.sortedByRating')}
                 </span>
                 {/* Meal Counter */}
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -166,7 +166,7 @@ const RestaurantStep = ({ onNext, onBack }) => {
                   <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
-                  {getTotalItemsCount()} meals selected
+                  {getTotalItemsCount()} {t('restaurantStep.mealsSelected')}
                 </span>
               </div>
             </div>
@@ -177,7 +177,7 @@ const RestaurantStep = ({ onNext, onBack }) => {
                 onClick={onBack}
                 className="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors duration-200"
               >
-                Change Location
+                {t('restaurantStep.changeLocation')}
               </button>
               <button
                 onClick={handleContinueToSubscription}
@@ -188,7 +188,7 @@ const RestaurantStep = ({ onNext, onBack }) => {
                     : 'bg-gradient-to-r from-grub-red to-red-700 hover:from-grub-red hover:to-red-800 transform hover:-translate-y-0.5 hover:shadow-xl'
                 }`}
               >
-                {isProcessing ? 'Processing...' : 'Continue to Subscription Plans'}
+                {isProcessing ? t('restaurantStep.processing') : t('restaurantStep.continueToSubscriptionPlans')}
               </button>
             </div>
           </div>

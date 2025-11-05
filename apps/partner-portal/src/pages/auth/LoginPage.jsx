@@ -65,15 +65,15 @@ const LoginPage = () => {
     const newErrors = {};
     
     if (!formData.email.trim()) {
-      newErrors.email = 'Email address is required';
+      newErrors.email = t('auth.login.validation.emailRequired');
     } else if (!/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address (e.g., user@example.com)';
+      newErrors.email = t('auth.login.validation.emailInvalid');
     }
     
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = t('auth.login.validation.passwordRequired');
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters long';
+      newErrors.password = t('auth.login.validation.passwordMinLength');
     }
     
     setErrors(newErrors);
@@ -134,23 +134,23 @@ const LoginPage = () => {
   const features = [
     {
       icon: faUtensils,
-      title: 'Manage Your Menu',
-      description: 'Create and update your restaurant menu with ease'
+      title: t('auth.login.features.menu.title'),
+      description: t('auth.login.features.menu.description')
     },
     {
       icon: faUsers,
-      title: 'Track Customers',
-      description: 'Monitor customer orders and preferences'
+      title: t('auth.login.features.customers.title'),
+      description: t('auth.login.features.customers.description')
     },
     {
       icon: faArrowTrendUp,
-      title: 'Boost Revenue',
-      description: 'Grow your business with subscription meal plans'
+      title: t('auth.login.features.revenue.title'),
+      description: t('auth.login.features.revenue.description')
     },
     {
       icon: faShield,
-      title: 'Secure Platform',
-      description: 'Your data is protected with enterprise-grade security'
+      title: t('auth.login.features.security.title'),
+      description: t('auth.login.features.security.description')
     }
   ];
 
@@ -168,14 +168,14 @@ const LoginPage = () => {
         <div className="w-full">
           <div className="mb-4 sm:mb-6 lg:mb-8 text-center">
             <h1 className="text-2xl sm:text-3xl xl:text-4xl font-bold text-gray-900 mb-2 sm:mb-3 lg:mb-4 leading-tight drop-shadow-sm">
-              Welcome to GrubGate Partner Portal
+              {t('auth.login.welcomeTitle')}
             </h1>
             <p className="text-sm sm:text-base xl:text-lg text-gray-700 leading-relaxed mb-3 sm:mb-4 lg:mb-6 drop-shadow-sm">
-              Join Montreal's leading restaurant network and grow your business with predictable revenue.
+              {t('auth.login.welcomeSubtitle')}
             </p>
             <div className="flex items-center justify-center space-x-3 text-grub-red">
               <div className="w-12 h-0.5 bg-grub-red"></div>
-              <span className="text-xs font-medium uppercase tracking-wider">Trusted by 500+ Restaurants</span>
+              <span className="text-xs font-medium uppercase tracking-wider">{t('auth.login.trustedBy')}</span>
             </div>
           </div>
           
@@ -211,8 +211,8 @@ const LoginPage = () => {
                 <div className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-grub-red to-red-600 rounded-xl shadow-lg mb-2">
                   <FontAwesomeIcon icon={faLock} className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1">Sign In</h3>
-                <p className="text-xs sm:text-sm text-gray-600">Enter your credentials to access your account</p>
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1">{t('auth.login.title')}</h3>
+                <p className="text-xs sm:text-sm text-gray-600">{t('auth.login.subtitle')}</p>
               </div>
               <div className="h-0.5 w-12 sm:w-16 bg-gradient-to-r from-grub-red to-orange-500 rounded-full mx-auto"></div>
             </div>
@@ -222,7 +222,7 @@ const LoginPage = () => {
               {/* Email Field */}
               <div>
                 <label htmlFor="email" className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-2 drop-shadow-sm">
-                  Email address
+                  {t('auth.login.email')}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -234,7 +234,7 @@ const LoginPage = () => {
                     type="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    placeholder="Enter your email"
+                    placeholder={t('auth.login.emailPlaceholder')}
                     className={`auth-input block w-full pl-10 pr-3 py-3 sm:py-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-0 text-sm sm:text-base text-gray-600 ${
                       errors.email 
                         ? 'error border-red-300 focus:border-red-500 focus:ring-red-500' 
@@ -252,7 +252,7 @@ const LoginPage = () => {
               {/* Password Field */}
               <div>
                 <label htmlFor="password" className="block text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-200 mb-2 drop-shadow-sm">
-                  Password
+                  {t('auth.login.password')}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -264,7 +264,7 @@ const LoginPage = () => {
                     type={showPassword ? 'text' : 'password'}
                     value={formData.password}
                     onChange={handleInputChange}
-                    placeholder="Enter your password"
+                    placeholder={t('auth.login.passwordPlaceholder')}
                     className={`auth-input block w-full pl-10 pr-12 py-3 sm:py-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-0 text-sm sm:text-base text-gray-600 ${
                       errors.password 
                         ? 'error border-red-300 focus:border-red-500 focus:ring-red-500' 
@@ -302,7 +302,7 @@ const LoginPage = () => {
                     className="h-4 w-4 text-grub-red focus:ring-grub-red border-gray-300 rounded transition-colors"
                   />
                   <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-600 drop-shadow-sm">
-                    Remember me
+                    {t('auth.login.rememberMe')}
                   </label>
                 </div>
 
@@ -310,7 +310,7 @@ const LoginPage = () => {
                   to="/forgot-password"
                   className="text-sm font-medium text-grub-red hover:text-grub-red-light transition-colors"
                 >
-                  Forgot password?
+                  {t('auth.login.forgotPassword')}
                 </Link>
               </div>
 
@@ -324,10 +324,10 @@ const LoginPage = () => {
                   {isLoading ? (
                     <div className="flex items-center justify-center">
                       <div className="auth-spinner mr-3"></div>
-                      Signing in...
+                      {t('auth.login.signingIn')}
                     </div>
                   ) : (
-                    'Sign in to Dashboard'
+                    t('auth.login.signIn')
                   )}
                 </button>
                 
@@ -349,12 +349,12 @@ const LoginPage = () => {
               {/* Sign Up Link */}
               <div className="text-center pt-3 sm:pt-4 border-t border-gray-100">
                 <span className="text-sm text-gray-600 drop-shadow-sm">
-                  Don't have an account?{' '}
+                  {t('auth.login.noAccount')}{' '}
                   <Link
                     to="/register"
                     className="font-medium text-grub-red hover:text-grub-red-light transition-colors"
                   >
-                    Sign up for free
+                    {t('auth.login.signUp')}
                   </Link>
                 </span>
               </div>

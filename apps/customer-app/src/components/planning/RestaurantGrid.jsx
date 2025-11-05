@@ -42,10 +42,10 @@ const RestaurantGrid = ({ restaurants = [], postalCode = '' }) => {
               </svg>
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              No restaurants found
+              {t('restaurantGrid.noRestaurantsFound')}
             </h3>
             <p className="text-gray-600">
-              We couldn't find any restaurants in your area. Try expanding your search radius.
+              {t('restaurantGrid.noRestaurantsFoundMessage')}
             </p>
           </div>
         </div>
@@ -58,11 +58,11 @@ const RestaurantGrid = ({ restaurants = [], postalCode = '' }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-            Restaurants Near You
+            {t('restaurantGrid.restaurantsNearYou')}
           </h2>
           {postalCode && (
             <p className="text-xl text-gray-600">
-              Showing restaurants near <span className="font-semibold text-grub-red">{postalCode}</span>
+              {t('restaurantGrid.showingRestaurantsNear')} <span className="font-semibold text-grub-red">{postalCode}</span>
             </p>
           )}
         </div>
@@ -72,8 +72,8 @@ const RestaurantGrid = ({ restaurants = [], postalCode = '' }) => {
           <div className="mb-12">
             <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
               <div className="text-center mb-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Your Meal Plan Cost Projection</h3>
-                <p className="text-gray-600">Based on your current {totalItems} selected meal{totalItems !== 1 ? 's' : ''}</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{t('restaurantGrid.mealPlanCostProjection')}</h3>
+                <p className="text-gray-600">{t('restaurantGrid.basedOnSelection', { count: totalItems })}</p>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -84,9 +84,9 @@ const RestaurantGrid = ({ restaurants = [], postalCode = '' }) => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <h4 className="text-lg font-semibold text-blue-900 mb-1">Biweekly</h4>
+                  <h4 className="text-lg font-semibold text-blue-900 mb-1">{t('restaurantGrid.biweekly')}</h4>
                   <p className="text-2xl font-bold text-blue-700">${biweeklyCost.toFixed(2)}</p>
-                  <p className="text-sm text-blue-600 mt-1">Every 2 weeks</p>
+                  <p className="text-sm text-blue-600 mt-1">{t('restaurantGrid.everyTwoWeeks')}</p>
                 </div>
 
                 {/* Monthly Cost */}
@@ -96,9 +96,9 @@ const RestaurantGrid = ({ restaurants = [], postalCode = '' }) => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                     </svg>
                   </div>
-                  <h4 className="text-lg font-semibold text-green-900 mb-1">Monthly</h4>
+                  <h4 className="text-lg font-semibold text-green-900 mb-1">{t('restaurantGrid.monthly')}</h4>
                   <p className="text-2xl font-bold text-green-700">${monthlyCost.toFixed(2)}</p>
-                  <p className="text-sm text-green-600 mt-1">Per month</p>
+                  <p className="text-sm text-green-600 mt-1">{t('restaurantGrid.perMonth')}</p>
                 </div>
 
                 {/* 3-Month Cost */}
@@ -108,9 +108,9 @@ const RestaurantGrid = ({ restaurants = [], postalCode = '' }) => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H9z" />
                     </svg>
                   </div>
-                  <h4 className="text-lg font-semibold text-purple-900 mb-1">3 Months</h4>
+                  <h4 className="text-lg font-semibold text-purple-900 mb-1">{t('restaurantGrid.threeMonths')}</h4>
                   <p className="text-2xl font-bold text-purple-700">${threeMonthCost.toFixed(2)}</p>
-                  <p className="text-sm text-purple-600 mt-1">Quarterly</p>
+                  <p className="text-sm text-purple-600 mt-1">{t('restaurantGrid.quarterly')}</p>
                 </div>
               </div>
 
@@ -121,13 +121,13 @@ const RestaurantGrid = ({ restaurants = [], postalCode = '' }) => {
                     <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    Estimates based on current meal selection
+                    {t('restaurantGrid.estimatesBasedOn')}
                   </span>
                   <span className="flex items-center">
                     <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    Avg per meal: ${totalItems > 0 ? (biweeklyCost / totalItems).toFixed(2) : '0.00'}
+                    {t('restaurantGrid.avgPerMeal')}: ${totalItems > 0 ? (biweeklyCost / totalItems).toFixed(2) : '0.00'}
                   </span>
                 </div>
               </div>
@@ -167,7 +167,7 @@ const RestaurantGrid = ({ restaurants = [], postalCode = '' }) => {
                 </h3>
                 
                 <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                  {restaurant.description || restaurant.cuisine || 'Delicious food awaits you'}
+                  {restaurant.description || restaurant.cuisine || t('restaurantGrid.deliciousFood')}
                 </p>
 
                 <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
@@ -176,7 +176,7 @@ const RestaurantGrid = ({ restaurants = [], postalCode = '' }) => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    <span>{restaurant.distance || 'Calculating...'}</span>
+                    <span>{restaurant.distance || t('restaurantGrid.calculating')}</span>
                   </span>
                 </div>
 
@@ -193,7 +193,7 @@ const RestaurantGrid = ({ restaurants = [], postalCode = '' }) => {
                     ))}
                     {restaurant.cuisines.length > 2 && (
                       <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">
-                        +{restaurant.cuisines.length - 2} more
+                        +{restaurant.cuisines.length - 2} {t('restaurantGrid.more')}
                       </span>
                     )}
                   </div>
@@ -201,7 +201,7 @@ const RestaurantGrid = ({ restaurants = [], postalCode = '' }) => {
 
                 {/* Action Button */}
                 <button className="w-full bg-grub-red text-white py-2.5 px-4 rounded-lg font-medium hover:bg-red-600 transition-colors duration-200">
-                  View Menu
+                  {t('restaurantGrid.viewMenu')}
                 </button>
               </div>
             </div>

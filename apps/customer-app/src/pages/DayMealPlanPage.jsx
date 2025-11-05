@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useMealPlan } from '../contexts/MealPlanContext_SSR_FIXED';
 import { useToast } from '../contexts/ToastContext';
 import { usePlanning } from '../contexts/PlanningContext';
@@ -11,6 +12,7 @@ import RestaurantContinueModal from '../components/modals/RestaurantContinueModa
 import RestaurantChoiceModal from '../components/modals/RestaurantChoiceModal';
 
 const DayMealPlanPage = () => {
+  const { t } = useTranslation();
   const { day } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -296,7 +298,7 @@ const DayMealPlanPage = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading meal plan...</p>
+          <p className="text-gray-600">{t('dayMealPlan.loadingMealPlan')}</p>
         </div>
       </div>
     );
@@ -321,10 +323,10 @@ const DayMealPlanPage = () => {
                 </button>
                 <div className="min-w-0 flex-1">
                   <h1 className="text-lg font-bold text-gray-900 truncate">
-                    {week === 0 ? 'This Week' : 'Next Week'} • {dayName} Meal Plan
+                    {week === 0 ? t('continueModal.thisWeek') : t('continueModal.nextWeek')} • {dayName} {t('dayMealPlan.mealPlan')}
                   </h1>
                   <p className="text-gray-600 text-sm">
-                    {getTotalItems()} total items planned
+                    {getTotalItems()} {t('dayMealPlan.totalItemsPlanned')}
                   </p>
                 </div>
               </div>
@@ -344,10 +346,10 @@ const DayMealPlanPage = () => {
               </button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
-                  {week === 0 ? 'This Week' : 'Next Week'} • {dayName} Meal Plan
+                  {week === 0 ? t('continueModal.thisWeek') : t('continueModal.nextWeek')} • {dayName} {t('dayMealPlan.mealPlan')}
                 </h1>
                 <p className="text-gray-600 mt-1">
-                  {getTotalItems()} total items planned for this day
+                  {getTotalItems()} {t('dayMealPlan.totalItemsPlannedForDay')}
                 </p>
               </div>
             </div>
@@ -359,7 +361,7 @@ const DayMealPlanPage = () => {
         {/* Meal Type Selector */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 mb-8">
           <div className="p-4 md:p-6">
-            <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">Select Meal Type</h2>
+            <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">{t('dayMealPlan.selectMealType')}</h2>
             <div className="flex space-x-3 md:space-x-4">
               <button
                 onClick={() => setSelectedMealType('lunch')}
@@ -373,7 +375,7 @@ const DayMealPlanPage = () => {
                   <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
-                  <span className="text-sm md:text-base">Lunch ({lunchItems.length})</span>
+                  <span className="text-sm md:text-base">{t('dayMealPlan.lunchCount', { count: lunchItems.length })}</span>
                 </div>
               </button>
               <button
@@ -388,7 +390,7 @@ const DayMealPlanPage = () => {
                   <svg className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-1.85.63-3.55 1.69-4.9L16.9 18.31C15.55 19.37 13.85 20 12 20z"/>
                   </svg>
-                  <span className="text-sm md:text-base">Dinner ({dinnerItems.length})</span>
+                  <span className="text-sm md:text-base">{t('dayMealPlan.dinnerCount', { count: dinnerItems.length })}</span>
                 </div>
               </button>
             </div>
@@ -404,15 +406,15 @@ const DayMealPlanPage = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-lg font-semibold text-green-800">
-                      {selectedMealType.charAt(0).toUpperCase() + selectedMealType.slice(1)} Summary
+                      {selectedMealType === 'lunch' ? t('dayMealPlan.lunchSummary') : t('dayMealPlan.dinnerSummary')}
                     </h3>
                     <p className="text-green-700 mt-1">
-                      {groupedItems.length} unique item{groupedItems.length !== 1 ? 's' : ''} • {currentMealItems.length} total items • ${getTotalCost()}
+                      {groupedItems.length} {groupedItems.length === 1 ? t('dayMealPlan.uniqueItem') : t('dayMealPlan.uniqueItems')} • {currentMealItems.length} {t('dayMealPlan.totalItems')} • ${getTotalCost()}
                     </p>
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-green-800">${getTotalCost()}</div>
-                    <div className="text-sm text-green-600">{currentMealItems.length} items</div>
+                    <div className="text-sm text-green-600">{currentMealItems.length} {t('dayMealPlan.items')}</div>
                   </div>
                 </div>
               </div>
@@ -427,7 +429,7 @@ const DayMealPlanPage = () => {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                <span>Add More {selectedMealType.charAt(0).toUpperCase() + selectedMealType.slice(1)} Items</span>
+                <span>{selectedMealType === 'lunch' ? t('dayMealPlan.addMoreLunchItems') : t('dayMealPlan.addMoreDinnerItems')}</span>
               </button>
             </div>
 
@@ -448,7 +450,7 @@ const DayMealPlanPage = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h4a1 1 0 011 1v2h4a1 1 0 011 1v1a1 1 0 01-1 1v9a2 2 0 01-2 2H8a2 2 0 01-2-2V7a1 1 0 01-1-1V5a1 1 0 011-1h4z" />
                           </svg>
                           <span className="text-blue-700 font-semibold text-sm">
-                            Qty: {groupedItem.quantity}
+                            {t('dayMealPlan.qty')}: {groupedItem.quantity}
                           </span>
                         </div>
                       </div>
@@ -477,7 +479,7 @@ const DayMealPlanPage = () => {
                         </div>
                         {groupedItem.quantity > 1 && (
                           <div className="text-sm text-gray-500">
-                            ${groupedItem.price} each
+                            ${groupedItem.price} {t('dayMealPlan.each')}
                           </div>
                         )}
                       </div>
@@ -500,7 +502,7 @@ const DayMealPlanPage = () => {
                           ))}
                         </div>
                       ) : (
-                        <div className="text-xs text-gray-400 italic">No dietary preferences specified</div>
+                        <div className="text-xs text-gray-400 italic">{t('dayMealPlan.noDietaryPreferences')}</div>
                       )}
                     </div>
 
@@ -518,7 +520,7 @@ const DayMealPlanPage = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
-                        <span>View Item Details</span>
+                        <span>{t('dayMealPlan.viewItemDetails')}</span>
                       </button>
 
                       {/* Remove Actions */}
@@ -534,7 +536,7 @@ const DayMealPlanPage = () => {
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                             </svg>
-                            <span>Remove 1</span>
+                            <span>{t('dayMealPlan.remove1')}</span>
                           </button>
                           <button
                             onClick={(e) => {
@@ -547,7 +549,7 @@ const DayMealPlanPage = () => {
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
-                            <span>Remove All</span>
+                            <span>{t('dayMealPlan.removeAll')}</span>
                           </button>
                         </div>
                       ) : (
@@ -561,7 +563,7 @@ const DayMealPlanPage = () => {
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
-                          <span>Remove</span>
+                          <span>{t('dayMealPlan.remove')}</span>
                         </button>
                       )}
                     </div>
@@ -579,10 +581,10 @@ const DayMealPlanPage = () => {
               </svg>
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              No {selectedMealType.charAt(0).toUpperCase() + selectedMealType.slice(1)} Items Yet
+              {selectedMealType === 'lunch' ? t('dayMealPlan.noLunchItemsYet') : t('dayMealPlan.noDinnerItemsYet')}
             </h3>
             <p className="text-gray-600 mb-6">
-              Start building your {selectedMealType} plan by adding some delicious items.
+              {selectedMealType === 'lunch' ? t('dayMealPlan.startBuildingLunch') : t('dayMealPlan.startBuildingDinner')}
             </p>
             <button
               onClick={handleAddMoreItems}
@@ -591,7 +593,7 @@ const DayMealPlanPage = () => {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
-              <span>Add {selectedMealType.charAt(0).toUpperCase() + selectedMealType.slice(1)} Items</span>
+              <span>{selectedMealType === 'lunch' ? t('dayMealPlan.addLunchItems') : t('dayMealPlan.addDinnerItems')}</span>
             </button>
           </div>
         )}

@@ -29,7 +29,7 @@ const RestaurantGridContainer = ({ postalCode }) => {
           setPagination(result.pagination);
           
           if (result.data.length === 0) {
-            setError(`No restaurants found in ${postalCode.toUpperCase()}. Try a different postal code.`);
+            setError(t('restaurantGrid.noRestaurantsInArea', { postalCode: postalCode.toUpperCase() }));
           }
         } else {
           setError(result.error);
@@ -37,7 +37,7 @@ const RestaurantGridContainer = ({ postalCode }) => {
         }
       } catch (err) {
         console.error('Error in fetchRestaurants:', err);
-        setError('Failed to load restaurants. Please try again.');
+        setError(t('restaurantGrid.failedToLoad'));
         setRestaurants([]);
       } finally {
         setLoading(false);
@@ -45,7 +45,7 @@ const RestaurantGridContainer = ({ postalCode }) => {
     };
 
     fetchRestaurants();
-  }, [postalCode]);
+  }, [postalCode, t]);
 
   if (loading) {
     return (
@@ -62,7 +62,7 @@ const RestaurantGridContainer = ({ postalCode }) => {
             {/* Enhanced loading header with animation */}
             <div className="relative inline-block">
               <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                Finding Restaurants Near You
+                {t('restaurantGrid.findingRestaurants')}
               </h2>
               {/* Animated dots */}
               <div className="flex justify-center space-x-1 mb-4">
@@ -75,7 +75,7 @@ const RestaurantGridContainer = ({ postalCode }) => {
             {postalCode && (
               <div className="relative">
                 <p className="text-xl text-gray-600 mb-4">
-                  Searching near <span className="font-semibold text-grub-red">{postalCode.toUpperCase()}</span>
+                  {t('restaurantGrid.searchingNear')} <span className="font-semibold text-grub-red">{postalCode.toUpperCase()}</span>
                 </p>
                 {/* Progress bar animation */}
                 <div className="w-64 h-2 bg-gray-200 rounded-full mx-auto overflow-hidden">
@@ -91,7 +91,7 @@ const RestaurantGridContainer = ({ postalCode }) => {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span className="text-sm font-medium">Discovering delicious options...</span>
+                <span className="text-sm font-medium">{t('restaurantGrid.discoveringOptions')}</span>
               </div>
             </div>
           </div>
@@ -142,9 +142,9 @@ const RestaurantGridContainer = ({ postalCode }) => {
           {/* Loading tips */}
           <div className="mt-12 text-center">
             <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-white/50">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">💡 Did you know?</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">💡 {t('restaurantGrid.didYouKnow')}</h3>
               <p className="text-gray-600 text-sm">
-                We're finding the best-rated restaurants in your area and checking their availability for meal planning!
+                {t('restaurantGrid.didYouKnowText')}
               </p>
             </div>
           </div>
@@ -175,7 +175,7 @@ const RestaurantGridContainer = ({ postalCode }) => {
               </svg>
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Unable to Load Restaurants
+              {t('restaurantGrid.unableToLoad')}
             </h3>
             <p className="text-gray-600 mb-6">
               {error}
@@ -184,7 +184,7 @@ const RestaurantGridContainer = ({ postalCode }) => {
               onClick={() => window.location.reload()}
               className="bg-grub-red text-white px-6 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors duration-200"
             >
-              Try Again
+              {t('restaurantGrid.tryAgain')}
             </button>
           </div>
         </div>
@@ -204,11 +204,11 @@ const RestaurantGridContainer = ({ postalCode }) => {
         <div className="py-8 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <p className="text-gray-600">
-              Showing {restaurants.length} of {pagination.totalItems} restaurants near {postalCode.toUpperCase()}
+              {t('restaurantGrid.showingRestaurants', { count: restaurants.length, total: pagination.totalItems, postalCode: postalCode.toUpperCase() })}
             </p>
             {pagination.totalPages > 1 && (
               <p className="text-sm text-gray-500 mt-2">
-                Page {pagination.page} of {pagination.totalPages}
+                {t('restaurantGrid.pageInfo', { current: pagination.page, total: pagination.totalPages })}
               </p>
             )}
           </div>
