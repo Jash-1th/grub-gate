@@ -16,7 +16,8 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
-    "terser": "^5.44.0"
+    "terser": "^5.44.0",
+    "patch-package": "^8.0.0"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.52.4"
