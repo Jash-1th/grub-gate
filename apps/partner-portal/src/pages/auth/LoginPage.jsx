@@ -99,7 +99,7 @@ const LoginPage = () => {
         console.log('📍 Login redirect route determined:', redirectRoute);
         
         // Show success toast message
-        showSuccess(`Welcome back, ${result.user.firstName || 'Partner'}! You have successfully logged in.`, 6000);
+        showSuccess(t('auth.login.welcomeBackMessage', { name: result.user.firstName || 'Partner' }), 6000);
         
         navigate(redirectRoute);
         console.log('📍 Navigation called to:', redirectRoute);

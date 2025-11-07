@@ -352,7 +352,7 @@ const BusinessDetailsStep = ({
           // Scroll to top to show validation errors
           window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
-          setErrors({ general: result.message || 'Registration failed. Please try again.' });
+          setErrors({ general: result.message || t('toasts.registration.failed') });
           // Scroll to top to show error message
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -371,7 +371,7 @@ const BusinessDetailsStep = ({
           // Scroll to top to show validation errors
           window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
-          setErrors({ general: errorData.message || 'Registration failed. Please try again.' });
+          setErrors({ general: errorData.message || t('toasts.registration.failed') });
           // Scroll to top to show error message
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }

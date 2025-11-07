@@ -20,6 +20,7 @@ import MobileBottomNav from './MobileBottomNav';
 import { useRestaurant } from '../../contexts/RestaurantContext';
 import { useResponsive } from '../../hooks/useResponsive';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
 
 const DashboardLayout = ({ onLanguageChange }) => {
   const { t, i18n } = useTranslation();
@@ -28,6 +29,7 @@ const DashboardLayout = ({ onLanguageChange }) => {
   const { getRestaurantName, getRestaurantInitial } = useRestaurant();
   const { isMobile, isTablet, isClient } = useResponsive();
   const { logout } = useAuth();
+  const { showSuccess } = useToast();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLanguageToggle = () => {
@@ -57,6 +59,7 @@ const DashboardLayout = ({ onLanguageChange }) => {
   const handleLogout = async () => {
     try {
       await logout();
+      showSuccess(t('logout.title'), t('logout.message'));
       navigate('/login');
     } catch (error) {
       console.error('Logout error:', error);

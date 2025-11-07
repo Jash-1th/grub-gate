@@ -919,9 +919,65 @@ const MealCalendarPage = () => {
     console.log('🔄 MealCalendar: isLoadingFromDatabase:', isLoadingFromDatabase, 'hasLoadedFromDatabase:', hasLoadedFromDatabase);
     
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-8">
-          <Loading text={loadingText} />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        {/* Hero Section Skeleton */}
+        <section className="relative bg-gradient-to-r from-grub-red to-red-600 text-white py-12 sm:py-16 overflow-hidden">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10"></div>
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 md:px-8 text-center">
+            <div className="h-12 sm:h-14 md:h-16 bg-white/20 rounded-lg mx-auto mb-3 sm:mb-4 max-w-md animate-pulse"></div>
+            <div className="h-6 sm:h-8 bg-white/10 rounded-lg mx-auto max-w-2xl animate-pulse"></div>
+          </div>
+        </section>
+
+        {/* Main Content Skeleton */}
+        <div className="container mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8 -mt-8 sm:-mt-12 relative z-20">
+          {/* Controls Skeleton */}
+          <div className="mb-6 bg-white rounded-xl shadow-lg p-4 sm:p-6 animate-pulse">
+            <div className="flex flex-wrap gap-3 justify-between items-center">
+              <div className="h-10 bg-gray-200 rounded-lg w-32"></div>
+              <div className="h-10 bg-gray-200 rounded-lg w-48"></div>
+              <div className="h-10 bg-gray-200 rounded-lg w-32"></div>
+            </div>
+          </div>
+
+          {/* Calendar Skeleton */}
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden animate-pulse">
+            {/* Calendar Header */}
+            <div className="bg-gradient-to-r from-grub-red/10 to-red-100/10 p-4 border-b border-gray-200">
+              <div className="grid grid-cols-7 gap-2">
+                {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                  <div key={i} className="h-8 bg-gray-200 rounded"></div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Calendar Body */}
+            <div className="p-4 space-y-4">
+              {/* Lunch Row */}
+              <div className="grid grid-cols-7 gap-2">
+                {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                  <div key={i} className="h-32 bg-gray-100 rounded-lg"></div>
+                ))}
+              </div>
+              
+              {/* Dinner Row */}
+              <div className="grid grid-cols-7 gap-2">
+                {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                  <div key={i} className="h-32 bg-gray-100 rounded-lg"></div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Loading Spinner */}
+          <div className="flex flex-col items-center justify-center py-12 mt-8">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-gray-200 border-t-grub-red rounded-full animate-spin"></div>
+              <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-b-red-400 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1s' }}></div>
+            </div>
+            <p className="mt-6 text-gray-600 font-medium text-lg animate-pulse">{loadingText}</p>
+          </div>
         </div>
       </div>
     );
@@ -930,6 +986,7 @@ const MealCalendarPage = () => {
   // Error state - only show if no calendar data AND no planned meals
   if (error && !calendarData && !hasPlannedMeals) {
     return (
+      // ...
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto">

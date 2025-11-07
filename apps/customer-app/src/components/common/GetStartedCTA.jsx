@@ -79,7 +79,7 @@ const GetStartedCTA = () => {
                   <span className="text-base xs:text-lg sm:text-xl">Loading...</span>
                 </div>
               ) : isAuthenticated ? (
-                hasActiveSubscription ? t('yourOrders.viewCalendar') : 'Start Planning'
+                hasActiveSubscription ? t('yourOrders.viewCalendar') : t('common.startPlanning')
               ) : (
                 t('getStartedCta.startPlan')
               )}

@@ -13,7 +13,7 @@ import { navigation } from '../../data';
  * @param {boolean} [props.isMobile] - Whether the buttons are displayed in mobile view
  */
 const AuthButtons = ({ className = '', isMobile = false }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { openLoginModal, openOTPAuthModal } = useModal();
   const { isAuthenticated, user, logout, isLoading } = useAuth();
   const { showSuccess } = useToast();
@@ -23,11 +23,10 @@ const AuthButtons = ({ className = '', isMobile = false }) => {
     try {
       await logout();
       // Show success message after logout
-      showSuccess(
-        'Logged Out Successfully! 👋',
-        'Thanks for using GrubGate! We hope to see you again soon.',
-        { duration: 4000 }
-      );
+      const title = t('logout.title');
+      const message = t('logout.message');
+      console.log('Logout translations:', { title, message, currentLang: i18n.language });
+      showSuccess(title, message, { duration: 4000 });
     } catch (error) {
       console.error('Logout error:', error);
     }

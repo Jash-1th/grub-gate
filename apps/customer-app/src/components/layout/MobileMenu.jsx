@@ -58,13 +58,13 @@ const MobileMenu = ({ isOpen, onClose }) => {
         <div className="flex flex-col h-full overflow-y-auto mobile-menu-panel">
           {/* Header */}
           <div className="flex items-center justify-between px-4 xs:px-5 sm:px-6 py-4 xs:py-5 border-b border-gray-200">
-            <h2 className="text-lg xs:text-xl sm:text-2xl font-semibold text-gray-900">{t('menu')}</h2>
+            <h2 className="text-lg xs:text-xl sm:text-2xl font-semibold text-gray-900">{t('common.menu')}</h2>
             <button
               type="button"
               onClick={onClose}
               className="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-grub-red p-1"
             >
-              <span className="sr-only">{t('close')}</span>
+              <span className="sr-only">{t('common.close')}</span>
               <XMarkIcon className="h-5 w-5 xs:h-6 xs:w-6" aria-hidden="true" />
             </button>
           </div>
@@ -77,7 +77,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
                 <svg className="w-4 h-4 xs:w-5 xs:h-5 text-grub-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
                 </svg>
-                {t('language').toUpperCase()}
+                {t('common.language').toUpperCase()}
               </h3>
               <div className="flex justify-center">
                 <LanguageSwitcher />
@@ -90,7 +90,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
                 <svg className="w-4 h-4 xs:w-5 xs:h-5 text-grub-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                {t('account').toUpperCase()}
+                {t('common.account').toUpperCase()}
               </h3>
               <AuthButtons 
                 isMobile={true} 

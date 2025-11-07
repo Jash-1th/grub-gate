@@ -90,7 +90,7 @@ const SetupComplete = () => {
         console.log('✅ Restaurant activation successful:', result.data);
         
         // Show success message
-        showToast(result.message || 'Your restaurant is now active and ready to receive orders!', 'success');
+        showToast(result.message || t('toasts.restaurant.activationSuccess'), 'success');
         
         // Navigate to dashboard after a short delay to show the success message
         setTimeout(() => {
@@ -104,10 +104,10 @@ const SetupComplete = () => {
       
       // Show error message
       const errorMessage = error.response?.data?.message || error.message || 'Failed to activate restaurant. Please try again.';
-      showToast(errorMessage, 'error');
+      showToast(errorMessage || t('toasts.restaurant.activationFailed'), 'error');
       
       // Still navigate to dashboard but show warning
-      showToast('Proceeding to dashboard. You may need to contact support if issues persist.', 'warning');
+      showToast(t('toasts.restaurant.proceedingToDashboard'), 'warning');
       setTimeout(() => {
         navigate('/dashboard');
       }, 3000);

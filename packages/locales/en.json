@@ -148,24 +148,27 @@
     "partnerAccount": "Partner Account",
     "login": {
       "welcomeTitle": "Welcome to GrubGate Partner Portal",
-      "welcomeSubtitle": "Join Montreal's leading restaurant network and grow your business with predictable revenue.",
+      "welcomeSubtitle": "Join Montreal's leading restaurant network and grow your business with predictable, recurring revenue.",
       "trustedBy": "Trusted by 500+ Restaurants",
-      "title": "Sign In",
-      "subtitle": "Enter your credentials to access your account",
-      "email": "Email address",
+      "title": "Partner Login",
+      "subtitle": "Access your restaurant dashboard",
+      "email": "Email Address",
+      "emailLabel": "Email Address",
       "emailPlaceholder": "Enter your email",
       "password": "Password",
+      "passwordLabel": "Password",
       "passwordPlaceholder": "Enter your password",
+      "forgotPassword": "Forgot Password?",
       "rememberMe": "Remember me",
-      "forgotPassword": "Forgot password?",
-      "signIn": "Sign in to Dashboard",
-      "signingIn": "Signing in...",
+      "signIn": "Sign In",
+      "loginButton": "Sign In",
       "noAccount": "Don't have an account?",
-      "signUp": "Sign up for free",
+      "signUp": "Sign up here",
+      "welcomeBackMessage": "Welcome back, {{name}}! You have successfully logged in.",
       "features": {
         "menu": {
-          "title": "Manage Your Menu",
-          "description": "Create and update your restaurant menu with ease"
+          "title": "Manage Menu",
+          "description": "Update your menu items and pricing easily"
         },
         "customers": {
           "title": "Track Customers",
@@ -188,8 +191,10 @@
       }
     },
     "register": {
-      "title": "Join as Partner",
-      "subtitle": "Create your partner account to manage your restaurant",
+      "pageTitle": "Join GrubGate Partner Network",
+      "pageSubtitle": "Start growing your restaurant business with Montreal's leading food delivery platform.",
+      "title": "Create Partner Account",
+      "subtitle": "Fill in your details to get started",
       "otpTitle": "Enter Verification Code",
       "otpSubtitle": "We sent a code to your",
       "businessTitle": "Business Details",
@@ -202,15 +207,42 @@
       "sendingCode": "Sending Code...",
       "helpText": "We'll send you a verification code to confirm your identity",
       "restaurantName": "Restaurant Name",
+      "restaurantNamePlaceholder": "Your Restaurant Name",
       "ownerName": "Owner Name",
+      "ownerNamePlaceholder": "Your Full Name",
       "email": "Email Address",
+      "emailPlaceholder": "your.email@example.com",
       "phone": "Phone Number",
+      "phonePlaceholder": "+1 (514) 123-4567",
       "password": "Password",
+      "passwordPlaceholder": "Create a strong password",
       "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Re-enter your password",
+      "cuisine": "Cuisine Type",
+      "cuisinePlaceholder": "e.g., Italian, Japanese, Mexican",
       "agreeTerms": "I agree to the Terms of Service and Privacy Policy",
-      "createAccount": "Create Account",
+      "createAccount": "Create Partner Account",
+      "creating": "Creating Account...",
       "haveAccount": "Already have an account?",
       "signIn": "Sign in here",
+      "benefits": {
+        "premiumFeatures": {
+          "title": "Premium Features",
+          "description": "Access advanced analytics and customer insights"
+        },
+        "verifiedPartner": {
+          "title": "Verified Partner",
+          "description": "Get verified badge and priority listing"
+        },
+        "quickSetup": {
+          "title": "Quick Setup",
+          "description": "Get started in less than 5 minutes"
+        },
+        "noFees": {
+          "title": "No Setup Fees",
+          "description": "Join for free with no hidden costs"
+        }
+      },
       "validation": {
         "identifierRequired": "Email or phone number is required",
         "identifierInvalid": "Please enter a valid email address or phone number"
@@ -601,10 +633,54 @@
   },
   "errors": {
     "pageNotFound": "Page Not Found",
-    "unauthorized": "Unauthorized Access",
+    "unauthorized": "Access Denied",
     "serverError": "Server Error",
     "networkError": "Network Error",
     "validationError": "Validation Error"
+  },
+  "logout": {
+    "title": "Logged Out Successfully! 👋",
+    "message": "Thanks for using GrubGate Partner Portal! See you soon."
+  },
+  "toasts": {
+    "registration": {
+      "success": "Registration successful! Your restaurant is pending approval.",
+      "welcomePartner": "Registration successful! Welcome to GrubGate Partner Portal.",
+      "failed": "Registration failed. Please try again.",
+      "maxImages": "Maximum 5 images allowed"
+    },
+    "restaurant": {
+      "activationSuccess": "Your restaurant is now active and ready to receive orders!",
+      "activationFailed": "Failed to activate restaurant. Please try again.",
+      "proceedingToDashboard": "Proceeding to dashboard. You may need to contact support if issues persist.",
+      "notFound": "Restaurant not found"
+    },
+    "verification": {
+      "failed": "Verification failed. Please try again."
+    },
+    "menu": {
+      "fetchFailed": "Failed to fetch menu items",
+      "createSuccess": "Menu item created successfully!",
+      "updateSuccess": "Menu item updated successfully!",
+      "saveFailed": "Failed to save menu item. Please try again.",
+      "deleteSuccess": "Menu item deleted successfully!",
+      "deleteFailed": "Failed to delete menu item",
+      "statusEnabled": "Item enabled successfully!",
+      "statusDisabled": "Item disabled successfully!",
+      "statusUpdateFailed": "Failed to update item status"
+    },
+    "settings": {
+      "saveSuccess": "Settings saved successfully!",
+      "saveFailed": "Failed to save settings. Please try again.",
+      "fixErrors": "Please fix the errors before saving",
+      "addressMigrated": "Address migrated to enhanced format. Please review and update as needed.",
+      "usingDemoData": "Using demo data - API authentication required for live data"
+    },
+    "general": {
+      "success": "Operation completed successfully",
+      "error": "An error occurred",
+      "warning": "Warning",
+      "info": "Information"
+    }
   }
 }
-

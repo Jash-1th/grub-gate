@@ -183,7 +183,7 @@ const RegisterPage = () => {
     if (fileType === 'images') {
       // Multiple images allowed (max 5)
       if (selectedFiles.length > 5) {
-        showToast('Maximum 5 images allowed', 'error');
+        showToast(t('toasts.registration.maxImages'), 'error');
         return;
       }
       setFiles(prev => ({ ...prev, images: selectedFiles }));
@@ -284,14 +284,14 @@ const RegisterPage = () => {
       const result = await response.json();
       
       if (response.ok) {
-        showToast('Registration successful! Your restaurant is pending approval.', 'success');
+        showToast(t('toasts.registration.success'), 'success');
         navigate('/login');
       } else {
-        showToast(result.message || 'Registration failed. Please try again.', 'error');
+        showToast(result.message || t('toasts.registration.failed'), 'error');
       }
     } catch (error) {
       console.error('Registration error:', error);
-      showToast('Registration failed. Please try again.', 'error');
+      showToast(t('toasts.registration.failed'), 'error');
     } finally {
       setLoading(false);
     }

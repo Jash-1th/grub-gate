@@ -176,8 +176,8 @@ const SignupModal = () => {
           // Show toast after a short delay (after welcome modal appears)
           setTimeout(() => {
             showSuccess(
-              'Account Created Successfully! 🎉',
-              `Welcome to GrubGate, ${firstName}! Start exploring delicious meals and planning your weekly menu.`,
+              t('signup.accountCreated'),
+              t('signup.welcomeMessage', { name: firstName }),
               { duration: 6000 }
             );
           }, 1000); // Show toast 1 second after welcome modal appears
@@ -211,8 +211,8 @@ const SignupModal = () => {
     } catch (error) {
       console.error('Registration error:', error);
       // Don't override validation errors, only set general error if no specific field errors
-      if (Object.keys(formErrors).length === 0) {
-        setFormErrors({ general: 'Registration failed. Please try again.' });
+        if (Object.keys(formErrors).length === 0) {
+          setFormErrors({ general: t('signup.errors.registrationFailed') });
       }
     } finally {
       // Always clear local loading state
@@ -392,7 +392,7 @@ const SignupModal = () => {
               {/* Name Field */}
               <div>
                 <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Full Name
+                  {t('signup.nameLabel')}
                 </label>
                 <div className="relative">
                   <input
@@ -402,7 +402,7 @@ const SignupModal = () => {
                     value={formData.name}
                     onChange={handleInputChange}
                     onBlur={handleFieldBlur}
-                    placeholder="Enter your full name"
+                    placeholder={t('signup.namePlaceholder')}
                     className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
                       getFieldStyling('name')
                     }`}
@@ -424,7 +424,7 @@ const SignupModal = () => {
               {/* Email Field */}
               <div>
                 <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Email Address
+                  {t('signup.emailLabel')}
                 </label>
                 <div className="relative">
                   <input
@@ -434,7 +434,7 @@ const SignupModal = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     onBlur={handleFieldBlur}
-                    placeholder="Enter your email address"
+                    placeholder={t('signup.emailPlaceholder')}
                     className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
                       getFieldStyling('email')
                     }`}
@@ -456,7 +456,7 @@ const SignupModal = () => {
               {/* Phone Number Field */}
               <div>
                 <label htmlFor="phoneNumber" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Phone Number
+                  {t('signup.phoneLabel')}
                 </label>
                 <div className="relative">
                   <input
@@ -466,7 +466,7 @@ const SignupModal = () => {
                     value={formData.phoneNumber}
                     onChange={handleInputChange}
                     onBlur={handleFieldBlur}
-                    placeholder="Enter your phone number (e.g., +1-234-567-8900)"
+                    placeholder={t('signup.phonePlaceholder')}
                     className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
                       getFieldStyling('phoneNumber')
                     }`}
@@ -488,7 +488,7 @@ const SignupModal = () => {
               {/* Password Field */}
               <div>
                 <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Password
+                  {t('signup.passwordLabel')}
                 </label>
                 <div className="relative">
                   <input
@@ -498,7 +498,7 @@ const SignupModal = () => {
                     value={formData.password}
                     onChange={handleInputChange}
                     onBlur={handleFieldBlur}
-                    placeholder="Create a password (min. 6 characters)"
+                    placeholder={t('signup.passwordPlaceholder')}
                     className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
                       getFieldStyling('password')
                     }`}
@@ -520,7 +520,7 @@ const SignupModal = () => {
               {/* Confirm Password Field */}
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Confirm Password
+                  {t('signup.confirmPasswordLabel')}
                 </label>
                 <div className="relative">
                   <input
@@ -530,7 +530,7 @@ const SignupModal = () => {
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
                     onBlur={handleFieldBlur}
-                    placeholder="Confirm your password"
+                    placeholder={t('signup.confirmPasswordPlaceholder')}
                     className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
                       getFieldStyling('confirmPassword')
                     }`}
@@ -565,10 +565,10 @@ const SignupModal = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Creating account...
+                    {t('signup.creatingAccount')}
                   </div>
                 ) : (
-                  'Create Account'
+                  t('signup.button')
                 )}
               </button>
             </form>

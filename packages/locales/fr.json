@@ -150,29 +150,33 @@
       "welcomeTitle": "Bienvenue au Portail Partenaire GrubGate",
       "welcomeSubtitle": "Rejoignez le réseau de restaurants leader de Montréal et développez votre entreprise avec des revenus prévisibles.",
       "trustedBy": "Approuvé par 500+ Restaurants",
-      "title": "Se Connecter",
-      "subtitle": "Entrez vos identifiants pour accéder à votre compte",
-      "email": "Adresse email",
+      "title": "Connexion Partenaire",
+      "subtitle": "Accédez au tableau de bord de votre restaurant",
+      "email": "Adresse Email",
+      "emailLabel": "Adresse Email",
       "emailPlaceholder": "Entrez votre email",
-      "password": "Mot de passe",
+      "password": "Mot de Passe",
+      "passwordLabel": "Mot de Passe",
       "passwordPlaceholder": "Entrez votre mot de passe",
       "rememberMe": "Se souvenir de moi",
       "forgotPassword": "Mot de passe oublié?",
-      "signIn": "Se connecter au tableau de bord",
+      "signIn": "Se Connecter",
+      "loginButton": "Se Connecter",
       "signingIn": "Connexion en cours...",
       "noAccount": "Vous n'avez pas de compte?",
-      "signUp": "Inscrivez-vous gratuitement",
+      "signUp": "Inscrivez-vous ici",
+      "welcomeBackMessage": "Bon retour, {{name}}! Vous vous êtes connecté avec succès.",
       "features": {
         "menu": {
-          "title": "Gérez Votre Menu",
-          "description": "Créez et mettez à jour le menu de votre restaurant facilement"
+          "title": "Gérer le Menu",
+          "description": "Mettez à jour vos articles de menu et vos prix facilement"
         },
         "customers": {
-          "title": "Suivez les Clients",
+          "title": "Suivre les Clients",
           "description": "Surveillez les commandes et préférences des clients"
         },
         "revenue": {
-          "title": "Augmentez les Revenus",
+          "title": "Augmenter les Revenus",
           "description": "Développez votre entreprise avec des plans de repas par abonnement"
         },
         "security": {
@@ -188,8 +192,10 @@
       }
     },
     "register": {
-      "title": "Rejoindre en tant que Partenaire",
-      "subtitle": "Créez votre compte partenaire pour gérer votre restaurant",
+      "pageTitle": "Rejoignez le Réseau de Partenaires GrubGate",
+      "pageSubtitle": "Commencez à développer votre entreprise de restaurant avec la plateforme de livraison de nourriture leader de Montréal.",
+      "title": "Créer un Compte Partenaire",
+      "subtitle": "Remplissez vos informations pour commencer",
       "otpTitle": "Entrez le Code de Vérification",
       "otpSubtitle": "Nous avons envoyé un code à votre",
       "businessTitle": "Détails de l'Entreprise",
@@ -202,15 +208,42 @@
       "sendingCode": "Envoi du Code...",
       "helpText": "Nous vous enverrons un code de vérification pour confirmer votre identité",
       "restaurantName": "Nom du Restaurant",
+      "restaurantNamePlaceholder": "Nom de Votre Restaurant",
       "ownerName": "Nom du Propriétaire",
+      "ownerNamePlaceholder": "Votre Nom Complet",
       "email": "Adresse Email",
+      "emailPlaceholder": "votre.email@exemple.com",
       "phone": "Numéro de Téléphone",
+      "phonePlaceholder": "+1 (514) 123-4567",
       "password": "Mot de Passe",
+      "passwordPlaceholder": "Créez un mot de passe fort",
       "confirmPassword": "Confirmer le Mot de Passe",
+      "confirmPasswordPlaceholder": "Ressaisissez votre mot de passe",
+      "cuisine": "Type de Cuisine",
+      "cuisinePlaceholder": "ex: Italien, Japonais, Mexicain",
       "agreeTerms": "J'accepte les Conditions de Service et la Politique de Confidentialité",
-      "createAccount": "Créer un Compte",
+      "createAccount": "Créer un Compte Partenaire",
+      "creating": "Création du Compte...",
       "haveAccount": "Vous avez déjà un compte?",
       "signIn": "Connectez-vous ici",
+      "benefits": {
+        "premiumFeatures": {
+          "title": "Fonctionnalités Premium",
+          "description": "Accédez aux analyses avancées et aux informations sur les clients"
+        },
+        "verifiedPartner": {
+          "title": "Partenaire Vérifié",
+          "description": "Obtenez un badge vérifié et une liste prioritaire"
+        },
+        "quickSetup": {
+          "title": "Configuration Rapide",
+          "description": "Commencez en moins de 5 minutes"
+        },
+        "noFees": {
+          "title": "Aucun Frais d'Installation",
+          "description": "Rejoignez gratuitement sans frais cachés"
+        }
+      },
       "validation": {
         "identifierRequired": "L'email ou le numéro de téléphone est requis",
         "identifierInvalid": "Veuillez entrer une adresse email ou un numéro de téléphone valide"
@@ -608,6 +641,51 @@
     "serverError": "Erreur Serveur",
     "networkError": "Erreur Réseau",
     "validationError": "Erreur de Validation"
+  },
+  "logout": {
+    "title": "Déconnexion Réussie! 👋",
+    "message": "Merci d'avoir utilisé le Portail Partenaire GrubGate! À bientôt."
+  },
+  "toasts": {
+    "registration": {
+      "success": "Inscription réussie! Votre restaurant est en attente d'approbation.",
+      "welcomePartner": "Inscription réussie! Bienvenue sur le Portail Partenaire GrubGate.",
+      "failed": "L'inscription a échoué. Veuillez réessayer.",
+      "maxImages": "Maximum 5 images autorisées"
+    },
+    "restaurant": {
+      "activationSuccess": "Votre restaurant est maintenant actif et prêt à recevoir des commandes!",
+      "activationFailed": "Échec de l'activation du restaurant. Veuillez réessayer.",
+      "proceedingToDashboard": "Accès au tableau de bord. Vous devrez peut-être contacter le support si les problèmes persistent.",
+      "notFound": "Restaurant non trouvé"
+    },
+    "verification": {
+      "failed": "La vérification a échoué. Veuillez réessayer."
+    },
+    "menu": {
+      "fetchFailed": "Échec du chargement des articles du menu",
+      "createSuccess": "Article du menu créé avec succès!",
+      "updateSuccess": "Article du menu mis à jour avec succès!",
+      "saveFailed": "Échec de l'enregistrement de l'article du menu. Veuillez réessayer.",
+      "deleteSuccess": "Article du menu supprimé avec succès!",
+      "deleteFailed": "Échec de la suppression de l'article du menu",
+      "statusEnabled": "Article activé avec succès!",
+      "statusDisabled": "Article désactivé avec succès!",
+      "statusUpdateFailed": "Échec de la mise à jour du statut de l'article"
+    },
+    "settings": {
+      "saveSuccess": "Paramètres enregistrés avec succès!",
+      "saveFailed": "Échec de l'enregistrement des paramètres. Veuillez réessayer.",
+      "fixErrors": "Veuillez corriger les erreurs avant d'enregistrer",
+      "addressMigrated": "Adresse migrée vers le format amélioré. Veuillez vérifier et mettre à jour si nécessaire.",
+      "usingDemoData": "Utilisation de données de démonstration - Authentification API requise pour les données en direct"
+    },
+    "general": {
+      "success": "Opération terminée avec succès",
+      "error": "Une erreur s'est produite",
+      "warning": "Avertissement",
+      "info": "Information"
+    }
   }
 }
 

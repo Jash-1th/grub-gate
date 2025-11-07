@@ -246,7 +246,7 @@ const AddressForm = ({
       });
     }
 
-    showSuccess('Location Found', 'Your current location has been detected and filled in the form.');
+    showSuccess(t('location.locationFound'), t('location.currentLocationDetected'));
   }, [showSuccess]);
 
   // Handle location error

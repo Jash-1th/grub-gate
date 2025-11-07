@@ -112,14 +112,17 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
         console.log('❌ Delivery not available - showing warning');
         
         // Create better distance message
-        let distanceMsg = 'This restaurant does not deliver to the selected address.';
+        let distanceMsg = t('location.restaurantDoesNotDeliver');
         if (validation.distance && validation.maxDistance) {
-          distanceMsg = `Distance: ${Math.round(validation.distance)}km (Max delivery: ${validation.maxDistance}km)`;
+          distanceMsg = t('location.distanceExceeded', { 
+            distance: Math.round(validation.distance), 
+            maxDistance: validation.maxDistance 
+          });
         } else if (validation.note) {
           distanceMsg = validation.note;
         }
         
-        showWarning('Delivery Not Available', distanceMsg);
+        showWarning(t('location.deliveryNotAvailable'), distanceMsg);
       } else {
         console.log('✅ Delivery available!');
         // Don't show success toast for delivery validation to avoid confusion
@@ -193,8 +196,8 @@ const AddressSelectionStep = ({ checkoutData, onNext, onPrevious, isLoading, set
       'Current location detected';
     
     showSuccess(
-      'Location Found', 
-      `Address: ${displayAddress}`
+      t('location.locationFound'), 
+      t('location.addressFound', { address: displayAddress })
     );
   };
 

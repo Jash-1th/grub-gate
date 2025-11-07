@@ -4,17 +4,42 @@
     "title": "Welcome Back!",
     "subtitle": "Log in to access your meal plans and continue your journey with GrubGate.",
     "emailLabel": "Email",
+    "emailOrPhoneLabel": "Email or Phone Number",
     "emailPlaceholder": "your.email@example.com",
+    "emailOrPhonePlaceholder": "Enter your email or phone number",
     "passwordLabel": "Password",
     "passwordPlaceholder": "Enter your password",
     "forgotPassword": "Forgot Password?",
     "button": "Login",
+    "signingIn": "Signing in...",
     "googleButton": "Login with Google",
     "divider": "OR",
     "signupPrompt": "Don't have an account?",
-    "signupLink": "Sign Up"
+    "signupLink": "Sign Up",
+    "errors": {
+      "identifierRequired": "Email or phone number is required",
+      "invalidIdentifier": "Please enter a valid email address or phone number",
+      "passwordRequired": "Password is required",
+      "passwordTooShort": "Password must be at least 6 characters",
+      "invalidCredentials": "Invalid credentials. Please try again.",
+      "invalidEmailOrPassword": "Invalid email or password. Please check your credentials and try again.",
+      "loginFailed": "Login failed. Please try again."
+    },
+    "welcomeBack": "Welcome Back! 🎉",
+    "welcomeMessage": "Great to see you again, {{name}}! Ready to continue your meal planning journey?"
   },
-
+  "location": {
+    "locationFound": "Location Found",
+    "currentLocationDetected": "Your current location has been detected and filled in the form.",
+    "addressFound": "Address: {{address}}",
+    "deliveryNotAvailable": "Delivery Not Available",
+    "distanceExceeded": "Distance: {{distance}}km (Max delivery: {{maxDistance}}km)",
+    "restaurantDoesNotDeliver": "This restaurant does not deliver to the selected address."
+  },
+  "logout": {
+    "title": "Logged Out Successfully! 👋",
+    "message": "Thanks for using GrubGate! We hope to see you again soon."
+  },
   "nav": {
     "home": "Home",
     "about": "About Us",
@@ -29,7 +54,12 @@
     "loading" :"Loading...",
     "restaurant": "Restaurant",
     "error": "Something went wrong",
-    "retry": "Try Again"
+    "retry": "Try Again",
+    "startPlanning": "Start Planning",
+    "menu": "Menu",
+    "close": "Close",
+    "language": "Language",
+    "account": "Account"
   },
   "deliveredOrders": {
     "title": "Delivered Orders",
@@ -415,17 +445,29 @@
   "signup": {
     "title": "Create Your Account",
     "subtitle": "Sign up to get delicious, pre-scheduled meals from your favorite local restaurants delivered right to your door.",
+    "nameLabel": "Full Name",
+    "namePlaceholder": "Enter your full name",
     "usernameLabel": "Username",
     "usernamePlaceholder": "Enter your username",
-    "emailLabel": "Email",
-    "emailPlaceholder": "your.email@example.com",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "Enter your email address",
+    "phoneLabel": "Phone Number",
+    "phonePlaceholder": "Enter your phone number (e.g., +1-234-567-8900)",
     "passwordLabel": "Password",
-    "passwordPlaceholder": "Create a strong password",
-    "button": "Sign Up",
+    "passwordPlaceholder": "Create a password (min. 6 characters)",
+    "confirmPasswordLabel": "Confirm Password",
+    "confirmPasswordPlaceholder": "Confirm your password",
+    "button": "Create Account",
+    "creatingAccount": "Creating account...",
     "googleButton": "Sign Up with Google",
     "divider": "OR",
     "loginPrompt": "Already have an account?",
-    "loginLink": "Log In"
+    "loginLink": "Log In",
+    "errors": {
+      "registrationFailed": "Registration failed. Please try again."
+    },
+    "accountCreated": "Account Created Successfully! 🎉",
+    "welcomeMessage": "Welcome to GrubGate, {{name}}! Start exploring delicious meals and planning your weekly menu."
   },
   "mealPlanning": {
     "hero": {
@@ -436,6 +478,18 @@
       "postalCodeLabel": "Postal Code",
       "findMealsButton": "Get nearest restaurants",
       "searchNearby": "Search nearby"
+    },
+    "restaurantSearch": {
+      "successTitle": "Great!",
+      "successMessage": "Found {{count}} restaurants near {{postalCode}}!",
+      "successMessageSeveral": "Found several restaurants near {{postalCode}}!",
+      "noRestaurantsTitle": "No Restaurants Found",
+      "noRestaurantsMessage": "Sorry, we don't have any restaurants available in {{postalCode}} yet. Please try a different postal code."
+    },
+    "restaurantRemoval": {
+      "title": "Restaurants Removed",
+      "messageSingle": "Removed {{restaurantNames}} and cleared its meals",
+      "messageMultiple": "Removed {{count}} restaurants ({{restaurantNames}}) and cleared their meals"
     },
     "howItWorks": {
       "title": "Deliciously Simple.",
@@ -928,6 +982,10 @@
     "subscribeNow": "Subscribe to Plan",
     "readyToStart": "Ready to start your meal journey? Subscribe now to get fresh, delicious meals delivered to your door!",
     "dismiss": "Dismiss"
+  },
+  "subscriptionCompletion": {
+    "title": "Subscription Created!",
+    "message": "Your meal plan subscription has been set up successfully."
   },
   "subscription": {
     "backToWeeklyMenu": "Back to Weekly Menu",

@@ -33,17 +33,20 @@ const LocationStep = ({ onNext }) => {
         if (result.success) {
           if (result.data.length === 0) {
             showInfo(
-              'No Restaurants Found',
-              `Sorry, we don't have any restaurants available in ${postalCode.toUpperCase()} yet. Please try a different postal code.`
+              t('mealPlanning.restaurantSearch.noRestaurantsTitle'),
+              t('mealPlanning.restaurantSearch.noRestaurantsMessage', { postalCode: postalCode.toUpperCase() })
             );
             setIsSearching(false);
             return;
           }
           
           // Show success message
+          const count = result.pagination?.totalItems;
           showSuccess(
-            'Great!',
-            `Found ${result.pagination?.totalItems || 'several'} restaurants near ${postalCode.toUpperCase()}!`
+            t('mealPlanning.restaurantSearch.successTitle'),
+            count 
+              ? t('mealPlanning.restaurantSearch.successMessage', { count, postalCode: postalCode.toUpperCase() })
+              : t('mealPlanning.restaurantSearch.successMessageSeveral', { postalCode: postalCode.toUpperCase() })
           );
           
           // Check if user is authenticated before proceeding

@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import i18next from 'i18next';
 import apiClient from '../api/apiClient';
 import { getStorageItem, setStorageItem, removeStorageItem } from '../utils/ssrSafeStorage';
 import { requestNotificationPermission, getNotificationPermissionStatus } from '../pwa';
@@ -311,10 +313,10 @@ export const AuthProvider = ({ children }) => {
         }
       } else if (error.response?.status === 401) {
         // Unauthorized - wrong credentials
-        errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+        errorMessage = i18next.t('login.errors.invalidEmailOrPassword');
       } else {
         // Use backend message for other errors
-        errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
+        errorMessage = error.response?.data?.message || i18next.t('login.errors.loginFailed');
       }
       
       // We need to reset the loading state, but without setting isAuthenticated to false

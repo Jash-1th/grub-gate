@@ -133,7 +133,7 @@ const MenuPage = () => {
       setError(null);
     } catch (err) {
       setError(err.message || 'Failed to fetch menu items');
-      showToast('Failed to fetch menu items', 'error');
+      showToast(t('toasts.menu.fetchFailed'), 'error');
     } finally {
       setLoading(false);
     }
@@ -337,11 +337,11 @@ const MenuPage = () => {
       if (editingItem) {
         // Update existing item
         await updateMenuItem(restaurant.id, editingItem._id || editingItem.id, submitData);
-        showToast('Menu item updated successfully!', 'success');
+        showToast(t('toasts.menu.updateSuccess'), 'success');
       } else {
         // Create new item
         await createMenuItem(restaurant.id, submitData);
-        showToast('Menu item created successfully!', 'success');
+        showToast(t('toasts.menu.createSuccess'), 'success');
       }
       
       // Refresh menu items and close modal
@@ -390,7 +390,7 @@ const MenuPage = () => {
         // Fallback to generic message
         const errorMessage = err.message || 'Failed to save menu item. Please try again.';
         setFormErrors({ general: errorMessage });
-        showToast(errorMessage, 'error');
+        showToast(errorMessage || t('toasts.menu.saveFailed'), 'error');
         // Scroll to top to show error message
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -406,10 +406,10 @@ const MenuPage = () => {
     try {
       const newStatus = currentStatus === 'available' ? 'unavailable' : 'available';
       await toggleMenuItemStatus(restaurant.id, itemId, newStatus);
-      showToast(`Item ${newStatus === 'available' ? 'enabled' : 'disabled'} successfully!`, 'success');
+      showToast(newStatus === 'available' ? t('toasts.menu.statusEnabled') : t('toasts.menu.statusDisabled'), 'success');
       await fetchMenuItems();
     } catch (err) {
-      showToast(err.message || 'Failed to update item status', 'error');
+      showToast(err.message || t('toasts.menu.statusUpdateFailed'), 'error');
     }
   };
 
@@ -475,10 +475,10 @@ const MenuPage = () => {
     if (window.confirm('Are you sure you want to delete this menu item? This action cannot be undone.')) {
       try {
         await deleteMenuItem(restaurant.id, itemId);
-        showToast('Menu item deleted successfully!', 'success');
+        showToast(t('toasts.menu.deleteSuccess'), 'success');
         await fetchMenuItems();
       } catch (err) {
-        showToast(err.message || 'Failed to delete menu item', 'error');
+        showToast(err.message || t('toasts.menu.deleteFailed'), 'error');
       }
     }
   };

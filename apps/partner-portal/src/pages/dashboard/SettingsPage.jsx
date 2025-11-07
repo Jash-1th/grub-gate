@@ -245,7 +245,7 @@ const SettingsPage = () => {
         billingAddress: ''
       });
       
-      showToast('Using demo data - API authentication required for live data', 'warning');
+      showToast(t('toasts.settings.usingDemoData'), 'warning');
     } finally {
       setInitialLoading(false);
     }
@@ -463,7 +463,7 @@ const SettingsPage = () => {
           address: '' // Clear legacy address
         }));
         
-        showToast('Address migrated to enhanced format. Please review and update as needed.', 'info');
+        showToast(t('toasts.settings.addressMigrated'), 'info');
       }
     }
   };
@@ -471,12 +471,12 @@ const SettingsPage = () => {
   // Save settings
   const handleSave = async () => {
     if (!validateForm()) {
-      showToast('Please fix the errors before saving', 'error');
+      showToast(t('toasts.settings.fixErrors'), 'error');
       return;
     }
     
     if (!restaurant?.id) {
-      showToast('Restaurant not found', 'error');
+      showToast(t('toasts.restaurant.notFound'), 'error');
       return;
     }
     
@@ -570,7 +570,7 @@ const SettingsPage = () => {
         await updateBillingInfo(billingInfo);
       }
       
-      showToast('Settings saved successfully!', 'success');
+      showToast(t('toasts.settings.saveSuccess'), 'success');
     } catch (error) {
       console.error('Settings save error:', error);
       console.error('Error Response Data:', error.response?.data);
@@ -588,14 +588,14 @@ const SettingsPage = () => {
         // Show specific backend error message
         console.log('📝 Backend error message:', error.response.data.message);
         setErrors({ general: error.response.data.message });
-        showToast(error.response.data.message, 'error');
+        showToast(error.response.data.message || t('toasts.settings.saveFailed'), 'error');
         // Scroll to top to show error message
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         // Fallback to generic message
         const errorMessage = error.message || 'Failed to save settings. Please try again.';
         setErrors({ general: errorMessage });
-        showToast(errorMessage, 'error');
+        showToast(errorMessage || t('toasts.settings.saveFailed'), 'error');
         // Scroll to top to show error message
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }

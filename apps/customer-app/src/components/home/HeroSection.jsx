@@ -111,7 +111,7 @@ const HeroSection = () => {
                       Loading...
                     </div>
                   ) : isAuthenticated ? (
-                    hasActiveSubscription ? t('yourOrders.viewCalendar') : 'Start Planning'
+                    hasActiveSubscription ? t('yourOrders.viewCalendar') : t('common.startPlanning')
                   ) : (
                     t('hero.getStarted')
                   )}

@@ -79,7 +79,7 @@ const PartnerOTPAuthModal = ({ isOpen, onClose }) => {
       
     } catch (error) {
       console.error('OTP completion error:', error);
-      showError('Verification failed. Please try again.');
+      showError(t('toasts.verification.failed'));
     }
   };
 
@@ -109,7 +109,7 @@ const PartnerOTPAuthModal = ({ isOpen, onClose }) => {
       const authResult = setAuthenticatedUser(userData);
       
       if (authResult.success) {
-        showSuccess('Registration successful! Welcome to GrubGate Partner Portal.');
+        showSuccess(t('toasts.registration.welcomePartner'));
         handleClose();
         navigate('/onboarding/welcome');
       } else {
@@ -118,7 +118,7 @@ const PartnerOTPAuthModal = ({ isOpen, onClose }) => {
       
     } catch (error) {
       console.error('Registration completion error:', error);
-      showError('Registration failed. Please try again.');
+      showError(t('toasts.registration.failed'));
       setErrors({ general: error.message });
     } finally {
       setIsLoading(false);

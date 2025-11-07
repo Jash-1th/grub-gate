@@ -57,21 +57,21 @@ const LoginModal = () => {
     const errors = {};
     
     if (!formData.identifier) {
-      errors.identifier = 'Email or phone number is required';
+      errors.identifier = t('login.errors.identifierRequired');
     } else {
       // Check if it's a valid email or phone
       const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.identifier);
       const isPhone = /^[+]?[1-9]\d{1,14}$/.test(formData.identifier.replace(/[\s()-]/g, ''));
       
       if (!isEmail && !isPhone) {
-        errors.identifier = 'Please enter a valid email address or phone number';
+        errors.identifier = t('login.errors.invalidIdentifier');
       }
     }
     
     if (!formData.password) {
-      errors.password = 'Password is required';
+      errors.password = t('login.errors.passwordRequired');
     } else if (formData.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters';
+      errors.password = t('login.errors.passwordTooShort');
     }
     
     return errors;
@@ -125,8 +125,8 @@ const LoginModal = () => {
           setShowWelcomeBackModal(true);
           setTimeout(() => {
             showSuccess(
-              'Welcome Back! 🎉',
-              `Great to see you again, ${firstName}! Ready to continue your meal planning journey?`,
+              t('login.welcomeBack'),
+              t('login.welcomeMessage', { name: firstName }),
               { duration: 5000 }
             );
           }, 800);
@@ -138,13 +138,13 @@ const LoginModal = () => {
         if (result && result.fieldErrors && Object.keys(result.fieldErrors).length > 0) {
           setFormErrors(result.fieldErrors);
         } else {
-          const errorMsg = result?.error || 'Invalid credentials. Please try again.';
+          const errorMsg = result?.error || t('login.errors.invalidCredentials');
           setFormErrors({ general: errorMsg });
         }
       }
     } catch (error) {
       console.error('Login error:', error);
-      setFormErrors({ general: 'Login failed. Please try again.' });
+      setFormErrors({ general: t('login.errors.loginFailed') });
     } finally {
       // Always clear local loading state
       setIsLocalLoading(false);
@@ -259,7 +259,7 @@ const LoginModal = () => {
               {/* Email or Phone Field */}
               <div>
                 <label htmlFor="login-identifier" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Email or Phone Number
+                  {t('login.emailOrPhoneLabel')}
                 </label>
                 <input
                   type="text"
@@ -267,7 +267,7 @@ const LoginModal = () => {
                   name="identifier"
                   value={formData.identifier}
                   onChange={handleInputChange}
-                  placeholder="Enter your email or phone number"
+                  placeholder={t('login.emailOrPhonePlaceholder')}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors duration-200 text-gray-900 placeholder-gray-500 ${
                     formErrors.identifier ? 'border-red-300 bg-red-50' : 'border-gray-300'
                   }`}
@@ -329,7 +329,7 @@ const LoginModal = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Signing in...
+                    {t('login.signingIn')}
                   </div>
                 ) : (
                   t('login.button')

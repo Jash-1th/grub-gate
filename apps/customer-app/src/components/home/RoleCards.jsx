@@ -41,7 +41,7 @@ const RoleCards = () => {
       hoverGradient: 'hover:from-blue-600 hover:to-blue-700',
       features: ['Weekly Meal Planning', 'Restaurant Discovery', 'Easy Ordering', 'Subscription Plans'],
       onClick: handleCustomerClick,
-      buttonText: isAuthenticated ? 'Start Planning' : 'Get Started',
+      buttonText: isAuthenticated ? t('common.startPlanning') : 'Get Started',
       buttonStyle: 'bg-blue-600 hover:bg-blue-700'
     },
     {
@@ -175,7 +175,7 @@ const RoleCards = () => {
               onClick={handleCustomerClick}
               className="w-full sm:w-auto bg-grub-red text-white px-6 xs:px-7 sm:px-8 py-3 xs:py-3.5 sm:py-4 rounded-lg sm:rounded-xl font-semibold text-base xs:text-lg hover:bg-red-700 transition-colors duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
             >
-              {isAuthenticated ? '🚀 Start Planning' : '✨ Join as Customer'}
+              {isAuthenticated ? `🚀 ${t('common.startPlanning')}` : '✨ Join as Customer'}
             </button>
             <button
               onClick={handlePartnerClick}

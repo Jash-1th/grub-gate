@@ -715,10 +715,10 @@ const WeeklyMenuPage = () => {
         // Show success message for removal
         const restaurantNames = restaurantsToRemove.map(r => r.restaurantName || r.name).join(', ');
         const message = restaurantsToRemove.length === 1 
-          ? `Removed ${restaurantNames} and cleared its meals`
-          : `Removed ${restaurantsToRemove.length} restaurants (${restaurantNames}) and cleared their meals`;
+          ? t('mealPlanning.restaurantRemoval.messageSingle', { restaurantNames })
+          : t('mealPlanning.restaurantRemoval.messageMultiple', { count: restaurantsToRemove.length, restaurantNames });
         
-        showSuccess('Restaurants Removed', message);
+        showSuccess(t('mealPlanning.restaurantRemoval.title'), message);
         
         // Don't close modal here - let it proceed to add step
         return;

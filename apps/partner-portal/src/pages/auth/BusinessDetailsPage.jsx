@@ -77,7 +77,7 @@ const BusinessDetailsPage = () => {
         // Clear OTP data from session storage
         sessionStorage.removeItem('otpVerificationData');
         
-        showSuccess('Registration successful! Welcome to GrubGate Partner Portal.');
+        showSuccess(t('toasts.registration.welcomePartner'));
         
         console.log('🚀 Navigating to /onboarding/welcome...');
         // Redirect to onboarding welcome page
@@ -89,7 +89,7 @@ const BusinessDetailsPage = () => {
       
     } catch (error) {
       console.error('Registration error:', error);
-      showError('Registration failed. Please try again.');
+      showError(t('toasts.registration.failed'));
       setErrors({ general: error.message });
     } finally {
       setIsLoading(false);

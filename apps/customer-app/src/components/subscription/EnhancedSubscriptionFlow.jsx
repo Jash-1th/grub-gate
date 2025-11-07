@@ -166,7 +166,7 @@ const EnhancedSubscriptionFlow = ({ selectedPlan, onComplete, onCancel }) => {
       console.log('✅ Subscription created successfully:', response.data);
 
       // Use the backend success message instead of showing duplicate toast
-      showSuccess('Subscription Created!', response.data.message || 'Your meal plan subscription has been set up successfully.');
+      showSuccess(t('subscriptionCompletion.title'), response.data.message || t('subscriptionCompletion.message'));
       onComplete?.(subscriptionPayload);
 
     } catch (error) {

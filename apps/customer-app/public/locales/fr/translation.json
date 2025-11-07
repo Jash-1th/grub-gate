@@ -13,7 +13,10 @@
     "signupPrompt": "Vous n'avez pas de compte?",
     "signupLink": "S'inscrire"
   },
-  
+  "logout": {
+    "title": "Déconnexion Réussie! 👋",
+    "message": "Merci d'avoir utilisé GrubGate! Nous espérons vous revoir bientôt."
+  },
   "nav": {
     "home": "Accueil",
     "about": "À Propos",
@@ -331,17 +334,29 @@
   "signup": {
     "title": "Créez Votre Compte",
     "subtitle": "Inscrivez-vous pour recevoir de délicieux repas pré-programmés de vos restaurants locaux préférés livrés directement à votre porte.",
+    "nameLabel": "Nom Complet",
+    "namePlaceholder": "Entrez votre nom complet",
     "usernameLabel": "Nom d'utilisateur",
     "usernamePlaceholder": "Entrez votre nom d'utilisateur",
-    "emailLabel": "E-mail",
-    "emailPlaceholder": "votre.email@exemple.com",
+    "emailLabel": "Adresse E-mail",
+    "emailPlaceholder": "Entrez votre adresse e-mail",
+    "phoneLabel": "Numéro de Téléphone",
+    "phonePlaceholder": "Entrez votre numéro de téléphone (ex: +1-234-567-8900)",
     "passwordLabel": "Mot de passe",
-    "passwordPlaceholder": "Créez un mot de passe fort",
-    "button": "S'inscrire",
+    "passwordPlaceholder": "Créez un mot de passe (min. 6 caractères)",
+    "confirmPasswordLabel": "Confirmer le Mot de Passe",
+    "confirmPasswordPlaceholder": "Confirmez votre mot de passe",
+    "button": "Créer un Compte",
+    "creatingAccount": "Création du compte...",
     "googleButton": "S'inscrire avec Google",
     "divider": "OU",
     "loginPrompt": "Vous avez déjà un compte?",
-    "loginLink": "Se connecter"
+    "loginLink": "Se connecter",
+    "errors": {
+      "registrationFailed": "L'inscription a échoué. Veuillez réessayer."
+    },
+    "accountCreated": "Compte Créé avec Succès! ",
+    "welcomeMessage": "Bienvenue sur GrubGate, {{name}}! Commencez à explorer de délicieux repas et à planifier votre menu hebdomadaire."
   },
   "common": {
     "loading": "Chargement...",
@@ -364,6 +379,18 @@
       "postalCodeLabel": "Code Postal",
       "findMealsButton": "Trouver restaurants",
       "searchNearby": "Rechercher à proximité"
+    },
+    "restaurantSearch": {
+      "successTitle": "Génial!",
+      "successMessage": "Trouvé {{count}} restaurants près de {{postalCode}}!",
+      "successMessageSeveral": "Trouvé plusieurs restaurants près de {{postalCode}}!",
+      "noRestaurantsTitle": "Aucun Restaurant Trouvé",
+      "noRestaurantsMessage": "Désolé, nous n'avons pas encore de restaurants disponibles dans {{postalCode}}. Veuillez essayer un autre code postal."
+    },
+    "restaurantRemoval": {
+      "title": "Restaurants Supprimés",
+      "messageSingle": "Supprimé {{restaurantNames}} et effacé ses repas",
+      "messageMultiple": "Supprimé {{count}} restaurants ({{restaurantNames}}) et effacé leurs repas"
     },
     "howItWorks": {
       "title": "Délicieusement Simple.",
@@ -857,6 +884,10 @@
     "readyToStart": "Prêt à commencer votre voyage culinaire? Abonnez-vous maintenant pour recevoir des repas frais et délicieux livrés à votre porte!",
     "dismiss": "Fermer"
   },
+  "subscriptionCompletion": {
+    "title": "Abonnement Créé!",
+    "message": "Votre abonnement au plan de repas a été configuré avec succès."
+  },
   "subscription": {
     "backToWeeklyMenu": "Retour au Menu Hebdomadaire",
     "chooseYourPlan": "Choisissez Votre Plan d'Abonnement",
@@ -962,15 +993,29 @@
     "title": "Bon Retour!",
     "subtitle": "Connectez-vous pour accéder à vos plans de repas et continuer votre voyage avec GrubGate.",
     "emailLabel": "E-mail",
+    "emailOrPhoneLabel": "E-mail ou Numéro de Téléphone",
     "emailPlaceholder": "votre.email@example.com",
+    "emailOrPhonePlaceholder": "Entrez votre e-mail ou numéro de téléphone",
     "passwordLabel": "Mot de passe",
     "passwordPlaceholder": "Entrez votre mot de passe",
     "forgotPassword": "Mot de passe oublié?",
     "button": "Connexion",
+    "signingIn": "Connexion en cours...",
     "googleButton": "Connexion avec Google",
     "divider": "OU",
     "signupPrompt": "Vous n'avez pas de compte?",
-    "signupLink": "S'inscrire"
+    "signupLink": "S'inscrire",
+    "errors": {
+      "identifierRequired": "L'e-mail ou le numéro de téléphone est requis",
+      "invalidIdentifier": "Veuillez entrer une adresse e-mail ou un numéro de téléphone valide",
+      "passwordRequired": "Le mot de passe est requis",
+      "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères",
+      "invalidCredentials": "Identifiants invalides. Veuillez réessayer.",
+      "invalidEmailOrPassword": "E-mail ou mot de passe invalide. Veuillez vérifier vos identifiants et réessayer.",
+      "loginFailed": "La connexion a échoué. Veuillez réessayer."
+    },
+    "welcomeBack": "Bon Retour! 🎉",
+    "welcomeMessage": "Ravi de vous revoir, {{name}}! Prêt à continuer votre planification de repas?"
   },
   
   "nav": {
@@ -987,7 +1032,12 @@
     "loading": "Chargement...",
     "restaurant": "Restaurant",
     "error": "Quelque chose s'est mal passé",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "startPlanning": "Commencer la Planification",
+    "menu": "Menu",
+    "close": "Fermer",
+    "language": "Langue",
+    "account": "Compte"
   },
   "deliveredOrders": {
     "title": "Commandes Livrées",

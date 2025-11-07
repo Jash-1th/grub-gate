@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import mealCalendarApi from '../../api/mealCalendarApi';
 
 const MealCalendarButton = () => {
+  const { t } = useTranslation();
+  
   // SSR-safe state initialization
   const [isClient, setIsClient] = useState(false);
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
@@ -88,12 +91,12 @@ const MealCalendarButton = () => {
                    px-4 py-2.5 xs:px-5 xs:py-3 sm:px-6 sm:py-3.5 md:px-6 md:py-4 
                    rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 
                    focus:outline-none focus:ring-4 focus:ring-orange-300"
-        title="View Your Meal Calendar"
-        aria-label="View Your Meal Calendar"
+        title={t('yourOrders.viewCalendar')}
+        aria-label={t('yourOrders.viewCalendar')}
       >
         <div className="flex items-center space-x-2 xs:space-x-2.5">
           <svg 
-            className="w-5 h-5 xs:w-5 xs:h-5 sm:w-6 sm:h-6" 
+            className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
@@ -106,7 +109,7 @@ const MealCalendarButton = () => {
               d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" 
             />
           </svg>
-          <span className="font-semibold text-xs xs:text-sm sm:text-base whitespace-nowrap">Your Meal Calendar</span>
+          <span className="font-semibold text-xs xs:text-sm sm:text-base whitespace-nowrap">{t('yourOrders.viewCalendar')}</span>
         </div>
         
         {/* Notification badge if there are upcoming meals */}
