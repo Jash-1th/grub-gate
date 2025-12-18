@@ -11,6 +11,7 @@ const {
   forgotPassword,
   resetPassword,
   changePassword,
+  checkUserExists,
   requestOTP,
   verifyOTP,
   requestLoginOTP,
@@ -41,6 +42,7 @@ router.post('/refresh', refreshToken);
 router.post('/verify-email', verifyEmail);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
+router.post('/check-user', checkUserExists);
 
 // OTP Authentication routes
 router.post('/otp/request', validateRequest(userSchemas.requestOTP), requestOTP);

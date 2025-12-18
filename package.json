@@ -9,10 +9,12 @@
   "scripts": {
     "dev:customer": "npm run dev --workspace=customer-app",
     "dev:partner": "npm run dev --workspace=partner-portal",
+    "dev:dasher": "npm run dev --workspace=dasher-app",
     "build:customer": "npm run build --workspace=customer-app",
     "build:partner": "npm run build --workspace=partner-portal",
-    "build:all": "npm run build:customer && npm run build:partner",
-    "dev:all": "concurrently \"npm run dev:customer\" \"npm run dev:partner\""
+    "build:dasher": "npm run build --workspace=dasher-app",
+    "build:all": "npm run build:customer && npm run build:partner && npm run build:dasher",
+    "dev:all": "concurrently \"npm run dev:customer\" \"npm run dev:partner\" \"npm run dev:dasher\""
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

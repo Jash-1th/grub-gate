@@ -177,6 +177,37 @@ const orderSchema = new mongoose.Schema({
   estimatedDeliveryTime: {
     type: Number, // in minutes
     min: [10, 'Estimated delivery time must be at least 10 minutes']
+  },
+  
+  // Dasher/Delivery Driver Information
+  dasherId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    sparse: true  // Only assigned orders will have this
+  },
+  
+  dasherAssignedAt: Date,
+  dasherAcceptedAt: Date,
+  dasherPickedUpAt: Date,
+  dasherDeliveredAt: Date,
+  
+  dasherLocation: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number],  // [longitude, latitude]
+      default: [0, 0]
+    },
+    lastUpdated: Date
+  },
+  
+  deliveryNotes: {
+    type: String,
+    trim: true,
+    maxlength: [500, 'Delivery notes cannot exceed 500 characters']
   }
 }, {
   timestamps: true,

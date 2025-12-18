@@ -38,6 +38,10 @@ const geocodingRoutes = require('./src/routes/geocoding.routes');
 const activationRoutes = require('./src/routes/activation.routes');
 const notificationRoutes = require('./src/routes/notification.routes');
 const pushNotificationRoutes = require('./src/routes/pushNotification.routes');
+const dasherAuthRoutes = require('./src/routes/dasher.auth.routes');
+const mealCalendarRoutes = require('./src/routes/mealCalendar.routes');
+const restaurantValidationRoutes = require('./src/routes/restaurantValidation.routes');
+const orderActivationRoutes = require('./src/routes/orderActivation.routes');
 
 const app = express();
 
@@ -83,13 +87,16 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
-// CORS configuration - Allow both Customer App and Partner Portal
+// CORS configuration - Allow Customer App, Partner Portal, and Dasher App
 const allowedOrigins = [
   'http://localhost:3000', // Customer App (local)
   'http://localhost:5173', // Partner Portal (Vite dev server)
+  'http://localhost:5174', // Dasher App (Vite dev server)
   'http://localhost:4173', // Partner Portal (Vite preview)
+  'http://localhost:4174', // Dasher App (Vite preview)
   'http://127.0.0.1:3000', // Customer App (alternative localhost)
   'http://127.0.0.1:5173', // Partner Portal (alternative localhost)
+  'http://127.0.0.1:5174', // Dasher App (alternative localhost)
 ];
 
 // Add production origins from environment variable
@@ -193,9 +200,10 @@ app.use('/api/v1/geocoding', geocodingRoutes);
 app.use('/api/v1/activation', activationRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/push-notifications', pushNotificationRoutes);
-app.use('/api/v1/meal-calendar', require('./src/routes/mealCalendar.routes'));
-app.use('/api/v1/restaurant-validation', require('./src/routes/restaurantValidation.routes'));
-app.use('/api/v1/order-activation', require('./src/routes/orderActivation.routes'));
+app.use('/api/v1/dasher/auth', dasherAuthRoutes);
+app.use('/api/v1/meal-calendar', mealCalendarRoutes);
+app.use('/api/v1/restaurant-validation', restaurantValidationRoutes);
+app.use('/api/v1/order-activation', orderActivationRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
