@@ -50,15 +50,19 @@ const storage = multer.diskStorage({
 
 // File filter function
 const fileFilter = (req, file, cb) => {
+  // Dasher-related fields (profile photo, license, vehicle registration, insurance)
+  const dasherImageFields = ['profilePhoto', 'driversLicenseFront', 'driversLicenseBack'];
+  const dasherDocumentFields = ['vehicleRegistration', 'insuranceDocument'];
+  
   // Check file type based on fieldname
-  if (file.fieldname === 'logo' || file.fieldname === 'images') {
+  if (file.fieldname === 'logo' || file.fieldname === 'images' || dasherImageFields.includes(file.fieldname)) {
     // Accept only image files
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
       cb(new Error('Only image files are allowed for logo and images'), false);
     }
-  } else if (file.fieldname === 'documents' || file.fieldname === 'businessLicenseFile') {
+  } else if (file.fieldname === 'documents' || file.fieldname === 'businessLicenseFile' || dasherDocumentFields.includes(file.fieldname)) {
     // Accept documents (PDF, DOC, DOCX) and business license files (PDF, images)
     const allowedMimes = [
       'application/pdf',
@@ -76,7 +80,7 @@ const fileFilter = (req, file, cb) => {
       cb(new Error('Only PDF, DOC, DOCX, and image files are allowed for documents'), false);
     }
   } else {
-    cb(new Error('Invalid field name'), false);
+    cb(new Error(`Invalid field name: ${file.fieldname}`), false);
   }
 };
 

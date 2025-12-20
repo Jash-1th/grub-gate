@@ -41,14 +41,14 @@ const HomePage = () => {
         <StatisticsSection />
       </Suspense>
       
-      <Suspense fallback={<Fallback />}>
+      {/* <Suspense fallback={<Fallback />}>
         <PopularDishes />
-      </Suspense>
+      </Suspense> */}
       
       <TestimonialsSection />
       <RoleCards />
       {/* <NearbyRestaurants /> */}
-      <GetStartedCTA />
+      {/* <GetStartedCTA /> */}
       
       {/* Push Notification Tester - Development Only - Commented Out */}
       

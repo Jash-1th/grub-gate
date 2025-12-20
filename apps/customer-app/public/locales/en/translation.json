@@ -148,7 +148,13 @@
   "whyGrubGate": {
     "title": "Why Choose GrubGate?",
     "subtitle": "We're more than just a food delivery service. We're your gateway to Montreal's finest culinary experiences, delivered with care and convenience.",
-    "specialTitle": "What Makes Us Special"
+    "specialTitle": "What Makes Us Special",
+    "stats": {
+      "stressFree": "Stress free",
+      "restaurants": "{{count}}+ Restaurants",
+      "available": "24/7 Available",
+      "secure": "100% Secure"
+    }
   },
   "benefits": {
     "1": {

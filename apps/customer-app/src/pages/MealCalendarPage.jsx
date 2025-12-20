@@ -35,6 +35,7 @@ const MealCalendarPage = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const includeWeek2 = searchParams.get('includeWeek2') === '1';
   
   // Access MealPlan context with proper error boundary
   const mealPlanContext = useMealPlan();
@@ -525,7 +526,7 @@ const MealCalendarPage = () => {
       if (storedWeekStart) {
         const startDate = new Date(storedWeekStart);
         const endDate = new Date(storedWeekStart);
-        endDate.setDate(startDate.getDate() + 13); // 14 days total
+        endDate.setDate(startDate.getDate() + (includeWeek2 ? 13 : 6)); // 7 or 14 days total
         startDate.setHours(0, 0, 0, 0);
         endDate.setHours(0, 0, 0, 0);
 
@@ -552,7 +553,7 @@ const MealCalendarPage = () => {
         const startDate = new Date(mealPlan.planStartDate);
         startDate.setHours(0, 0, 0, 0);
         const twoWeeksLater = new Date(startDate);
-        twoWeeksLater.setDate(startDate.getDate() + 13);
+        twoWeeksLater.setDate(startDate.getDate() + (includeWeek2 ? 13 : 6));
         
         console.log(`📆 Weekly plan double fallback range: ${startDate.toDateString()} to ${twoWeeksLater.toDateString()}`);
         const isClickable = date >= startDate && date <= twoWeeksLater;
@@ -660,11 +661,12 @@ const MealCalendarPage = () => {
       console.log('🎯 Taking WEEKLY PLAN (STORED MEALS) path');
       const storedWeekStart = getEarliestStoredMealDate();
       if (storedWeekStart) {
-        // Generate 14 days from the earliest stored meal date
+        // Generate 7 or 14 days from the earliest stored meal date
         const startDate = new Date(storedWeekStart);
-        console.log(`📅 Weekly plan mode: Generating 14 days from stored meal date ${startDate.toDateString()}`);
+        const dayCount = includeWeek2 ? 14 : 7;
+        console.log(`📅 Weekly plan mode: Generating ${dayCount} days from stored meal date ${startDate.toDateString()}`);
         
-        for (let i = 0; i < 14; i++) {
+        for (let i = 0; i < dayCount; i++) {
           const date = new Date(startDate);
           date.setDate(startDate.getDate() + i);
           dates.push(date.toISOString().split('T')[0]);
@@ -766,7 +768,8 @@ const MealCalendarPage = () => {
     const previewMeals = [];
     
     // Generate meals for both weeks using stored dates
-    for (let weekIndex = 0; weekIndex < 2; weekIndex++) {
+    const weekCount = includeWeek2 ? 2 : 1;
+    for (let weekIndex = 0; weekIndex < weekCount; weekIndex++) {
       const weekPlan = getWeekPlan(weekIndex);
       console.log(`🔄 generatePreviewMeals: Week ${weekIndex} plan:`, weekPlan);
       if (!weekPlan) continue;
@@ -872,8 +875,8 @@ const MealCalendarPage = () => {
     if (!hasPlannedMeals) return null;
     
     const previewMeals = generatePreviewMeals();
-    const totalMeals = getWeekTotalItems(0) + getWeekTotalItems(1);
-    const totalCost = getWeekTotalCost(0) + getWeekTotalCost(1);
+    const totalMeals = getWeekTotalItems(0) + (includeWeek2 ? getWeekTotalItems(1) : 0);
+    const totalCost = getWeekTotalCost(0) + (includeWeek2 ? getWeekTotalCost(1) : 0);
     
     return {
       meals: previewMeals,

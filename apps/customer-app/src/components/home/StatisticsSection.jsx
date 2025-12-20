@@ -155,7 +155,7 @@ const StatisticsSection = () => {
         {!loading && stats.dataSource && (
           <div className="text-center mt-4">
             <p className="text-sm text-gray-500">
-              {stats.dataSource === 'live' ? '📊 Live data from database' : '⚠️ Using fallback data'}
+              {stats.dataSource === 'live' ? null : '⚠️ Using fallback data'}
             </p>
           </div>
         )}

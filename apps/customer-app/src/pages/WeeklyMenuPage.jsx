@@ -232,7 +232,11 @@ const WeeklyMenuPage = () => {
   const { postalCode, selectedRestaurant: planningSelectedRestaurant, updateSelectedRestaurant } = usePlanning();
   const { isAuthenticated, user } = useAuth();
   const [isClient, setIsClient] = useState(false);
-  const [selectedWeek, setSelectedWeek] = useState(0); // 0 = current week, 1 = next week, etc.
+  const [selectedWeek, setSelectedWeek] = useState(() => {
+    const weekParam = parseInt(searchParams.get('week') || '0', 10);
+    return Number.isFinite(weekParam) && (weekParam === 0 || weekParam === 1) ? weekParam : 0;
+  }); // 0 = current week, 1 = next week, etc.
+  const [isWeek2Enabled, setIsWeek2Enabled] = useState(false);
   
   // Subscription overlap state
   const [subscriptionStatus, setSubscriptionStatus] = useState({
@@ -523,6 +527,45 @@ const WeeklyMenuPage = () => {
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+    if (!hasLoadedFromDatabase) return;
+
+    const hasWeek2Data = getWeekTotalItems(1) > 0;
+    const weekParam = parseInt(searchParams.get('week') || '0', 10);
+    const isWeek2Requested = weekParam === 1;
+
+    if (hasWeek2Data || isWeek2Requested) {
+      setIsWeek2Enabled(true);
+    }
+  }, [isClient, hasLoadedFromDatabase, searchParams, getWeekTotalItems]);
+
+  useEffect(() => {
+    if (!isWeek2Enabled && selectedWeek === 1) {
+      setIsWeek2Enabled(true);
+    }
+  }, [isWeek2Enabled, selectedWeek]);
+
+  const handleSelectWeek = (week) => {
+    setSelectedWeek(week);
+    navigate(`/weekly-menu?week=${week}`, { replace: true });
+  };
+
+  const handleEnableWeek2 = () => {
+    setIsWeek2Enabled(true);
+    handleSelectWeek(1);
+    showInfo('Week 2 Enabled', 'You can now plan meals for Week 2 as well.');
+  };
+
+  const handleRemoveWeek2 = () => {
+    if (window.confirm('Remove Week 2 plan? This will delete all Week 2 meals from your account.')) {
+      clearWeek(1);
+      setIsWeek2Enabled(false);
+      handleSelectWeek(0);
+      showSuccess('Week 2 Removed', 'All Week 2 meals have been removed.');
+    }
+  };
 
   const handleRemoveItem = (planId, day, mealType) => {
     removeItemFromPlanWeek(planId, day, mealType, selectedWeek);
@@ -959,51 +1002,86 @@ const WeeklyMenuPage = () => {
       <div className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-md backdrop-blur-sm bg-white/95">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           {/* Week Selector Buttons */}
-          <div className="flex items-center justify-center mb-4">
-            <div className="bg-gray-100 rounded-2xl p-1.5 shadow-inner w-full max-w-md">
-              <div className="grid grid-cols-2 gap-1">
-                {/* First Week Button */}
-                <button
-                  onClick={() => setSelectedWeek(0)}
-                  className={`px-4 py-3 sm:py-4 rounded-xl text-sm sm:text-base font-semibold transition-all duration-300 touch-manipulation ${
-                    selectedWeek === 0
-                      ? 'bg-white text-grub-red shadow-lg transform scale-105'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2">
-                    <svg className="w-5 h-5 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span className="font-bold">{t('weeklyMenu.week1')}</span>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1 sm:hidden">
-                    {getWeekTotalItems(0)} {t('weeklyMenu.meals')}
-                  </div>
-                </button>
-
-                {/* Second Week Button */}
-                <button
-                  onClick={() => setSelectedWeek(1)}
-                  className={`px-4 py-3 sm:py-4 rounded-xl text-sm sm:text-base font-semibold transition-all duration-300 touch-manipulation ${
-                    selectedWeek === 1
-                      ? 'bg-white text-grub-red shadow-lg transform scale-105'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2">
-                    <svg className="w-5 h-5 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span className="font-bold">{t('weeklyMenu.week2')}</span>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1 sm:hidden">
-                    {getWeekTotalItems(1)} {t('weeklyMenu.meals')}
-                  </div>
-                </button>
+          {!isWeek2Enabled ? (
+            <div className="flex flex-col items-center justify-center mb-4 gap-3">
+              <div className="bg-gray-100 rounded-2xl p-1.5 shadow-inner w-full max-w-md">
+                <div className="grid grid-cols-1 gap-1">
+                  <button
+                    onClick={() => handleSelectWeek(0)}
+                    className="px-4 py-3 sm:py-4 rounded-xl text-sm sm:text-base font-semibold transition-all duration-300 touch-manipulation bg-white text-grub-red shadow-lg transform scale-105"
+                  >
+                    <div className="flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2">
+                      <svg className="w-5 h-5 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span className="font-bold">{t('weeklyMenu.week1')}</span>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1 sm:hidden">
+                      {getWeekTotalItems(0)} {t('weeklyMenu.meals')}
+                    </div>
+                  </button>
+                </div>
               </div>
+
+              <button
+                onClick={handleEnableWeek2}
+                className="w-full max-w-md px-4 py-3 bg-grub-red text-white rounded-xl hover:bg-red-700 transition-colors text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] touch-manipulation"
+              >
+                Plan Week 2 as well
+              </button>
             </div>
-          </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center mb-4 gap-3">
+              <div className="bg-gray-100 rounded-2xl p-1.5 shadow-inner w-full max-w-md">
+                <div className="grid grid-cols-2 gap-1">
+                  <button
+                    onClick={() => handleSelectWeek(0)}
+                    className={`px-4 py-3 sm:py-4 rounded-xl text-sm sm:text-base font-semibold transition-all duration-300 touch-manipulation ${
+                      selectedWeek === 0
+                        ? 'bg-white text-grub-red shadow-lg transform scale-105'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2">
+                      <svg className="w-5 h-5 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span className="font-bold">{t('weeklyMenu.week1')}</span>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1 sm:hidden">
+                      {getWeekTotalItems(0)} {t('weeklyMenu.meals')}
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => handleSelectWeek(1)}
+                    className={`px-4 py-3 sm:py-4 rounded-xl text-sm sm:text-base font-semibold transition-all duration-300 touch-manipulation ${
+                      selectedWeek === 1
+                        ? 'bg-white text-grub-red shadow-lg transform scale-105'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2">
+                      <svg className="w-5 h-5 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span className="font-bold">{t('weeklyMenu.week2')}</span>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1 sm:hidden">
+                      {getWeekTotalItems(1)} {t('weeklyMenu.meals')}
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <button
+                onClick={handleRemoveWeek2}
+                className="w-full max-w-md px-4 py-3 border border-red-300 text-red-700 font-semibold rounded-xl hover:bg-red-50 transition-colors duration-200 touch-manipulation"
+              >
+                Remove Week 2
+              </button>
+            </div>
+          )}
           
           {/* Week Date Range Display */}
           <div className="text-center space-y-2">
@@ -1437,7 +1515,10 @@ const WeeklyMenuPage = () => {
               {/* View Calendar Button - Only show if user has planned meals */}
               {hasPlannedMeals ? (
                 <button
-                  onClick={() => navigate('/meal-calendar')}
+                  onClick={() => {
+                    const includeWeek2 = selectedWeek === 1 ? '1' : '0';
+                    navigate(`/meal-calendar?includeWeek2=${includeWeek2}`);
+                  }}
                   className="group w-full text-left p-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 relative overflow-hidden"
                 >
                   <div className="relative z-10">

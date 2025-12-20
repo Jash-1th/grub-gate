@@ -1197,6 +1197,29 @@ const updateOperatingHours = asyncHandler(async (req, res) => {
   }
 });
 
+/**
+ * @desc      Check if user exists
+ * @route     POST /api/v1/auth/check-user
+ * @access    Public
+ */
+const checkUserExists = asyncHandler(async (req, res) => {
+  const { email, phoneNumber } = req.body;
+
+  const existingUser = await User.findOne({ 
+    $or: [
+      { email },
+      { phoneNumber }
+    ]
+  });
+  
+  if (existingUser) {
+    const field = existingUser.email === email ? 'email' : 'phoneNumber';
+    return successResponse(res, { exists: true, field });
+  }
+
+  return successResponse(res, { exists: false });
+});
+
 module.exports = {
   // General auth
   register,
@@ -1208,6 +1231,7 @@ module.exports = {
   forgotPassword,
   resetPassword,
   changePassword,
+  checkUserExists,
 
   // OTP authentication (aliases for backward compatibility)
   requestOTP: requestCustomerOTP,

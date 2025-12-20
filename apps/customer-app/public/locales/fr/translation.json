@@ -34,7 +34,13 @@
   "whyGrubGate": {
     "title": "Pourquoi Choisir GrubGate?",
     "subtitle": "Nous sommes plus qu'un simple service de livraison de nourriture. Nous sommes votre passerelle vers les meilleures expériences culinaires de Montréal, livrées avec soin et commodité.",
-    "specialTitle": "Ce Qui Nous Rend Spéciaux"
+    "specialTitle": "Ce Qui Nous Rend Spéciaux",
+    "stats": {
+      "stressFree": "Sans stress",
+      "restaurants": "{{count}}+ restaurants",
+      "available": "Disponible 24/7",
+      "secure": "100% sécurisé"
+    }
   },
   "benefits": {
     "1": {

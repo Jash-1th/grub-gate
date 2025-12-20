@@ -1,50 +1,16 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import TwoColumnSection from '../common/TwoColumnSection';
-import locationImg from '../../assets/images/HowItWorks/Location.png';
-import kitchenImg from '../../assets/images/HowItWorks/Restaurant.png';
-import planImg from '../../assets/images/HowItWorks/ChoosePlan.png';
-import deliveryImg from '../../assets/images/HowItWorks/PickUporDel.png';
-import relaxImg from '../../assets/images/HowItWorks/Relax&Enjoy.png';
 
 const ProcessSteps = () => {
   const { t } = useTranslation();
 
-  const steps = [
-    {
-      id: 1,
-      title: t('howItWorks.step1Title'),
-      description: t('howItWorks.step1Description'),
-      image: locationImg
-    },
-    {
-      id: 2,
-      title: t('howItWorks.step2Title'),
-      description: t('howItWorks.step2Description'),
-      image: kitchenImg
-    },
-    {
-      id: 3,
-      title: t('howItWorks.step3Title'),
-      description: t('howItWorks.step3Description'),
-      image: planImg
-    },
-    {
-      id: 4,
-      title: t('howItWorks.step4Title'),
-      description: t('howItWorks.step4Description'),
-      image: deliveryImg
-    },
-    {
-      id: 5,
-      title: t('howItWorks.step5Title'),
-      description: t('howItWorks.step5Description'),
-      image: relaxImg
-    }
-  ];
+  const allInOneImage = {
+    src: '/images/howItWorks/allInOne.png',
+    alt: 'How It Works'
+  };
 
   return (
-    <section id="how-it-works-steps" className="py-16 lg:py-24 bg-gray-50">
+    <section id="how-it-works-steps" className="py-16 lg:py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16">
@@ -57,7 +23,7 @@ const ProcessSteps = () => {
         </div>
 
         {/* Process Steps - Using TwoColumnSection */}
-        <div className="space-y-8">
+        {/* <div className="space-y-8">
           {steps.map((step, index) => (
             <TwoColumnSection
               key={step.id}
@@ -67,6 +33,15 @@ const ProcessSteps = () => {
               reverse={index % 2 === 1}
             />
           ))}
+        </div> */}
+
+        <div className="max-w-4xl mx-auto px-0 sm:px-2 lg:px-4">
+          <img
+            src={allInOneImage.src}
+            alt={allInOneImage.alt}
+            className="block w-full h-auto object-contain"
+            loading="lazy"
+          />
         </div>
 
         {/* Additional Info */}

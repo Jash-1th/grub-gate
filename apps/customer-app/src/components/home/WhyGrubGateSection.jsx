@@ -70,7 +70,7 @@ const WhyGrubGateSection = () => {
   const [restaurantCount, setRestaurantCount] = useState(0); // Default fallback
   const [loading, setLoading] = useState(true);
 
-  // Fetch restaurant stats from backend
+  // Fetch restaurant stats from backend (live DB count used for the "{{count}}+ Restaurants" text in 'What Makes Us Special')
   useEffect(() => {
     const fetchRestaurantStats = async () => {
       try {
@@ -99,14 +99,14 @@ const WhyGrubGateSection = () => {
 
   // Data for the special features section - now with dynamic restaurant count
   const specialFeaturesData = [
-    { id: '1', stat: 'stress free' },
+    { id: '1', stat: t('whyGrubGate.stats.stressFree') },
     { 
       id: '2', 
-      stat: loading ? '0+ restaurants' : `${restaurantCount}+ restaurants`,
+      stat: t('whyGrubGate.stats.restaurants', { count: loading ? 0 : restaurantCount }),
       isLoading: loading 
     },
-    { id: '3', stat: '24/7 available' },
-    { id: '4', stat: '100% secure' }
+    { id: '3', stat: t('whyGrubGate.stats.available') },
+    { id: '4', stat: t('whyGrubGate.stats.secure') }
   ];
 
   return (
