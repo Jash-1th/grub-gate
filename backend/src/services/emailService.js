@@ -99,19 +99,25 @@ class EmailService {
    */
   async sendEmail({ to, subject, text, html }) {
     try {
-      // If no transporter is configured, log the email (for development)
+      // If no transporter is configured, only allow logging in development.
       if (!this.transporter) {
-        console.log('📧 Email Service (Development Mode):');
-        console.log(`To: ${to}`);
-        console.log(`Subject: ${subject}`);
-        console.log(`Content: ${text || html}`);
-        console.log('---');
-        
-        return {
-          success: true,
-          messageId: `dev_${Date.now()}`,
-          message: 'Email sent successfully (development mode)'
-        };
+        if (process.env.NODE_ENV === 'development') {
+          console.log('📧 Email Service (Development Mode):');
+          console.log(`To: ${to}`);
+          console.log(`Subject: ${subject}`);
+          console.log(`Content: ${text || html}`);
+          console.log('---');
+          
+          return {
+            success: true,
+            messageId: `dev_${Date.now()}`,
+            message: 'Email sent successfully (development mode)'
+          };
+        }
+
+        throw new Error(
+          'Email transporter is not configured. Set EMAIL_HOST/EMAIL_USER/EMAIL_PASS, or SENDGRID_API_KEY, or SMTP_HOST/SMTP_USER/SMTP_PASS.'
+        );
       }
 
       const mailOptions = {
@@ -138,12 +144,7 @@ class EmailService {
 
     } catch (error) {
       console.error('Email Service Error:', error);
-      
-      return {
-        success: false,
-        error: error.message,
-        message: 'Failed to send email'
-      };
+      throw error;
     }
   }
 
@@ -154,8 +155,11 @@ class EmailService {
    * @param {string} appName - Application name
    * @returns {Promise<Object>} Result object
    */
-  async sendOTP(email, otp, appName = 'GrubGate') {
-    const subject = `Your ${appName} Verification Code`;
+  async sendOTP(email, otp, appNameOrOptions = 'GrubGate') {
+    const options = (appNameOrOptions && typeof appNameOrOptions === 'object') ? appNameOrOptions : {};
+    const appName = (typeof appNameOrOptions === 'string' ? appNameOrOptions : (options.appName || 'GrubGate'));
+
+    const subject = options.subject || `Your ${appName} Verification Code`;
     
     const text = `
 Your ${appName} verification code is: ${otp}

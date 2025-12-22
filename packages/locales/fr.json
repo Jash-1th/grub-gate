@@ -27,7 +27,16 @@
     "success": "Succès",
     "warning": "Avertissement",
     "info": "Information",
-    "language": "Langue"
+    "language": "Langue",
+    "home": "Accueil",
+    "faqs": "FAQ"
+  },
+  "navigation": {
+    "home": "Accueil",
+    "benefits": "Avantages",
+    "howItWorks": "Comment Ça Marche",
+    "partnerReviews": "Avis des partenaires",
+    "faqs": "FAQ"
   },
   "landingPage": {
     "hero": {

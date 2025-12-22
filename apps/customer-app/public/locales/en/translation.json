@@ -61,6 +61,49 @@
     "language": "Language",
     "account": "Account"
   },
+  "roleCards": {
+    "sectionTitle": "Join the GrubGate Community",
+    "sectionSubtitle": "Whether you're looking to order food, grow your restaurant business, or earn as a delivery partner, we have the perfect solution for you.",
+    "cards": {
+      "customer": {
+        "title": "For Customers",
+        "subtitle": "Order & Plan Meals",
+        "description": "Discover amazing restaurants, plan your weekly meals, and enjoy hassle-free food delivery.",
+        "features": {
+          "0": "Weekly Meal Planning",
+          "1": "Restaurant Discovery",
+          "2": "Easy Ordering",
+          "3": "Subscription Plans"
+        },
+        "button": "Get Started"
+      },
+      "partner": {
+        "title": "For Partners",
+        "subtitle": "Grow Your Restaurant",
+        "description": "Join our platform to reach more customers, manage orders efficiently, and grow your business.",
+        "features": {
+          "0": "Order Management",
+          "1": "Analytics Dashboard",
+          "2": "Menu Management",
+          "3": "Customer Insights"
+        },
+        "button": "Partner Portal"
+      },
+      "runner": {
+        "title": "For Grub Runners",
+        "subtitle": "Deliver & Earn",
+        "description": "Become a delivery partner and earn flexible income by delivering delicious meals to customers.",
+        "features": {
+          "0": "Flexible Schedule",
+          "1": "Competitive Pay",
+          "2": "Easy App Interface",
+          "3": "Weekly Payouts"
+        },
+        "button": "Coming Soon",
+        "badge": "Coming Soon"
+      }
+    }
+  },
   "deliveredOrders": {
     "title": "Delivered Orders",
     "noOrders": "You don't have any delivered orders yet"

@@ -133,7 +133,7 @@ const LandingPage = () => {
   return (
     <div className="min-h-screen overflow-x-hidden bg-white">
       {/* Hero Section */}
-      <section className="bg-grub-red text-white py-12 md:py-16 lg:py-20 pb-20 md:pb-24 relative overflow-hidden">
+      <section className="bg-grub-red text-white py-12 md:py-16 lg:py-20 pb-28 md:pb-32 relative overflow-hidden">
         {/* Animated Background Elements - Subtle */}
         <div className="absolute inset-0 overflow-hidden opacity-20">
           <div className="absolute -top-20 -right-20 w-64 h-64 md:w-96 md:h-96 bg-black/10 rounded-full blur-3xl"></div>
@@ -198,18 +198,18 @@ const LandingPage = () => {
             
             {/* Trust Indicators */}
             <div className="flex justify-center">
-              <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-6 text-white/90">
+              <div className="flex flex-wrap justify-center items-start md:items-center gap-x-6 gap-y-2 text-white/90 px-2 mb-8 md:mb-10">
                 <div className="flex items-center gap-2">
                   <FontAwesomeIcon icon={faCheckCircle} className="h-5 w-5 text-green-400 flex-shrink-0" />
-                  <span className="text-sm font-medium whitespace-nowrap">{t('landingPage.hero.trust.free')}</span>
+                  <span className="text-sm font-medium leading-snug">{t('landingPage.hero.trust.free')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <FontAwesomeIcon icon={faCheckCircle} className="h-5 w-5 text-green-400 flex-shrink-0" />
-                  <span className="text-sm font-medium whitespace-nowrap">{t('landingPage.hero.trust.noCard')}</span>
+                  <span className="text-sm font-medium leading-snug">{t('landingPage.hero.trust.noCard')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <FontAwesomeIcon icon={faCheckCircle} className="h-5 w-5 text-green-400 flex-shrink-0" />
-                  <span className="text-sm font-medium whitespace-nowrap">{t('landingPage.hero.trust.cancel')}</span>
+                  <span className="text-sm font-medium leading-snug">{t('landingPage.hero.trust.cancel')}</span>
                 </div>
               </div>
             </div>
@@ -217,7 +217,7 @@ const LandingPage = () => {
         </div>
         
         {/* Wave Divider */}
-        <div className="absolute bottom-0 left-0 right-0">
+        <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-0">
           <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
             <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="white" />
           </svg>
@@ -448,18 +448,18 @@ const LandingPage = () => {
               
               {/* Additional info */}
               <div className="flex justify-center">
-                <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-6 text-white/90 text-xs sm:text-sm">
+                <div className="flex flex-wrap justify-center items-start md:items-center gap-x-6 gap-y-2 text-white/90 text-xs sm:text-sm px-2">
                   <div className="flex items-center gap-2">
                     <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4 sm:h-5 sm:w-5 text-green-400 flex-shrink-0" />
-                    <span className="font-medium whitespace-nowrap">{t('landingPage.hero.trust.free')}</span>
+                    <span className="font-medium leading-snug">{t('landingPage.hero.trust.free')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4 sm:h-5 sm:w-5 text-green-400 flex-shrink-0" />
-                    <span className="font-medium whitespace-nowrap">{t('landingPage.hero.trust.noCard')}</span>
+                    <span className="font-medium leading-snug">{t('landingPage.hero.trust.noCard')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4 sm:h-5 sm:w-5 text-green-400 flex-shrink-0" />
-                    <span className="font-medium whitespace-nowrap">{t('landingPage.hero.trust.cancel')}</span>
+                    <span className="font-medium leading-snug">{t('landingPage.hero.trust.cancel')}</span>
                   </div>
                 </div>
               </div>

@@ -77,7 +77,7 @@ const RestaurantReplacementModal = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
       <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-4xl w-full mx-2 sm:mx-4 overflow-hidden max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white p-4 sm:p-6 text-center">
+        <div className="bg-grub-red text-white p-4 sm:p-6 text-center">
           <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
             <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
@@ -86,7 +86,7 @@ const RestaurantReplacementModal = ({
           <h3 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2">
             {modalStep === 'remove' ? t('restaurantModal.removeRestaurant') : t('restaurantModal.addNewRestaurant')}
           </h3>
-          <p className="text-orange-100 text-xs sm:text-sm leading-relaxed">
+          <p className="text-white/80 text-xs sm:text-sm leading-relaxed">
             {modalStep === 'remove' 
               ? t('restaurantModal.step1SelectRemove')
               : t('restaurantModal.step2ChooseNew')
@@ -327,7 +327,7 @@ const RestaurantReplacementModal = ({
               disabled={selectedRestaurantsToRemove.length === 0 || isRemoving}
               className={`flex-1 px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-all duration-200 text-sm sm:text-base touch-manipulation ${
                 selectedRestaurantsToRemove.length > 0 && !isRemoving
-                  ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white hover:from-orange-600 hover:to-red-700 shadow-lg active:scale-95'
+                  ? 'bg-grub-red text-white hover:bg-red-700 shadow-lg active:scale-95'
                   : 'bg-gray-200 text-gray-400 cursor-not-allowed'
               }`}
             >

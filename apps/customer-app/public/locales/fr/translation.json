@@ -369,12 +369,59 @@
     "error": "Quelque chose s'est mal passé",
     "retry": "Réessayer",
     "close": "Fermer",
+    "menu": "Menu",
+    "language": "Langue",
+    "account": "Compte",
     "next": "Suivant",
     "previous": "Précédent",
     "viewMore": "Voir Plus",
     "readMore": "Lire Plus",
     "subscription": "Plan de Repas par Abonnement",
-    "loadMore": "Charger Plus"
+    "loadMore": "Charger Plus",
+    "startPlanning": "Commencer à planifier"
+  },
+  "roleCards": {
+    "sectionTitle": "Rejoignez la communauté GrubGate",
+    "sectionSubtitle": "Que vous souhaitiez commander des repas, développer votre restaurant ou gagner de l'argent en tant que partenaire de livraison, nous avons la solution idéale pour vous.",
+    "cards": {
+      "customer": {
+        "title": "Pour les clients",
+        "subtitle": "Commander et planifier",
+        "description": "Découvrez d'excellents restaurants, planifiez vos repas de la semaine et profitez d'une livraison simple et sans tracas.",
+        "features": {
+          "0": "Planification hebdomadaire",
+          "1": "Découverte de restaurants",
+          "2": "Commande facile",
+          "3": "Plans d'abonnement"
+        },
+        "button": "Commencer"
+      },
+      "partner": {
+        "title": "Pour les partenaires",
+        "subtitle": "Développez votre restaurant",
+        "description": "Rejoignez notre plateforme pour atteindre plus de clients, gérer les commandes efficacement et développer votre activité.",
+        "features": {
+          "0": "Gestion des commandes",
+          "1": "Tableau de bord analytique",
+          "2": "Gestion du menu",
+          "3": "Insights clients"
+        },
+        "button": "Portail partenaire"
+      },
+      "runner": {
+        "title": "Pour les Grub Runners",
+        "subtitle": "Livrez et gagnez",
+        "description": "Devenez partenaire de livraison et gagnez un revenu flexible en livrant de délicieux repas aux clients.",
+        "features": {
+          "0": "Horaires flexibles",
+          "1": "Rémunération compétitive",
+          "2": "Application simple",
+          "3": "Paiements hebdomadaires"
+        },
+        "button": "Bientôt disponible",
+        "badge": "Bientôt disponible"
+      }
+    }
   },
   "mealPlanning": {
     "hero": {

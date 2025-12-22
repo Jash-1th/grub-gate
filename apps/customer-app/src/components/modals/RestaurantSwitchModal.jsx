@@ -18,7 +18,7 @@ const RestaurantSwitchModal = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
         {/* Header */}
-        <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white p-6 rounded-t-lg">
+        <div className="bg-grub-red text-white p-6 rounded-t-lg">
           <div className="flex items-center">
             <div className="text-white mr-3">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -27,7 +27,7 @@ const RestaurantSwitchModal = ({
             </div>
             <h3 className="text-lg font-semibold">Switch Restaurant?</h3>
           </div>
-          <p className="text-orange-100 text-sm mt-2">
+          <p className="text-white/80 text-sm mt-2">
             This will clear your current meal plan
           </p>
         </div>
@@ -83,7 +83,7 @@ const RestaurantSwitchModal = ({
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg font-medium hover:from-orange-600 hover:to-red-700 transition-all duration-200"
+            className="flex-1 px-4 py-2 bg-grub-red text-white rounded-lg font-medium hover:bg-red-700 transition-all duration-200"
           >
             Switch Restaurant
           </button>

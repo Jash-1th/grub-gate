@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import apiClient from '../../../api/client';
 
 /**
  * PhoneNumberStep Component
@@ -70,38 +71,32 @@ const PhoneNumberStep = ({
     setErrors({});
     
     try {
-      // Use environment variable for API base URL with fallback to deployed backend
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://gg0b1.netlify.app/api/v1';
-      
+      const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.identifier);
+      const channel = isEmail ? 'email' : 'sms';
+
       // Debug: Log what we're sending
       console.log('🔍 OTP Request Debug:', {
-        apiBaseUrl,
+        apiBaseUrl: apiClient?.defaults?.baseURL,
         identifier: data.identifier,
-        channel: data.channel,
-        fullUrl: `${apiBaseUrl}/auth/partner/otp/request`
+        channel,
+        fullUrl: `${apiClient?.defaults?.baseURL}/auth/partner/otp/request`
       });
-      
-      const response = await fetch(`${apiBaseUrl}/auth/partner/otp/request`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          identifier: data.identifier,
-          channel: data.channel
-        })
+
+      const response = await apiClient.post('/auth/partner/otp/request', {
+        identifier: data.identifier,
+        channel
       });
-      
-      const result = await response.json();
-      
+
+      const result = response.data;
+
       // Debug: Log the response
       console.log('🔍 OTP Response Debug:', {
         status: response.status,
-        ok: response.ok,
+        ok: true,
         result: result
       });
-      
-      if (response.ok && result.status === 'success') {
+
+      if (result.status === 'success') {
         // Check if user exists to determine if this is a new signup
         onDataChange(prev => ({
           ...prev,

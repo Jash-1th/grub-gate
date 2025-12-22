@@ -33,41 +33,56 @@ const RoleCards = () => {
   const roleCards = [
     {
       id: 'customer',
-      title: 'For Customers',
-      subtitle: 'Order & Plan Meals',
-      description: 'Discover amazing restaurants, plan your weekly meals, and enjoy hassle-free food delivery.',
+      title: t('roleCards.cards.customer.title'),
+      subtitle: t('roleCards.cards.customer.subtitle'),
+      description: t('roleCards.cards.customer.description'),
       icon: '🍽️',
       gradient: 'from-blue-500 to-blue-600',
       hoverGradient: 'hover:from-blue-600 hover:to-blue-700',
-      features: ['Weekly Meal Planning', 'Restaurant Discovery', 'Easy Ordering', 'Subscription Plans'],
+      features: [
+        t('roleCards.cards.customer.features.0'),
+        t('roleCards.cards.customer.features.1'),
+        t('roleCards.cards.customer.features.2'),
+        t('roleCards.cards.customer.features.3')
+      ],
       onClick: handleCustomerClick,
-      buttonText: isAuthenticated ? t('common.startPlanning') : 'Get Started',
+      buttonText: isAuthenticated ? t('common.startPlanning') : t('roleCards.cards.customer.button'),
       buttonStyle: 'bg-blue-600 hover:bg-blue-700'
     },
     {
       id: 'partner',
-      title: 'For Partners',
-      subtitle: 'Grow Your Restaurant',
-      description: 'Join our platform to reach more customers, manage orders efficiently, and grow your business.',
+      title: t('roleCards.cards.partner.title'),
+      subtitle: t('roleCards.cards.partner.subtitle'),
+      description: t('roleCards.cards.partner.description'),
       icon: '🏪',
       gradient: 'from-green-500 to-green-600',
       hoverGradient: 'hover:from-green-600 hover:to-green-700',
-      features: ['Order Management', 'Analytics Dashboard', 'Menu Management', 'Customer Insights'],
+      features: [
+        t('roleCards.cards.partner.features.0'),
+        t('roleCards.cards.partner.features.1'),
+        t('roleCards.cards.partner.features.2'),
+        t('roleCards.cards.partner.features.3')
+      ],
       onClick: handlePartnerClick,
-      buttonText: 'Partner Portal',
+      buttonText: t('roleCards.cards.partner.button'),
       buttonStyle: 'bg-green-600 hover:bg-green-700'
     },
     {
       id: 'runner',
-      title: 'For Grub Runners',
-      subtitle: 'Deliver & Earn',
-      description: 'Become a delivery partner and earn flexible income by delivering delicious meals to customers.',
+      title: t('roleCards.cards.runner.title'),
+      subtitle: t('roleCards.cards.runner.subtitle'),
+      description: t('roleCards.cards.runner.description'),
       icon: '🚴‍♂️',
       gradient: 'from-orange-500 to-orange-600',
       hoverGradient: 'hover:from-orange-600 hover:to-orange-700',
-      features: ['Flexible Schedule', 'Competitive Pay', 'Easy App Interface', 'Weekly Payouts'],
+      features: [
+        t('roleCards.cards.runner.features.0'),
+        t('roleCards.cards.runner.features.1'),
+        t('roleCards.cards.runner.features.2'),
+        t('roleCards.cards.runner.features.3')
+      ],
       onClick: handleGrubRunnerClick,
-      buttonText: 'Coming Soon',
+      buttonText: t('roleCards.cards.runner.button'),
       buttonStyle: 'bg-gray-400 cursor-not-allowed',
       disabled: true
     }
@@ -79,11 +94,10 @@ const RoleCards = () => {
         {/* Section Header */}
         <div className="text-center mb-6 xs:mb-7 sm:mb-8 md:mb-10">
           <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3 xs:mb-4">
-            Join the GrubGate Community
+            {t('roleCards.sectionTitle')}
           </h2>
           <p className="text-sm xs:text-base sm:text-lg text-gray-600 max-w-3xl mx-auto px-2">
-            Whether you're looking to order food, grow your restaurant business, or earn as a delivery partner, 
-            we have the perfect solution for you.
+            {t('roleCards.sectionSubtitle')}
           </p>
         </div>
 
@@ -145,7 +159,7 @@ const RoleCards = () => {
                 {card.disabled && (
                   <div className="absolute top-4 right-4">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                      Coming Soon
+                      {t('roleCards.cards.runner.badge')}
                     </span>
                   </div>
                 )}
