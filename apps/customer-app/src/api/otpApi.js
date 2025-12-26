@@ -1,5 +1,5 @@
 // API functions for OTP authentication
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://gg0b1.netlify.app/api/v1';
+import apiClient from './apiClient';
 
 /**
  * Request OTP for authentication
@@ -9,22 +9,12 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://gg0b1.netlify
  */
 export const requestOTP = async (identifier, channel) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/otp/request`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        identifier,
-        channel
-      }),
+    const response = await apiClient.post('/auth/otp/request', {
+      identifier,
+      channel
     });
 
-    const result = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(result.message || 'Failed to send OTP');
-    }
+    const result = response.data;
 
     return {
       success: true,
@@ -33,10 +23,12 @@ export const requestOTP = async (identifier, channel) => {
     };
   } catch (error) {
     console.error('Request OTP API Error:', error);
+
+    const message = error?.response?.data?.message || error.message || 'Failed to send verification code';
     return {
       success: false,
-      error: error.message,
-      message: error.message || 'Failed to send verification code'
+      error: message,
+      message
     };
   }
 };
@@ -52,25 +44,15 @@ export const requestOTP = async (identifier, channel) => {
  */
 export const verifyOTP = async (identifier, otp, userType = 'customer', firstName = '', lastName = '') => {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/otp/verify`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        identifier,
-        otp,
-        userType,
-        firstName: firstName.trim(),
-        lastName: lastName.trim()
-      }),
+    const response = await apiClient.post('/auth/otp/verify', {
+      identifier,
+      otp,
+      userType,
+      firstName: firstName.trim(),
+      lastName: lastName.trim()
     });
 
-    const result = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(result.message || 'Failed to verify OTP');
-    }
+    const result = response.data;
 
     return {
       success: true,
@@ -80,10 +62,12 @@ export const verifyOTP = async (identifier, otp, userType = 'customer', firstNam
     };
   } catch (error) {
     console.error('Verify OTP API Error:', error);
+
+    const message = error?.response?.data?.message || error.message || 'Failed to verify code';
     return {
       success: false,
-      error: error.message,
-      message: error.message || 'Failed to verify code'
+      error: message,
+      message
     };
   }
 };

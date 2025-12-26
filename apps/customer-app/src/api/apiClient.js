@@ -2,8 +2,12 @@ import axios from 'axios';
 import { getStorageItem, removeStorageItem } from '../utils/ssrSafeStorage';
 
 // Create axios instance with base configuration
+const baseURL = import.meta.env.DEV
+  ? (import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1')
+  : (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1');
+
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1',
+  baseURL,
 
   timeout: 10000,
   headers: {

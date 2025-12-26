@@ -77,6 +77,172 @@
   outline-offset: 2px;
 }
 
+.gg-btn-shine {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    110deg,
+    rgba(255, 255, 255, 0) 20%,
+    rgba(255, 255, 255, 0.55) 45%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  transform: translateX(-140%);
+  animation: gg-btn-shine-sweep 5s ease-in-out infinite;
+  mix-blend-mode: overlay;
+}
+
+@keyframes gg-btn-shine-sweep {
+  0%,
+  72% {
+    transform: translateX(-140%);
+    opacity: 0;
+  }
+  78% {
+    opacity: 1;
+  }
+  92% {
+    transform: translateX(140%);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(140%);
+    opacity: 0;
+  }
+}
+
+.gg-cta {
+  position: relative;
+}
+
+.gg-btn-fill {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+  transform: translateX(-105%);
+  transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+  mix-blend-mode: overlay;
+}
+
+.gg-cta:hover .gg-btn-fill {
+  transform: translateX(0%);
+}
+
+.gg-cta-icon {
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.gg-cta:hover .gg-cta-icon {
+  transform: translateX(4px) rotate(10deg);
+}
+
+.gg-badge-pulse {
+  animation: gg-badge-heartbeat 2s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes gg-badge-heartbeat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.gg-star-twinkle {
+  transform-origin: center;
+}
+
+.group:hover .gg-star-twinkle {
+  animation: gg-star-twinkle 650ms ease-in-out;
+}
+
+@keyframes gg-star-twinkle {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  35% {
+    transform: rotate(-12deg) scale(1.08);
+  }
+  70% {
+    transform: rotate(10deg) scale(1.06);
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+.gg-about-hero {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(120deg, #4a0014 0%, #800020 42%, #b1122d 72%, #6f001c 100%);
+  background-size: 280% 280%;
+  animation: gg-about-breathe 10s ease-in-out infinite;
+}
+
+.gg-about-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.12;
+  mix-blend-mode: overlay;
+  background-image:
+    repeating-radial-gradient(circle at 0 0, rgba(255, 255, 255, 0.07) 0, rgba(255, 255, 255, 0.07) 1px, transparent 1px, transparent 3px),
+    repeating-radial-gradient(circle at 100% 0, rgba(0, 0, 0, 0.08) 0, rgba(0, 0, 0, 0.08) 1px, transparent 1px, transparent 4px);
+  animation: gg-about-grain 850ms steps(2) infinite;
+  transform: translate3d(0, 0, 0);
+}
+
+.gg-about-spotlight {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.9;
+  mix-blend-mode: soft-light;
+  will-change: background-image;
+}
+
+.gg-about-hero-text {
+  will-change: text-shadow;
+}
+
+@keyframes gg-about-breathe {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes gg-about-grain {
+  0% {
+    transform: translate3d(-8%, -6%, 0);
+  }
+  25% {
+    transform: translate3d(6%, -4%, 0);
+  }
+  50% {
+    transform: translate3d(-3%, 7%, 0);
+  }
+  75% {
+    transform: translate3d(7%, 4%, 0);
+  }
+  100% {
+    transform: translate3d(-6%, 5%, 0);
+  }
+}
+
 /* Loading animation for meal planning components */
 @keyframes pulse-meal {
   0%, 100% {
@@ -144,4 +310,271 @@
 
 .toast-container > * {
   pointer-events: auto;
+}
+
+.benefit-card {
+  position: relative;
+  overflow: hidden;
+  transform-style: preserve-3d;
+}
+
+.benefit-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: radial-gradient(120px circle at var(--spot-x, 50%) var(--spot-y, 50%), rgba(128, 0, 32, 0.55), rgba(128, 0, 32, 0.08) 40%, rgba(128, 0, 32, 0) 70%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 220ms ease;
+  pointer-events: none;
+}
+
+.benefit-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(220px circle at var(--spot-x, 50%) var(--spot-y, 50%), rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 60%);
+  opacity: 0;
+  transition: opacity 220ms ease;
+  pointer-events: none;
+}
+
+.benefit-card:hover::before,
+.benefit-card:focus-within::before {
+  opacity: 1;
+}
+
+.benefit-card:hover::after,
+.benefit-card:focus-within::after {
+  opacity: 1;
+}
+
+.benefit-features {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-6px);
+  overflow: hidden;
+  transition: max-height 420ms ease, opacity 260ms ease, transform 420ms ease;
+}
+
+.benefit-card:hover .benefit-features,
+.benefit-card:focus-within .benefit-features {
+  max-height: 300px;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.benefit-bullet {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.benefit-bullet-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #800020;
+  display: block;
+  transition: transform 220ms ease, opacity 220ms ease, background 220ms ease;
+}
+
+.benefit-bullet-check {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1;
+  color: #10b981;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: transform 220ms ease, opacity 220ms ease;
+}
+
+.benefit-card:hover .benefit-bullet-dot,
+.benefit-card:focus-within .benefit-bullet-dot {
+  opacity: 0;
+  transform: scale(0.6);
+}
+
+.benefit-card:hover .benefit-bullet-check,
+.benefit-card:focus-within .benefit-bullet-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .benefit-features {
+    max-height: none;
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .benefit-card::before,
+  .benefit-card::after,
+  .benefit-bullet-dot,
+  .benefit-bullet-check {
+    transition: none;
+  }
+}
+
+.special-feature-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.special-feature-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(128, 0, 32, 0.0);
+  opacity: 0;
+  transition: opacity 220ms ease;
+  pointer-events: none;
+}
+
+.special-feature-card:hover::before,
+.special-feature-card:focus-within::before {
+  opacity: 1;
+  box-shadow: inset 0 0 0 1px rgba(128, 0, 32, 0.22), 0 0 0 6px rgba(128, 0, 32, 0.07);
+}
+
+.special-feature-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(120px circle at var(--ripple-x, 50%) var(--ripple-y, 50%), rgba(128, 0, 32, 0.18), rgba(128, 0, 32, 0) 70%);
+  transform: scale(0.2);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.special-feature-card.ripple-active::after {
+  animation: special-ripple 520ms ease-out;
+}
+
+@keyframes special-ripple {
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .special-feature-card::before {
+    transition: none;
+  }
+  .special-feature-card.ripple-active::after {
+    animation: none;
+  }
+}
+
+.stat-live-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: rgb(128, 0, 32);
+  margin-right: 8px;
+  vertical-align: middle;
+  animation: stat-live-pulse 1.15s ease-in-out infinite;
+}
+
+@keyframes stat-live-pulse {
+  0%,
+  100% {
+    transform: scale(0.85);
+    opacity: 0.55;
+    box-shadow: 0 0 0 0 rgba(128, 0, 32, 0.0);
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 0 0 8px rgba(128, 0, 32, 0.12);
+  }
+}
+
+.stat-card.pulse-active {
+  animation: stat-card-pulse 260ms ease-out;
+}
+
+@keyframes stat-card-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stat-live-dot {
+    animation: none;
+  }
+  .stat-card.pulse-active {
+    animation: none;
+  }
+
+  .gg-btn-shine {
+    display: none;
+  }
+
+  .gg-badge-pulse {
+    animation: none;
+  }
+  .group:hover .gg-star-twinkle {
+    animation: none;
+  }
+  .gg-btn-fill {
+    display: none;
+  }
+  .gg-cta:hover .gg-cta-icon {
+    transform: none;
+  }
+
+  .gg-about-hero {
+    animation: none;
+  }
+  .gg-about-hero::before {
+    animation: none;
+  }
+}
+
+.role-card-icon {
+  position: relative;
+  overflow: hidden;
+}
+
+.role-card-icon-shine {
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .role-card-icon-shine {
+    display: none;
+  }
 }

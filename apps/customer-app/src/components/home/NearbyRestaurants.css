@@ -64,6 +64,29 @@
   -ms-touch-action: pan-x;
 }
 
+/* Mobile snap + focus carousel */
+.mobile-carousel {
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: 16px;
+  scroll-padding-right: 16px;
+}
+
+.restaurant-card-mobile {
+  scroll-snap-align: center;
+  transform-origin: center;
+  transition: transform 220ms ease-out, opacity 220ms ease-out;
+}
+
+.restaurant-card-mobile.is-active {
+  transform: scale(1.05);
+  opacity: 1;
+}
+
+.restaurant-card-mobile.is-inactive {
+  transform: scale(0.95);
+  opacity: 0.9;
+}
+
 .unified-carousel::-webkit-scrollbar {
   display: none;
 }
@@ -205,6 +228,17 @@
   
   .unified-carousel {
     gap: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .restaurant-card-mobile {
+    transition: none;
+  }
+  .restaurant-card-mobile.is-active,
+  .restaurant-card-mobile.is-inactive {
+    transform: none;
+    opacity: 1;
   }
 }
 

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useServerData } from '../../utils/serverData';
 import { useInView } from 'react-intersection-observer';
 import { getPlatformStats } from '../../services/restaurantService';
 
-const AnimatedCounter = ({ target, duration = 2000, prefix = '', suffix = '' }) => {
+const AnimatedCounter = ({ target, duration = 1500, prefix = '', suffix = '', motionVariants }) => {
   const [count, setCount] = useState(0);
+  const shouldReduceMotion = useReducedMotion();
   const [ref, inView] = useInView({
     triggerOnce: true,
     threshold: 0.1,
@@ -13,37 +14,84 @@ const AnimatedCounter = ({ target, duration = 2000, prefix = '', suffix = '' }) 
 
   useEffect(() => {
     if (!inView) return;
-    
-    let start = 0;
-    const increment = target / (duration / 16); // 60fps
-    
-    const updateCounter = () => {
-      start += increment;
-      if (start < target) {
-        setCount(Math.ceil(start));
-        requestAnimationFrame(updateCounter);
-      } else {
-        setCount(target);
-      }
+    if (shouldReduceMotion) {
+      setCount(target);
+      return;
+    }
+
+    let rafId = 0;
+    const startTime = performance.now();
+    const safeTarget = Number.isFinite(target) ? target : 0;
+
+    const tick = (now) => {
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      const next = Math.round(safeTarget * eased);
+      setCount(next);
+      if (t < 1) rafId = requestAnimationFrame(tick);
     };
-    
-    updateCounter();
-  }, [inView, target, duration]);
+
+    rafId = requestAnimationFrame(tick);
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, [inView, target, duration, shouldReduceMotion]);
 
   return (
-    <div ref={ref} className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-grub-red">
+    <motion.div
+      ref={ref}
+      className="stat-number text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-grub-red"
+      variants={motionVariants}
+    >
       {prefix}{count.toLocaleString()}{suffix}
-    </div>
+    </motion.div>
   );
 };
 
-const StatCard = ({ title, value, description, prefix = '', suffix = '' }) => (
-  <div className="bg-white p-4 xs:p-5 sm:p-6 md:p-7 lg:p-8 rounded-lg sm:rounded-xl shadow-md text-center hover:shadow-lg transition-shadow duration-300">
-    <AnimatedCounter target={value} prefix={prefix} suffix={suffix} />
-    <h3 className="text-base xs:text-lg sm:text-xl md:text-2xl font-semibold mt-2 xs:mt-3 text-gray-800">{title}</h3>
-    <p className="text-xs xs:text-sm sm:text-base md:text-lg text-gray-600 mt-1.5 xs:mt-2">{description}</p>
-  </div>
-);
+const StatCard = ({ title, value, description, prefix = '', suffix = '', isLive }) => {
+  const shouldReduceMotion = useReducedMotion();
+  const cardVariants = {
+    rest: { y: 0 },
+    hover: { y: -8, boxShadow: '0 18px 42px rgba(0,0,0,0.12)' },
+    tap: { scale: 0.98 }
+  };
+
+  const numberVariants = {
+    rest: { scale: 1 },
+    hover: { scale: 1.2 },
+    tap: { scale: 1.06 }
+  };
+
+  const handlePointerDown = (e) => {
+    if (shouldReduceMotion) return;
+    if (e.pointerType !== 'touch') return;
+    const el = e.currentTarget;
+    el.classList.remove('pulse-active');
+    void el.offsetWidth;
+    el.classList.add('pulse-active');
+    window.setTimeout(() => el.classList.remove('pulse-active'), 260);
+  };
+
+  return (
+    <motion.div
+      className="stat-card bg-white p-4 xs:p-5 sm:p-6 md:p-7 lg:p-8 rounded-lg sm:rounded-xl shadow-md text-center transition-shadow duration-300"
+      initial="rest"
+      animate="rest"
+      whileHover={shouldReduceMotion ? undefined : 'hover'}
+      whileTap={shouldReduceMotion ? undefined : 'tap'}
+      variants={cardVariants}
+      onPointerDown={handlePointerDown}
+    >
+      <AnimatedCounter target={value} prefix={prefix} suffix={suffix} duration={1500} motionVariants={shouldReduceMotion ? undefined : numberVariants} />
+      <h3 className="text-base xs:text-lg sm:text-xl md:text-2xl font-semibold mt-2 xs:mt-3 text-gray-800">{title}</h3>
+      <p className="stat-subtext text-xs xs:text-sm sm:text-base md:text-lg text-gray-600 mt-1.5 xs:mt-2">
+        {isLive ? <span className="stat-live-dot" aria-hidden="true"></span> : null}
+        {description}
+      </p>
+    </motion.div>
+  );
+};
 
 const StatisticsSection = () => {
   // Get statistics from server data or use empty object as fallback
@@ -102,20 +150,20 @@ const StatisticsSection = () => {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 xs:gap-5 sm:gap-6 md:gap-7 lg:gap-8">
-            <div className="bg-white p-4 xs:p-5 sm:p-6 md:p-7 lg:p-8 rounded-lg sm:rounded-xl shadow-md text-center hover:shadow-lg transition-shadow duration-300">
-              <div className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-grub-red">0</div>
+            <div className="stat-card bg-white p-4 xs:p-5 sm:p-6 md:p-7 lg:p-8 rounded-lg sm:rounded-xl shadow-md text-center transition-shadow duration-300">
+              <div className="stat-number text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-grub-red">0</div>
               <h3 className="text-base xs:text-lg sm:text-xl md:text-2xl font-semibold mt-2 xs:mt-3 text-gray-800">Happy Customers</h3>
-              <p className="text-xs xs:text-sm sm:text-base md:text-lg text-gray-600 mt-1.5 xs:mt-2">and counting</p>
+              <p className="stat-subtext text-xs xs:text-sm sm:text-base md:text-lg text-gray-600 mt-1.5 xs:mt-2"><span className="stat-live-dot" aria-hidden="true"></span>and counting</p>
             </div>
-            <div className="bg-white p-4 xs:p-5 sm:p-6 md:p-7 lg:p-8 rounded-lg sm:rounded-xl shadow-md text-center hover:shadow-lg transition-shadow duration-300">
-              <div className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-grub-red">0</div>
+            <div className="stat-card bg-white p-4 xs:p-5 sm:p-6 md:p-7 lg:p-8 rounded-lg sm:rounded-xl shadow-md text-center transition-shadow duration-300">
+              <div className="stat-number text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-grub-red">0</div>
               <h3 className="text-base xs:text-lg sm:text-xl md:text-2xl font-semibold mt-2 xs:mt-3 text-gray-800">Partner Restaurants</h3>
-              <p className="text-xs xs:text-sm sm:text-base md:text-lg text-gray-600 mt-1.5 xs:mt-2">and growing</p>
+              <p className="stat-subtext text-xs xs:text-sm sm:text-base md:text-lg text-gray-600 mt-1.5 xs:mt-2"><span className="stat-live-dot" aria-hidden="true"></span>and growing</p>
             </div>
-            <div className="bg-white p-4 xs:p-5 sm:p-6 md:p-7 lg:p-8 rounded-lg sm:rounded-xl shadow-md text-center hover:shadow-lg transition-shadow duration-300">
-              <div className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-grub-red">0</div>
+            <div className="stat-card bg-white p-4 xs:p-5 sm:p-6 md:p-7 lg:p-8 rounded-lg sm:rounded-xl shadow-md text-center transition-shadow duration-300">
+              <div className="stat-number text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-grub-red">0</div>
               <h3 className="text-base xs:text-lg sm:text-xl md:text-2xl font-semibold mt-2 xs:mt-3 text-gray-800">Meals Served</h3>
-              <p className="text-xs xs:text-sm sm:text-base md:text-lg text-gray-600 mt-1.5 xs:mt-2">and many more to come</p>
+              <p className="stat-subtext text-xs xs:text-sm sm:text-base md:text-lg text-gray-600 mt-1.5 xs:mt-2">and many more to come</p>
             </div>
           </div>
         </div>
@@ -140,16 +188,19 @@ const StatisticsSection = () => {
             value={stats.totalCustomers || 0} 
             title="Happy Customers" 
             description={loading ? "Loading..." : "and counting"}
+            isLive={!loading}
           />
           <StatCard 
             value={stats.totalRestaurants || 0} 
             title="Partner Restaurants" 
             description={loading ? "Loading..." : "and growing"}
+            isLive={!loading}
           />
           <StatCard 
             value={stats.totalOrders || 0} 
             title="Meals Served" 
             description={loading ? "Loading..." : "and many more to come"}
+            isLive={false}
           />
         </div>
         {!loading && stats.dataSource && (

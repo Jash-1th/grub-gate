@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useReducedMotion } from 'framer-motion';
 import { getPopularRestaurants } from '../../services/restaurantService';
 import './NearbyRestaurants.css';
 
@@ -22,6 +23,8 @@ const NearbyRestaurants = () => {
   const [isPaused, setIsPaused] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [dragVisualState, setDragVisualState] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const shouldReduceMotion = useReducedMotion();
 
   // Fetch popular restaurants
   useEffect(() => {
@@ -114,6 +117,35 @@ const NearbyRestaurants = () => {
       }
     };
   }, [isClient, animate]);
+
+  // Track centered card (for mobile snap+grow feel)
+  useEffect(() => {
+    if (!isClient || !carouselRef.current) return;
+    const carousel = carouselRef.current;
+
+    const computeActive = () => {
+      const children = carousel.querySelectorAll('.restaurant-card-mobile');
+      if (!children || children.length === 0) return;
+      const center = carousel.scrollLeft + carousel.clientWidth / 2;
+
+      let bestIndex = 0;
+      let bestDistance = Number.POSITIVE_INFINITY;
+      children.forEach((el, idx) => {
+        const elCenter = el.offsetLeft + el.offsetWidth / 2;
+        const d = Math.abs(elCenter - center);
+        if (d < bestDistance) {
+          bestDistance = d;
+          bestIndex = idx;
+        }
+      });
+
+      setActiveIndex(bestIndex);
+    };
+
+    computeActive();
+    carousel.addEventListener('scroll', computeActive, { passive: true });
+    return () => carousel.removeEventListener('scroll', computeActive);
+  }, [isClient]);
   
   // Clear resume timeout helper
   const clearResumeTimeout = useCallback(() => {
@@ -418,7 +450,16 @@ const NearbyRestaurants = () => {
         }}
       >
         {duplicatedRestaurants.map((restaurant, index) => (
-          <div className="restaurant-card-mobile" key={`${restaurant.id}-${index}`}>
+          <div
+            className={`restaurant-card-mobile ${
+              shouldReduceMotion
+                ? ''
+                : index === activeIndex
+                  ? 'is-active'
+                  : 'is-inactive'
+            }`}
+            key={`${restaurant.id}-${index}`}
+          >
             <div className="relative overflow-hidden">
               <img 
                 src={restaurantImage} 

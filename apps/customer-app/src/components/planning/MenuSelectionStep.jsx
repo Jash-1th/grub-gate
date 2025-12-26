@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { motion, useReducedMotion } from 'framer-motion';
 import { usePlanning } from '../../contexts/PlanningContext';
 import { useMealPlan } from '../../contexts/MealPlanContext_SSR_FIXED';
 import RestaurantCard from './RestaurantCard';
@@ -9,6 +10,7 @@ import { getRestaurantsByPostalCode, getRestaurants } from '../../services/resta
 const MenuSelectionStep = ({ onNext, onBack }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const shouldReduceMotion = useReducedMotion();
   const [searchParams] = useSearchParams();
   const { postalCode, selectedPreferences, isClient } = usePlanning();
   const { addItemToPlan, removeItemFromPlan, getMealItems, isRestaurantSelected, getSelectedRestaurants } = useMealPlan();
@@ -186,7 +188,7 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
         
         {/* Restaurant Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
-          {availableRestaurants.map((restaurant) => {
+          {availableRestaurants.map((restaurant, index) => {
             const isSelected = isRestaurantSelected(restaurant.id);
             console.log('🔍 MenuSelectionStep Debug:', {
               restaurantId: restaurant.id,
@@ -198,13 +200,20 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
             });
             
             return (
-              <RestaurantCard 
+              <motion.div
                 key={restaurant.id}
-                restaurant={restaurant}
-                selectedPreferences={selectedPreferences}
-                onExplore={handleRestaurantClick}
-                isSelected={isSelected}
-              />
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 22 }}
+                whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.25 }}
+                transition={shouldReduceMotion ? undefined : { duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.1 * index }}
+              >
+                <RestaurantCard 
+                  restaurant={restaurant}
+                  selectedPreferences={selectedPreferences}
+                  onExplore={handleRestaurantClick}
+                  isSelected={isSelected}
+                />
+              </motion.div>
             );
           })}
         </div>

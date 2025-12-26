@@ -2,12 +2,13 @@ import React, { createContext, useContext, useReducer, useEffect, useRef, useSta
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
 import { getStorageItem, setStorageItem, removeStorageItem } from '../utils/ssrSafeStorage';
+import apiClient from '../api/apiClient';
 
 // SSR-safe check
 const isClient = typeof window !== 'undefined';
 
 // API endpoints for subscription meal plans
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://gg0b1.netlify.app/api/v1';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
 // Initial week plan structure
 const initialWeekPlan = {
@@ -335,21 +336,18 @@ export const SubscriptionMealPlanProvider = ({ children }) => {
     if (!isClient) return null;
     
     try {
-      const token = getStorageItem('token');
-      const response = await fetch(`${API_BASE}${endpoint}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
-          ...options.headers
-        },
-        ...options
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API call failed: ${response.statusText}`);
-      }
-      
-      return await response.json();
+      const method = (options.method || 'GET').toUpperCase();
+      const url = endpoint;
+
+      const axiosConfig = {
+        method,
+        url,
+        headers: options.headers || undefined,
+        data: options.body ? JSON.parse(options.body) : undefined
+      };
+
+      const response = await apiClient.request(axiosConfig);
+      return response.data;
     } catch (error) {
       console.error('API call error:', error);
       throw error;

@@ -19,10 +19,13 @@ const ScrollToTop = () => {
 
     // Force scroll to top immediately
     const forceScrollToTop = () => {
+      const scrollingEl = document.scrollingElement || document.documentElement;
+
       // Multiple scroll methods for maximum compatibility
       window.scrollTo(0, 0);
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
+      if (scrollingEl) scrollingEl.scrollTop = 0;
       
       // Handle any custom scroll containers
       const scrollContainers = document.querySelectorAll('main, .app-content, #root, [data-scroll="true"]');
@@ -40,10 +43,18 @@ const ScrollToTop = () => {
     forceScrollToTop();
 
     // Also execute after any potential async operations
-    const timeoutId = setTimeout(forceScrollToTop, 0);
+    const rafId1 = requestAnimationFrame(forceScrollToTop);
+    const rafId2 = requestAnimationFrame(() => requestAnimationFrame(forceScrollToTop));
+    const timeoutId0 = setTimeout(forceScrollToTop, 0);
+    const timeoutId1 = setTimeout(forceScrollToTop, 50);
+    const timeoutId2 = setTimeout(forceScrollToTop, 150);
     
     return () => {
-      clearTimeout(timeoutId);
+      cancelAnimationFrame(rafId1);
+      cancelAnimationFrame(rafId2);
+      clearTimeout(timeoutId0);
+      clearTimeout(timeoutId1);
+      clearTimeout(timeoutId2);
     };
   }, [pathname, key]); // Include key to handle same-route navigations
 

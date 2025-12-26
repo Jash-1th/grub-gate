@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useModal } from '../../context/ModalContext';
 import { usePlanning } from '../../contexts/PlanningContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -16,8 +17,70 @@ const LocationStep = ({ onNext }) => {
   const { updatePostalCode, updatePreferences } = usePlanning();
   const { isAuthenticated } = useAuth();
   const { showSuccess, showError, showInfo } = useToast();
+  const shouldReduceMotion = useReducedMotion();
   const [postalCode, setPostalCode] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [isPostalFocused, setIsPostalFocused] = useState(false);
+  const [isPostalHover, setIsPostalHover] = useState(false);
+
+  const glowOpacity = isPostalFocused ? 0.6 : isPostalHover ? 0.45 : 0.25;
+
+  const foodTiles = useMemo(
+    () => [
+      {
+        id: 'noodles',
+        src: 'https://images.unsplash.com/photo-1617093727343-374698b1b08d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+        fallback: '/images/grub-gate-default-img.jpg',
+        glow: 'from-orange-400 to-red-400',
+        alt: 'Delicious ramen bowl with soft-boiled eggs and vegetables',
+        entrance: { x: 0, y: 36 },
+        float: { y: [0, -7, 0], duration: 4.7, delay: 0.1 }
+      },
+      {
+        id: 'burger',
+        src: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+        fallback: '/images/grub-gate-default-img.jpg',
+        glow: 'from-yellow-400 to-orange-400',
+        alt: 'Gourmet burger with fresh ingredients and fries',
+        entrance: { x: 36, y: 0 },
+        float: { y: [0, -9, 0], duration: 5.3, delay: 0.7 },
+        tooltip: 'American Cuisine · 50+ Options'
+      },
+      {
+        id: 'sushi',
+        src: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+        fallback: '/images/grub-gate-default-img.jpg',
+        glow: 'from-green-400 to-teal-400',
+        alt: 'Fresh sushi platter with various rolls and sashimi',
+        entrance: { x: -36, y: 0 },
+        float: { y: [0, -6, 0], duration: 4.2, delay: 0.35 }
+      },
+      {
+        id: 'salad',
+        src: 'https://images.unsplash.com/photo-1546793665-c74683f339c1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+        fallback: '/images/grub-gate-default-img.jpg',
+        glow: 'from-emerald-400 to-green-400',
+        alt: 'Colorful Buddha bowl with avocado, vegetables, and grains',
+        entrance: { x: 0, y: -36 },
+        float: { y: [0, -8, 0], duration: 5.8, delay: 1.15 }
+      }
+    ],
+    []
+  );
+
+  const tileEntranceVariants = useMemo(() => {
+    if (shouldReduceMotion) return undefined;
+    return {
+      hidden: (c) => ({ opacity: 0, x: c.from.x, y: c.from.y, scale: 0.96 }),
+      show: (c) => ({
+        opacity: 1,
+        x: 0,
+        y: 0,
+        scale: 1,
+        transition: { duration: 0.75, ease: [0.22, 1, 0.36, 1], delay: c.delay }
+      })
+    };
+  }, [shouldReduceMotion]);
 
   const handleFindMeals = async () => {
     if (postalCode.trim()) {
@@ -94,9 +157,63 @@ const LocationStep = ({ onNext }) => {
       <section className="min-h-screen flex items-center bg-gradient-to-br from-slate-50 via-white to-red-50 relative overflow-hidden">
         {/* Background decorative elements - responsive positioning */}
         <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-10 sm:top-20 left-5 sm:left-10 w-48 h-48 sm:w-72 sm:h-72 bg-red-100 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse"></div>
-          <div className="absolute top-20 sm:top-40 right-5 sm:right-20 w-64 h-64 sm:w-96 sm:h-96 bg-orange-100 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse delay-1000"></div>
-          <div className="absolute bottom-10 sm:bottom-20 left-5 sm:left-20 w-56 h-56 sm:w-80 sm:h-80 bg-yellow-100 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse delay-2000"></div>
+          <motion.div
+            className="absolute top-10 sm:top-20 left-5 sm:left-10 w-48 h-48 sm:w-72 sm:h-72 bg-red-100 mix-blend-multiply filter blur-xl opacity-30"
+            style={{ borderRadius: '40% 60% 55% 45% / 50% 45% 55% 50%' }}
+            animate={
+              shouldReduceMotion
+                ? undefined
+                : {
+                    x: [0, 18, -10, 0],
+                    y: [0, 10, -14, 0],
+                    borderRadius: [
+                      '40% 60% 55% 45% / 50% 45% 55% 50%',
+                      '55% 45% 40% 60% / 45% 55% 45% 55%',
+                      '45% 55% 60% 40% / 55% 45% 55% 45%',
+                      '40% 60% 55% 45% / 50% 45% 55% 50%'
+                    ]
+                  }
+            }
+            transition={shouldReduceMotion ? undefined : { duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <motion.div
+            className="absolute top-20 sm:top-40 right-5 sm:right-20 w-64 h-64 sm:w-96 sm:h-96 bg-orange-100 mix-blend-multiply filter blur-xl opacity-30"
+            style={{ borderRadius: '55% 45% 50% 50% / 45% 55% 45% 55%' }}
+            animate={
+              shouldReduceMotion
+                ? undefined
+                : {
+                    x: [0, -16, 12, 0],
+                    y: [0, 14, -8, 0],
+                    borderRadius: [
+                      '55% 45% 50% 50% / 45% 55% 45% 55%',
+                      '45% 55% 60% 40% / 55% 45% 55% 45%',
+                      '60% 40% 45% 55% / 50% 45% 55% 50%',
+                      '55% 45% 50% 50% / 45% 55% 45% 55%'
+                    ]
+                  }
+            }
+            transition={shouldReduceMotion ? undefined : { duration: 22, repeat: Infinity, ease: 'easeInOut', delay: 1.2 }}
+          />
+          <motion.div
+            className="absolute bottom-10 sm:bottom-20 left-5 sm:left-20 w-56 h-56 sm:w-80 sm:h-80 bg-yellow-100 mix-blend-multiply filter blur-xl opacity-30"
+            style={{ borderRadius: '45% 55% 55% 45% / 55% 45% 55% 45%' }}
+            animate={
+              shouldReduceMotion
+                ? undefined
+                : {
+                    x: [0, 12, -18, 0],
+                    y: [0, -10, 14, 0],
+                    borderRadius: [
+                      '45% 55% 55% 45% / 55% 45% 55% 45%',
+                      '60% 40% 45% 55% / 50% 45% 55% 50%',
+                      '50% 50% 40% 60% / 45% 55% 45% 55%',
+                      '45% 55% 55% 45% / 55% 45% 55% 45%'
+                    ]
+                  }
+            }
+            transition={shouldReduceMotion ? undefined : { duration: 20, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
+          />
         </div>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-20 relative z-10">
@@ -119,15 +236,36 @@ const LocationStep = ({ onNext }) => {
               
               {/* Enhanced Postal Code Input Container - Responsive */}
               <div className="mb-6">
-                <div className="relative group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-grub-red to-orange-600 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
-                  <div className="relative backdrop-blur-sm bg-white/90 border border-white/50 rounded-2xl p-1.5 sm:p-2 shadow-2xl">
+                <div
+                  className="relative group"
+                  onMouseEnter={() => setIsPostalHover(true)}
+                  onMouseLeave={() => setIsPostalHover(false)}
+                >
+                  <motion.div
+                    className="absolute -inset-1 bg-gradient-to-r from-grub-red to-pink-500 rounded-3xl blur"
+                    animate={shouldReduceMotion ? undefined : { opacity: glowOpacity }}
+                    transition={shouldReduceMotion ? undefined : { duration: 0.25, ease: 'easeOut' }}
+                    style={{ opacity: glowOpacity }}
+                  />
+                  <motion.div
+                    className="relative backdrop-blur-sm bg-white/90 border border-white/50 rounded-2xl p-1.5 sm:p-2 shadow-2xl"
+                    animate={
+                      shouldReduceMotion
+                        ? undefined
+                        : isPostalFocused
+                          ? { boxShadow: '0 28px 80px rgba(128,0,32,0.25)' }
+                          : { boxShadow: '0 25px 60px rgba(0,0,0,0.12)' }
+                    }
+                    transition={shouldReduceMotion ? undefined : { duration: 0.25, ease: 'easeOut' }}
+                  >
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-0">
                       <input
                         type="text"
                         value={postalCode}
                         onChange={(e) => setPostalCode(e.target.value)}
                         onKeyPress={handleKeyPress}
+                        onFocus={() => setIsPostalFocused(true)}
+                        onBlur={() => setIsPostalFocused(false)}
                         placeholder={t('mealPlanning.hero.postalCodePlaceholder')}
                         className="flex-1 px-4 sm:px-6 py-3 sm:py-4 bg-transparent text-gray-900 placeholder-gray-500 border-0 focus:outline-none text-base sm:text-lg font-medium rounded-xl sm:rounded-none"
                         aria-label={t('mealPlanning.hero.postalCodeLabel')}
@@ -135,8 +273,11 @@ const LocationStep = ({ onNext }) => {
                       <button
                         onClick={handleFindMeals}
                         disabled={isSearching || !postalCode.trim()}
-                        className="px-4 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-grub-red to-red-600 text-white rounded-xl font-semibold text-sm sm:text-lg hover:from-grub-red hover:to-grub-red transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-grub-red focus:ring-offset-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 sm:mr-1 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-lg"
+                        className="relative overflow-hidden px-4 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-grub-red to-red-600 text-white rounded-xl font-semibold text-sm sm:text-lg hover:from-grub-red hover:to-grub-red transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-grub-red focus:ring-offset-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 sm:mr-1 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-lg"
                       >
+                        {!shouldReduceMotion && !isSearching && postalCode.trim() ? (
+                          <span aria-hidden="true" className="gg-btn-shine" />
+                        ) : null}
                         {isSearching ? (
                           <div className="flex items-center justify-center">
                             <svg className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-white mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -150,7 +291,7 @@ const LocationStep = ({ onNext }) => {
                         )}
                       </button>
                     </div>
-                  </div>
+                  </motion.div>
                 </div>
                 
                 {/* Use Current Location Option - Responsive */}
@@ -170,14 +311,23 @@ const LocationStep = ({ onNext }) => {
                 <div className="text-center mt-4 sm:mt-6">
                   <div className="relative inline-block group">
                     {/* Glowing background effect */}
-                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 via-purple-400 to-blue-500 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-500 group-hover:duration-200"></div>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-red-300 via-pink-300 to-red-400 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-500 group-hover:duration-200"></div>
                     
                     <button
                       onClick={handleUseCurrentLocation}
-                      className="relative inline-flex items-center text-gray-700 hover:text-white font-medium transition-all duration-300 focus:outline-none bg-white/80 hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-600 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl border border-gray-200/50 hover:border-transparent shadow-lg hover:shadow-xl transform hover:-translate-y-1 backdrop-blur-sm group text-sm sm:text-base"
+                      className="relative inline-flex items-center text-gray-700 hover:text-gray-900 font-medium transition-all duration-300 focus:outline-none bg-white/80 hover:bg-red-50 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl border border-gray-200/50 hover:border-red-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 backdrop-blur-sm group text-sm sm:text-base"
                     >
                       {/* Animated location icon */}
                       <div className="relative mr-2 sm:mr-3">
+                        {!shouldReduceMotion ? (
+                          <motion.span
+                            aria-hidden="true"
+                            className="absolute inset-0 rounded-full"
+                            style={{ border: '2px solid rgba(239, 68, 68, 0.35)' }}
+                            animate={{ scale: [1, 2.15], opacity: [0.55, 0] }}
+                            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
+                          />
+                        ) : null}
                         <svg 
                           className="w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12" 
                           fill="none" 
@@ -201,7 +351,7 @@ const LocationStep = ({ onNext }) => {
                         
                         {/* Pulsing dot effect */}
                         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full opacity-0 group-hover:opacity-100 animate-ping"></div>
+                          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 animate-ping"></div>
                         </div>
                       </div>
                       
@@ -222,69 +372,58 @@ const LocationStep = ({ onNext }) => {
             {/* Right Content - Food Images - Responsive */}
             <div className="relative mt-8 lg:mt-0 order-first lg:order-last">
               <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:gap-6 max-w-md mx-auto lg:max-w-none">
-                {/* Ramen Bowl */}
-                <div className="relative group">
-                  <div className="absolute -inset-0.5 sm:-inset-1 bg-gradient-to-r from-orange-400 to-red-400 rounded-2xl sm:rounded-3xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
-                  <div className="relative aspect-square rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                    <img 
-                      src="https://images.unsplash.com/photo-1617093727343-374698b1b08d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" 
-                      alt="Delicious ramen bowl with soft-boiled eggs and vegetables"
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      onError={(e) => {
-                        e.target.src = '/images/grub-gate-default-img.jpg';
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  </div>
-                </div>
-                
-                {/* Gourmet Burger */}
-                <div className="relative mt-4 sm:mt-8 group">
-                  <div className="absolute -inset-0.5 sm:-inset-1 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-2xl sm:rounded-3xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
-                  <div className="relative aspect-square rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                    <img 
-                      src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" 
-                      alt="Gourmet burger with fresh ingredients and fries"
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      onError={(e) => {
-                        e.target.src = '/images/grub-gate-default-img.jpg';
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  </div>
-                </div>
-                
-                {/* Sushi Platter */}
-                <div className="relative -mt-2 sm:-mt-4 group">
-                  <div className="absolute -inset-0.5 sm:-inset-1 bg-gradient-to-r from-green-400 to-teal-400 rounded-2xl sm:rounded-3xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
-                  <div className="relative aspect-square rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                    <img 
-                      src="https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" 
-                      alt="Fresh sushi platter with various rolls and sashimi"
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      onError={(e) => {
-                        e.target.src = '/images/grub-gate-default-img.jpg';
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  </div>
-                </div>
-                
-                {/* Buddha Bowl */}
-                <div className="relative mt-2 sm:mt-4 group">
-                  <div className="absolute -inset-0.5 sm:-inset-1 bg-gradient-to-r from-emerald-400 to-green-400 rounded-2xl sm:rounded-3xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
-                  <div className="relative aspect-square rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                    <img 
-                      src="https://images.unsplash.com/photo-1546793665-c74683f339c1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" 
-                      alt="Colorful Buddha bowl with avocado, vegetables, and grains"
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      onError={(e) => {
-                        e.target.src = '/images/grub-gate-default-img.jpg';
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  </div>
-                </div>
+                {foodTiles.map((tile, idx) => {
+                  const positionClass =
+                    tile.id === 'burger'
+                      ? 'mt-4 sm:mt-8'
+                      : tile.id === 'sushi'
+                        ? '-mt-2 sm:-mt-4'
+                        : tile.id === 'salad'
+                          ? 'mt-2 sm:mt-4'
+                          : '';
+
+                  return (
+                    <motion.div
+                      key={tile.id}
+                      className={`relative group ${positionClass}`}
+                      variants={tileEntranceVariants}
+                      custom={{ from: tile.entrance, delay: 0.08 * idx }}
+                      initial={shouldReduceMotion ? false : 'hidden'}
+                      whileInView={shouldReduceMotion ? undefined : 'show'}
+                      viewport={{ once: true, amount: 0.35 }}
+                    >
+                      <div className={`absolute -inset-0.5 sm:-inset-1 bg-gradient-to-r ${tile.glow} rounded-2xl sm:rounded-3xl blur opacity-20 group-hover:opacity-30 transition duration-300`}></div>
+                      <motion.div
+                        className="relative aspect-square rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-xl hover:shadow-2xl transition-all duration-300"
+                        animate={shouldReduceMotion ? undefined : { y: tile.float.y }}
+                        transition={
+                          shouldReduceMotion
+                            ? undefined
+                            : { duration: tile.float.duration, repeat: Infinity, ease: 'easeInOut', delay: tile.float.delay }
+                        }
+                        whileHover={shouldReduceMotion ? undefined : { scale: tile.id === 'burger' ? 1.1 : 1.06 }}
+                      >
+                        <motion.img
+                          src={tile.src}
+                          alt={tile.alt}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.src = tile.fallback;
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                        {tile.tooltip && !shouldReduceMotion ? (
+                          <div className="absolute left-3 bottom-3 right-3 pointer-events-none opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200">
+                            <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-white/90 backdrop-blur text-gray-900 text-xs sm:text-sm font-semibold shadow-lg">
+                              {tile.tooltip}
+                            </div>
+                          </div>
+                        ) : null}
+                      </motion.div>
+                    </motion.div>
+                  );
+                })}
               </div>
               
               {/* Enhanced floating elements - Responsive */}

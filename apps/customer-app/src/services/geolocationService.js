@@ -5,6 +5,8 @@
  * SSR-safe implementation
  */
 
+import apiClient from '../api/apiClient';
+
 class GeolocationService {
   constructor() {
     this.isClient = typeof window !== 'undefined';
@@ -78,19 +80,11 @@ class GeolocationService {
     }
 
     try {
-      const response = await fetch(`/api/v1/geocoding/reverse?lat=${lat}&lng=${lng}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+      const response = await apiClient.get('/geocoding/reverse', {
+        params: { lat, lng }
       });
 
-      if (!response.ok) {
-        throw new Error(`Reverse geocoding failed: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.data.address;
+      return response.data?.data?.address;
     } catch (error) {
       console.warn('Reverse geocoding failed:', error.message);
       // Return basic structure if reverse geocoding fails
