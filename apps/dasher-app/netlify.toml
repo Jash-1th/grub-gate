@@ -1,0 +1,17 @@
+[build]
+  # Build from monorepo root so workspace dependencies resolve correctly
+  command = "cd ../.. && npm ci && cd apps/dasher-app && npm run build"
+
+  # The publish directory is relative to the Netlify "Base directory".
+  # Set Base directory = "apps/dasher-app" in the Netlify UI.
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_VERSION = "10"
+
+# React Router (SPA) fallback so refresh on nested routes works.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

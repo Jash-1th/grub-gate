@@ -19,6 +19,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { registerDasher } from '../../api/authApi';
 import { useAuth } from '../../contexts/AuthContext';
+import Navbar from '../../components/Navbar';
+import Footer from '../../components/Footer';
 import '../../styles/auth-pages.css';
 
 const RegisterPage = () => {
@@ -818,15 +820,18 @@ const RegisterPage = () => {
   );
 
   return (
-    <div className="auth-page register-page">
-      <div className="auth-container">
-        <div className="auth-form-section full-width">
-          <div className="auth-form-wrapper">
-            {/* Logo */}
-            <div className="auth-logo">
-              <FontAwesomeIcon icon={faTruck} className="logo-icon" />
-              <h1>Become a GrubGate Dasher</h1>
-            </div>
+    <div className="min-h-screen flex flex-col bg-[#f5f5f5]">
+      <Navbar />
+      <div className="flex-1 pt-20">
+        <div className="auth-page register-page">
+          <div className="auth-container">
+            <div className="auth-form-section full-width">
+              <div className="auth-form-wrapper">
+                {/* Logo */}
+                <div className="auth-logo">
+                  <FontAwesomeIcon icon={faTruck} className="logo-icon" />
+                  <h1>Become a GrubGate Dasher</h1>
+                </div>
 
             {/* Progress Bar */}
             <div className="progress-bar">
@@ -914,10 +919,14 @@ const RegisterPage = () => {
                   </Link>
                 </p>
               </div>
-            </form>
+                </form>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 };

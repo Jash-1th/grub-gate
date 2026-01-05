@@ -1,9 +1,9 @@
 /* FILE: src/styles/auth-pages.css */
 
 :root {
-  --grub-red: #FF6B35;
-  --grub-red-dark: #E85A2A;
-  --grub-red-light: #FF8C5A;
+  --grub-red: #E63946;
+  --grub-red-dark: #D62839;
+  --grub-red-light: #FF6B75;
   --grub-dark: #1a1a1a;
   --grub-gray: #f8f9fa;
 }
@@ -24,7 +24,7 @@
   background: white;
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.18);
   position: relative;
   z-index: 1;
   animation: slideUp 0.6s ease-out;
@@ -96,7 +96,7 @@
   font-size: 3.5rem;
   color: var(--grub-red);
   margin-bottom: 0.5rem;
-  filter: drop-shadow(0 4px 8px rgba(255, 107, 53, 0.3));
+  filter: drop-shadow(0 4px 8px rgba(230, 57, 70, 0.3));
   animation: pulse 2s ease-in-out infinite;
 }
 
@@ -174,7 +174,7 @@
 .form-group select:focus {
   outline: none;
   border-color: var(--grub-red);
-  box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.15);
+  box-shadow: 0 0 0 4px rgba(230, 57, 70, 0.15);
   transform: translateY(-1px);
   transition: all 0.3s ease;
 }
@@ -269,7 +269,7 @@
   cursor: pointer;
   transition: all 0.3s ease;
   margin-top: 0.5rem;
-  box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+  box-shadow: 0 4px 15px rgba(230, 57, 70, 0.3);
   position: relative;
   overflow: hidden;
 }
@@ -291,7 +291,7 @@
 
 .submit-button:hover:not(:disabled) {
   transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+  box-shadow: 0 8px 25px rgba(230, 57, 70, 0.4);
 }
 
 .submit-button:active:not(:disabled) {
@@ -436,7 +436,7 @@
 .progress-step.active .step-number {
   background: linear-gradient(135deg, var(--grub-red) 0%, var(--grub-red-dark) 100%);
   color: white;
-  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.4);
   transform: scale(1.1);
 }
 
@@ -472,7 +472,7 @@
   background: linear-gradient(90deg, var(--grub-red) 0%, var(--grub-red-dark) 100%);
   border-radius: 10px;
   transition: width 0.5s ease;
-  box-shadow: 0 0 10px rgba(255, 107, 53, 0.5);
+  box-shadow: 0 0 10px rgba(230, 57, 70, 0.5);
 }
 
 .form-step {
@@ -533,7 +533,7 @@
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.15);
+  box-shadow: 0 2px 8px rgba(230, 57, 70, 0.15);
 }
 
 .back-button:hover,
@@ -541,7 +541,7 @@
   background: var(--grub-red);
   color: white;
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+  box-shadow: 0 4px 15px rgba(230, 57, 70, 0.3);
 }
 
 .next-button {
@@ -553,7 +553,7 @@
 .next-button:hover {
   background: linear-gradient(135deg, var(--grub-red-dark) 0%, var(--grub-red) 100%);
   border-color: var(--grub-red-dark);
-  box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+  box-shadow: 0 6px 20px rgba(230, 57, 70, 0.4);
 }
 
 /* Responsive Design */

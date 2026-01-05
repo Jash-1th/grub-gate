@@ -13,6 +13,8 @@ import {
   faClock
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../contexts/AuthContext';
+import Navbar from '../../components/Navbar';
+import Footer from '../../components/Footer';
 import '../../styles/auth-pages.css';
 
 const LoginPage = () => {
@@ -82,16 +84,19 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-container">
-        {/* Left Side - Form */}
-        <div className="auth-form-section">
-          <div className="auth-form-wrapper">
-            {/* Logo */}
-            <div className="auth-logo">
-              <FontAwesomeIcon icon={faTruck} className="logo-icon" />
-              <h1>GrubGate Dasher</h1>
-            </div>
+    <div className="min-h-screen flex flex-col bg-[#f5f5f5]">
+      <Navbar />
+      <div className="flex-1 pt-20">
+        <div className="auth-page">
+          <div className="auth-container">
+            {/* Left Side - Form */}
+            <div className="auth-form-section">
+              <div className="auth-form-wrapper">
+                {/* Logo */}
+                <div className="auth-logo">
+                  <FontAwesomeIcon icon={faTruck} className="logo-icon" />
+                  <h1>GrubGate Dasher</h1>
+                </div>
 
             {/* Welcome Text */}
             <div className="auth-header">
@@ -193,51 +198,53 @@ const LoginPage = () => {
                 </p>
               </div>
             </form>
-          </div>
-        </div>
-
-        {/* Right Side - Benefits */}
-        <div className="auth-info-section">
-          <div className="info-content">
-            <h2>Start Earning Today</h2>
-            <p className="info-subtitle">
-              Join thousands of dashers delivering happiness
-            </p>
-
-            <div className="benefits-list">
-              <div className="benefit-item">
-                <div className="benefit-icon">
-                  <FontAwesomeIcon icon={faDollarSign} />
-                </div>
-                <div className="benefit-text">
-                  <h3>Flexible Earnings</h3>
-                  <p>Earn money on your own schedule</p>
-                </div>
               </div>
+            </div>
 
-              <div className="benefit-item">
-                <div className="benefit-icon">
-                  <FontAwesomeIcon icon={faClock} />
-                </div>
-                <div className="benefit-text">
-                  <h3>Work Anytime</h3>
-                  <p>Choose when and where you deliver</p>
-                </div>
-              </div>
+            {/* Right Side - Benefits */}
+            <div className="auth-info-section">
+              <div className="info-content">
+                <h2>Start Earning Today</h2>
+                <p className="info-subtitle">Join thousands of dashers delivering happiness</p>
 
-              <div className="benefit-item">
-                <div className="benefit-icon">
-                  <FontAwesomeIcon icon={faCheckCircle} />
-                </div>
-                <div className="benefit-text">
-                  <h3>Quick Payouts</h3>
-                  <p>Get paid weekly or instantly</p>
+                <div className="benefits-list">
+                  <div className="benefit-item">
+                    <div className="benefit-icon">
+                      <FontAwesomeIcon icon={faDollarSign} />
+                    </div>
+                    <div className="benefit-text">
+                      <h3>Flexible Earnings</h3>
+                      <p>Earn money on your own schedule</p>
+                    </div>
+                  </div>
+
+                  <div className="benefit-item">
+                    <div className="benefit-icon">
+                      <FontAwesomeIcon icon={faClock} />
+                    </div>
+                    <div className="benefit-text">
+                      <h3>Work Anytime</h3>
+                      <p>Choose when and where you deliver</p>
+                    </div>
+                  </div>
+
+                  <div className="benefit-item">
+                    <div className="benefit-icon">
+                      <FontAwesomeIcon icon={faCheckCircle} />
+                    </div>
+                    <div className="benefit-text">
+                      <h3>Quick Payouts</h3>
+                      <p>Get paid weekly or instantly</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 };

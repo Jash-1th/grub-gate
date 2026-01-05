@@ -1,9 +1,15 @@
 /* FILE: src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
-  --primary-color: #FF6B35;
-  --grub-red: #FF6B35;
-  --grub-red-dark: #E85A2A;
-  --grub-red-light: #FF8C5A;
+  --primary-color: #800020;
+  --grub-red: #800020;
+  --grub-red-rgb: 128 0 32;
+  --grub-red-dark: #D62839;
+  --grub-red-dark-rgb: 214 40 57;
+  --grub-red-light: #FF6B75;
   --secondary-color: #004E89;
   --success-color: #28a745;
   --danger-color: #dc3545;
@@ -16,6 +22,10 @@
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -23,6 +33,7 @@
 }
 
 body {
+  scroll-behavior: smooth;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
