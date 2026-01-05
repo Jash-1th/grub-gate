@@ -1,10 +1,10 @@
 [build]
-  # Build from monorepo root so workspace dependencies resolve correctly
-  command = "cd ../.. && npm ci && cd apps/dasher-app && npm run build"
+  # Netlify runs the build from the repo root even when using a package directory.
+  # Install workspace deps from the repo root, then build the dasher-app workspace.
+  command = "npm ci --workspaces --include-workspace-root && npm --workspace=dasher-app run build"
 
-  # The publish directory is relative to the Netlify "Base directory".
-  # Set Base directory = "apps/dasher-app" in the Netlify UI.
-  publish = "dist"
+  # When Netlify Base directory is the repo root, publish must include the app path.
+  publish = "apps/dasher-app/dist"
 
 [build.environment]
   NODE_VERSION = "20"
