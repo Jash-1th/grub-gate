@@ -1,5 +1,5 @@
 // FILE: src/pages/auth/RegisterPage.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -27,6 +27,9 @@ const RegisterPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, updateUser, updateDasher } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
+  const isInitialStepRender = useRef(true);
+  const scrollContainerRef = useRef(null);
+  const scrollAnchorRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
@@ -83,6 +86,19 @@ const RegisterPage = () => {
       navigate('/dashboard');
     }
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    if (isInitialStepRender.current) {
+      isInitialStepRender.current = false;
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      scrollContainerRef.current?.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+      scrollAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+    });
+  }, [currentStep]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -825,7 +841,8 @@ const RegisterPage = () => {
       <div className="flex-1 pt-20">
         <div className="auth-page register-page">
           <div className="auth-container">
-            <div className="auth-form-section full-width">
+            <div ref={scrollContainerRef} className="auth-form-section full-width">
+              <div ref={scrollAnchorRef} />
               <div className="auth-form-wrapper">
                 {/* Logo */}
                 <div className="auth-logo">

@@ -148,8 +148,18 @@ function GrubRunnerLanding() {
       <Navbar />
 
       <main>
-        <section className="w-full bg-gradient-to-b from-red-50 to-white min-h-[90vh] flex flex-col justify-center items-center pt-32 pb-32 px-6">
-          <style>{`
+        <section
+          className="w-full min-h-screen flex flex-col justify-center items-center pt-28 pb-20 px-6 relative overflow-hidden"
+          style={{
+            backgroundImage: "url('/herosection-landingpage.png')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center 18%',
+            backgroundRepeat: 'no-repeat',
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/25" />
+          <div className="relative z-10 w-full">
+            <style>{`
             @keyframes grHeroFloat {
               0% { transform: translateY(0px); }
               50% { transform: translateY(-8px); }
@@ -161,11 +171,11 @@ function GrubRunnerLanding() {
           `}</style>
 
           <div className="max-w-7xl w-full">
-            <div className="text-center">
-              <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-gray-900">
-                Deliver Smart. Earn Predictably.
+            <div className="max-w-5xl ml-auto text-center">
+              <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-white drop-shadow-sm">
+                Deliver Smart.Earn Predictably.
               </h1>
-              <p className="text-xl text-gray-600 mt-6 max-w-2xl mx-auto">
+              <p className="text-xl text-white/90 mt-6 max-w-2xl mx-auto drop-shadow-sm">
                 Planned meals. Fixed routes. No chaos.
               </p>
 
@@ -185,7 +195,7 @@ function GrubRunnerLanding() {
               </div>
 
               <div className="mt-12 flex justify-center">
-                <div className="gr-hero-float rounded-2xl border border-gray-100 bg-white px-6 py-4 shadow-lg">
+                <div className="gr-hero-float rounded-2xl border border-white/30 bg-white/90 backdrop-blur px-6 py-4 shadow-lg">
                   <div className="flex items-center gap-4">
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50">
                       <CurrencyDollarIcon className="h-10 w-10 text-emerald-600" aria-hidden="true" />
@@ -197,6 +207,7 @@ function GrubRunnerLanding() {
                 </div>
               </div>
             </div>
+          </div>
           </div>
         </section>
 

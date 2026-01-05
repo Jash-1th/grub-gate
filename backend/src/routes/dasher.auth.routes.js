@@ -1,8 +1,6 @@
 // FILE: src/routes/dasher.auth.routes.js
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
-const path = require('path');
 const { authMiddleware, roleMiddleware } = require('../middlewares/auth');
 const {
   registerDasher,
@@ -12,7 +10,7 @@ const {
   toggleAvailability,
   refreshToken
 } = require('../controllers/dasher.auth.controller');
-const { upload } = require('../middlewares/upload');
+const { upload, handleUploadError } = require('../middlewares/upload');
 
 /**
  * @route   POST /api/v1/dasher/auth/register
@@ -25,7 +23,7 @@ router.post('/register', upload.fields([
   { name: 'driversLicenseBack', maxCount: 1 },
   { name: 'vehicleRegistration', maxCount: 1 },
   { name: 'insuranceDocument', maxCount: 1 }
-]), registerDasher);
+]), handleUploadError, registerDasher);
 
 /**
  * @route   POST /api/v1/dasher/auth/login
