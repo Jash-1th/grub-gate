@@ -279,27 +279,62 @@ function GrubRunnerLanding() {
               </p>
             </div>
 
-            <div className="mt-12 max-w-4xl mx-auto border border-gray-200 rounded-2xl overflow-hidden bg-white">
-              <div className="grid grid-cols-3 bg-gray-50 p-4 text-base md:text-lg font-semibold">
-                <div className="text-gray-900 text-left">Feature</div>
-                <div className="text-grub-red font-bold text-center">GrubRunners</div>
-                <div className="text-gray-500 text-center">Others</div>
+            <div className="mt-12 max-w-4xl mx-auto rounded-3xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+              {/* Desktop / Tablet */}
+              <div className="hidden sm:block">
+                <div className="grid grid-cols-3 bg-gradient-to-r from-gray-50 to-white px-6 py-5 text-sm md:text-base font-semibold">
+                  <div className="text-gray-700 text-left">Feature</div>
+                  <div className="text-grub-red font-extrabold text-center">GrubRunners</div>
+                  <div className="text-gray-500 text-center">Others</div>
+                </div>
+
+                <div className="divide-y divide-gray-100">
+                  {comparisonItems.map((row, idx) => (
+                    <div
+                      key={row.feature}
+                      className={`grid grid-cols-3 px-6 py-5 text-sm md:text-base transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'} hover:bg-gray-50`}
+                    >
+                      <div className="font-semibold text-gray-900 text-left">{row.feature}</div>
+                      <div className="flex items-center justify-center gap-3 font-semibold text-gray-900 text-center">
+                        <CheckCircleIcon className="h-6 w-6 text-emerald-600" aria-hidden="true" />
+                        <span>{row.grub}</span>
+                      </div>
+                      <div className="flex items-center justify-center gap-3 text-gray-600 text-center">
+                        <XMarkIcon className="h-6 w-6 text-gray-400" aria-hidden="true" />
+                        <span>{row.other}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <div className="divide-y divide-gray-100">
-                {comparisonItems.map((row) => (
-                  <div key={row.feature} className="grid grid-cols-3 p-4 text-base md:text-lg">
-                    <div className="font-semibold text-gray-900 text-left">{row.feature}</div>
-                    <div className="flex flex-col items-center justify-center gap-2 font-semibold text-gray-900 text-center">
-                      <CheckCircleIcon className="h-7 w-7 text-emerald-600" aria-hidden="true" />
-                      <span>{row.grub}</span>
+              {/* Mobile */}
+              <div className="sm:hidden p-4">
+                <div className="space-y-4">
+                  {comparisonItems.map((row) => (
+                    <div key={row.feature} className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+                      <div className="px-4 py-3 bg-gray-50">
+                        <div className="text-sm font-semibold text-gray-900">{row.feature}</div>
+                      </div>
+                      <div className="p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="text-xs font-semibold text-grub-red">GrubRunners</div>
+                          <div className="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-gray-900">
+                            <CheckCircleIcon className="h-5 w-5 text-emerald-600" aria-hidden="true" />
+                            <span>{row.grub}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="text-xs font-semibold text-gray-500">Others</div>
+                          <div className="flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-700">
+                            <XMarkIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                            <span>{row.other}</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex flex-col items-center justify-center gap-2 text-gray-600 text-center">
-                      <XMarkIcon className="h-7 w-7 text-gray-400" aria-hidden="true" />
-                      <span>{row.other}</span>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
