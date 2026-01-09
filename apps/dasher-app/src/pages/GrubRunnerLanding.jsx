@@ -24,17 +24,17 @@ const PackageIcon = ArchiveBoxIcon;
 const whatIsFeatures = [
   {
     title: 'Pre-planned Meals',
-    body: 'Pick up organized meal orders prepared in advance—less guesswork, smoother handoffs.',
+    body: 'Pick up organized meal orders prepared in advance. Eliminate guesswork and ensure smoother handoffs.',
     icon: PackageIcon,
   },
   {
     title: 'Fixed Delivery Waves',
-    body: 'Run deliveries in scheduled blocks with clearer timing and fewer last-minute changes.',
+    body: 'Operate during scheduled time blocks. Enjoy clearer timing with fewer last-minute changes.',
     icon: ClockIcon,
   },
   {
     title: 'No Random Orders',
-    body: 'No endless pings or chaotic routing—just a clear plan you can execute calmly.',
+    body: 'Avoid endless notifications or chaotic routing. Execute a clear, pre-assigned plan calmly.',
     icon: MapPinIcon,
   },
 ];
@@ -42,58 +42,58 @@ const whatIsFeatures = [
 const processSteps = [
   {
     title: 'Apply',
-    body: 'Create your profile and submit a quick application.',
+    body: 'Create your profile and submit a streamlined application.',
     icon: UserPlusIcon,
   },
   {
     title: 'Choose Waves',
-    body: 'Select delivery waves that fit your availability.',
+    body: 'Select delivery blocks that align with your availability.',
     icon: CalendarIcon,
   },
   {
     title: 'Pick Up & Deliver',
-    body: 'Pick up and complete scheduled drop-offs with a clear plan.',
+    body: 'Collect orders and complete scheduled drop-offs using a fixed route.',
     icon: TruckIcon,
   },
   {
     title: 'Get Paid',
-    body: 'Receive predictable earnings tied to the wave you worked.',
+    body: 'Receive transparent earnings tied directly to the deliveries and waves you complete.',
     icon: CurrencyDollarIcon,
   },
 ];
 
 const comparisonItems = [
   {
-    feature: 'Routing',
-    grub: 'Planned',
-    other: 'Random',
+    feature: 'Routing & Planning',
+    grub: 'Planned Routes',
+    other: 'Random Orders',
   },
   {
-    feature: 'Earnings',
-    grub: 'Predictable',
-    other: 'Uncertain',
+    feature: 'Earnings Structure',
+    grub: 'Predictable Earnings',
+    other: 'Unpredictable Pay',
   },
   {
-    feature: 'Pressure',
-    grub: 'Zero',
-    other: 'High',
+    feature: 'Work Environment',
+    grub: 'Time-boxed Waves',
+    other: 'High Pressure',
   },
 ];
 
 const audienceCards = [
   {
     title: 'Students',
-    body: 'Plan around class schedules by choosing waves that match your day.',
+    body: 'Organize work around class schedules by selecting specific waves that fit your day.',
     icon: CalendarIcon,
   },
   {
-    title: 'Part-time workers',
-    body: 'Pick predictable delivery blocks that complement your primary job.',
+    title: 'Part-time Workers',
+    body: 'Select predictable delivery blocks that complement your primary employment.',
     icon: ClockIcon,
   },
   {
-    title: 'Gig workers seeking stability',
-    body: 'Trade constant pings for waves, planned routes, and clearer expectations.',
+    title: 'Stability Seekers',
+    body: 'Trade constant notifications for planned routes and clearer expectations.',
     icon: ShieldCheckIcon,
   },
 ];
@@ -108,7 +108,7 @@ const requirementCards = [
     icon: DevicePhoneMobileIcon,
   },
   {
-    title: 'Vehicle',
+    title: 'Reliable Vehicle (Bike / Car / Scooter)',
     icon: TruckIcon,
   },
   {
@@ -121,22 +121,22 @@ const faqs = [
   {
     question: 'What is a Delivery Wave?',
     answer:
-      'A wave is a pre-scheduled block of time (usually lunch or dinner). Instead of waiting for random pings, you pick a wave, pick up a batch of orders, and deliver them in one go.',
+      'A wave is a pre-scheduled block of time (typically lunch or dinner). Instead of waiting for random requests, you select a wave, collect a batch of orders, and deliver them in a single sequence.',
   },
   {
     question: 'Do I need a car to be a GrubRunner?',
     answer:
-      'Not necessarily! For many campus and downtown zones, electric bikes and scooters are preferred. You just need a reliable vehicle that can carry insulated bags.',
+      'Not necessarily. In many campus and downtown zones, electric bikes and scooters are preferred. You simply need a reliable vehicle capable of carrying insulated bags.',
   },
   {
     question: 'How does payment work?',
     answer:
-      'You earn a fixed fee per delivery plus a wave bonus. Payments are processed weekly, with an option for instant cash-out for top-rated runners.',
+      'You earn a fixed fee per delivery plus a wave bonus. Payments are processed weekly, with options for instant transfer available for top-rated runners.',
   },
   {
-    question: 'Is this different from DoorDash or UberEats?',
+    question: 'Is this different from other apps?',
     answer:
-      "Yes. We don't use stressful algorithms that punish you for declining orders. You choose your waves in advance, know your route, and earn predictably.",
+      'Yes. We do not utilize algorithms that penalize you for declining orders. You select your waves in advance, know your route, and earn predictably.',
   },
 ];
 
@@ -154,6 +154,7 @@ function GrubRunnerLanding() {
             backgroundImage: "url('/herosection-landingpage.png')",
             backgroundSize: 'cover',
             backgroundPosition: 'center 18%',
+              backgroundPosition: 'center 60px',
             backgroundRepeat: 'no-repeat',
           }}
         >
@@ -171,37 +172,37 @@ function GrubRunnerLanding() {
           `}</style>
 
           <div className="max-w-7xl w-full">
-            <div className="max-w-5xl ml-auto text-center">
-              <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-white drop-shadow-sm">
-                Deliver Smart.Earn Predictably.
+            <div className="w-full max-w-xl sm:max-w-2xl lg:max-w-5xl mx-auto lg:mx-0 lg:ml-20 text-left">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl leading-[1.05] font-extrabold tracking-tight text-white drop-shadow-sm">
+                Deliver Smart. Earn Predictably. Become a GrubRunner.
               </h1>
-              <p className="text-xl text-white/90 mt-6 max-w-2xl mx-auto drop-shadow-sm">
-                Planned meals. Fixed routes. No chaos.
+              <p className="text-base sm:text-lg md:text-xl text-white/90 mt-4 sm:mt-6 max-w-2xl drop-shadow-sm">
+                Execute pre-planned delivery waves with fixed routes. No chaos. No algorithm pressure.
               </p>
 
-              <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <div className="mt-8 sm:mt-10 flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center">
                 <Link
-                  to="/register"
-                  className="bg-grub-red text-white px-8 py-4 rounded-full font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                  to="/become-a-runner"
+                  className="w-full sm:w-auto text-center bg-grub-red text-white px-8 py-4 rounded-full font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
                 >
                   Become a GrubRunner
                 </Link>
                 <a
                   href="#how-it-works"
-                  className="bg-white text-gray-700 border border-gray-200 px-8 py-4 rounded-full font-semibold hover:bg-gray-50"
+                  className="w-full sm:w-auto text-center bg-white text-gray-700 border border-gray-200 px-8 py-4 rounded-full font-semibold hover:bg-gray-50"
                 >
                   How it Works
                 </a>
               </div>
 
-              <div className="mt-12 flex justify-center">
-                <div className="gr-hero-float rounded-2xl border border-white/30 bg-white/90 backdrop-blur px-6 py-4 shadow-lg">
+              <div className="mt-10 sm:mt-12 flex justify-center sm:justify-start">
+                <div className="gr-hero-float w-full max-w-sm sm:w-auto rounded-2xl border border-white/30 bg-white/90 backdrop-blur px-5 sm:px-6 py-4 shadow-lg">
                   <div className="flex items-center gap-4">
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50">
                       <CurrencyDollarIcon className="h-10 w-10 text-emerald-600" aria-hidden="true" />
                     </div>
-                    <div className="text-base md:text-lg font-semibold text-gray-900 whitespace-nowrap">
-                      Payment Received: $120.00
+                    <div className="text-sm sm:text-base md:text-lg font-semibold text-gray-900">
+                      Weekly Earnings: $840.50
                     </div>
                   </div>
                 </div>
@@ -218,8 +219,7 @@ function GrubRunnerLanding() {
                 What is a GrubRunner?
               </h2>
               <p className="text-xl text-gray-500 max-w-2xl mx-auto">
-                GrubRunners deliver pre-planned meal drops in scheduled waves, so you can focus on safe, consistent
-                deliveries.
+                GrubRunners facilitate pre-planned meal distributions during scheduled waves, allowing for a safe and consistent delivery experience.
               </p>
             </div>
 
@@ -245,7 +245,7 @@ function GrubRunnerLanding() {
             <div className="text-center">
               <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-6">How it Works</h2>
               <p className="text-xl text-gray-500 max-w-2xl mx-auto">
-                A straightforward workflow designed for clarity—so you can deliver calmly and consistently.
+                A streamlined workflow designed for clarity—deliver calmly and consistently.
               </p>
             </div>
 
@@ -275,15 +275,15 @@ function GrubRunnerLanding() {
             <div className="text-center">
               <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-6">Comparison</h2>
               <p className="text-xl text-gray-500 max-w-2xl mx-auto">
-                GrubGate is built for calm, predictable delivery work.
+                GrubRunners is engineered for calm, predictable delivery work.
               </p>
             </div>
 
             <div className="mt-12 max-w-4xl mx-auto border border-gray-200 rounded-2xl overflow-hidden bg-white">
               <div className="grid grid-cols-3 bg-gray-50 p-4 text-base md:text-lg font-semibold">
                 <div className="text-gray-900 text-left">Feature</div>
-                <div className="text-grub-red font-bold text-center">GrubGate</div>
-                <div className="text-gray-500 text-center">Other Apps</div>
+                <div className="text-grub-red font-bold text-center">GrubRunners</div>
+                <div className="text-gray-500 text-center">Others</div>
               </div>
 
               <div className="divide-y divide-gray-100">
@@ -323,18 +323,17 @@ function GrubRunnerLanding() {
                     No Pooled Payments
                   </div>
                 </div>
-                <h3 className="mt-6 text-xl font-bold text-gray-900">Transparent payouts</h3>
+                <h3 className="mt-6 text-xl font-bold text-gray-900">Transparent Payouts</h3>
                 <p className="mt-3 text-lg text-gray-600 leading-relaxed">
-                  <span className="text-grub-red font-bold">Paid per delivery + wave</span> so you know what you’re earning
-                  before you start.
+                  Compensation is calculated per delivery and per wave. You understand your earning potential before you begin.
                 </p>
               </div>
 
               <div className="bg-white rounded-2xl p-10 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 text-center flex flex-col items-center">
                 <ClockIcon className="h-12 w-12 text-grub-red mb-6" aria-hidden="true" />
-                <h3 className="mt-6 text-xl font-bold text-gray-900">Consistent schedule</h3>
+                <h3 className="mt-6 text-xl font-bold text-gray-900">Consistent Schedule</h3>
                 <p className="mt-3 text-lg text-gray-600 leading-relaxed">
-                  Choose delivery waves that fit your day, then follow the plan—less stress, more stability.
+                  Plan your finances around dependable work blocks rather than fluctuating demand.
                 </p>
               </div>
             </div>
@@ -346,7 +345,7 @@ function GrubRunnerLanding() {
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-6">Is this for you?</h2>
               <p className="text-xl text-gray-500 max-w-2xl mx-auto">
-                A good fit if you want delivery work that feels structured, not stressful.
+                An ideal opportunity for those seeking structured, low-stress delivery work.
               </p>
             </div>
 
@@ -368,7 +367,7 @@ function GrubRunnerLanding() {
           <div className="max-w-3xl mx-auto px-6 py-24">
             <div className="text-center">
               <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-6">
-                Frequently Asked Questions
+                FAQ
               </h2>
             </div>
 
@@ -434,13 +433,13 @@ function GrubRunnerLanding() {
             <div className="bg-grub-red rounded-3xl p-12 text-center text-white relative overflow-hidden">
               <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-6">Ready to start earning?</h2>
               <p className="text-xl text-white/90 max-w-2xl mx-auto mb-8">
-                Apply in minutes, choose waves that fit your schedule, and earn predictably.
+                Apply once, then choose delivery waves that fit your schedule.
               </p>
               <Link
-                to="/register"
+                to="/become-a-runner"
                 className="bg-white text-grub-red px-10 py-4 rounded-full font-bold hover:bg-gray-100 transition-colors shadow-lg inline-flex items-center justify-center"
               >
-                Become a GrubRunner
+                Apply to Become a GrubRunner
               </Link>
             </div>
           </div>

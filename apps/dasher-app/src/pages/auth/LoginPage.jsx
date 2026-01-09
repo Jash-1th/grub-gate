@@ -78,7 +78,7 @@ const LoginPage = () => {
     const result = await login(formData.identifier, formData.password);
     
     if (result.success) {
-      console.log('✅ Dasher login successful!');
+      console.log('✅ GrubRunner login successful!');
       navigate('/dashboard');
     }
   };
@@ -95,22 +95,22 @@ const LoginPage = () => {
                 {/* Logo */}
                 <div className="auth-logo">
                   <FontAwesomeIcon icon={faTruck} className="logo-icon" />
-                  <h1>GrubGate Dasher</h1>
+                  <h1>GrubRunners</h1>
                 </div>
 
-            {/* Welcome Text */}
-            <div className="auth-header">
-              <h2>Welcome Back, Dasher!</h2>
-              <p>Sign in to start delivering and earning</p>
-            </div>
+                {/* Welcome Text */}
+                <div className="auth-header">
+                  <h2>Welcome Back, GrubRunner!</h2>
+                  <p>Sign in to start delivering and earning</p>
+                </div>
 
-            {/* Error Message */}
-            {error && (
-              <div className="error-message">
-                <FontAwesomeIcon icon={faCheckCircle} />
-                <span>{error}</span>
-              </div>
-            )}
+                {/* Error Message */}
+                {error && (
+                  <div className="error-message">
+                    <FontAwesomeIcon icon={faCheckCircle} />
+                    <span>{error}</span>
+                  </div>
+                )}
 
             {/* Login Form */}
             <form onSubmit={handleSubmit} className="auth-form">
@@ -193,7 +193,7 @@ const LoginPage = () => {
                 <p>
                   Don't have an account?{' '}
                   <Link to="/register" className="auth-link">
-                    Apply to become a Dasher
+                    Apply to become a GrubRunner
                   </Link>
                 </p>
               </div>
@@ -205,7 +205,7 @@ const LoginPage = () => {
             <div className="auth-info-section">
               <div className="info-content">
                 <h2>Start Earning Today</h2>
-                <p className="info-subtitle">Join thousands of dashers delivering happiness</p>
+                <p className="info-subtitle">Join thousands of GrubRunners delivering happiness</p>
 
                 <div className="benefits-list">
                   <div className="benefit-item">

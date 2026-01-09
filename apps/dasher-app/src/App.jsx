@@ -55,7 +55,7 @@ const RegistrationSuccess = () => (
 
 const Dashboard = () => (
   <div style={{ padding: '2rem' }}>
-    <h1>Dasher Dashboard</h1>
+    <h1>GrubRunner Dashboard</h1>
     <p>Welcome to your dashboard!</p>
   </div>
 );

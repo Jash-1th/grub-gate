@@ -847,7 +847,7 @@ const RegisterPage = () => {
                 {/* Logo */}
                 <div className="auth-logo">
                   <FontAwesomeIcon icon={faTruck} className="logo-icon" />
-                  <h1>Become a GrubGate Dasher</h1>
+                  <h1>Become a GrubRunner</h1>
                 </div>
 
             {/* Progress Bar */}
