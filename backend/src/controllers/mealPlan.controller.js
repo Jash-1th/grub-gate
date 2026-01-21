@@ -3,6 +3,10 @@ const MealPlan = require('../models/MealPlan');
 const { successResponse, errorResponse, notFoundResponse } = require('../utils/apiResponse');
 const { addDatesToMealPlan, needsDateRecalculation } = require('../utils/mealPlanDateCalculator');
 
+ const getMaxRestaurantsForUser = (user) => {
+   return user?.isGrubPass ? null : 2;
+ };
+
 /**
  * Clean individual meal items by keeping all necessary fields
  * @param {Array} mealItems - Array of meal items
@@ -98,7 +102,7 @@ const cleanMealPlanResponse = (mealPlan) => {
     totalItems: mealPlan.totalItems || 0,
     // Multi-restaurant support
     selectedRestaurants: mealPlan.selectedRestaurants || [],
-    maxRestaurants: mealPlan.maxRestaurants || 2,
+    maxRestaurants: mealPlan.maxRestaurants === undefined ? 2 : mealPlan.maxRestaurants,
     // Legacy fields for backward compatibility
     selectedRestaurantId: mealPlan.selectedRestaurants?.[0]?.restaurantId || null,
     selectedRestaurantName: mealPlan.selectedRestaurants?.[0]?.restaurantName || null,
@@ -154,6 +158,8 @@ const getMealPlan = asyncHandler(async (req, res) => {
   // Handle both /me and /:userId routes
   const userId = req.params.userId || req.user.id;
 
+  const maxRestaurants = getMaxRestaurantsForUser(req.user);
+
   // Ensure user can only access their own meal plan
   if (req.user.id !== userId) {
     return errorResponse(res, 'Access denied', 403);
@@ -174,7 +180,7 @@ const getMealPlan = asyncHandler(async (req, res) => {
       },
       totalItems: 0,
       selectedRestaurants: [],
-      maxRestaurants: 2,
+      maxRestaurants,
       // Legacy fields for backward compatibility
       selectedRestaurantId: null,
       selectedRestaurantName: null,
@@ -232,12 +238,13 @@ const createOrUpdateMealPlan = asyncHandler(async (req, res) => {
     totalItems, 
     // Multi-restaurant support
     selectedRestaurants,
-    maxRestaurants = 2,
     // Legacy fields for backward compatibility
     selectedRestaurantId, 
     selectedRestaurantName, 
     selectedRestaurantData 
   } = req.body;
+
+  const maxRestaurants = getMaxRestaurantsForUser(req.user);
 
   // Ensure user can only update their own meal plan
   if (req.user.id !== userId) {
@@ -247,6 +254,10 @@ const createOrUpdateMealPlan = asyncHandler(async (req, res) => {
   // Validate required fields
   if (!userId || !weeklyPlans) {
     return errorResponse(res, 'User ID and weekly plans are required', 400);
+  }
+
+  if (!req.user?.isGrubPass && Array.isArray(selectedRestaurants) && selectedRestaurants.length > 2) {
+    return errorResponse(res, 'Maximum 2 restaurants allowed per meal plan', 400);
   }
 
   // Find existing meal plan or create new one
@@ -283,7 +294,7 @@ const createOrUpdateMealPlan = asyncHandler(async (req, res) => {
     totalItems: totalItems || 0,
     // Multi-restaurant support
     selectedRestaurants: selectedRestaurants || [],
-    maxRestaurants: maxRestaurants || 2,
+    maxRestaurants,
     // Legacy fields for backward compatibility
     selectedRestaurantId: selectedRestaurantId || null,
     selectedRestaurantName: selectedRestaurantName || null,
@@ -308,9 +319,7 @@ const createOrUpdateMealPlan = asyncHandler(async (req, res) => {
     if (selectedRestaurants !== undefined) {
       mealPlan.selectedRestaurants = selectedRestaurants;
     }
-    if (maxRestaurants !== undefined) {
-      mealPlan.maxRestaurants = maxRestaurants;
-    }
+    mealPlan.maxRestaurants = maxRestaurants;
     if (selectedRestaurantId !== undefined) {
       mealPlan.selectedRestaurantId = selectedRestaurantId;
     }
@@ -614,6 +623,9 @@ const addSelectedRestaurant = asyncHandler(async (req, res) => {
     console.log('❌ Backend: No userId found in req.user');
     return errorResponse(res, 'User ID not found in request. Please ensure you are authenticated.', 400);
   }
+
+  const maxRestaurants = getMaxRestaurantsForUser(req.user);
+
   let mealPlan = await MealPlan.findOne({ userId });
   
   if (!mealPlan) {
@@ -642,9 +654,11 @@ const addSelectedRestaurant = asyncHandler(async (req, res) => {
       },
       totalItems: 0,
       selectedRestaurants: [],
-      maxRestaurants: 2
+      maxRestaurants
     });
   }
+
+  mealPlan.maxRestaurants = maxRestaurants;
   
   // Initialize selectedRestaurants if it doesn't exist
   if (!mealPlan.selectedRestaurants) {
@@ -665,7 +679,7 @@ const addSelectedRestaurant = asyncHandler(async (req, res) => {
     };
   } else {
     // Check max limit
-    if (mealPlan.selectedRestaurants.length >= 2) {
+    if (maxRestaurants !== null && maxRestaurants !== undefined && mealPlan.selectedRestaurants.length >= maxRestaurants) {
       return errorResponse(res, 'Maximum 2 restaurants can be selected', 400);
     }
     // Add new restaurant

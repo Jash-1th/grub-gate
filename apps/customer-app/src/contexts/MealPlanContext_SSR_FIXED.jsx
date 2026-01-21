@@ -58,7 +58,7 @@ const getInitialState = () => {
           weeklyPlans: savedWeeklyPlans.weeklyPlans,
           totalItems: savedWeeklyPlans.totalItems || 0,
           selectedRestaurants: savedWeeklyPlans.selectedRestaurants || [],
-          maxRestaurants: savedWeeklyPlans.maxRestaurants || 2,
+          maxRestaurants: savedWeeklyPlans.maxRestaurants === undefined ? 2 : savedWeeklyPlans.maxRestaurants,
           // Update legacy fields from first restaurant for backward compatibility
           selectedRestaurantId: savedWeeklyPlans.selectedRestaurants?.[0]?.restaurantId || null,
           selectedRestaurantName: savedWeeklyPlans.selectedRestaurants?.[0]?.restaurantName || null,
@@ -105,6 +105,7 @@ const MEAL_PLAN_ACTIONS = {
   REMOVE_ITEM_FROM_WEEK: 'REMOVE_ITEM_FROM_WEEK',
   CLEAR_WEEK: 'CLEAR_WEEK',
   SET_LOADED_FROM_DATABASE: 'SET_LOADED_FROM_DATABASE',
+  SET_MAX_RESTAURANTS: 'SET_MAX_RESTAURANTS',
   // Multi-restaurant actions
   ADD_SELECTED_RESTAURANT: 'ADD_SELECTED_RESTAURANT',
   REMOVE_SELECTED_RESTAURANT: 'REMOVE_SELECTED_RESTAURANT',
@@ -306,6 +307,15 @@ const mealPlanReducer = (state, action) => {
       };
     }
 
+    case MEAL_PLAN_ACTIONS.SET_MAX_RESTAURANTS: {
+      const { maxRestaurants } = action.payload;
+      console.log('🔄 SET_MAX_RESTAURANTS:', maxRestaurants);
+      return {
+        ...state,
+        maxRestaurants
+      };
+    }
+
     case MEAL_PLAN_ACTIONS.ADD_SELECTED_RESTAURANT: {
       const { restaurantId, restaurantName, restaurantData } = action.payload;
       console.log('🔄 ADD_SELECTED_RESTAURANT:', { restaurantId, restaurantName });
@@ -318,7 +328,7 @@ const mealPlanReducer = (state, action) => {
       }
       
       // Check max restaurants limit
-      if (state.selectedRestaurants.length >= state.maxRestaurants) {
+      if (state.maxRestaurants !== null && state.maxRestaurants !== undefined && state.selectedRestaurants.length >= state.maxRestaurants) {
         console.log('⚠️ Maximum restaurants limit reached');
         return state;
       }
@@ -447,7 +457,7 @@ const mealPlanReducer = (state, action) => {
         totalItems: totalItems,
         // Multi-restaurant support
         selectedRestaurants: databaseData.selectedRestaurants || [],
-        maxRestaurants: databaseData.maxRestaurants || 2,
+        maxRestaurants: databaseData.maxRestaurants === undefined ? 2 : databaseData.maxRestaurants,
         // Legacy fields for backward compatibility
         selectedRestaurantId: databaseData.selectedRestaurantId || null,
         selectedRestaurantName: databaseData.selectedRestaurantName || null,
@@ -489,6 +499,18 @@ export const MealPlanProvider = ({ children }) => {
   console.log('🎯 DEBUG: isClient:', isClient);
   console.log('🎯 DEBUG: isLoading:', isLoading);
   console.log('🎯 DEBUG: isAuthenticated:', isAuthenticated);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+
+    const desiredMaxRestaurants = user.isGrubPass ? null : 2;
+    if (state.maxRestaurants === desiredMaxRestaurants) return;
+
+    dispatch({
+      type: MEAL_PLAN_ACTIONS.SET_MAX_RESTAURANTS,
+      payload: { maxRestaurants: desiredMaxRestaurants }
+    });
+  }, [isAuthenticated, user, state.maxRestaurants]);
 
   // SSR Safety - sync with database on mount
   useEffect(() => {
@@ -651,7 +673,7 @@ export const MealPlanProvider = ({ children }) => {
         weeklyPlans: mealPlanData.weeklyPlans || state.weeklyPlans,
         totalItems: mealPlanData.totalItems || state.totalItems,
         selectedRestaurants: cleanedSelectedRestaurants,
-        maxRestaurants: mealPlanData.maxRestaurants || state.maxRestaurants,
+        maxRestaurants: mealPlanData.maxRestaurants === undefined ? state.maxRestaurants : mealPlanData.maxRestaurants,
         selectedRestaurantId: state.selectedRestaurantId,
         selectedRestaurantName: state.selectedRestaurantName,
         selectedRestaurantData: state.selectedRestaurantData
@@ -1101,7 +1123,7 @@ export const MealPlanProvider = ({ children }) => {
     }
     
     // Check max restaurants limit
-    if (state.selectedRestaurants.length >= state.maxRestaurants) {
+    if (state.maxRestaurants !== null && state.maxRestaurants !== undefined && state.selectedRestaurants.length >= state.maxRestaurants) {
       console.log('⚠️ Maximum restaurants limit reached');
       return false;
     }
@@ -1148,6 +1170,7 @@ export const MealPlanProvider = ({ children }) => {
   };
 
   const canAddRestaurant = () => {
+    if (state.maxRestaurants === null || state.maxRestaurants === undefined) return true;
     return state.selectedRestaurants.length < state.maxRestaurants;
   };
 

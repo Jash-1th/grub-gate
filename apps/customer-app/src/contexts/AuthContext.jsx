@@ -134,10 +134,30 @@ export const AuthProvider = ({ children }) => {
       try {
         const parsedUser = typeof user === 'string' ? JSON.parse(user) : user;
         console.log('✅ AuthContext: Restoring auth state for user:', parsedUser);
-        dispatch({
-          type: AUTH_ACTIONS.SET_USER,
-          payload: { user: parsedUser, token },
-        });
+
+        (async () => {
+          try {
+            const meRes = await apiClient.get('/auth/me');
+            const fullUser = meRes?.data?.data?.user;
+            if (fullUser) {
+              setStorageItem('user', fullUser);
+              dispatch({
+                type: AUTH_ACTIONS.SET_USER,
+                payload: { user: fullUser, token },
+              });
+              return;
+            }
+          } catch (e) {
+            console.error('❌ AuthContext: Failed to refresh /auth/me on restore:', e);
+          }
+
+          dispatch({
+            type: AUTH_ACTIONS.SET_USER,
+            payload: { user: parsedUser, token },
+          });
+        })();
+
+        return;
       } catch (error) {
         console.error('❌ AuthContext: Error parsing stored user data:', error);
         removeStorageItem('authToken');
@@ -212,13 +232,25 @@ export const AuthProvider = ({ children }) => {
         password,
       });
 
-      const { accessToken, user } = response.data.data;
+      const { accessToken, user: loginUser } = response.data.data;
 
-      console.log('🔐 AuthContext: Received login response:', { accessToken: accessToken ? '***' : null, user });
+      console.log('🔐 AuthContext: Received login response:', { accessToken: accessToken ? '***' : null, user: loginUser });
 
       // Store in localStorage
       const tokenSaved = setStorageItem('authToken', accessToken);
-      const userSaved = setStorageItem('user', user);
+
+      let userToStore = loginUser;
+      try {
+        const meRes = await apiClient.get('/auth/me');
+        const fullUser = meRes?.data?.data?.user;
+        if (fullUser) {
+          userToStore = fullUser;
+        }
+      } catch (e) {
+        console.error('❌ AuthContext: Failed to fetch /auth/me after login:', e);
+      }
+
+      const userSaved = setStorageItem('user', userToStore);
       
       console.log('💾 AuthContext: Token saved to localStorage:', tokenSaved);
       console.log('💾 AuthContext: User saved to localStorage:', userSaved);
@@ -231,10 +263,10 @@ export const AuthProvider = ({ children }) => {
 
       dispatch({
         type: AUTH_ACTIONS.LOGIN_SUCCESS,
-        payload: { user, token: accessToken },
+        payload: { user: userToStore, token: accessToken },
       });
 
-      console.log('✅ AuthContext: Login successful, user:', user);
+      console.log('✅ AuthContext: Login successful, user:', userToStore);
       console.log('✅ AuthContext: Token stored:', accessToken);
 
       // Request notification permission after successful login
@@ -288,7 +320,7 @@ export const AuthProvider = ({ children }) => {
         removeStorageItem('loginInProgress');
       }
 
-      return { success: true, user };
+      return { success: true, user: userToStore };
     } catch (error) {
       let errorMessage = 'Invalid credentials. Please try again.';
       let fieldErrors = {};

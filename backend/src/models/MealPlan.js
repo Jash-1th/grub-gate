@@ -79,7 +79,6 @@ const mealPlanSchema = new mongoose.Schema({
   maxRestaurants: {
     type: Number,
     default: 2,
-    max: [2, 'Maximum 2 restaurants allowed'],
     min: [0, 'Cannot have negative restaurants']
   },
   // Date calculation tracking
@@ -98,7 +97,7 @@ const mealPlanSchema = new mongoose.Schema({
 
 // Pre-save validation for restaurant limit
 mealPlanSchema.pre('save', function(next) {
-  if (this.selectedRestaurants.length > this.maxRestaurants) {
+  if (this.maxRestaurants !== null && this.maxRestaurants !== undefined && this.selectedRestaurants.length > this.maxRestaurants) {
     return next(new Error(`Maximum ${this.maxRestaurants} restaurants allowed`));
   }
   next();
@@ -121,7 +120,7 @@ mealPlanSchema.methods.addRestaurant = function(restaurantId, restaurantName) {
     throw new Error('Restaurant already selected');
   }
   
-  if (this.selectedRestaurants.length >= this.maxRestaurants) {
+  if (this.maxRestaurants !== null && this.maxRestaurants !== undefined && this.selectedRestaurants.length >= this.maxRestaurants) {
     throw new Error(`Maximum ${this.maxRestaurants} restaurants allowed`);
   }
   

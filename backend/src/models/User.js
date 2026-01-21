@@ -59,6 +59,10 @@ const userSchema = new mongoose.Schema({
     default: ['customer'],
     required: true
   },
+  isGrubPass: {
+    type: Boolean,
+    default: false
+  },
   status: {
     type: String,
     enum: ['active', 'inactive', 'suspended'],

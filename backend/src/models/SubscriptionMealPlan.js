@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { findSubscriptionDayForDate, getNextSunday, getSubscriptionStartSunday, getWeekDateRange } = require('../utils/dateHelpers');
+const User = require('./User');
 
 // Individual meal item schema
 const mealItemSchema = new mongoose.Schema({
@@ -177,7 +178,6 @@ const subscriptionMealPlanSchema = new mongoose.Schema({
   maxRestaurants: {
     type: Number,
     default: 2,
-    max: [2, 'Maximum 2 restaurants allowed'],
     min: [1, 'At least 1 restaurant required']
   },
   subscriptionId: {
@@ -568,6 +568,9 @@ subscriptionMealPlanSchema.statics.findOrCreateForUser = async function(userId, 
     subscriptionId: subscriptionId,
     status: 'active'
   });
+
+  const user = await User.findById(userId).select('isGrubPass');
+  const maxRestaurants = user?.isGrubPass ? null : 2;
   
   if (!mealPlan) {
     // Calculate plan dates based on type - FIXED: Use proper subscription start calculation
@@ -625,7 +628,7 @@ subscriptionMealPlanSchema.statics.findOrCreateForUser = async function(userId, 
     
     // Ensure restaurants is an array and validate max 2 restaurants
     const restaurantsArray = Array.isArray(restaurants) ? restaurants : [restaurants];
-    if (restaurantsArray.length > 2) {
+    if (!user?.isGrubPass && restaurantsArray.length > 2) {
       throw new Error('Maximum 2 restaurants allowed per meal plan');
     }
     
@@ -641,6 +644,7 @@ subscriptionMealPlanSchema.statics.findOrCreateForUser = async function(userId, 
     mealPlan = new this({
       customerId: userId,
       restaurants: formattedRestaurants,
+      maxRestaurants,
       subscriptionId: subscriptionId,
       planType: planType,
       planStartDate: startDate,
@@ -659,6 +663,8 @@ subscriptionMealPlanSchema.statics.findOrCreateForUser = async function(userId, 
     });
     
     await mealPlan.save();
+  } else {
+    mealPlan.maxRestaurants = maxRestaurants;
   }
   
   return mealPlan;

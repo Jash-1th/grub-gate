@@ -17,7 +17,7 @@ const DayMealPlanPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const week = parseInt(searchParams.get('week')) || 0; // Default to current week
-  const { getWeekMealItems, removeItemFromPlanWeek, getRestaurantsInAllWeeks, getRestaurantsInWeekPlan, getRestaurantIdsInWeekPlan, getRestaurantIdsInAllWeeks, selectedRestaurants, isLoading } = useMealPlan();
+  const { getWeekMealItems, removeItemFromPlanWeek, getRestaurantsInAllWeeks, getRestaurantsInWeekPlan, getRestaurantIdsInWeekPlan, getRestaurantIdsInAllWeeks, selectedRestaurants, setSelectedRestaurant, isLoading } = useMealPlan();
   const { showMealPlanSuccess } = useToast();
   const { postalCode, selectedRestaurant: planningSelectedRestaurant } = usePlanning();
   const { isAuthenticated, user } = useAuth();
@@ -185,8 +185,8 @@ const DayMealPlanPage = () => {
         existingRestaurant: selectedRestaurants[0] 
       });
       setShowRestaurantContinueModal(true);
-    } else if (selectedRestaurantsCount === 2) {
-      // User has 2 restaurants - show choice modal
+    } else if (selectedRestaurantsCount >= 2) {
+      // User has 2+ restaurants - show choice modal
       setChoiceModalData({ 
         day, 
         mealType: selectedMealType, 
@@ -244,17 +244,33 @@ const DayMealPlanPage = () => {
   };
 
   // Restaurant Choice Modal handlers
-  const handleChooseRestaurant = (restaurant) => {
+  const handleChooseRestaurant = async (restaurant) => {
     console.log('🎯 handleChooseRestaurant called:', restaurant);
     
     // Close modal
     setShowRestaurantChoiceModal(false);
     const modalData = choiceModalData;
     setChoiceModalData(null);
+
+    const restaurantId = restaurant?.restaurantId || restaurant?.id;
+    const restaurantName = restaurant?.restaurantName || restaurant?.name;
+    if (restaurantId && restaurantName) {
+      try {
+        await setSelectedRestaurant({
+          id: restaurantId,
+          name: restaurantName,
+          cuisine: restaurant?.cuisine,
+          rating: restaurant?.rating,
+          image: restaurant?.image,
+          isApiRestaurant: true
+        });
+      } catch (e) {
+        console.error('❌ Failed to persist selected restaurant:', e);
+      }
+    }
     
     // Navigate to the chosen restaurant with day/slot context
     if (modalData && restaurant) {
-      const restaurantId = restaurant.restaurantId || restaurant.id;
       const navigationUrl = `/restaurant/${restaurantId}?day=${modalData.day}&slot=${modalData.mealType}&week=${modalData.week}&userType=normal&source=daily-meal-plan`;
       console.log('🎯 Navigating to chosen restaurant:', navigationUrl);
       navigate(navigationUrl);

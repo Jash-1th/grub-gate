@@ -633,6 +633,13 @@ const createSubscriptionFromMealPlan = async (req, res) => {
         message: 'No restaurants found in your meal plan. Please ensure your meals have restaurant information.'
       });
     }
+
+    if (!req.user?.isGrubPass && restaurantList.length > 2) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Maximum 2 restaurants allowed per meal plan'
+      });
+    }
     
     console.log(`📊 Found ${restaurantList.length} restaurants in meal plan:`, restaurantList.map(r => r.name));
 

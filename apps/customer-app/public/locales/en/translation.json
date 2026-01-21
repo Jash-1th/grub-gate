@@ -858,6 +858,7 @@
     "clickEmptySlot": "Click any empty slot to add meals",
     "loading": "Loading...",
     "addRestaurant": "Add Restaurant",
+    "getGrubPass": "More restaurants • Grub Pass",
     "changeRestaurant": "Change Restaurant",
     "clearAllFrom": "Clear All from {{week}}",
     "week1Menu": "Week 1 Menu",

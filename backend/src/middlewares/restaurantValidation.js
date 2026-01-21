@@ -159,7 +159,7 @@ const validateMultiRestaurantSelection = async (req, res, next) => {
     }
 
     // Validate maximum restaurants limit (2 restaurants)
-    if (restaurantIds && restaurantIds.length > 2) {
+    if (!user.isGrubPass && restaurantIds && restaurantIds.length > 2) {
       return errorResponse(res, 'Maximum 2 restaurants allowed per meal plan', 400);
     }
 

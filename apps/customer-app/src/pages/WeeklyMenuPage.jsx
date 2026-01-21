@@ -11,6 +11,7 @@ import RestaurantSwitchModal from '../components/modals/RestaurantSwitchModal';
 import RestaurantContinueModal from '../components/modals/RestaurantContinueModal';
 import RestaurantChoiceModal from '../components/modals/RestaurantChoiceModal';
 import RestaurantReplacementModal from '../components/modals/RestaurantReplacementModal';
+import SelectedRestaurantsModal from '../components/modals/SelectedRestaurantsModal';
 import mealCalendarApi from '../api/mealCalendarApi';
 
 // Enhanced Meal Slot Component with more features
@@ -231,6 +232,7 @@ const WeeklyMenuPage = () => {
   const { showError, showSuccess, showInfo } = useToast();
   const { postalCode, selectedRestaurant: planningSelectedRestaurant, updateSelectedRestaurant } = usePlanning();
   const { isAuthenticated, user } = useAuth();
+  const [showSelectedRestaurantsModal, setShowSelectedRestaurantsModal] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState(() => {
     const weekParam = parseInt(searchParams.get('week') || '0', 10);
@@ -593,6 +595,21 @@ const WeeklyMenuPage = () => {
     
     const selectedRestaurantsCount = getSelectedRestaurantCount();
     const allSelectedRestaurants = getSelectedRestaurants();
+
+    if (user?.isGrubPass) {
+      if (selectedRestaurantsCount === 0) {
+        const postalParam = postalCode ? `&postal=${postalCode}` : '';
+        navigate(`/plan/restaurants?source=plan${postalParam}`);
+        return;
+      }
+
+      setReplacementModalData({
+        selectedRestaurants: allSelectedRestaurants,
+        newRestaurant: null
+      });
+      setShowRestaurantReplacementModal(true);
+      return;
+    }
     
     // Check if user is normal and has restaurants selected
     const userType = user?.userType || 'normal';
@@ -651,8 +668,8 @@ const WeeklyMenuPage = () => {
       // User has 1 restaurant - show continue modal
       setContinueModalData({ day, mealType, week: selectedWeek, existingRestaurant: selectedRestaurant });
       setShowRestaurantContinueModal(true);
-    } else if (selectedRestaurantsCount === 2) {
-      // User has 2 restaurants - show choice modal
+    } else if (selectedRestaurantsCount >= 2) {
+      // User has 2+ restaurants - show choice modal
       setChoiceModalData({ day, mealType, week: selectedWeek, restaurants: allSelectedRestaurants });
       setShowRestaurantChoiceModal(true);
     }
@@ -710,17 +727,33 @@ const WeeklyMenuPage = () => {
   };
 
   // Restaurant Choice Modal handlers (for 2 restaurants)
-  const handleSelectRestaurantFromChoice = (selectedRestaurant) => {
+  const handleSelectRestaurantFromChoice = async (selectedRestaurant) => {
     console.log('🎯 handleSelectRestaurantFromChoice called:', selectedRestaurant);
     
     // Close modal
     setShowRestaurantChoiceModal(false);
     const modalData = choiceModalData;
     setChoiceModalData(null);
+
+    const restaurantId = selectedRestaurant.restaurantId || selectedRestaurant.id;
+    const restaurantName = selectedRestaurant.restaurantName || selectedRestaurant.name;
+    if (restaurantId && restaurantName) {
+      try {
+        await setSelectedRestaurant({
+          id: restaurantId,
+          name: restaurantName,
+          cuisine: selectedRestaurant.cuisine,
+          rating: selectedRestaurant.rating,
+          image: selectedRestaurant.image,
+          isApiRestaurant: true
+        });
+      } catch (e) {
+        console.error('❌ Failed to persist selected restaurant:', e);
+      }
+    }
     
     // Navigate to the selected restaurant with day/slot context
-    if (modalData && selectedRestaurant) {
-      const restaurantId = selectedRestaurant.restaurantId || selectedRestaurant.id;
+    if (modalData?.day && modalData?.mealType && selectedRestaurant) {
       const navigationUrl = `/restaurant/${restaurantId}?day=${modalData.day}&slot=${modalData.mealType}&week=${modalData.week}&userType=normal&source=weekly-menu`;
       console.log('🎯 Navigating to chosen restaurant:', navigationUrl);
       navigate(navigationUrl);
@@ -1145,18 +1178,29 @@ const WeeklyMenuPage = () => {
                       {/* Restaurant Names - Mobile Optimized */}
                       <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">
                         <span className="block sm:inline">{t('weeklyMenu.planningMealsFrom')}</span>
-                        <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0 sm:inline-flex">
-                          {currentRestaurants.map((restaurant, index) => (
-                            <span key={index} className="inline-flex items-center">
-                              <span className="inline-flex items-center px-2 sm:px-3 py-1 bg-gradient-to-r from-grub-red to-red-600 text-white text-xs sm:text-sm font-medium rounded-full shadow-sm">
-                                {restaurant}
+                        {user?.isGrubPass ? (
+                          <div className="mt-2 sm:mt-0 sm:ml-2 inline-flex">
+                            <button
+                              onClick={() => setShowSelectedRestaurantsModal(true)}
+                              className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors text-xs sm:text-sm font-semibold border border-gray-200"
+                            >
+                              Selected Restaurants
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0 sm:inline-flex">
+                            {currentRestaurants.map((restaurant, index) => (
+                              <span key={index} className="inline-flex items-center">
+                                <span className="inline-flex items-center px-2 sm:px-3 py-1 bg-gradient-to-r from-grub-red to-red-600 text-white text-xs sm:text-sm font-medium rounded-full shadow-sm">
+                                  {restaurant}
+                                </span>
+                                {index < currentRestaurants.length - 1 && (
+                                  <span className="text-gray-500 mx-1">&</span>
+                                )}
                               </span>
-                              {index < currentRestaurants.length - 1 && (
-                                <span className="text-gray-500 mx-1">&</span>
-                              )}
-                            </span>
-                          ))}
-                        </div>
+                            ))}
+                          </div>
+                        )}
                       </h3>
                       <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm md:text-base text-gray-600 mt-1">
                         <span>{t('weeklyMenu.clickEmptySlot')}</span>
@@ -1181,7 +1225,7 @@ const WeeklyMenuPage = () => {
                   </div>
                 ) : selectedRestaurant ? (
                   <>
-                    {getSelectedRestaurantCount() < 2 && (
+                    {user?.isGrubPass || getSelectedRestaurantCount() < 2 ? (
                       <button
                         onClick={handleAddRestaurant}
                         className="px-4 py-3 bg-grub-red text-white rounded-xl hover:bg-red-700 transition-colors text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 touch-manipulation"
@@ -1191,6 +1235,20 @@ const WeeklyMenuPage = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                           </svg>
                           <span>{t('weeklyMenu.addRestaurant')}</span>
+                        </div>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {}}
+                        className="relative overflow-hidden px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-md hover:shadow-lg transition-all duration-200 touch-manipulation"
+                      >
+                        <div className="absolute inset-0 opacity-20 bg-gradient-to-r from-white/10 to-white/0" />
+                        <div className="relative flex items-center justify-center space-x-2">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-3.314 0-6 2.686-6 6v2a2 2 0 002 2h8a2 2 0 002-2v-2c0-3.314-2.686-6-6-6zm0 0V6a2 2 0 10-4 0v2m4 0V6a2 2 0 114 0v2" />
+                          </svg>
+                          <span>{t('weeklyMenu.getGrubPass')}</span>
                         </div>
                       </button>
                     )}
@@ -1597,6 +1655,7 @@ const WeeklyMenuPage = () => {
         selectedRestaurants={replacementModalData?.selectedRestaurants || []}
         newRestaurant={replacementModalData?.newRestaurant}
         getItemCountForRestaurant={getItemCountForRestaurant}
+        hideMaxMessage={user?.isGrubPass}
       />
 
       {/* Restaurant Switch Modal */}
@@ -1606,9 +1665,13 @@ const WeeklyMenuPage = () => {
         isOpen={showRestaurantSwitchModal}
         onClose={handleCloseRestaurantSwitchModal}
         onConfirm={handleConfirmRestaurantSwitch}
-        existingRestaurant={switchModalData?.existingRestaurant}
-        newRestaurant={switchModalData?.newRestaurant}
-        itemCount={switchModalData?.itemCount}
+        switchData={switchModalData}
+      />
+
+      <SelectedRestaurantsModal
+        isOpen={showSelectedRestaurantsModal}
+        onClose={() => setShowSelectedRestaurantsModal(false)}
+        restaurants={getSelectedRestaurants()}
       />
     </div>
   );

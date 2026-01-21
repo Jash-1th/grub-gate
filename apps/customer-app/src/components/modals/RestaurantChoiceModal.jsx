@@ -14,13 +14,21 @@ const RestaurantChoiceModal = ({
   
   if (!isOpen || restaurants.length === 0) return null;
 
+  const hasContext = Boolean(day && mealType && (week === 0 || week === 1));
+  const useGridLayout = restaurants.length >= 2;
+  const isManyRestaurants = restaurants.length >= 4;
+  const modalWidthClass = useGridLayout ? 'max-w-2xl lg:max-w-4xl' : 'max-w-md';
+  const optionsLayoutClass = useGridLayout
+    ? `grid grid-cols-1 sm:grid-cols-2 ${isManyRestaurants ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-3`
+    : 'space-y-3';
+
   const weekText = week === 0 ? t('continueModal.thisWeek') : t('continueModal.nextWeek');
   const dayText = day ? day.charAt(0).toUpperCase() + day.slice(1) : '';
   const mealText = mealType === 'lunch' ? t('weeklyMenu.lunch') : mealType === 'dinner' ? t('weeklyMenu.dinner') : '';
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+      <div className={`bg-white rounded-2xl shadow-2xl ${modalWidthClass} w-full mx-4 overflow-hidden max-h-[85vh] flex flex-col`}>
         {/* Header */}
         <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 text-center">
           <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -35,18 +43,20 @@ const RestaurantChoiceModal = ({
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-6 flex-1 flex flex-col min-h-0">
           <div className="text-center mb-6">
-            <div className="bg-gray-50 rounded-lg p-4 mb-4">
-              <div className="flex items-center justify-center space-x-2 text-gray-700">
-                <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z" />
-                </svg>
-                <span className="font-medium">
-                  {weekText} • {dayText} {mealText}
-                </span>
+            {hasContext && (
+              <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                <div className="flex items-center justify-center space-x-2 text-gray-700">
+                  <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z" />
+                  </svg>
+                  <span className="font-medium">
+                    {weekText} • {dayText} {mealText}
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
             
             <p className="text-gray-600 text-sm leading-relaxed mb-4">
               {t('choiceModal.multipleRestaurantsSelected')}
@@ -54,15 +64,17 @@ const RestaurantChoiceModal = ({
           </div>
 
           {/* Restaurant Options */}
-          <div className="space-y-3 mb-6">
+          <div className={`mb-6 overflow-auto pr-1 ${optionsLayoutClass}`}>
             {restaurants.map((restaurant, index) => (
               <button
                 key={restaurant.restaurantId || restaurant.id}
                 onClick={() => onSelectRestaurant(restaurant)}
-                className="w-full p-4 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all duration-200 text-left group"
+                className={`w-full border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all duration-200 text-left group ${
+                  useGridLayout ? 'p-3' : 'p-4'
+                }`}
               >
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center group-hover:bg-purple-200">
+                  <div className={`${useGridLayout ? 'w-9 h-9' : 'w-10 h-10'} bg-purple-100 rounded-full flex items-center justify-center group-hover:bg-purple-200 flex-shrink-0`}>
                     <span className="text-purple-600 font-bold text-lg">
                       {String.fromCharCode(65 + index)} {/* A, B, C, etc. */}
                     </span>

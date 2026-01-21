@@ -7,7 +7,8 @@ const RestaurantReplacementModal = ({
   onConfirm, 
   selectedRestaurants = [],
   newRestaurant,
-  getItemCountForRestaurant
+  getItemCountForRestaurant,
+  hideMaxMessage = false
 }) => {
   const { t } = useTranslation();
   const [modalStep, setModalStep] = useState('remove'); // 'remove' or 'add'
@@ -48,7 +49,7 @@ const RestaurantReplacementModal = ({
   };
 
 
-  if (!isOpen || selectedRestaurants.length === 0 || selectedRestaurants.length > 2) return null;
+  if (!isOpen || selectedRestaurants.length === 0) return null;
 
 
   const toggleRestaurantSelection = (restaurant) => {
@@ -73,9 +74,16 @@ const RestaurantReplacementModal = ({
     return 0;
   };
 
+  const useGridLayout = selectedRestaurants.length >= 2;
+  const isManyRestaurants = selectedRestaurants.length >= 4;
+  const modalWidthClass = useGridLayout ? 'max-w-5xl xl:max-w-6xl' : 'max-w-4xl';
+  const restaurantsGridClass = useGridLayout
+    ? `grid grid-cols-1 sm:grid-cols-2 ${isManyRestaurants ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-3 sm:gap-4`
+    : 'grid grid-cols-1 gap-3 sm:gap-4';
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-      <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-4xl w-full mx-2 sm:mx-4 overflow-hidden max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+      <div className={`bg-white rounded-xl sm:rounded-2xl shadow-2xl ${modalWidthClass} w-full mx-2 sm:mx-4 overflow-hidden max-h-[95vh] sm:max-h-[90vh] overflow-y-auto`}>
         {/* Header */}
         <div className="bg-grub-red text-white p-4 sm:p-6 text-center">
           <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
@@ -100,9 +108,11 @@ const RestaurantReplacementModal = ({
             // REMOVE STEP
             <>
               <div className="text-center mb-4 sm:mb-6">
-                <p className="text-gray-800 text-sm sm:text-base font-medium mb-2">
-                  {t('restaurantModal.maxRestaurantsReached')}
-                </p>
+                {!hideMaxMessage && (
+                  <p className="text-gray-800 text-sm sm:text-base font-medium mb-2">
+                    {t('restaurantModal.maxRestaurantsReached')}
+                  </p>
+                )}
                 <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-3 sm:mb-4">
                   ☑️ <strong>{t('restaurantModal.checkRestaurantsBelow')}</strong> {t('restaurantModal.thatYouWantRemove')}:
                 </p>
@@ -125,7 +135,7 @@ const RestaurantReplacementModal = ({
               {/* Current Restaurants - Side by Side */}
               <div className="mb-4 sm:mb-6">
                 <h4 className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">{t('restaurantModal.currentRestaurants')}:</h4>
-                <div className="grid grid-cols-1 gap-3 sm:gap-4">
+                <div className={restaurantsGridClass}>
                 {selectedRestaurants.map((restaurant, index) => {
               const itemCount = getItemCount(restaurant);
               const restaurantId = restaurant.restaurantId || restaurant.id;
@@ -278,7 +288,7 @@ const RestaurantReplacementModal = ({
                     <h4 className="text-sm font-medium text-gray-700 mb-3">
                       {remainingRestaurants.length === 1 ? t('restaurantModal.yourRemainingRestaurant') : t('restaurantModal.yourRemainingRestaurants')}
                     </h4>
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className={`grid grid-cols-1 sm:grid-cols-2 ${remainingRestaurants.length >= 4 ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-4`}>
                       {remainingRestaurants.map((restaurant, index) => (
                       <div key={restaurant.restaurantId || restaurant.id} className="p-4 bg-green-50 border-2 border-green-200 rounded-lg">
                         <div className="flex items-center space-x-4">
