@@ -794,7 +794,10 @@
     "browseRestaurant": "Parcourir {{name}}",
     "browseFromSelected": "Parcourir les restaurants sélectionnés",
     "more": "plus",
-    "viewDetails": "Voir les détails"
+    "viewDetails": "Voir les détails",
+    "planned": "Planifié",
+    "wantToAddMoreClickMe": "Vous voulez en ajouter plus ? Cliquez ici",
+    "planning": "Planification..."
   },
   "restaurantModal": {
     "removeRestaurant": "Retirer le Restaurant",
@@ -955,10 +958,12 @@
     "grubGatePlatformAccess": "Accès à la plateforme GrubGate",
     "mealCosts": "Coûts des Repas",
     "restaurantFoodCosts": "Coûts de la nourriture des restaurants",
+    "tax": "Taxe",
+    "taxOnMealCost": "15% du coût des repas",
     "total": "Total {{duration}}",
-    "servicePlusMeals": "Service + repas",
+    "servicePlusMeals": "Service + repas + taxe",
     "mealCostsVary": "Les coûts des repas varient selon le restaurant et les sélections",
-    "serviceFeeFixed": "Les frais de service sont fixes par plan",
+    "serviceFeeFixed": "Les frais de service représentent 10% du coût des repas",
     "mostPopular": "Le Plus Populaire",
     "biWeeklyPlan": "Plan Bi-Hebdomadaire",
     "monthlyPlan": "Plan 1 Mois",

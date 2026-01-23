@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faEye, 
@@ -27,6 +28,8 @@ const BusinessDetailsStep = ({
   errors, 
   setErrors 
 }) => {
+  
+  const { t } = useTranslation();
   
   // Form state for business details
   const [formData, setFormData] = useState({

@@ -889,7 +889,10 @@
     "browseRestaurant": "Browse {{name}}",
     "browseFromSelected": "Browse from selected restaurants",
     "more": "more",
-    "viewDetails": "View details"
+    "viewDetails": "View details",
+    "planned": "Planned",
+    "wantToAddMoreClickMe": "Want to add more? Click me",
+    "planning": "Planning..."
   },
   "restaurantModal": {
     "removeRestaurant": "Remove Restaurant",

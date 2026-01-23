@@ -6,6 +6,7 @@ import { useAuth } from './contexts/AuthContext';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import GrubRunnerLanding from './pages/GrubRunnerLanding';
+import RunnerTypesPage from './pages/RunnerTypesPage';
 import ScrollToTop from './components/ScrollToTop';
 import './App.css';
 
@@ -25,7 +26,8 @@ function App() {
         <ScrollToTop />
         <Routes>
           <Route path="/" element={<GrubRunnerLanding />} />
-          <Route path="/become-a-runner" element={<Navigate to="/" replace />} />
+          <Route path="/runner-types" element={<RunnerTypesPage />} />
+          <Route path="/become-a-runner" element={<Navigate to="/register" replace />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/registration-success" element={<RegistrationSuccess />} />

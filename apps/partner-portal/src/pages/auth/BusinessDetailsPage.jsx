@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useToast } from '../../contexts/ToastContext.jsx';
@@ -11,6 +12,7 @@ import { Logo } from '@grub-gate/ui';
  * Replaces the modal-based business details step
  */
 const BusinessDetailsPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { setAuthenticatedUser } = useAuth();
   const { showSuccess, showError } = useToast();

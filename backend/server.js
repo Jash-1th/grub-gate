@@ -7,6 +7,12 @@ const rateLimit = require('express-rate-limit');
 require('express-async-errors');
 require('dotenv').config();
 
+require('dotenv').config(); // Make sure this is at the top
+
+// ADD THIS DEBUG LINE:
+console.log("📧 DEBUG: Email User:", process.env.EMAIL_USER);
+console.log("🔑 DEBUG: Password Length:", process.env.EMAIL_PASS ? process.env.EMAIL_PASS.length : "Undefined");
+console.log("🔑 DEBUG: Password First 3 Chars:", process.env.EMAIL_PASS ? process.env.EMAIL_PASS.substring(0, 3) : "None");
 // Import configuration and middleware
 const connectDB = require('./src/config/database');
 const { errorHandler } = require('./src/middlewares/errorHandler');

@@ -1,6 +1,6 @@
 // FILE: src/pages/auth/RegisterPage.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faEye,
@@ -25,6 +25,7 @@ import '../../styles/auth-pages.css';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, updateUser, updateDasher } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const isInitialStepRender = useRef(true);
@@ -79,6 +80,55 @@ const RegisterPage = () => {
     vehicleRegistration: null,
     insuranceDocument: null,
   });
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const runnerType = params.get('runnerType');
+
+    if (!runnerType) return;
+
+    const vehicleTypeByRunnerType = {
+      '1': 'walk',
+      '2': 'bike',
+      '3': 'car',
+    };
+
+    const mappedVehicleType = vehicleTypeByRunnerType[String(runnerType)];
+    if (!mappedVehicleType) return;
+
+    setFormData((prev) => {
+      if (prev.vehicleType === mappedVehicleType) return prev;
+      return { ...prev, vehicleType: mappedVehicleType };
+    });
+  }, [location.search]);
+
+  useEffect(() => {
+    if (formData.vehicleType !== 'walk') return;
+
+    setFormData((prev) => {
+      const next = {
+        ...prev,
+        vehicleMake: '',
+        vehicleModel: '',
+        vehicleYear: '',
+        licensePlate: '',
+        vehicleColor: '',
+      };
+
+      return next;
+    });
+
+    setFiles((prev) => {
+      if (!prev.vehicleRegistration) return prev;
+      return { ...prev, vehicleRegistration: null };
+    });
+
+    setErrors((prev) => {
+      if (!prev.licensePlate && !prev.vehicleRegistration) return prev;
+      const { licensePlate, vehicleRegistration, ...rest } = prev;
+      return rest;
+    });
+  }, [formData.vehicleType]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -154,7 +204,7 @@ const RegisterPage = () => {
     const newErrors = {};
     
     if (!formData.vehicleType) newErrors.vehicleType = 'Vehicle type is required';
-    if (!formData.licensePlate.trim()) newErrors.licensePlate = 'License plate is required';
+    if (formData.vehicleType !== 'walk' && !formData.licensePlate.trim()) newErrors.licensePlate = 'License plate is required';
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -168,7 +218,7 @@ const RegisterPage = () => {
     if (!files.profilePhoto) newErrors.profilePhoto = 'Profile photo is required';
     if (!files.driversLicenseFront) newErrors.driversLicenseFront = 'Driver\'s license front is required';
     if (!files.driversLicenseBack) newErrors.driversLicenseBack = 'Driver\'s license back is required';
-    if (!files.vehicleRegistration) newErrors.vehicleRegistration = 'Vehicle registration is required';
+    if (formData.vehicleType !== 'walk' && !files.vehicleRegistration) newErrors.vehicleRegistration = 'Vehicle registration is required';
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -444,6 +494,7 @@ const RegisterPage = () => {
           onChange={handleInputChange}
           className={errors.vehicleType ? 'error' : ''}
         >
+          <option value="walk">Walk</option>
           <option value="bike">Bike</option>
           <option value="scooter">Scooter</option>
           <option value="motorcycle">Motorcycle</option>
@@ -451,77 +502,81 @@ const RegisterPage = () => {
         </select>
         {errors.vehicleType && <span className="error-text">{errors.vehicleType}</span>}
       </div>
-      
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="vehicleMake">Vehicle Make</label>
-          <input
-            type="text"
-            id="vehicleMake"
-            name="vehicleMake"
-            value={formData.vehicleMake}
-            onChange={handleInputChange}
-            placeholder="e.g., Honda"
-          />
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="vehicleModel">Vehicle Model</label>
-          <input
-            type="text"
-            id="vehicleModel"
-            name="vehicleModel"
-            value={formData.vehicleModel}
-            onChange={handleInputChange}
-            placeholder="e.g., Civic"
-          />
-        </div>
-      </div>
-      
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="vehicleYear">Vehicle Year</label>
-          <input
-            type="number"
-            id="vehicleYear"
-            name="vehicleYear"
-            value={formData.vehicleYear}
-            onChange={handleInputChange}
-            placeholder="2020"
-            min="1990"
-            max={new Date().getFullYear() + 1}
-          />
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="vehicleColor">Vehicle Color</label>
-          <input
-            type="text"
-            id="vehicleColor"
-            name="vehicleColor"
-            value={formData.vehicleColor}
-            onChange={handleInputChange}
-            placeholder="e.g., Black"
-          />
-        </div>
-      </div>
-      
-      <div className="form-group">
-        <label htmlFor="licensePlate">
-          License Plate Number *
-        </label>
-        <input
-          type="text"
-          id="licensePlate"
-          name="licensePlate"
-          value={formData.licensePlate}
-          onChange={handleInputChange}
-          placeholder="ABC-1234"
-          className={errors.licensePlate ? 'error' : ''}
-          style={{ textTransform: 'uppercase' }}
-        />
-        {errors.licensePlate && <span className="error-text">{errors.licensePlate}</span>}
-      </div>
+
+      {formData.vehicleType === 'walk' ? null : (
+        <>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="vehicleMake">Vehicle Make</label>
+              <input
+                type="text"
+                id="vehicleMake"
+                name="vehicleMake"
+                value={formData.vehicleMake}
+                onChange={handleInputChange}
+                placeholder="e.g., Honda"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="vehicleModel">Vehicle Model</label>
+              <input
+                type="text"
+                id="vehicleModel"
+                name="vehicleModel"
+                value={formData.vehicleModel}
+                onChange={handleInputChange}
+                placeholder="e.g., Civic"
+              />
+            </div>
+          </div>
+          
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="vehicleYear">Vehicle Year</label>
+              <input
+                type="number"
+                id="vehicleYear"
+                name="vehicleYear"
+                value={formData.vehicleYear}
+                onChange={handleInputChange}
+                placeholder="2020"
+                min="1990"
+                max={new Date().getFullYear() + 1}
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="vehicleColor">Vehicle Color</label>
+              <input
+                type="text"
+                id="vehicleColor"
+                name="vehicleColor"
+                value={formData.vehicleColor}
+                onChange={handleInputChange}
+                placeholder="e.g., Black"
+              />
+            </div>
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="licensePlate">
+              License Plate Number *
+            </label>
+            <input
+              type="text"
+              id="licensePlate"
+              name="licensePlate"
+              value={formData.licensePlate}
+              onChange={handleInputChange}
+              placeholder="ABC-1234"
+              className={errors.licensePlate ? 'error' : ''}
+              style={{ textTransform: 'uppercase' }}
+            />
+            {errors.licensePlate && <span className="error-text">{errors.licensePlate}</span>}
+          </div>
+        </>
+      )}
     </div>
   );
 
@@ -609,22 +664,24 @@ const RegisterPage = () => {
         {files.driversLicenseBack && <span className="file-name">{files.driversLicenseBack.name}</span>}
         {errors.driversLicenseBack && <span className="error-text">{errors.driversLicenseBack}</span>}
       </div>
-      
-      <div className="form-group">
-        <label htmlFor="vehicleRegistration">
-          <FontAwesomeIcon icon={faFileUpload} /> Vehicle Registration *
-        </label>
-        <input
-          type="file"
-          id="vehicleRegistration"
-          name="vehicleRegistration"
-          onChange={handleFileChange}
-          accept="image/*,application/pdf"
-          className={errors.vehicleRegistration ? 'error' : ''}
-        />
-        {files.vehicleRegistration && <span className="file-name">{files.vehicleRegistration.name}</span>}
-        {errors.vehicleRegistration && <span className="error-text">{errors.vehicleRegistration}</span>}
-      </div>
+
+      {formData.vehicleType === 'walk' ? null : (
+        <div className="form-group">
+          <label htmlFor="vehicleRegistration">
+            <FontAwesomeIcon icon={faFileUpload} /> Vehicle Registration *
+          </label>
+          <input
+            type="file"
+            id="vehicleRegistration"
+            name="vehicleRegistration"
+            onChange={handleFileChange}
+            accept="image/*,application/pdf"
+            className={errors.vehicleRegistration ? 'error' : ''}
+          />
+          {files.vehicleRegistration && <span className="file-name">{files.vehicleRegistration.name}</span>}
+          {errors.vehicleRegistration && <span className="error-text">{errors.vehicleRegistration}</span>}
+        </div>
+      )}
       
       <div className="form-group">
         <label htmlFor="insuranceProvider">Insurance Provider (Optional)</label>

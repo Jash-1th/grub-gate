@@ -32,15 +32,6 @@ const SubscriptionPlans = () => {
   const totalItems = getWeekTotalItems(0) + getWeekTotalItems(1);
 
   // Calculate costs based on selected plan
-  const getServiceFeeForPlan = (planId) => {
-    switch (planId) {
-      case 'bi-weekly': return 19.99;
-      case 'monthly': return 39.99;
-      case 'quarterly': return 59.99;
-      default: return 19.99;
-    }
-  };
-
   const getMealCostForPlan = (planId) => {
     switch (planId) {
       case 'bi-weekly': return biweeklyMealCost;
@@ -59,9 +50,10 @@ const SubscriptionPlans = () => {
     }
   };
 
-  const currentServiceFee = getServiceFeeForPlan(selectedPlan);
   const currentMealCost = getMealCostForPlan(selectedPlan);
-  const currentTotalCost = currentServiceFee + currentMealCost;
+  const currentServiceFee = currentMealCost * 0.10;
+  const currentTax = currentMealCost * 0.15;
+  const currentTotalCost = currentMealCost + currentServiceFee + currentTax;
 
   // Handle Get Started button click
   const handleGetStarted = (planId) => {
@@ -264,7 +256,7 @@ const SubscriptionPlans = () => {
                 <p className="text-sm sm:text-base text-gray-600">{totalItems === 1 ? t('subscription.basedOnMeals', { count: totalItems, duration: getPlanDurationText(selectedPlan) }) : t('subscription.basedOnMealsPlural', { count: totalItems, duration: getPlanDurationText(selectedPlan) })}</p>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6 max-w-4xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 sm:gap-6 max-w-5xl mx-auto">
                 {/* Service Fee */}
                 <div className="text-center p-3 sm:p-4 bg-white rounded-lg border border-gray-200">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 bg-blue-500 rounded-full flex items-center justify-center">
@@ -287,6 +279,18 @@ const SubscriptionPlans = () => {
                   <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{t('subscription.mealCosts')}</h4>
                   <p className="text-xl sm:text-2xl font-bold text-green-600">${currentMealCost.toFixed(2)}</p>
                   <p className="text-xs sm:text-sm text-gray-600 mt-1">{t('subscription.restaurantFoodCosts')}</p>
+                </div>
+
+                {/* Tax */}
+                <div className="text-center p-3 sm:p-4 bg-white rounded-lg border border-gray-200">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 bg-purple-500 rounded-full flex items-center justify-center">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14l6-6m-5.5.5h.01m4.99 4.99h.01M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{t('subscription.tax')}</h4>
+                  <p className="text-xl sm:text-2xl font-bold text-purple-600">${currentTax.toFixed(2)}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-1">{t('subscription.taxOnMealCost')}</p>
                 </div>
 
                 {/* Total Cost */}

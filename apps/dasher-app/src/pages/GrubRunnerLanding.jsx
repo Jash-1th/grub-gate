@@ -149,12 +149,11 @@ function GrubRunnerLanding() {
 
       <main>
         <section
-          className="w-full min-h-screen flex flex-col justify-center items-center pt-28 pb-20 px-6 relative overflow-hidden"
+          className="w-full min-h-[100svh] flex items-center pt-24 sm:pt-28 pb-14 sm:pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
           style={{
             backgroundImage: "url('/herosection-landingpage.png')",
             backgroundSize: 'cover',
-            backgroundPosition: 'center 18%',
-              backgroundPosition: 'center 60px',
+            backgroundPosition: 'center top',
             backgroundRepeat: 'no-repeat',
           }}
         >
@@ -171,98 +170,127 @@ function GrubRunnerLanding() {
             }
           `}</style>
 
-          <div className="max-w-7xl w-full">
-            <div className="w-full max-w-xl sm:max-w-2xl lg:max-w-5xl mx-auto lg:mx-0 lg:ml-20 text-left">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl leading-[1.05] font-extrabold tracking-tight text-white drop-shadow-sm">
-                Deliver Smart. Earn Predictably. Become a GrubRunner.
-              </h1>
-              <p className="text-base sm:text-lg md:text-xl text-white/90 mt-4 sm:mt-6 max-w-2xl drop-shadow-sm">
-                Execute pre-planned delivery waves with fixed routes. No chaos. No algorithm pressure.
-              </p>
+            <div className="max-w-7xl mx-auto w-full">
+              <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
+                <div className="lg:col-span-7 text-center lg:text-left">
+                  <h1 className="text-4xl sm:text-5xl lg:text-6xl leading-[1.07] font-extrabold tracking-tight text-white drop-shadow-sm">
+                    Deliver Smart. Earn Predictably. Become a GrubRunner.
+                  </h1>
+                  <p className="text-base sm:text-lg md:text-xl text-white/90 mt-4 sm:mt-6 max-w-2xl drop-shadow-sm">
+                    Execute pre-planned delivery waves with fixed routes. No chaos. No algorithm pressure.
+                  </p>
 
-              <div className="mt-8 sm:mt-10 flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center">
-                <Link
-                  to="/become-a-runner"
-                  className="w-full sm:w-auto text-center bg-grub-red text-white px-8 py-4 rounded-full font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
-                >
-                  Become a GrubRunner
-                </Link>
-                <a
-                  href="#how-it-works"
-                  className="w-full sm:w-auto text-center bg-white text-gray-700 border border-gray-200 px-8 py-4 rounded-full font-semibold hover:bg-gray-50"
-                >
-                  How it Works
-                </a>
-              </div>
+                  <div className="mt-8 sm:mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                    <Link
+                      to="/become-a-runner"
+                      className="w-full sm:w-auto text-center bg-grub-red text-white px-7 py-3.5 rounded-2xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                    >
+                      Become a GrubRunner
+                    </Link>
+                    <a
+                      href="#how-it-works"
+                      className="w-full sm:w-auto text-center bg-white/0 text-white border border-white/35 px-7 py-3.5 rounded-2xl font-semibold hover:bg-white/10 transition-colors"
+                    >
+                      How it Works
+                    </a>
+                  </div>
 
-              <div className="mt-10 sm:mt-12 flex justify-center sm:justify-start">
-                <div className="gr-hero-float w-full max-w-sm sm:w-auto rounded-2xl border border-white/30 bg-white/90 backdrop-blur px-5 sm:px-6 py-4 shadow-lg">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50">
-                      <CurrencyDollarIcon className="h-10 w-10 text-emerald-600" aria-hidden="true" />
+                  <div className="mt-7 flex flex-wrap justify-center lg:justify-start gap-x-5 gap-y-3 text-sm sm:text-base text-white/90">
+                    <div className="inline-flex items-center gap-2">
+                      <CheckCircleIcon className="h-5 w-5 text-emerald-300" aria-hidden="true" />
+                      Planned routes
                     </div>
-                    <div className="text-sm sm:text-base md:text-lg font-semibold text-gray-900">
-                      Weekly Earnings: $840.50
+                    <div className="inline-flex items-center gap-2">
+                      <CheckCircleIcon className="h-5 w-5 text-emerald-300" aria-hidden="true" />
+                      Fixed delivery waves
+                    </div>
+                    <div className="inline-flex items-center gap-2">
+                      <CheckCircleIcon className="h-5 w-5 text-emerald-300" aria-hidden="true" />
+                      Predictable earnings
+                    </div>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-5 flex justify-center lg:justify-end">
+                  <div className="gr-hero-float w-full max-w-md rounded-3xl border border-white/25 bg-white/90 backdrop-blur px-5 sm:px-7 py-5 sm:py-6 shadow-2xl">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50">
+                        <CurrencyDollarIcon className="h-10 w-10 text-emerald-600" aria-hidden="true" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-gray-500">Example weekly earnings</div>
+                        <div className="text-lg sm:text-xl font-extrabold tracking-tight text-gray-900">$840.50</div>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 grid grid-cols-2 gap-3">
+                      <div className="rounded-2xl border border-gray-200 bg-white px-4 py-3">
+                        <div className="text-xs font-semibold text-gray-500">Waves</div>
+                        <div className="mt-1 text-base font-bold text-gray-900">10 / week</div>
+                      </div>
+                      <div className="rounded-2xl border border-gray-200 bg-white px-4 py-3">
+                        <div className="text-xs font-semibold text-gray-500">Avg / wave</div>
+                        <div className="mt-1 text-base font-bold text-gray-900">$84</div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          </div>
         </section>
 
-        <section className="w-full bg-white py-24">
-          <div className="max-w-7xl mx-auto px-6">
+        <section className="w-full bg-white py-16 sm:py-20 lg:py-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
-              <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-6">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-4 sm:mb-6">
                 What is a GrubRunner?
               </h2>
-              <p className="text-xl text-gray-500 max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg md:text-xl text-gray-500 max-w-2xl mx-auto">
                 GrubRunners facilitate pre-planned meal distributions during scheduled waves, allowing for a safe and consistent delivery experience.
               </p>
             </div>
 
-            <div className="mt-12 grid md:grid-cols-3 gap-8">
+            <div className="mt-10 sm:mt-12 grid md:grid-cols-3 gap-5 sm:gap-8">
               {whatIsFeatures.map((item) => (
                 <div
                   key={item.title}
-                  className="bg-white rounded-2xl p-10 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 text-center"
+                  className="bg-white rounded-3xl p-6 sm:p-8 lg:p-10 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 text-center"
                 >
                   <div className="bg-red-50 text-grub-red p-4 rounded-2xl w-fit mb-6 mx-auto">
                     <item.icon className="h-12 w-12" aria-hidden="true" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900">{item.title}</h3>
-                  <p className="mt-3 text-lg text-gray-600 leading-relaxed">{item.body}</p>
+                  <p className="mt-3 text-base sm:text-lg text-gray-600 leading-relaxed">{item.body}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section id="how-it-works" className="w-full bg-gray-100 py-24 scroll-mt-28 border-y border-gray-200">
-          <div className="max-w-7xl mx-auto px-6">
+        <section id="how-it-works" className="w-full bg-gray-50 py-16 sm:py-20 lg:py-24 scroll-mt-28 border-y border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
-              <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-6">How it Works</h2>
-              <p className="text-xl text-gray-500 max-w-2xl mx-auto">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-4 sm:mb-6">How it Works</h2>
+              <p className="text-base sm:text-lg md:text-xl text-gray-500 max-w-2xl mx-auto">
                 A streamlined workflow designed for clarity—deliver calmly and consistently.
               </p>
             </div>
 
             <div className="relative mt-12">
               <div className="hidden md:block absolute left-4 right-4 top-10 h-px bg-gray-100" aria-hidden="true" />
-              <div className="grid gap-8 md:grid-cols-4 relative">
+              <div className="grid gap-5 sm:gap-8 md:grid-cols-4 relative">
                 {processSteps.map((step, idx) => (
                   <div
                     key={step.title}
-                    className="relative overflow-hidden z-10 bg-white rounded-2xl p-10 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 text-center flex flex-col items-center"
+                    className="relative overflow-hidden z-10 bg-white rounded-3xl p-6 sm:p-8 lg:p-10 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 text-center flex flex-col items-center"
                   >
                     <div className="bg-red-50 text-grub-red w-8 h-8 rounded-full flex items-center justify-center font-bold mb-4">
                       {idx + 1}
                     </div>
                     <step.icon className="text-grub-red h-12 w-12 mb-6" aria-hidden="true" />
                     <div className="font-bold text-gray-900">{step.title}</div>
-                    <div className="mt-3 text-lg leading-relaxed text-gray-600">{step.body}</div>
+                    <div className="mt-3 text-base sm:text-lg leading-relaxed text-gray-600">{step.body}</div>
                   </div>
                 ))}
               </div>
@@ -270,11 +298,11 @@ function GrubRunnerLanding() {
           </div>
         </section>
 
-        <section className="w-full bg-white py-24">
-          <div className="max-w-7xl mx-auto px-6">
+        <section className="w-full bg-white py-16 sm:py-20 lg:py-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
-              <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-6">Comparison</h2>
-              <p className="text-xl text-gray-500 max-w-2xl mx-auto">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-4 sm:mb-6">Comparison</h2>
+              <p className="text-base sm:text-lg md:text-xl text-gray-500 max-w-2xl mx-auto">
                 GrubRunners is engineered for calm, predictable delivery work.
               </p>
             </div>
@@ -340,17 +368,17 @@ function GrubRunnerLanding() {
           </div>
         </section>
 
-        <section className="w-full bg-gray-100 py-24 border-y border-gray-200">
-          <div className="max-w-7xl mx-auto px-6">
+        <section className="w-full bg-gray-50 py-16 sm:py-20 lg:py-24 border-y border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
-              <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-6">Earnings</h2>
-              <p className="text-xl text-gray-500 max-w-2xl mx-auto">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-4 sm:mb-6">Earnings</h2>
+              <p className="text-base sm:text-lg md:text-xl text-gray-500 max-w-2xl mx-auto">
                 <span className="text-grub-red font-bold">Paid per delivery + wave</span> — clear, predictable payouts.
               </p>
             </div>
 
-            <div className="mt-12 grid md:grid-cols-2 gap-8">
-              <div className="bg-white rounded-2xl p-10 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 text-center flex flex-col items-center">
+            <div className="mt-10 sm:mt-12 grid md:grid-cols-2 gap-5 sm:gap-8">
+              <div className="bg-white rounded-3xl p-6 sm:p-8 lg:p-10 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 text-center flex flex-col items-center">
                 <div className="flex flex-col items-center justify-center gap-4 mb-6">
                   <CurrencyDollarIcon className="h-12 w-12 text-grub-red" aria-hidden="true" />
                   <div className="inline-flex items-center gap-2 rounded-full bg-red-50 px-4 py-2 text-base font-semibold text-grub-red">
@@ -359,15 +387,15 @@ function GrubRunnerLanding() {
                   </div>
                 </div>
                 <h3 className="mt-6 text-xl font-bold text-gray-900">Transparent Payouts</h3>
-                <p className="mt-3 text-lg text-gray-600 leading-relaxed">
+                <p className="mt-3 text-base sm:text-lg text-gray-600 leading-relaxed">
                   Compensation is calculated per delivery and per wave. You understand your earning potential before you begin.
                 </p>
               </div>
 
-              <div className="bg-white rounded-2xl p-10 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 text-center flex flex-col items-center">
+              <div className="bg-white rounded-3xl p-6 sm:p-8 lg:p-10 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 text-center flex flex-col items-center">
                 <ClockIcon className="h-12 w-12 text-grub-red mb-6" aria-hidden="true" />
                 <h3 className="mt-6 text-xl font-bold text-gray-900">Consistent Schedule</h3>
-                <p className="mt-3 text-lg text-gray-600 leading-relaxed">
+                <p className="mt-3 text-base sm:text-lg text-gray-600 leading-relaxed">
                   Plan your finances around dependable work blocks rather than fluctuating demand.
                 </p>
               </div>
@@ -375,33 +403,33 @@ function GrubRunnerLanding() {
           </div>
         </section>
 
-        <section className="w-full bg-white py-24">
-          <div className="max-w-7xl mx-auto px-6">
+        <section className="w-full bg-white py-16 sm:py-20 lg:py-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto text-center">
-              <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-6">Is this for you?</h2>
-              <p className="text-xl text-gray-500 max-w-2xl mx-auto">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-4 sm:mb-6">Is this for you?</h2>
+              <p className="text-base sm:text-lg md:text-xl text-gray-500 max-w-2xl mx-auto">
                 An ideal opportunity for those seeking structured, low-stress delivery work.
               </p>
             </div>
 
-            <div className="mt-8 grid gap-4 md:grid-cols-3">
+            <div className="mt-8 grid gap-5 sm:gap-6 md:grid-cols-3">
               {audienceCards.map((card) => (
-                <div key={card.title} className="rounded-2xl border border-gray-100 bg-white p-10 shadow-sm hover:shadow-xl transition-all duration-300 text-center">
+                <div key={card.title} className="rounded-3xl border border-gray-100 bg-white p-6 sm:p-8 lg:p-10 shadow-sm hover:shadow-xl transition-all duration-300 text-center">
                   <div className="inline-flex rounded-2xl bg-grub-red/5 p-4 mb-6 mx-auto">
                     <card.icon className="h-10 w-10 text-grub-red" aria-hidden="true" />
                   </div>
                   <div className="font-semibold text-gray-900 text-xl">{card.title}</div>
-                  <div className="mt-3 text-lg leading-relaxed text-gray-600">{card.body}</div>
+                  <div className="mt-3 text-base sm:text-lg leading-relaxed text-gray-600">{card.body}</div>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section id="faq" className="w-full bg-white">
-          <div className="max-w-3xl mx-auto px-6 py-24">
+        <section id="faq" className="w-full bg-white scroll-mt-28">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
             <div className="text-center">
-              <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-6">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-4 sm:mb-6">
                 FAQ
               </h2>
             </div>
@@ -414,7 +442,7 @@ function GrubRunnerLanding() {
                   <div
                     key={item.question}
                     onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                    className="bg-white border border-gray-100 rounded-xl p-6 mb-4 cursor-pointer shadow-sm"
+                    className="bg-white border border-gray-100 rounded-2xl p-5 sm:p-6 mb-4 cursor-pointer shadow-sm"
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => {
@@ -425,7 +453,7 @@ function GrubRunnerLanding() {
                     }}
                   >
                     <div className="flex justify-between items-center">
-                      <div className="text-lg font-semibold text-gray-900">{item.question}</div>
+                      <div className="text-base sm:text-lg font-semibold text-gray-900 pr-3">{item.question}</div>
                       {isOpen ? (
                         <ChevronUpIcon className="h-6 w-6 text-gray-500" aria-hidden="true" />
                       ) : (
@@ -442,18 +470,18 @@ function GrubRunnerLanding() {
           </div>
         </section>
 
-        <section className="w-full bg-gray-100 py-24 border-y border-gray-200">
-          <div className="max-w-5xl mx-auto px-6">
+        <section className="w-full bg-gray-50 py-16 sm:py-20 lg:py-24 border-y border-gray-200">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto text-center">
-              <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-6">Requirements</h2>
-              <p className="text-xl text-gray-500 max-w-2xl mx-auto">A short checklist to get started.</p>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-4 sm:mb-6">Requirements</h2>
+              <p className="text-base sm:text-lg md:text-xl text-gray-500 max-w-2xl mx-auto">A short checklist to get started.</p>
             </div>
 
-            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-8 grid gap-5 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {requirementCards.map((item) => (
                 <div
                   key={item.title}
-                  className="flex flex-col items-center text-center p-10 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300"
+                  className="flex flex-col items-center text-center p-6 sm:p-8 lg:p-10 bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300"
                 >
                   <item.icon className="h-12 w-12 text-grub-red mb-6" aria-hidden="true" />
                   <div className="font-semibold text-gray-900 text-xl">{item.title}</div>
@@ -463,16 +491,16 @@ function GrubRunnerLanding() {
           </div>
         </section>
 
-        <section className="w-full bg-white py-24">
-          <div className="max-w-5xl mx-auto px-6">
-            <div className="bg-grub-red rounded-3xl p-12 text-center text-white relative overflow-hidden">
-              <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-6">Ready to start earning?</h2>
-              <p className="text-xl text-white/90 max-w-2xl mx-auto mb-8">
+        <section className="w-full bg-white py-16 sm:py-20 lg:py-24">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-gradient-to-r from-grub-red to-grub-red-dark rounded-3xl p-8 sm:p-12 text-center text-white relative overflow-hidden">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-4 sm:mb-6">Ready to start earning?</h2>
+              <p className="text-base sm:text-lg md:text-xl text-white/90 max-w-2xl mx-auto mb-8">
                 Apply once, then choose delivery waves that fit your schedule.
               </p>
               <Link
                 to="/become-a-runner"
-                className="bg-white text-grub-red px-10 py-4 rounded-full font-bold hover:bg-gray-100 transition-colors shadow-lg inline-flex items-center justify-center"
+                className="w-full sm:w-auto bg-white text-grub-red px-8 sm:px-10 py-3.5 sm:py-4 rounded-2xl font-bold hover:bg-gray-100 transition-colors shadow-lg inline-flex items-center justify-center"
               >
                 Apply to Become a GrubRunner
               </Link>

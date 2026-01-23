@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMealPlan } from '../contexts/MealPlanContext_SSR_FIXED';
@@ -13,14 +13,19 @@ import RestaurantChoiceModal from '../components/modals/RestaurantChoiceModal';
 import RestaurantReplacementModal from '../components/modals/RestaurantReplacementModal';
 import SelectedRestaurantsModal from '../components/modals/SelectedRestaurantsModal';
 import mealCalendarApi from '../api/mealCalendarApi';
+import MenuItemsGrid from '../components/restaurant/MenuItemsGrid';
+import { getRestaurant, getRestaurantMenu } from '../services/restaurantService';
 
 // Enhanced Meal Slot Component with more features
-const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postalCode, selectedRestaurant, selectedWeek = 0, onShowRestaurantSelectionModal, isAuthenticated, hasLoadedFromDatabase, disabled = false, loading = false, getSelectedRestaurantCount, getSelectedRestaurants }) => {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
+const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postalCode, selectedRestaurant, selectedWeek = 0, onShowRestaurantSelectionModal, isAuthenticated, hasLoadedFromDatabase, disabled = false, loading = false, getSelectedRestaurantCount, getSelectedRestaurants, isActive = false }) => {
+  const { t, i18n } = useTranslation();
   const hasItems = actualMealItems && actualMealItems.length > 0;
   const firstItem = hasItems ? actualMealItems[0] : null;
   const additionalCount = hasItems ? actualMealItems.length - 1 : 0;
+
+  const planningLabel = t('weeklyMenu.planning', {
+    defaultValue: i18n?.language?.toLowerCase()?.startsWith('fr') ? 'Planification...' : 'Planning...',
+  });
 
   const handleSlotClick = () => {
     if (disabled) {
@@ -28,11 +33,17 @@ const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postal
     }
     
     if (hasItems) {
-      navigate(`/meal-plan/${day}?week=${selectedWeek}`);
-    } else {
-      // Always show modal for empty slots - let the modal handler decide which modal to show
       onShowRestaurantSelectionModal(day, mealType);
+      return;
     }
+
+    // If no restaurants are selected, the UI should remain non-clickable for empty slots.
+    const selectedRestaurantsCount = typeof getSelectedRestaurantCount === 'function' ? getSelectedRestaurantCount() : 0;
+    if (selectedRestaurantsCount === 0) {
+      return;
+    }
+
+    onShowRestaurantSelectionModal(day, mealType);
   };
 
   const handleRemoveItem = (e, planId) => {
@@ -48,20 +59,25 @@ const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postal
         ${disabled 
           ? 'cursor-not-allowed opacity-50 bg-gray-100 border-gray-300' 
           : hasItems 
-            ? 'cursor-pointer border-grub-red bg-gradient-to-br from-red-50 to-orange-50 shadow-lg hover:shadow-xl hover:border-red-400 transform hover:scale-[1.02] hover:-translate-y-1 active:scale-95' 
+            ? 'cursor-pointer border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg hover:shadow-xl hover:border-green-400 transform hover:scale-[1.02] hover:-translate-y-1 active:scale-95' 
             : 'cursor-pointer border-gray-200 bg-gradient-to-br from-white to-gray-50 hover:border-grub-red/60 hover:shadow-lg hover:from-red-50/30 hover:to-orange-50/30 transform hover:scale-[1.02] hover:-translate-y-1 active:scale-95'
         }
+        ${isActive ? 'ring-2 ring-grub-red ring-offset-2' : ''}
       `}
     >
       {/* Gradient overlay for hover effect */}
       <div className={`absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
         hasItems 
-          ? 'bg-gradient-to-br from-red-100/50 to-orange-100/50' 
+          ? 'bg-gradient-to-br from-green-100/50 to-emerald-100/50' 
           : 'bg-gradient-to-br from-red-50/30 to-orange-50/30'
       }`}></div>
       
       <div className="relative z-10">
-        {hasItems ? (
+        {isActive ? (
+          <div className="text-center">
+            <div className="text-sm font-semibold text-green-700">{planningLabel}</div>
+          </div>
+        ) : hasItems ? (
           <div className="space-y-1 sm:space-y-2">
             <div className="flex items-center justify-between mb-1 sm:mb-3">
               <div className="font-semibold text-grub-red truncate group-hover:text-red-700 transition-colors duration-200 text-xs sm:text-sm">
@@ -109,12 +125,10 @@ const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postal
                 +{additionalCount} {t('weeklyMenu.more')}
               </div>
             )}
-            
-            <div className="hidden sm:flex text-xs text-grub-red/70 mt-3 font-medium group-hover:text-red-600 transition-colors duration-200 items-center">
-              <span>{t('weeklyMenu.viewDetails')}</span>
-              <svg className="w-3 h-3 ml-1 group-hover:translate-x-0.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+
+            <div className="mt-2 rounded-lg border border-green-300 bg-green-50 px-2 py-1">
+              <div className="text-[11px] font-semibold text-green-700">{t('weeklyMenu.planned')}</div>
+              <div className="text-[11px] text-green-700">{t('weeklyMenu.wantToAddMoreClickMe')}</div>
             </div>
           </div>
         ) : (
@@ -191,6 +205,7 @@ const WeeklyMenuPage = () => {
     mealPlan, 
     weeklyPlan, 
     totalItems, 
+    addItemToPlanWeek,
     removeItemFromPlan, 
     removeItemFromPlanWeek,
     clearAllPlan, 
@@ -234,6 +249,20 @@ const WeeklyMenuPage = () => {
   const { isAuthenticated, user } = useAuth();
   const [showSelectedRestaurantsModal, setShowSelectedRestaurantsModal] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
+  const [panelDay, setPanelDay] = useState(null);
+  const [panelMealType, setPanelMealType] = useState(null);
+  const [panelRestaurantId, setPanelRestaurantId] = useState(null);
+  const [panelRestaurant, setPanelRestaurant] = useState(null);
+  const [panelMenuItems, setPanelMenuItems] = useState([]);
+  const [panelLoading, setPanelLoading] = useState(false);
+  const [panelError, setPanelError] = useState(null);
+  const [dayCarouselStartIndex, setDayCarouselStartIndex] = useState(0);
+  const [restaurantCarouselStartIndex, setRestaurantCarouselStartIndex] = useState(0);
+  const dayCarouselViewportRef = useRef(null);
+  const restaurantCarouselViewportRef = useRef(null);
+  const [dayCarouselViewportWidth, setDayCarouselViewportWidth] = useState(0);
+  const [restaurantCarouselViewportWidth, setRestaurantCarouselViewportWidth] = useState(0);
   const [selectedWeek, setSelectedWeek] = useState(() => {
     const weekParam = parseInt(searchParams.get('week') || '0', 10);
     return Number.isFinite(weekParam) && (weekParam === 0 || weekParam === 1) ? weekParam : 0;
@@ -526,6 +555,72 @@ const WeeklyMenuPage = () => {
     }
   };
 
+  const clampIndex = (value, min, max) => Math.max(min, Math.min(max, value));
+
+  const sidePanelDays = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  const visibleDayCount = 4;
+  const maxDayStartIndex = Math.max(0, sidePanelDays.length - visibleDayCount);
+
+  const panelSelectedRestaurants = (getSelectedRestaurants && getSelectedRestaurants()) || [];
+  const visibleRestaurantCount = 2;
+  const maxRestaurantStartIndex = Math.max(0, panelSelectedRestaurants.length - visibleRestaurantCount);
+  const dayItemShiftPx = dayCarouselViewportWidth ? dayCarouselViewportWidth / visibleDayCount : 0;
+  const restaurantItemShiftPx = restaurantCarouselViewportWidth ? restaurantCarouselViewportWidth / visibleRestaurantCount : 0;
+
+  useEffect(() => {
+    if (!isSidePanelOpen) return;
+    if (!isClient) return;
+
+    const measure = () => {
+      setDayCarouselViewportWidth(dayCarouselViewportRef.current?.clientWidth || 0);
+      setRestaurantCarouselViewportWidth(restaurantCarouselViewportRef.current?.clientWidth || 0);
+    };
+
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [isSidePanelOpen, isClient]);
+
+  useEffect(() => {
+    if (!isSidePanelOpen) return;
+    setDayCarouselStartIndex((prev) => clampIndex(prev, 0, maxDayStartIndex));
+    setRestaurantCarouselStartIndex((prev) => clampIndex(prev, 0, maxRestaurantStartIndex));
+  }, [isSidePanelOpen, maxDayStartIndex, maxRestaurantStartIndex]);
+
+  useEffect(() => {
+    if (!isSidePanelOpen || !panelDay) return;
+    const selectedIndex = sidePanelDays.indexOf(panelDay);
+    if (selectedIndex === -1) return;
+
+    const endIndex = dayCarouselStartIndex + visibleDayCount - 1;
+    if (selectedIndex < dayCarouselStartIndex) {
+      setDayCarouselStartIndex(clampIndex(selectedIndex, 0, maxDayStartIndex));
+    } else if (selectedIndex > endIndex) {
+      setDayCarouselStartIndex(clampIndex(selectedIndex - (visibleDayCount - 1), 0, maxDayStartIndex));
+    }
+  }, [isSidePanelOpen, panelDay, maxDayStartIndex]);
+
+  useEffect(() => {
+    if (!isSidePanelOpen || !panelRestaurantId) return;
+    const selectedIndex = panelSelectedRestaurants.findIndex((r) => String(r.restaurantId || r.id) === String(panelRestaurantId));
+    if (selectedIndex === -1) return;
+
+    const endIndex = restaurantCarouselStartIndex + visibleRestaurantCount - 1;
+    if (selectedIndex < restaurantCarouselStartIndex) {
+      setRestaurantCarouselStartIndex(clampIndex(selectedIndex, 0, maxRestaurantStartIndex));
+    } else if (selectedIndex > endIndex) {
+      setRestaurantCarouselStartIndex(clampIndex(selectedIndex - (visibleRestaurantCount - 1), 0, maxRestaurantStartIndex));
+    }
+  }, [isSidePanelOpen, panelRestaurantId, maxRestaurantStartIndex, panelSelectedRestaurants]);
+
+  const handleDayArrow = (direction) => {
+    setDayCarouselStartIndex((prev) => clampIndex(prev + direction, 0, maxDayStartIndex));
+  };
+
+  const handleRestaurantArrow = (direction) => {
+    setRestaurantCarouselStartIndex((prev) => clampIndex(prev + direction, 0, maxRestaurantStartIndex));
+  };
+
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -572,6 +667,137 @@ const WeeklyMenuPage = () => {
   const handleRemoveItem = (planId, day, mealType) => {
     removeItemFromPlanWeek(planId, day, mealType, selectedWeek);
     showSuccess('Item Removed', 'Item removed from meal plan');
+  };
+
+  const handleOpenSidePanel = (day, mealType, restaurantIdOverride = null) => {
+    const selectedRestaurantsCount = getSelectedRestaurantCount();
+    if (selectedRestaurantsCount === 0) {
+      return;
+    }
+
+    setPanelDay(day);
+    setPanelMealType(mealType);
+    setIsSidePanelOpen(true);
+
+    const restaurants = getSelectedRestaurants();
+    if (restaurants && restaurants.length > 0) {
+      const restaurantIds = restaurants.map(r => r.restaurantId || r.id).filter(Boolean);
+
+      if (restaurantIdOverride && restaurantIds.includes(restaurantIdOverride)) {
+        setPanelRestaurantId(restaurantIdOverride);
+        return;
+      }
+
+      const shouldKeepCurrent = panelRestaurantId && restaurantIds.includes(panelRestaurantId);
+      if (!shouldKeepCurrent) {
+        const first = restaurants[0];
+        const firstId = first.restaurantId || first.id;
+        if (firstId) {
+          setPanelRestaurantId(firstId);
+        }
+      }
+    }
+  };
+
+  const handleCloseSidePanel = () => {
+    setIsSidePanelOpen(false);
+  };
+
+  useEffect(() => {
+    const loadPanelRestaurantData = async () => {
+      if (!isSidePanelOpen || !panelRestaurantId || !panelDay || !panelMealType) {
+        return;
+      }
+
+      setPanelLoading(true);
+      setPanelError(null);
+
+      try {
+        const panelUserType = user?.userType || 'normal';
+        const [restaurantResult, menuResult] = await Promise.all([
+          getRestaurant(panelRestaurantId),
+          getRestaurantMenu(panelRestaurantId, { userType: panelUserType, day: panelDay, mealType: panelMealType })
+        ]);
+
+        if (restaurantResult?.success && menuResult?.success) {
+          setPanelRestaurant(restaurantResult.data);
+          setPanelMenuItems(menuResult.data?.menuItems || []);
+        } else {
+          setPanelRestaurant(null);
+          setPanelMenuItems([]);
+          setPanelError('Failed to load restaurant menu');
+        }
+      } catch (e) {
+        console.error('WeeklyMenuPage: failed loading side-panel restaurant/menu', e);
+        setPanelRestaurant(null);
+        setPanelMenuItems([]);
+        setPanelError('Failed to load restaurant menu');
+      } finally {
+        setPanelLoading(false);
+      }
+    };
+
+    loadPanelRestaurantData();
+  }, [isSidePanelOpen, panelRestaurantId, panelDay, panelMealType, user]);
+
+  const handleAddItemFromSidePanel = async (item) => {
+    if (!isAuthenticated) {
+      showError('Please log in to add items to your meal plan');
+      return;
+    }
+
+    if (!panelRestaurant || !panelDay || !panelMealType) {
+      return;
+    }
+
+    try {
+      const panelUserType = user?.userType || 'normal';
+      const result = await addItemToPlanWeek(
+        item,
+        panelDay,
+        panelMealType,
+        panelRestaurant.name,
+        selectedWeek,
+        panelUserType,
+        false,
+        panelRestaurant.id
+      );
+
+      if (!result?.success) {
+        showError('Error', result?.message || 'Failed to add item to meal plan');
+      }
+    } catch (e) {
+      console.error('WeeklyMenuPage: failed adding item from side panel', e);
+      showError('Error', 'Failed to add item to meal plan');
+    }
+  };
+
+  const handleRemoveItemFromSidePanel = (item) => {
+    if (!panelDay || !panelMealType) {
+      return;
+    }
+
+    const mealItems = getWeekMealItems(panelDay, panelMealType, selectedWeek);
+    const mealPlanItem = mealItems.find(mealItem => mealItem.id === item.id);
+    if (mealPlanItem?.planId) {
+      removeItemFromPlanWeek(mealPlanItem.planId, panelDay, panelMealType, selectedWeek);
+    }
+  };
+
+  const isItemInSidePanelSlot = (itemId) => {
+    if (!panelDay || !panelMealType) {
+      return false;
+    }
+    const mealItems = getWeekMealItems(panelDay, panelMealType, selectedWeek);
+    return mealItems.some(planItem => planItem.id === itemId);
+  };
+
+  const getItemPlanEntriesForSidePanelSlot = (itemId) => {
+    if (!panelDay || !panelMealType) {
+      return [];
+    }
+    const mealItems = getWeekMealItems(panelDay, panelMealType, selectedWeek);
+    return mealItems.filter(planItem => planItem.id === itemId);
   };
 
   const handleClearAll = () => {
@@ -652,27 +878,9 @@ const WeeklyMenuPage = () => {
     navigate(`/plan/restaurants?source=plan${postalParam}`);
   };
 
+  // Weekly menu split-pane: clicking an empty slot opens side panel (no navigation / no lunch-dinner dropdowns UI)
   const handleShowRestaurantSelectionModal = (day, mealType) => {
-    console.log('🎯 handleShowRestaurantSelectionModal called:', { day, mealType, selectedRestaurant });
-    console.log('🎯 Selected restaurants count:', getSelectedRestaurantCount());
-    console.log('🎯 All selected restaurants:', getSelectedRestaurants());
-    
-    const selectedRestaurantsCount = getSelectedRestaurantCount();
-    const allSelectedRestaurants = getSelectedRestaurants();
-    
-    if (selectedRestaurantsCount === 0) {
-      // No restaurant selected - show selection modal
-      setSelectionModalData({ day, mealType, week: selectedWeek });
-      setShowRestaurantSelectionModal(true);
-    } else if (selectedRestaurantsCount === 1) {
-      // User has 1 restaurant - show continue modal
-      setContinueModalData({ day, mealType, week: selectedWeek, existingRestaurant: selectedRestaurant });
-      setShowRestaurantContinueModal(true);
-    } else if (selectedRestaurantsCount >= 2) {
-      // User has 2+ restaurants - show choice modal
-      setChoiceModalData({ day, mealType, week: selectedWeek, restaurants: allSelectedRestaurants });
-      setShowRestaurantChoiceModal(true);
-    }
+    handleOpenSidePanel(day, mealType);
   };
 
   const handleConfirmRestaurantSelection = () => {
@@ -700,12 +908,10 @@ const WeeklyMenuPage = () => {
     const modalData = continueModalData;
     setContinueModalData(null);
     
-    // Navigate to the selected restaurant with day/slot context
-    if (modalData && selectedRestaurant) {
-      const restaurantId = selectedRestaurant.id;
-      const navigationUrl = `/restaurant/${restaurantId}?day=${modalData.day}&slot=${modalData.mealType}&week=${modalData.week}&userType=normal&source=weekly-menu`;
-      console.log('🎯 Navigating to existing restaurant:', navigationUrl);
-      navigate(navigationUrl);
+    // Open side panel instead of navigating
+    if (modalData?.day && modalData?.mealType) {
+      const restaurantId = selectedRestaurant?.id;
+      handleOpenSidePanel(modalData.day, modalData.mealType, restaurantId);
     }
   };
 
@@ -752,11 +958,9 @@ const WeeklyMenuPage = () => {
       }
     }
     
-    // Navigate to the selected restaurant with day/slot context
-    if (modalData?.day && modalData?.mealType && selectedRestaurant) {
-      const navigationUrl = `/restaurant/${restaurantId}?day=${modalData.day}&slot=${modalData.mealType}&week=${modalData.week}&userType=normal&source=weekly-menu`;
-      console.log('🎯 Navigating to chosen restaurant:', navigationUrl);
-      navigate(navigationUrl);
+    // Open side panel instead of navigating
+    if (modalData?.day && modalData?.mealType) {
+      handleOpenSidePanel(modalData.day, modalData.mealType, restaurantId);
     }
   };
 
@@ -914,7 +1118,7 @@ const WeeklyMenuPage = () => {
   if (!isClient) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="w-full max-w-none px-3 sm:px-4 lg:px-6 py-6">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
             <div className="h-4 bg-gray-200 rounded w-1/2 mb-12"></div>
@@ -933,7 +1137,7 @@ const WeeklyMenuPage = () => {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       {/* Header Section */}
       <div className="bg-gradient-to-r from-grub-red to-red-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="w-full max-w-none px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
           <div className="flex flex-col gap-6">
             {/* Title Section */}
             <div className="text-center sm:text-left">
@@ -1032,8 +1236,8 @@ const WeeklyMenuPage = () => {
       </div>
 
       {/* Week Selector */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-md backdrop-blur-sm bg-white/95">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+      <div className="bg-white border-b border-gray-200 shadow-md">
+        <div className="w-full max-w-none px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
           {/* Week Selector Buttons */}
           {!isWeek2Enabled ? (
             <div className="flex flex-col items-center justify-center mb-4 gap-3">
@@ -1156,7 +1360,7 @@ const WeeklyMenuPage = () => {
       {/* Selected Restaurant Banner */}
       {(selectedRestaurant || (isAuthenticated && !hasLoadedFromDatabase)) && (
         <div className="bg-white border-b border-gray-200 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="w-full max-w-none px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               {/* Restaurant Info */}
               <div className="flex items-center space-x-4 flex-1">
@@ -1272,7 +1476,7 @@ const WeeklyMenuPage = () => {
       )}
 
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 pt-8 sm:pt-12">
+      <div className="w-full max-w-none px-3 sm:px-6 lg:px-8 py-4 sm:py-8 pt-8 sm:pt-12">
         {/* Quick Actions */}
         {weekTotalItems > 0 && (
           <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -1289,18 +1493,25 @@ const WeeklyMenuPage = () => {
         )}
 
         {/* Weekly Calendar */}
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-200 p-3 sm:p-6 mb-6 sm:mb-8 mt-4 sm:mt-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-2">
-            <h2 className="text-lg sm:text-2xl font-bold text-gray-900">
-              {selectedWeek === 0 ? t('weeklyMenu.week1Menu') : t('weeklyMenu.week2Menu')}
-            </h2>
-            <div className="flex items-center justify-center sm:justify-end space-x-2">
-              <span className="text-xs sm:text-sm text-gray-500">{t('weeklyMenu.weekOf')}</span>
-              <span className="text-xs sm:text-sm font-semibold text-gray-900">
-                {isClient ? getWeekDateRange(selectedWeek) : ''}
-              </span>
+        <div className={`flex flex-col lg:flex-row gap-4 sm:gap-6 ${isSidePanelOpen ? '' : ''}`}>
+          <div
+            className={`${
+              isSidePanelOpen
+                ? 'lg:w-[65%] blur-sm opacity-60 pointer-events-none sm:blur-none sm:opacity-100 sm:pointer-events-auto'
+                : 'w-full'
+            } bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-200 p-3 sm:p-6 mb-6 sm:mb-8 mt-4 sm:mt-6 transition-[filter,opacity] duration-200`}
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-2">
+              <h2 className="text-lg sm:text-2xl font-bold text-gray-900">
+                {selectedWeek === 0 ? t('weeklyMenu.week1Menu') : t('weeklyMenu.week2Menu')}
+              </h2>
+              <div className="flex items-center justify-center sm:justify-end space-x-2">
+                <span className="text-xs sm:text-sm text-gray-500">{t('weeklyMenu.weekOf')}</span>
+                <span className="text-xs sm:text-sm font-semibold text-gray-900">
+                  {isClient ? getWeekDateRange(selectedWeek) : ''}
+                </span>
+              </div>
             </div>
-          </div>
 
           {/* Mobile Layout - Day Cards */}
           <div className="block sm:hidden space-y-3">
@@ -1356,6 +1567,7 @@ const WeeklyMenuPage = () => {
                         loading={subscriptionStatus.loading}
                         getSelectedRestaurantCount={getSelectedRestaurantCount}
                         getSelectedRestaurants={getSelectedRestaurants}
+                        isActive={isSidePanelOpen && panelDay === dayKey && panelMealType === 'lunch'}
                       />
                     </div>
                     
@@ -1382,6 +1594,7 @@ const WeeklyMenuPage = () => {
                         loading={subscriptionStatus.loading}
                         getSelectedRestaurantCount={getSelectedRestaurantCount}
                         getSelectedRestaurants={getSelectedRestaurants}
+                        isActive={isSidePanelOpen && panelDay === dayKey && panelMealType === 'dinner'}
                       />
                     </div>
                   </div>
@@ -1443,6 +1656,7 @@ const WeeklyMenuPage = () => {
                     loading={subscriptionStatus.loading}
                     getSelectedRestaurantCount={getSelectedRestaurantCount}
                     getSelectedRestaurants={getSelectedRestaurants}
+                    isActive={isSidePanelOpen && panelDay === day && panelMealType === 'lunch'}
                   />
                 ))}
                 
@@ -1474,35 +1688,291 @@ const WeeklyMenuPage = () => {
                     loading={subscriptionStatus.loading}
                     getSelectedRestaurantCount={getSelectedRestaurantCount}
                     getSelectedRestaurants={getSelectedRestaurants}
+                    isActive={isSidePanelOpen && panelDay === day && panelMealType === 'dinner'}
                   />
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Legend */}
-          <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-4 sm:p-6 mt-6 border border-gray-200">
-            <h4 className="text-sm font-semibold text-gray-900 mb-3 sm:hidden">{t('weeklyMenu.legend')}</h4>
-            <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-3 sm:gap-6 text-sm text-gray-700">
-              <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-200">
-                <div className="w-5 h-5 bg-gradient-to-br from-red-50 to-orange-50 border-2 border-grub-red rounded-lg shadow-sm flex-shrink-0"></div>
-                <span className="font-medium">{t('weeklyMenu.plannedMeals')}</span>
-              </div>
-              <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-200">
-                <div className="w-5 h-5 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-300 rounded-lg shadow-sm flex-shrink-0"></div>
-                <span className="font-medium">{t('weeklyMenu.availableSlots')}</span>
-              </div>
-              <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-200">
-                <svg className="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                <span className="font-medium">
-                  <span className="sm:hidden">{t('weeklyMenu.tapToRemove')}</span>
-                  <span className="hidden sm:inline">{t('weeklyMenu.hoverToRemove')}</span>
-                </span>
+            {/* Legend */}
+            <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-4 sm:p-6 mt-6 border border-gray-200">
+              <h4 className="text-sm font-semibold text-gray-900 mb-3 sm:hidden">{t('weeklyMenu.legend')}</h4>
+              <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-3 sm:gap-6 text-sm text-gray-700">
+                <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-200">
+                  <div className="w-5 h-5 bg-gradient-to-br from-red-50 to-orange-50 border-2 border-grub-red rounded-lg shadow-sm flex-shrink-0"></div>
+                  <span className="font-medium">{t('weeklyMenu.plannedMeals')}</span>
+                </div>
+                <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-200">
+                  <div className="w-5 h-5 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-300 rounded-lg shadow-sm flex-shrink-0"></div>
+                  <span className="font-medium">{t('weeklyMenu.availableSlots')}</span>
+                </div>
+                <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-200">
+                  <svg className="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span className="font-medium">
+                    <span className="sm:hidden">{t('weeklyMenu.tapToRemove')}</span>
+                    <span className="hidden sm:inline">{t('weeklyMenu.hoverToRemove')}</span>
+                  </span>
+                </div>
               </div>
             </div>
           </div>
+
+          {isSidePanelOpen && (
+            <div
+              className="fixed inset-0 z-40 bg-black/20 sm:hidden"
+              onClick={handleCloseSidePanel}
+              role="button"
+              tabIndex={-1}
+              aria-label="Close"
+            />
+          )}
+
+          {isSidePanelOpen && (
+            <div className="fixed inset-x-0 bottom-0 z-50 h-[80vh] bg-white rounded-t-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col sm:static sm:inset-auto sm:bottom-auto sm:z-auto sm:h-auto sm:rounded-xl sm:shadow-lg sm:mb-6 sm:mt-4 lg:w-[35%] sm:rounded-2xl sm:mb-8 sm:mt-6 lg:sticky lg:top-[120px] self-start lg:max-h-[calc(100vh-160px)]">
+              <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-gray-100">
+                <div className="px-3 sm:px-4 pt-3 sm:pt-4 pb-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-gray-900 truncate">
+                        {panelDay ? `${panelDay.charAt(0).toUpperCase() + panelDay.slice(1)} ${panelMealType}` : 'Select a slot'}
+                      </div>
+                      <div className="text-xs text-gray-500 truncate">
+                        {panelRestaurant?.name || ''}
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleCloseSidePanel}
+                      className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                      aria-label="Close"
+                      type="button"
+                    >
+                      <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="mt-3 sm:hidden">
+                    <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+                      {(isWeek2Enabled ? [0, 1] : [selectedWeek]).map((week) =>
+                        sidePanelDays.map((dayId) => {
+                          const dayLabel = dayId.charAt(0).toUpperCase() + dayId.slice(1);
+                          const dayDate = isClient ? getDayDateForWeek(dayLabel, week) : '';
+                          const isActiveChip = selectedWeek === week && panelDay === dayId;
+                          return (
+                            <button
+                              key={`${week}-${dayId}`}
+                              type="button"
+                              onClick={() => {
+                                if (selectedWeek !== week) handleSelectWeek(week);
+                                setPanelDay(dayId);
+                              }}
+                              className={`flex-none px-4 py-2 rounded-full text-xs font-semibold border transition-colors ${
+                                isActiveChip
+                                  ? 'bg-grub-red text-white border-grub-red'
+                                  : 'bg-white text-gray-700 border-gray-200'
+                              }`}
+                            >
+                              <div className="flex flex-col leading-tight text-left">
+                                <span className="font-bold">{dayLabel}</span>
+                                <span className={`text-[11px] ${isActiveChip ? 'text-white/90' : 'text-gray-500'}`}>
+                                  {dayDate}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+
+                  {/*
+                  Day tabs
+                  <div className="mt-3 flex items-center gap-2">
+                    <button
+                      type="button"
+                      aria-label="Scroll days left"
+                      onClick={() => handleDayArrow(-1)}
+                      disabled={dayCarouselStartIndex === 0}
+                      className={`flex-none p-2 rounded-lg border transition-colors ${
+                        dayCarouselStartIndex === 0
+                          ? 'border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed'
+                          : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+
+                    <div ref={dayCarouselViewportRef} className="flex-1 overflow-hidden">
+                      <div
+                        className="flex pb-1 transition-transform duration-300 ease-out will-change-transform"
+                        style={{ transform: `translateX(-${dayCarouselStartIndex * dayItemShiftPx}px)` }}
+                      >
+                      {sidePanelDays.map((dayId) => {
+                        const dayLabel = dayId.charAt(0).toUpperCase() + dayId.slice(1);
+                        const dayDate = isClient ? getDayDateForWeek(dayLabel, selectedWeek) : '';
+
+                        return (
+                          <div key={dayId} className="flex-none w-1/4 px-1">
+                            <button
+                              type="button"
+                              onClick={() => setPanelDay(dayId)}
+                              className={`w-full px-3 py-2 rounded-xl text-xs font-semibold border transition-all duration-300 text-left ${
+                                panelDay === dayId
+                                  ? 'bg-grub-red text-white border-grub-red shadow-md'
+                                  : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                              }`}
+                            >
+                              <div className="flex flex-col leading-tight">
+                                <span className="font-bold">{dayLabel}</span>
+                                <span className={`text-[11px] ${panelDay === dayId ? 'text-white/90' : 'text-gray-500'}`}>
+                                  {dayDate}
+                                </span>
+                              </div>
+                            </button>
+                          </div>
+                        );
+                      })}
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      aria-label="Scroll days right"
+                      onClick={() => handleDayArrow(1)}
+                      disabled={dayCarouselStartIndex >= maxDayStartIndex}
+                      className={`flex-none p-2 rounded-lg border transition-colors ${
+                        dayCarouselStartIndex >= maxDayStartIndex
+                          ? 'border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed'
+                          : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                  */}
+
+                  {/* Selected restaurants navbar (no Lunch/Dinner dropdown) */}
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <div className="text-xs font-semibold text-gray-700">Restaurants</div>
+                      {user?.isGrubPass && (
+                        <button
+                          type="button"
+                          onClick={() => setShowSelectedRestaurantsModal(true)}
+                          className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200 transition-colors"
+                        >
+                          Selected Restaurants
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        aria-label="Scroll restaurants left"
+                        onClick={() => handleRestaurantArrow(-1)}
+                        disabled={restaurantCarouselStartIndex === 0}
+                        className={`flex-none p-2 rounded-lg border transition-colors ${
+                          restaurantCarouselStartIndex === 0
+                            ? 'border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed'
+                            : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'
+                        }`}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+
+                      <div ref={restaurantCarouselViewportRef} className="flex-1 overflow-hidden">
+                        <div
+                          className={`flex pb-1 transition-transform duration-300 ease-out will-change-transform ${panelSelectedRestaurants.length <= 2 ? 'justify-center' : ''}`}
+                          style={{ transform: `translateX(-${restaurantCarouselStartIndex * restaurantItemShiftPx}px)` }}
+                        >
+                        {panelSelectedRestaurants.map((r) => {
+                          const rId = r.restaurantId || r.id;
+                          const rName = r.restaurantName || r.name;
+                          const isActiveRestaurant = String(panelRestaurantId) === String(rId);
+                          return (
+                            <div key={rId} className="flex-none w-1/2 px-1">
+                              <button
+                                type="button"
+                                onClick={() => setPanelRestaurantId(rId)}
+                                className={`w-full px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-300 ${
+                                  isActiveRestaurant
+                                    ? 'bg-gray-900 text-white border-gray-900 shadow-md'
+                                    : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                                }`}
+                              >
+                                {rName}
+                              </button>
+                            </div>
+                          );
+                        })}
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        aria-label="Scroll restaurants right"
+                        onClick={() => handleRestaurantArrow(1)}
+                        disabled={restaurantCarouselStartIndex >= maxRestaurantStartIndex}
+                        className={`flex-none p-2 rounded-lg border transition-colors ${
+                          restaurantCarouselStartIndex >= maxRestaurantStartIndex
+                            ? 'border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed'
+                            : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'
+                        }`}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-4">
+                {panelLoading ? (
+                  <div className="flex items-center justify-center py-10">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-grub-red" />
+                  </div>
+                ) : panelError ? (
+                  <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm">
+                    {panelError}
+                  </div>
+                ) : (
+                  <MenuItemsGrid
+                    items={panelMenuItems || []}
+                    userType={user?.userType || 'normal'}
+                    selectedDay={panelDay || 'monday'}
+                    selectedMealType={panelMealType || 'lunch'}
+                    restaurantName={panelRestaurant?.name || ''}
+                    onItemClick={() => {}}
+                    onAddToPlan={(item) => handleAddItemFromSidePanel(item)}
+                    onRemoveFromPlan={handleRemoveItemFromSidePanel}
+                    isItemInPlan={isItemInSidePanelSlot}
+                    getItemPlanEntries={getItemPlanEntriesForSidePanelSlot}
+                    title="Menu Items"
+                    subtitle="Click + to add"
+                    emptyStateMessage="No menu items available"
+                    isFromMenuSelection={true}
+                    isMealPlanningEnabled={true}
+                    compact={true}
+                    gridClassName="grid grid-cols-1 sm:grid-cols-2 gap-3"
+                    week={selectedWeek}
+                  />
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Weekly Summary - Hidden when subscription is active */}
