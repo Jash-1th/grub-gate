@@ -271,6 +271,8 @@ const WeeklyMenuPage = () => {
   const [restaurantCarouselStartIndex, setRestaurantCarouselStartIndex] = useState(0);
   const dayCarouselViewportRef = useRef(null);
   const restaurantCarouselViewportRef = useRef(null);
+  const leftCalendarRef = useRef(null);
+  const [leftCalendarHeight, setLeftCalendarHeight] = useState(null);
   const [dayCarouselViewportWidth, setDayCarouselViewportWidth] = useState(0);
   const [restaurantCarouselViewportWidth, setRestaurantCarouselViewportWidth] = useState(0);
   const [selectedWeek, setSelectedWeek] = useState(() => {
@@ -649,6 +651,35 @@ const WeeklyMenuPage = () => {
 
   useEffect(() => {
     if (!isClient) return;
+    if (!isSidePanelOpen) return;
+    if (window.innerWidth < 1024) return;
+
+    const measure = () => {
+      const height = leftCalendarRef.current?.getBoundingClientRect?.().height;
+      if (typeof height === 'number' && Number.isFinite(height) && height > 0) {
+        setLeftCalendarHeight(height);
+      }
+    };
+
+    measure();
+
+    const resizeObserver = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(() => measure())
+      : null;
+
+    if (resizeObserver && leftCalendarRef.current) {
+      resizeObserver.observe(leftCalendarRef.current);
+    }
+
+    window.addEventListener('resize', measure);
+    return () => {
+      window.removeEventListener('resize', measure);
+      if (resizeObserver) resizeObserver.disconnect();
+    };
+  }, [isClient, isSidePanelOpen, selectedWeek]);
+
+  useEffect(() => {
+    if (!isClient) return;
     if (!isSidePanelOpen || !isMobileViewport) return;
 
     const scrollY = window.scrollY;
@@ -863,6 +894,8 @@ const WeeklyMenuPage = () => {
     console.log('🔍 Navigating to:', `/plan/restaurants?source=plan${postalParam}`);
     navigate(`/plan/restaurants?source=plan${postalParam}`);
   };
+
+  const hasAnySelectedRestaurant = getSelectedRestaurantCount() > 0;
 
   const handleSelectOtherRestaurant = () => {
     console.log('🔍 handleSelectOtherRestaurant called');
@@ -1408,67 +1441,69 @@ const WeeklyMenuPage = () => {
       </div>
 
       {/* Selected Restaurant Banner */}
-      {(selectedRestaurant || (isAuthenticated && !hasLoadedFromDatabase)) && (
+      {(selectedRestaurant || !hasAnySelectedRestaurant || (isAuthenticated && !hasLoadedFromDatabase)) && (
         <div className="bg-white border-b border-gray-200 shadow-sm">
           <div className="w-full max-w-none px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               {/* Restaurant Info */}
-              <div className="flex items-center space-x-4 flex-1">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-grub-red to-red-600 rounded-full flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-xl sm:text-2xl">🍽️</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  {isAuthenticated && !hasLoadedFromDatabase ? (
-                    <>
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
-                        {t('weeklyMenu.loadingRestaurantSelection')}
-                      </h3>
-                      <p className="text-sm sm:text-base text-gray-600">
-                        {t('weeklyMenu.loadingMealPlan')}
-                      </p>
-                    </>
-                  ) : selectedRestaurant ? (
-                    <>
-                      {/* Restaurant Names - Mobile Optimized */}
-                      <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">
-                        <span className="block sm:inline">{t('weeklyMenu.planningMealsFrom')}</span>
-                        {user?.isGrubPass ? (
-                          <div className="mt-2 sm:mt-0 sm:ml-2 inline-flex">
-                            <button
-                              onClick={() => setShowSelectedRestaurantsModal(true)}
-                              className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors text-xs sm:text-sm font-semibold border border-gray-200"
-                            >
-                              Selected Restaurants
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0 sm:inline-flex">
-                            {currentRestaurants.map((restaurant, index) => (
-                              <span key={index} className="inline-flex items-center">
-                                <span className="inline-flex items-center px-2 sm:px-3 py-1 bg-gradient-to-r from-grub-red to-red-600 text-white text-xs sm:text-sm font-medium rounded-full shadow-sm">
-                                  {restaurant}
+              {(selectedRestaurant || (isAuthenticated && !hasLoadedFromDatabase)) && (
+                <div className="flex items-center space-x-4 flex-1">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-grub-red to-red-600 rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-white font-bold text-xl sm:text-2xl">🍽️</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    {isAuthenticated && !hasLoadedFromDatabase ? (
+                      <>
+                        <h3 className="text-lg sm:text-xl font-semibold text-gray-900 truncate">
+                          {t('weeklyMenu.loadingRestaurantSelection')}
+                        </h3>
+                        <p className="text-sm sm:text-base text-gray-600">
+                          {t('weeklyMenu.loadingMealPlan')}
+                        </p>
+                      </>
+                    ) : selectedRestaurant ? (
+                      <>
+                        {/* Restaurant Names - Mobile Optimized */}
+                        <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">
+                          <span className="block sm:inline">{t('weeklyMenu.planningMealsFrom')}</span>
+                          {user?.isGrubPass ? (
+                            <div className="mt-2 sm:mt-0 sm:ml-2 inline-flex">
+                              <button
+                                onClick={() => setShowSelectedRestaurantsModal(true)}
+                                className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors text-xs sm:text-sm font-semibold border border-gray-200"
+                              >
+                                Selected Restaurants
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0 sm:inline-flex">
+                              {currentRestaurants.map((restaurant, index) => (
+                                <span key={index} className="inline-flex items-center">
+                                  <span className="inline-flex items-center px-2 sm:px-3 py-1 bg-gradient-to-r from-grub-red to-red-600 text-white text-xs sm:text-sm font-medium rounded-full shadow-sm">
+                                    {restaurant}
+                                  </span>
+                                  {index < currentRestaurants.length - 1 && (
+                                    <span className="text-gray-500 mx-1">&</span>
+                                  )}
                                 </span>
-                                {index < currentRestaurants.length - 1 && (
-                                  <span className="text-gray-500 mx-1">&</span>
-                                )}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </h3>
-                      <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm md:text-base text-gray-600 mt-1">
-                        <span>{t('weeklyMenu.clickEmptySlot')}</span>
-                        {selectedRestaurant.cuisine && (
-                          <>
-                            <span>•</span>
-                            <span>{selectedRestaurant.cuisine}</span>
-                          </>
-                        )}
-                      </div>
-                    </>
-                  ) : null}
+                              ))}
+                            </div>
+                          )}
+                        </h3>
+                        <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs sm:text-sm md:text-base text-gray-600 mt-1">
+                          <span>{t('weeklyMenu.clickEmptySlot')}</span>
+                          {selectedRestaurant.cuisine && (
+                            <>
+                              <span>•</span>
+                              <span>{selectedRestaurant.cuisine}</span>
+                            </>
+                          )}
+                        </div>
+                      </>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
+              )}
               
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-3 w-full sm:w-auto">
@@ -1477,6 +1512,18 @@ const WeeklyMenuPage = () => {
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-grub-red"></div>
                     <span className="text-sm text-gray-600">{t('weeklyMenu.loading')}</span>
                   </div>
+                ) : !hasAnySelectedRestaurant ? (
+                  <button
+                    onClick={handleAddRestaurant}
+                    className="px-4 py-3 bg-grub-red text-white rounded-xl hover:bg-red-700 transition-colors text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 touch-manipulation"
+                  >
+                    <div className="flex items-center justify-center space-x-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      <span>{t('weeklyMenu.addRestaurant')}</span>
+                    </div>
+                  </button>
                 ) : selectedRestaurant ? (
                   <>
                     {user?.isGrubPass || getSelectedRestaurantCount() < 2 ? (
@@ -1543,8 +1590,9 @@ const WeeklyMenuPage = () => {
         )}
 
         {/* Weekly Calendar */}
-        <div className={`flex flex-col lg:flex-row gap-4 sm:gap-6 ${isSidePanelOpen ? '' : ''}`}>
+        <div className={`flex flex-col lg:flex-row lg:items-start gap-4 sm:gap-6 ${isSidePanelOpen ? '' : ''}`}>
           <div
+            ref={leftCalendarRef}
             className={`${
               isSidePanelOpen
                 ? 'lg:w-[65%] blur-sm opacity-60 pointer-events-none sm:blur-none sm:opacity-100 sm:pointer-events-auto'
@@ -1565,8 +1613,8 @@ const WeeklyMenuPage = () => {
 
           {/* Mobile Layout - Day Cards */}
           <div className="block sm:hidden space-y-3">
-            {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day, index) => {
-              const dayKey = day.toLowerCase();
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => {
+              const dayKey = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][index];
               const lunchItems = getWeekMealItems(dayKey, 'lunch', selectedWeek);
               const dinnerItems = getWeekMealItems(dayKey, 'dinner', selectedWeek);
               const totalDayItems = lunchItems.length + dinnerItems.length;
@@ -1613,7 +1661,7 @@ const WeeklyMenuPage = () => {
                         onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
                         isAuthenticated={isAuthenticated}
                         hasLoadedFromDatabase={hasLoadedFromDatabase}
-                        disabled={subscriptionStatus.hasActiveSubscription || subscriptionStatus.loading}
+                        disabled={!hasAnySelectedRestaurant || subscriptionStatus.hasActiveSubscription || subscriptionStatus.loading}
                         loading={subscriptionStatus.loading}
                         getSelectedRestaurantCount={getSelectedRestaurantCount}
                         getSelectedRestaurants={getSelectedRestaurants}
@@ -1640,7 +1688,7 @@ const WeeklyMenuPage = () => {
                         onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
                         isAuthenticated={isAuthenticated}
                         hasLoadedFromDatabase={hasLoadedFromDatabase}
-                        disabled={subscriptionStatus.hasActiveSubscription || subscriptionStatus.loading}
+                        disabled={!hasAnySelectedRestaurant || subscriptionStatus.hasActiveSubscription || subscriptionStatus.loading}
                         loading={subscriptionStatus.loading}
                         getSelectedRestaurantCount={getSelectedRestaurantCount}
                         getSelectedRestaurants={getSelectedRestaurants}
@@ -1659,8 +1707,8 @@ const WeeklyMenuPage = () => {
               <div className="grid grid-cols-8 gap-3 mb-4">
                 {/* Header row */}
                 <div className="p-3"></div>
-                {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day, index) => {
-                  const dayKey = day.toLowerCase();
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => {
+                  const dayKey = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][index];
                   const dayTotalItems = getWeekMealItems(dayKey, 'lunch', selectedWeek).length + getWeekMealItems(dayKey, 'dinner', selectedWeek).length;
                   
                   return (
@@ -1702,7 +1750,7 @@ const WeeklyMenuPage = () => {
                     onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
                     isAuthenticated={isAuthenticated}
                     hasLoadedFromDatabase={hasLoadedFromDatabase}
-                    disabled={subscriptionStatus.hasActiveSubscription || subscriptionStatus.loading}
+                    disabled={!hasAnySelectedRestaurant || subscriptionStatus.hasActiveSubscription || subscriptionStatus.loading}
                     loading={subscriptionStatus.loading}
                     getSelectedRestaurantCount={getSelectedRestaurantCount}
                     getSelectedRestaurants={getSelectedRestaurants}
@@ -1734,7 +1782,7 @@ const WeeklyMenuPage = () => {
                     onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
                     isAuthenticated={isAuthenticated}
                     hasLoadedFromDatabase={hasLoadedFromDatabase}
-                    disabled={subscriptionStatus.hasActiveSubscription || subscriptionStatus.loading}
+                    disabled={!hasAnySelectedRestaurant || subscriptionStatus.hasActiveSubscription || subscriptionStatus.loading}
                     loading={subscriptionStatus.loading}
                     getSelectedRestaurantCount={getSelectedRestaurantCount}
                     getSelectedRestaurants={getSelectedRestaurants}
@@ -1781,7 +1829,14 @@ const WeeklyMenuPage = () => {
           )}
 
           {isSidePanelOpen && (
-            <div className="fixed inset-x-0 bottom-0 z-50 h-[80vh] bg-white rounded-t-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col sm:static sm:inset-auto sm:bottom-auto sm:z-auto sm:h-auto sm:rounded-xl sm:shadow-lg sm:mb-6 sm:mt-4 lg:w-[35%] sm:rounded-2xl sm:mb-8 sm:mt-6 lg:sticky lg:top-[120px] self-start lg:max-h-[calc(100vh-160px)]">
+            <div
+              className="fixed inset-x-0 bottom-0 z-50 h-[80vh] bg-white rounded-t-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col min-h-0 sm:static sm:inset-auto sm:bottom-auto sm:z-auto sm:h-auto sm:rounded-xl sm:shadow-lg sm:mb-6 sm:mt-4 lg:w-[35%] sm:rounded-2xl sm:mb-8 sm:mt-6"
+              style={
+                isClient && window.innerWidth >= 1024 && leftCalendarHeight
+                  ? { height: leftCalendarHeight }
+                  : undefined
+              }
+            >
               <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-gray-100">
                 <div className="px-3 sm:px-4 pt-3 sm:pt-4 pb-3">
                   <div className="flex items-start justify-between gap-3">
@@ -1989,7 +2044,7 @@ const WeeklyMenuPage = () => {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto overscroll-contain px-3 sm:px-4 pt-4 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:pb-4">
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-auto px-3 sm:px-4 pt-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">
                 <div className="mb-4">
                   <PreferencesSelector
                     selectedPreferences={planningSelectedPreferences || []}

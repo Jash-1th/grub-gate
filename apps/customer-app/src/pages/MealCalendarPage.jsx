@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
@@ -23,6 +23,7 @@ const MealCalendarPage = () => {
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [userMealPlans, setUserMealPlans] = useState(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [planRange, setPlanRange] = useState({ startDate: null, endDate: null });
   
   // Modal state for meal details
   const [showMealModal, setShowMealModal] = useState(false);
@@ -36,7 +37,7 @@ const MealCalendarPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const includeWeek2 = searchParams.get('includeWeek2') === '1';
-  
+
   // Access MealPlan context with proper error boundary
   const mealPlanContext = useMealPlan();
   
@@ -49,6 +50,15 @@ const MealCalendarPage = () => {
     isLoadingFromDatabase,
     hasLoadedFromDatabase
   } = mealPlanContext;
+
+  const hasWeek2PlannedMeals = isClient && getWeekTotalItems(1) > 0;
+  const shouldShowWeek2 = includeWeek2 || hasWeek2PlannedMeals;
+  const week2Clickable = hasWeek2PlannedMeals;
+
+  useEffect(() => {
+    if (!isClient) return;
+    setCurrentWeekStart(null);
+  }, [includeWeek2, isClient]);
 
   // SSR safety check
   useEffect(() => {
@@ -156,6 +166,18 @@ const MealCalendarPage = () => {
         console.error('❌ MealCalendar: Failed to load calendar data:', calendarResult.reason);
       }
       
+      const fetchedMealPlans = mealPlansResult.status === 'fulfilled' ? mealPlansResult.value : null;
+      const fetchedPlanStartDate = fetchedMealPlans?.mealPlans?.length > 0 && fetchedMealPlans.mealPlans[0].planStartDate
+        ? new Date(fetchedMealPlans.mealPlans[0].planStartDate).toISOString().split('T')[0]
+        : null;
+      const fetchedPlanEndDate = fetchedMealPlans?.mealPlans?.length > 0 && fetchedMealPlans.mealPlans[0].planEndDate
+        ? new Date(fetchedMealPlans.mealPlans[0].planEndDate).toISOString().split('T')[0]
+        : null;
+
+      if (fetchedPlanStartDate || fetchedPlanEndDate) {
+        setPlanRange({ startDate: fetchedPlanStartDate, endDate: fetchedPlanEndDate });
+      }
+
       console.log('🔄 MealCalendar: Handling date initialization...');
       
       // Handle date initialization after data is loaded
@@ -165,21 +187,44 @@ const MealCalendarPage = () => {
       if (urlStartDate) {
         const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
         if (dateRegex.test(urlStartDate)) {
-          console.log('🗓️ MealCalendar: Using subscription start date from URL:', urlStartDate);
-          dateToSet = urlStartDate;
+          if (fetchedPlanStartDate) {
+            const urlDateObj = new Date(urlStartDate);
+            const planStartObj = new Date(fetchedPlanStartDate);
+            const planEndObj = fetchedPlanEndDate ? new Date(fetchedPlanEndDate) : null;
+            const withinPlan = planEndObj
+              ? (urlDateObj >= planStartObj && urlDateObj <= planEndObj)
+              : (urlDateObj >= planStartObj);
+
+            if (withinPlan) {
+              console.log('🗓️ MealCalendar: Using URL startDate within plan range:', urlStartDate);
+              dateToSet = urlStartDate;
+            } else {
+              console.log('🗓️ MealCalendar: URL startDate outside plan range, clamping to planStartDate:', fetchedPlanStartDate);
+              dateToSet = fetchedPlanStartDate;
+            }
+          } else {
+            console.log('🗓️ MealCalendar: Using startDate from URL:', urlStartDate);
+            dateToSet = urlStartDate;
+          }
         } else {
           console.log('🗓️ MealCalendar: Invalid date format in URL, using default');
           dateToSet = getDefaultStartDate();
         }
       } else if (!selectedDate) {
         console.log('🗓️ MealCalendar: No start date in URL, using default');
-        dateToSet = getDefaultStartDate();
+        dateToSet = fetchedPlanStartDate || getDefaultStartDate();
       }
       
       // Set the date if we determined one
       if (dateToSet && dateToSet !== selectedDate) {
         console.log('🗓️ MealCalendar: Setting selected date to:', dateToSet);
         setSelectedDate(dateToSet);
+
+        const clickedDate = new Date(dateToSet);
+        const dayOfWeek = clickedDate.getDay();
+        const weekStart = new Date(clickedDate);
+        weekStart.setDate(clickedDate.getDate() - dayOfWeek);
+        setCurrentWeekStart(weekStart.toISOString().split('T')[0]);
       }
       
       console.log('✅ MealCalendar: Initialization complete!');
@@ -242,25 +287,36 @@ const MealCalendarPage = () => {
       return subscriptionStart.toISOString().split('T')[0];
     }
 
+    if (!isSubscribed && planRange?.startDate) {
+      return planRange.startDate;
+    }
+
     // For unsubscribed users with weekly plans, use their actual meal dates (not plan start date)
     if (!isSubscribed && hasPlannedMeals) {
+      if (userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate) {
+        const weeklyPlanStart = new Date(userMealPlans.mealPlans[0].planStartDate);
+        console.log('📆 Using weekly plan start date as default for unsubscribed user:', weeklyPlanStart.toDateString());
+        return weeklyPlanStart.toISOString().split('T')[0];
+      }
+
       const storedWeekStart = getEarliestStoredMealDate();
       if (storedWeekStart) {
-        console.log('📆 Using actual stored meal date as default for unsubscribed user:', storedWeekStart.toDateString());
+        console.log('📆 Using actual stored meal date as fallback for unsubscribed user:', storedWeekStart.toDateString());
         return storedWeekStart.toISOString().split('T')[0];
-      } else if (userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate) {
-        // Fallback to plan start date if no stored meals
-        const weeklyPlanStart = new Date(userMealPlans.mealPlans[0].planStartDate);
-        console.log('📆 Using weekly plan start date as fallback for unsubscribed user:', weeklyPlanStart.toDateString());
-        return weeklyPlanStart.toISOString().split('T')[0];
       }
     }
 
     // For preview mode, use stored meal dates if available, otherwise next Sunday
     if (hasPlannedMeals) {
+      if (userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate) {
+        const weeklyPlanStart = new Date(userMealPlans.mealPlans[0].planStartDate);
+        console.log('📅 Using weekly plan start date as default start date:', weeklyPlanStart.toDateString());
+        return weeklyPlanStart.toISOString().split('T')[0];
+      }
+
       const storedWeekStart = getEarliestStoredMealDate();
       if (storedWeekStart) {
-        console.log('📅 Using stored meal date as default start date:', storedWeekStart.toDateString());
+        console.log('📅 Using stored meal date as fallback start date:', storedWeekStart.toDateString());
         return storedWeekStart.toISOString().split('T')[0];
       } else {
         // Fallback to next Sunday calculation
@@ -367,23 +423,27 @@ const MealCalendarPage = () => {
       
       const response = await subscriptionApi.getUserMealPlans();
       
-      console.log('✅ MealCalendarPage: User meal plans received:', response);
-      setUserMealPlans(response.data);
+      // subscriptionApi.getUserMealPlans() returns the JSON body, not an axios response.
+      // Backend shape: { status: 'success', data: { mealPlans, count } }
+      const normalized = response?.data ? response.data : response;
+      
+      console.log('✅ MealCalendarPage: User meal plans received:', normalized);
+      setUserMealPlans(normalized);
       
       // Don't set isSubscribed here - let fetchCalendarData determine subscription status
       // This function only fetches meal plan data
       
-      console.log('📊 MealCalendarPage: Meal plans found:', response.data?.mealPlans?.length || 0);
-      if (response.data?.mealPlans?.length > 0) {
+      console.log('📊 MealCalendarPage: Meal plans found:', normalized?.mealPlans?.length || 0);
+      if (normalized?.mealPlans?.length > 0) {
         console.log('📊 MealCalendarPage: First meal plan details:', {
-          status: response.data.mealPlans[0].status,
-          planStartDate: response.data.mealPlans[0].planStartDate,
-          planEndDate: response.data.mealPlans[0].planEndDate,
-          totalMealsCount: response.data.mealPlans[0].totalMealsCount
+          status: normalized.mealPlans[0].status,
+          planStartDate: normalized.mealPlans[0].planStartDate,
+          planEndDate: normalized.mealPlans[0].planEndDate,
+          totalMealsCount: normalized.mealPlans[0].totalMealsCount
         });
       }
       
-      return response.data; // Return data for consolidated function
+      return normalized; // Return data for consolidated function
       
     } catch (err) {
       console.error('❌ MealCalendarPage: Error fetching user meal plans:', err);
@@ -520,19 +580,32 @@ const MealCalendarPage = () => {
 
         return date >= nextSunday && date <= twoWeeksLater;
       }
-    } else if (!isSubscribed && hasPlannedMeals) {
-      // Unsubscribed user with planned meals: use their actual stored meal dates
+    } else if (!isSubscribed && (planRange?.startDate || hasPlannedMeals || (userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate))) {
+      // Unsubscribed user: prefer DB planStartDate/planEndDate as authoritative window
+      const plannedStartDate = planRange?.startDate
+        ? new Date(planRange.startDate)
+        : (userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate
+            ? new Date(userMealPlans.mealPlans[0].planStartDate)
+            : null);
+      const plannedEndDate = planRange?.endDate
+        ? new Date(planRange.endDate)
+        : (userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planEndDate
+            ? new Date(userMealPlans.mealPlans[0].planEndDate)
+            : null);
       const storedWeekStart = getEarliestStoredMealDate();
-      if (storedWeekStart) {
-        const startDate = new Date(storedWeekStart);
-        const endDate = new Date(storedWeekStart);
-        endDate.setDate(startDate.getDate() + (includeWeek2 ? 13 : 6)); // 7 or 14 days total
+
+      const startDate = plannedStartDate || storedWeekStart;
+      if (startDate) {
+        const endDate = plannedEndDate ? new Date(plannedEndDate) : new Date(startDate);
+        if (!plannedEndDate) {
+          endDate.setDate(endDate.getDate() + (week2Clickable ? 13 : 6)); // 7 or 14 days total
+        }
         startDate.setHours(0, 0, 0, 0);
         endDate.setHours(0, 0, 0, 0);
 
-        console.log(`📆 Stored meal date range: ${startDate.toDateString()} to ${endDate.toDateString()}`);
+        console.log(`📆 Planned date range: ${startDate.toDateString()} to ${endDate.toDateString()}`);
         const isClickable = date >= startDate && date <= endDate;
-        console.log(`📆 STORED MEAL RESULT: ${dateString} is ${isClickable ? 'CLICKABLE' : 'NOT CLICKABLE'}`);
+        console.log(`📆 PLANNED MEAL RESULT: ${dateString} is ${isClickable ? 'CLICKABLE' : 'NOT CLICKABLE'}`);
         return isClickable;
       }
     } else if (!isSubscribed && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate) {
@@ -553,7 +626,7 @@ const MealCalendarPage = () => {
         const startDate = new Date(mealPlan.planStartDate);
         startDate.setHours(0, 0, 0, 0);
         const twoWeeksLater = new Date(startDate);
-        twoWeeksLater.setDate(startDate.getDate() + (includeWeek2 ? 13 : 6));
+        twoWeeksLater.setDate(startDate.getDate() + (week2Clickable ? 13 : 6));
         
         console.log(`📆 Weekly plan double fallback range: ${startDate.toDateString()} to ${twoWeeksLater.toDateString()}`);
         const isClickable = date >= startDate && date <= twoWeeksLater;
@@ -657,18 +730,31 @@ const MealCalendarPage = () => {
     }
     
     // For weekly planned users, use their actual meal dates (not plan period)
-    if (!isSubscribed && hasPlannedMeals) {
+    if (!isSubscribed && (planRange?.startDate || hasPlannedMeals || userMealPlans?.mealPlans?.length > 0)) {
       console.log('🎯 Taking WEEKLY PLAN (STORED MEALS) path');
+      const plannedStartDate = planRange?.startDate
+        ? new Date(planRange.startDate)
+        : (userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate
+            ? new Date(userMealPlans.mealPlans[0].planStartDate)
+            : null);
+      const plannedEndDate = planRange?.endDate
+        ? new Date(planRange.endDate)
+        : (userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planEndDate
+            ? new Date(userMealPlans.mealPlans[0].planEndDate)
+            : null);
       const storedWeekStart = getEarliestStoredMealDate();
-      if (storedWeekStart) {
-        // Generate 7 or 14 days from the earliest stored meal date
-        const startDate = new Date(storedWeekStart);
-        const dayCount = includeWeek2 ? 14 : 7;
-        console.log(`📅 Weekly plan mode: Generating ${dayCount} days from stored meal date ${startDate.toDateString()}`);
+      const startDate = plannedStartDate || storedWeekStart;
+      if (startDate) {
+        const msPerDay = 24 * 60 * 60 * 1000;
+        const dayCount = plannedEndDate && shouldShowWeek2
+          ? (Math.floor((new Date(plannedEndDate).setHours(0, 0, 0, 0) - new Date(startDate).setHours(0, 0, 0, 0)) / msPerDay) + 1)
+          : (shouldShowWeek2 ? 14 : 7);
+
+        console.log(`📅 Weekly plan mode: Generating ${dayCount} days from start date ${new Date(startDate).toDateString()}`);
         
         for (let i = 0; i < dayCount; i++) {
           const date = new Date(startDate);
-          date.setDate(startDate.getDate() + i);
+          date.setDate(new Date(startDate).getDate() + i);
           dates.push(date.toISOString().split('T')[0]);
         }
         
@@ -768,7 +854,11 @@ const MealCalendarPage = () => {
     const previewMeals = [];
     
     // Generate meals for both weeks using stored dates
-    const weekCount = includeWeek2 ? 2 : 1;
+    const weekCount = shouldShowWeek2 ? 2 : 1;
+    const planStartDate = userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate
+      ? new Date(userMealPlans.mealPlans[0].planStartDate)
+      : null;
+
     for (let weekIndex = 0; weekIndex < weekCount; weekIndex++) {
       const weekPlan = getWeekPlan(weekIndex);
       console.log(`🔄 generatePreviewMeals: Week ${weekIndex} plan:`, weekPlan);
@@ -786,35 +876,45 @@ const MealCalendarPage = () => {
           return; // Skip empty days
         }
         
-        // Use stored date if available, otherwise use consistent calculation
+        // Prefer DB planStartDate when available to avoid shifted stored dates
         let mealDate;
-        if (dayMeals && dayMeals.date) {
+        if (planStartDate) {
+          const baseWeekStart = new Date(planStartDate);
+          baseWeekStart.setHours(0, 0, 0, 0);
+
+          const weekStartDate = new Date(baseWeekStart);
+          weekStartDate.setDate(baseWeekStart.getDate() + (weekIndex * 7));
+
+          const dayIndex = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].indexOf(day);
+          mealDate = new Date(weekStartDate);
+          mealDate.setDate(weekStartDate.getDate() + dayIndex);
+          console.log(`📅 Using planStartDate-derived date for ${day} (week ${weekIndex}):`, mealDate.toDateString());
+        } else if (dayMeals && dayMeals.date) {
           // Use the stored date from backend
           mealDate = new Date(dayMeals.date + 'T00:00:00.000Z'); // Ensure UTC
           console.log(`📅 Using stored date for ${day} (week ${weekIndex}):`, dayMeals.date, '→', mealDate.toDateString());
         } else {
-          // Use consistent calculation based on next Sunday (same logic as stored dates)
-          console.log(`⚠️ No stored date for ${day} (week ${weekIndex}), using consistent Sunday-based calculation`);
-          
-          // Calculate next Sunday from today (same logic that would be used for storing dates)
-          const today = new Date();
-          const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
-          
-          // Calculate next Sunday (or today if it's Sunday)
-          const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
-          const nextSunday = new Date(today);
-          nextSunday.setDate(today.getDate() + daysUntilSunday);
-          
+          // Derive from DB planStartDate when possible (avoid hard-coded nextSunday)
+          console.log(`⚠️ No stored date for ${day} (week ${weekIndex}), deriving from planStartDate`);
+
+          const planStartDate = userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate
+            ? new Date(userMealPlans.mealPlans[0].planStartDate)
+            : null;
+          const storedWeekStart = getEarliestStoredMealDate();
+
+          const baseWeekStart = planStartDate || storedWeekStart || getNextSunday();
+          baseWeekStart.setHours(0, 0, 0, 0);
+
           // Calculate the week start for this week index
-          const weekStartDate = new Date(nextSunday);
-          weekStartDate.setDate(nextSunday.getDate() + (weekIndex * 7));
-          
+          const weekStartDate = new Date(baseWeekStart);
+          weekStartDate.setDate(baseWeekStart.getDate() + (weekIndex * 7));
+
           // Calculate the specific day within the week
           const dayIndex = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].indexOf(day);
           mealDate = new Date(weekStartDate);
           mealDate.setDate(weekStartDate.getDate() + dayIndex);
-          
-          console.log(`📅 Calculated date for ${day} (week ${weekIndex}) using next Sunday logic:`, mealDate.toDateString());
+
+          console.log(`📅 Calculated date for ${day} (week ${weekIndex}) from base start ${baseWeekStart.toDateString()}:`, mealDate.toDateString());
         }
         
         // Generate lunch and dinner meals
@@ -875,8 +975,8 @@ const MealCalendarPage = () => {
     if (!hasPlannedMeals) return null;
     
     const previewMeals = generatePreviewMeals();
-    const totalMeals = getWeekTotalItems(0) + (includeWeek2 ? getWeekTotalItems(1) : 0);
-    const totalCost = getWeekTotalCost(0) + (includeWeek2 ? getWeekTotalCost(1) : 0);
+    const totalMeals = getWeekTotalItems(0) + (shouldShowWeek2 ? getWeekTotalItems(1) : 0);
+    const totalCost = getWeekTotalCost(0) + (shouldShowWeek2 ? getWeekTotalCost(1) : 0);
     
     return {
       meals: previewMeals,
@@ -898,6 +998,33 @@ const MealCalendarPage = () => {
       }
     };
   };
+
+  // Use either subscription data or preview data
+  const previewData = useMemo(
+    () => getPreviewCalendarData(),
+    [hasPlannedMeals, includeWeek2, hasWeek2PlannedMeals, hasLoadedFromDatabase, mealPlan]
+  );
+  const displayData = calendarData || previewData;
+
+  const mealsIndex = useMemo(() => {
+    const meals = displayData?.meals || [];
+    const index = {};
+
+    for (const meal of meals) {
+      const dateKey = new Date(meal.date).toISOString().split('T')[0];
+      const typeKey = meal.mealType;
+
+      if (!index[dateKey]) {
+        index[dateKey] = { lunch: [], dinner: [] };
+      }
+
+      if (typeKey === 'lunch' || typeKey === 'dinner') {
+        index[dateKey][typeKey].push(meal);
+      }
+    }
+
+    return index;
+  }, [displayData]);
 
   // SSR safety - don't render until client-side
   if (!isClient) {
@@ -1029,9 +1156,6 @@ const MealCalendarPage = () => {
       </div>
     );
   }
-
-  // Use either subscription data or preview data
-  const displayData = calendarData || getPreviewCalendarData();
   
   // Debug logging for displayData
   console.log('🔍 MealCalendar displayData calculation:');
@@ -1060,6 +1184,10 @@ const MealCalendarPage = () => {
     if (urlStartDate && /^\d{4}-\d{2}-\d{2}$/.test(urlStartDate)) {
       console.log(`📅 Using URL startDate for week calculation: ${urlStartDate}`);
       return urlStartDate;
+    }
+
+    if (!isSubscribed && planRange?.startDate) {
+      return planRange.startDate;
     }
     
     if (isSubscribed && calendarData?.calendar?.subscriptionPeriod?.startDate) {
@@ -1094,8 +1222,12 @@ const MealCalendarPage = () => {
   });
   
   let weekDates = [];
+  const hasWeeklyPlanDates = !isSubscribed && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate;
   if (isSubscribed && !calendarData?.calendar?.subscriptionPeriod) {
     console.log('⏳ Waiting for calendar data to load...');
+    weekDates = [];
+  } else if (!isSubscribed && !hasWeeklyPlanDates && hasPlannedMeals && !hasLoadedFromDatabase) {
+    console.log('⏳ Waiting for weekly plan dates to load...');
     weekDates = [];
   } else if (selectedDate || searchParams.get('startDate')) {
     weekDates = getWeekDates(getWeekStartDate());
@@ -1117,12 +1249,9 @@ const MealCalendarPage = () => {
 
   // Function to get meals by date and meal type
   const getMealsByDateAndType = (targetDate, mealType) => {
-    if (!displayData?.meals) return [];
-    
-    return displayData.meals.filter(meal => {
-      const mealDate = new Date(meal.date).toISOString().split('T')[0];
-      return mealDate === targetDate && meal.mealType === mealType;
-    });
+    if (!targetDate) return [];
+    if (mealType !== 'lunch' && mealType !== 'dinner') return [];
+    return mealsIndex[targetDate]?.[mealType] || [];
   };
 
   // Function to handle opening meal detail modal
@@ -1300,7 +1429,23 @@ const MealCalendarPage = () => {
                       ? `Your subscription period: ${new Date(calendarData.calendar.subscriptionPeriod.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} to ${new Date(calendarData.calendar.subscriptionPeriod.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
                       : isSubscribed 
                       ? 'Click on any date within your subscription period'
-                      : `Click on dates from ${getNextSunday().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} to ${new Date(getNextSunday().getTime() + 13 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} (2 weeks)`
+                      : (() => {
+                          const planStart = planRange?.startDate
+                            ? new Date(planRange.startDate)
+                            : (userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate
+                                ? new Date(userMealPlans.mealPlans[0].planStartDate)
+                                : getNextSunday());
+                          const planEnd = planRange?.endDate
+                            ? new Date(planRange.endDate)
+                            : (userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planEndDate
+                                ? new Date(userMealPlans.mealPlans[0].planEndDate)
+                                : (() => {
+                                    const end = new Date(planStart);
+                                    end.setDate(planStart.getDate() + (week2Clickable ? 13 : 6));
+                                    return end;
+                                  })());
+                          return `Click on dates from ${planStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} to ${planEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} (${week2Clickable ? '2 weeks' : '1 week'})`;
+                        })()
                     }
                   </p>
                 </div>
@@ -1319,6 +1464,10 @@ const MealCalendarPage = () => {
                       new Date(calendarData.calendar.subscriptionPeriod.startDate).toISOString().split('T')[0] : 
                       isSubscribed && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate ? 
                       new Date(userMealPlans.mealPlans[0].planStartDate).toISOString().split('T')[0] : 
+                      !isSubscribed && planRange?.startDate ?
+                      planRange.startDate :
+                      !isSubscribed && hasPlannedMeals && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate ?
+                      new Date(userMealPlans.mealPlans[0].planStartDate).toISOString().split('T')[0] :
                       !isSubscribed && hasPlannedMeals && getEarliestStoredMealDate() ?
                       getEarliestStoredMealDate().toISOString().split('T')[0] :
                       !isSubscribed && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate ?
@@ -1329,21 +1478,22 @@ const MealCalendarPage = () => {
                       new Date(calendarData.calendar.subscriptionPeriod.endDate).toISOString().split('T')[0] : 
                       isSubscribed && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planEndDate ? 
                       new Date(userMealPlans.mealPlans[0].planEndDate).toISOString().split('T')[0] : 
-                      !isSubscribed && hasPlannedMeals && getEarliestStoredMealDate() ?
+                      !isSubscribed && planRange?.endDate ?
+                      planRange.endDate :
+                      !isSubscribed && hasPlannedMeals && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planEndDate ?
+                      new Date(userMealPlans.mealPlans[0].planEndDate).toISOString().split('T')[0] :
+                      !isSubscribed && hasPlannedMeals && (userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate ? true : getEarliestStoredMealDate()) ?
                       (() => {
-                        const startDate = getEarliestStoredMealDate();
+                        const startDate = userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate
+                          ? new Date(userMealPlans.mealPlans[0].planStartDate)
+                          : getEarliestStoredMealDate();
                         const endDate = new Date(startDate);
-                        endDate.setDate(startDate.getDate() + 13); // 14 days total
+                        endDate.setDate(startDate.getDate() + (week2Clickable ? 13 : 6)); // 7 or 14 days total
                         return endDate.toISOString().split('T')[0];
                       })() :
                       !isSubscribed && userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planEndDate ?
                       new Date(userMealPlans.mealPlans[0].planEndDate).toISOString().split('T')[0] :
-                      (() => {
-                        const nextSunday = getNextSunday();
-                        const twoWeeksLater = new Date(nextSunday);
-                        twoWeeksLater.setDate(nextSunday.getDate() + 13);
-                        return twoWeeksLater.toISOString().split('T')[0];
-                      })()
+                      new Date(getNextSunday().getTime() + 13 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
                     }
                     onChange={(e) => {
                       const newDate = e.target.value;

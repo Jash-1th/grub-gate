@@ -140,7 +140,15 @@ const subscriptionApi = {
   // Get user's active meal plans (for subscription detection)
   getUserMealPlans: async () => {
     try {
-      const response = await apiClient.get('/subscription-meal-plans/me/all');
+      const response = await apiClient.get('/subscription-meal-plans/me/all', {
+        params: {
+          _ts: Date.now()
+        },
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          Pragma: 'no-cache'
+        }
+      });
       return response.data;
     } catch (error) {
       console.error('Error fetching user meal plans:', error);

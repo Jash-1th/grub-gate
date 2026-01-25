@@ -117,7 +117,7 @@ const authReducer = (state, action) => {
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
   const [isClient, setIsClient] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isHydrating, setIsHydrating] = useState(true);
 
   // SSR Safety - only run on client side
   useEffect(() => {
@@ -126,6 +126,9 @@ export const AuthProvider = ({ children }) => {
     console.log('🔍 AuthContext: Checking for existing auth on mount');
     const token = getStorageItem('authToken');
     const user = getStorageItem('user');
+
+    // Clear flags that can become stale across refresh (timeouts won't survive a reload)
+    removeStorageItem('loginInProgress');
     
     console.log('🔍 AuthContext: Found token:', !!token);
     console.log('🔍 AuthContext: Found user:', !!user);
@@ -137,24 +140,28 @@ export const AuthProvider = ({ children }) => {
 
         (async () => {
           try {
-            const meRes = await apiClient.get('/auth/me');
-            const fullUser = meRes?.data?.data?.user;
-            if (fullUser) {
-              setStorageItem('user', fullUser);
-              dispatch({
-                type: AUTH_ACTIONS.SET_USER,
-                payload: { user: fullUser, token },
-              });
-              return;
+            try {
+              const meRes = await apiClient.get('/auth/me');
+              const fullUser = meRes?.data?.data?.user;
+              if (fullUser) {
+                setStorageItem('user', fullUser);
+                dispatch({
+                  type: AUTH_ACTIONS.SET_USER,
+                  payload: { user: fullUser, token },
+                });
+                return;
+              }
+            } catch (e) {
+              console.error('❌ AuthContext: Failed to refresh /auth/me on restore:', e);
             }
-          } catch (e) {
-            console.error('❌ AuthContext: Failed to refresh /auth/me on restore:', e);
-          }
 
-          dispatch({
-            type: AUTH_ACTIONS.SET_USER,
-            payload: { user: parsedUser, token },
-          });
+            dispatch({
+              type: AUTH_ACTIONS.SET_USER,
+              payload: { user: parsedUser, token },
+            });
+          } finally {
+            setIsHydrating(false);
+          }
         })();
 
         return;
@@ -165,9 +172,11 @@ export const AuthProvider = ({ children }) => {
       }
     } else {
       console.log('❌ AuthContext: No existing auth found');
+      // If there is no auth to restore, any pending redirect is not actionable.
+      removeStorageItem('pendingRedirect');
     }
-    
-    setIsLoading(false);
+
+    setIsHydrating(false);
   }, []);
 
   // Handle pending redirect after authentication state is set (client-side only)
@@ -525,17 +534,18 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     ...state,
+    loading: state.isLoading,
     login,
     register,
     logout,
     otpLogin,
     clearError,
     isClient,
-    isLoading,
+    isHydrating,
   };
 
   // Show loading state during SSR and initial client hydration
-  if (!isClient || isLoading) {
+  if (!isClient || isHydrating) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

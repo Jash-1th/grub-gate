@@ -35,14 +35,14 @@ const FoodItemCard = ({
   
   // Use passed props for general meal plan status
   const itemIsInPlan = isInPlan || isInSpecificSlot;
-  const renderStars = (rating) => {
+  const renderStars = (rating, sizeClassName = 'w-4 h-4') => {
     const stars = [];
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 !== 0;
     
     for (let i = 0; i < fullStars; i++) {
       stars.push(
-        <svg key={i} className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
+        <svg key={i} className={`${sizeClassName} text-yellow-400 fill-current`} viewBox="0 0 20 20">
           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
         </svg>
       );
@@ -50,7 +50,7 @@ const FoodItemCard = ({
     
     if (hasHalfStar) {
       stars.push(
-        <svg key="half" className="w-4 h-4 text-yellow-400" viewBox="0 0 20 20">
+        <svg key="half" className={`${sizeClassName} text-yellow-400`} viewBox="0 0 20 20">
           <defs>
             <linearGradient id={`half-fill-${item.id}`}>
               <stop offset="50%" stopColor="currentColor" />
@@ -65,7 +65,7 @@ const FoodItemCard = ({
     const emptyStars = 5 - Math.ceil(rating);
     for (let i = 0; i < emptyStars; i++) {
       stars.push(
-        <svg key={`empty-${i}`} className="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+        <svg key={`empty-${i}`} className={`${sizeClassName} text-gray-300`} fill="currentColor" viewBox="0 0 20 20">
           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
         </svg>
       );
@@ -99,9 +99,13 @@ const FoodItemCard = ({
     onRemoveFromPlan && onRemoveFromPlan(item);
   };
 
+  const cardClassName = `group relative bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 h-full flex flex-col cursor-pointer${
+    isFromWeeklyMenu ? '' : ' transform hover:-translate-y-2 hover:scale-[1.02]'
+  }`;
+
   return (
     <div 
-      className="group relative bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-[1.02] overflow-hidden border border-gray-200 h-full flex flex-col cursor-pointer"
+      className={cardClassName}
       onClick={handleCardClick}
     >
       {/* Popular Badge */}
@@ -168,7 +172,7 @@ const FoodItemCard = ({
       )}
       
       {/* Food Image - Modern responsive design */}
-      <div className="relative h-40 sm:h-44 md:h-48 overflow-hidden rounded-t-2xl">
+      <div className={`relative ${isFromWeeklyMenu ? 'h-36 sm:h-40' : 'h-40 sm:h-44 md:h-48'} overflow-hidden rounded-t-2xl`}>
         <img
           src={item.image}
           alt={item.name}
@@ -178,6 +182,23 @@ const FoodItemCard = ({
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+        {isFromWeeklyMenu && (
+          <>
+            <div className="absolute bottom-2 left-2">
+              <div className="bg-white/90 backdrop-blur px-2.5 py-1 rounded-full shadow-md border border-white/30">
+                <span className="text-sm font-extrabold text-gray-900">
+                  ${item.price}
+                </span>
+              </div>
+            </div>
+            <div className="absolute bottom-2 right-2">
+              <div className="bg-white/85 backdrop-blur px-2 py-1 rounded-full shadow-md border border-white/30 flex items-center">
+                {renderStars(item.rating || 0, 'w-3 h-3')}
+              </div>
+            </div>
+          </>
+        )}
       </div>
       
       {/* Food Info - Clean and modern */}
@@ -202,25 +223,29 @@ const FoodItemCard = ({
           )}
         </div>
         
-        {/* Rating, Reviews, and Price */}
-        <div className="flex items-center justify-between mb-3 bg-gradient-to-r from-gray-50 to-gray-100 p-2 rounded-lg">
-          <div className="flex items-center gap-1">
-            <div className="flex">
-              {renderStars(item.rating)}
+        {!isFromWeeklyMenu && (
+          <>
+            {/* Rating, Reviews, and Price */}
+            <div className="flex items-center justify-between mb-3 bg-gradient-to-r from-gray-50 to-gray-100 p-2 rounded-lg">
+              <div className="flex items-center gap-1">
+                <div className="flex">
+                  {renderStars(item.rating)}
+                </div>
+                <span className="text-xs font-bold text-gray-800">
+                  {item.rating}
+                </span>
+                {item.reviewCount > 0 && (
+                  <span className="text-xs text-gray-500">({item.reviewCount})</span>
+                )}
+              </div>
+              <div className="bg-red-500 text-white px-3 py-1 rounded-full">
+                <span className="text-sm sm:text-base font-bold">
+                  ${item.price}
+                </span>
+              </div>
             </div>
-            <span className="text-xs font-bold text-gray-800">
-              {item.rating}
-            </span>
-            {item.reviewCount > 0 && (
-              <span className="text-xs text-gray-500">({item.reviewCount})</span>
-            )}
-          </div>
-          <div className="bg-red-500 text-white px-3 py-1 rounded-full">
-            <span className="text-sm sm:text-base font-bold">
-              ${item.price}
-            </span>
-          </div>
-        </div>
+          </>
+        )}
 
         {/* Servings and Spice Level */}
         {(item.servings || item.spiceLevel > 0) && (

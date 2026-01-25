@@ -5,13 +5,13 @@ import { useModal } from '../../context/ModalContext';
 import { getStorageItem, setStorageItem } from '../../utils/ssrSafeStorage';
 
 const AuthGuard = ({ children, redirectTo = '/login', showModal = true, requireAuth = true }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const { openLoginModal } = useModal();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    if (!loading && requireAuth && !isAuthenticated) {
+    if (!isLoading && requireAuth && !isAuthenticated) {
       // Check if there's a pending redirect or login in progress to avoid opening modal again
       const pendingRedirect = getStorageItem('pendingRedirect');
       const loginInProgress = getStorageItem('loginInProgress');
@@ -50,7 +50,7 @@ const AuthGuard = ({ children, redirectTo = '/login', showModal = true, requireA
         });
       }
     }
-  }, [isAuthenticated, loading, requireAuth, navigate, redirectTo, showModal, openLoginModal, location]);
+  }, [isAuthenticated, isLoading, requireAuth, navigate, redirectTo, showModal, openLoginModal, location]);
 
   // Show loading spinner while checking authentication or handling redirect
   const pendingRedirect = getStorageItem('pendingRedirect');
@@ -59,7 +59,7 @@ const AuthGuard = ({ children, redirectTo = '/login', showModal = true, requireA
   const storedUser = getStorageItem('user');
   
   // Show loading if we're still loading, have pending operations, or have stored auth but not yet authenticated
-  if (loading || pendingRedirect || loginInProgress || (!isAuthenticated && storedToken && storedUser)) {
+  if (isLoading || pendingRedirect || loginInProgress || (!isAuthenticated && storedToken && storedUser)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
