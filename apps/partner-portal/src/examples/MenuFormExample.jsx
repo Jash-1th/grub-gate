@@ -92,6 +92,7 @@ const MenuFormExample = ({ onSave, onCancel, initialData = null, isLoading = fal
     { value: 'spicy', label: 'Spicy' },
     { value: 'keto', label: 'Keto' },
     { value: 'low-carb', label: 'Low-Carb' },
+    { value: 'non-veg', label: 'Non-Veg' },
     { value: 'halal', label: 'Halal' },
     { value: 'kosher', label: 'Kosher' }
   ];

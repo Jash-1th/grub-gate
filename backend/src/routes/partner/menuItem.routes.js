@@ -66,6 +66,10 @@ const menuItemValidation = [
     .optional()
     .isArray()
     .withMessage('Dietary preferences must be an array'),
+  body('dietaryPreferences.*')
+    .optional()
+    .isIn(['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'spicy', 'keto', 'low-carb', 'halal', 'kosher', 'non-veg'])
+    .withMessage('Invalid dietary preference'),
   body('ingredients')
     .optional()
     .isArray()
@@ -116,6 +120,14 @@ const updateMenuItemValidation = [
     .trim()
     .isLength({ min: 2, max: 50 })
     .withMessage('Cuisine must be between 2 and 50 characters'),
+  body('dietaryPreferences')
+    .optional()
+    .isArray()
+    .withMessage('Dietary preferences must be an array'),
+  body('dietaryPreferences.*')
+    .optional()
+    .isIn(['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'spicy', 'keto', 'low-carb', 'halal', 'kosher', 'non-veg'])
+    .withMessage('Invalid dietary preference'),
   body('spiceLevel')
     .optional()
     .isInt({ min: 0, max: 5 })

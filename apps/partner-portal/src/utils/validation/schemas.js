@@ -573,7 +573,7 @@ export const menuItemSchemas = {
       .items(
         Joi.string().valid(
           'vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'spicy',
-          'keto', 'low-carb', 'halal', 'kosher'
+          'keto', 'low-carb', 'halal', 'kosher', 'non-veg'
         )
       )
       .unique()
@@ -994,7 +994,7 @@ export const registrationSchemas = {
       .items(
         Joi.string().valid(
           'vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'spicy',
-          'keto', 'low-carb', 'halal', 'kosher'
+          'keto', 'low-carb', 'halal', 'kosher', 'non-veg'
         )
       )
       .unique()

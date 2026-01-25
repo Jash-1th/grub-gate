@@ -1176,7 +1176,7 @@ const MenuPage = () => {
                 <div className="bg-white border border-gray-200 rounded-lg p-3">
                   <label className="block text-sm font-medium text-gray-700 mb-2">🌱 Dietary Preferences</label>
                   <div className="grid grid-cols-2 gap-x-3 gap-y-2">
-                    {['vegetarian','vegan','gluten-free','dairy-free','keto','low-carb'].map(opt => (
+                    {['vegetarian','vegan','gluten-free','dairy-free','keto','low-carb','non-veg'].map(opt => (
                       <label key={opt} className="flex items-start space-x-2 text-xs cursor-pointer">
                         <input 
                           type="checkbox" 
@@ -1302,7 +1302,7 @@ const MenuPage = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Dietary Preferences</label>
                   <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
-                    {['vegetarian','vegan','gluten-free','dairy-free','keto','low-carb','halal','kosher','spicy'].map(opt => (
+                    {['vegetarian','vegan','gluten-free','dairy-free','keto','low-carb','non-veg','halal','kosher','spicy'].map(opt => (
                       <label key={opt} className="inline-flex items-center space-x-2 text-sm py-1">
                         <input 
                           type="checkbox" 

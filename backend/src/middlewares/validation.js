@@ -242,7 +242,7 @@ const menuItemValidations = {
       .withMessage('Dietary preferences must be an array'),
     body('dietaryPreferences.*')
       .optional()
-      .isIn(['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'spicy', 'keto', 'low-carb'])
+      .isIn(['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'spicy', 'keto', 'low-carb', 'halal', 'kosher', 'non-veg'])
       .withMessage('Invalid dietary preference'),
     body('spiceLevel')
       .optional()

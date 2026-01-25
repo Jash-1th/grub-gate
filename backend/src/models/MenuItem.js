@@ -69,7 +69,7 @@ const menuItemSchema = new mongoose.Schema({
   },
   dietaryPreferences: [{
     type: String,
-    enum: ['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'spicy', 'keto', 'low-carb', 'halal', 'kosher'],
+    enum: ['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'spicy', 'keto', 'low-carb', 'halal', 'kosher' , 'non-veg'],
     lowercase: true
   }],
   ingredients: [{
