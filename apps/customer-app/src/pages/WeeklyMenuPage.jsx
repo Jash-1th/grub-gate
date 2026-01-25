@@ -14,7 +14,9 @@ import RestaurantReplacementModal from '../components/modals/RestaurantReplaceme
 import SelectedRestaurantsModal from '../components/modals/SelectedRestaurantsModal';
 import mealCalendarApi from '../api/mealCalendarApi';
 import MenuItemsGrid from '../components/restaurant/MenuItemsGrid';
+import PreferencesSelector from '../components/restaurant/PreferencesSelector';
 import { getRestaurant, getRestaurantMenu } from '../services/restaurantService';
+import { applyPreferenceFilter } from '../utils/filteringHelpers';
 
 // Enhanced Meal Slot Component with more features
 const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postalCode, selectedRestaurant, selectedWeek = 0, onShowRestaurantSelectionModal, isAuthenticated, hasLoadedFromDatabase, disabled = false, loading = false, getSelectedRestaurantCount, getSelectedRestaurants, isActive = false }) => {
@@ -110,7 +112,7 @@ const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postal
                 ${firstItem.price}
               </div>
               {firstItem.preferences && firstItem.preferences.length > 0 && (
-                <div className="hidden sm:flex space-x-1">
+                <div className="flex flex-wrap gap-1">
                   {firstItem.preferences.slice(0, 2).map((pref, index) => (
                     <span key={index} className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
                       {pref}
@@ -245,11 +247,19 @@ const WeeklyMenuPage = () => {
     hasLoadedFromDatabase
   } = useMealPlan();
   const { showError, showSuccess, showInfo } = useToast();
-  const { postalCode, selectedRestaurant: planningSelectedRestaurant, updateSelectedRestaurant } = usePlanning();
+  const {
+    postalCode,
+    selectedRestaurant: planningSelectedRestaurant,
+    updateSelectedRestaurant,
+    selectedPreferences: planningSelectedPreferences,
+    updatePreferences
+  } = usePlanning();
   const { isAuthenticated, user } = useAuth();
   const [showSelectedRestaurantsModal, setShowSelectedRestaurantsModal] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
+  const [showDietaryPreferences, setShowDietaryPreferences] = useState(false);
   const [panelDay, setPanelDay] = useState(null);
   const [panelMealType, setPanelMealType] = useState(null);
   const [panelRestaurantId, setPanelRestaurantId] = useState(null);
@@ -627,6 +637,42 @@ const WeeklyMenuPage = () => {
 
   useEffect(() => {
     if (!isClient) return;
+
+    const updateViewport = () => {
+      setIsMobileViewport(window.innerWidth < 640);
+    };
+
+    updateViewport();
+    window.addEventListener('resize', updateViewport);
+    return () => window.removeEventListener('resize', updateViewport);
+  }, [isClient]);
+
+  useEffect(() => {
+    if (!isClient) return;
+    if (!isSidePanelOpen || !isMobileViewport) return;
+
+    const scrollY = window.scrollY;
+    const prevOverflow = document.body.style.overflow;
+    const prevPosition = document.body.style.position;
+    const prevTop = document.body.style.top;
+    const prevWidth = document.body.style.width;
+
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.position = prevPosition;
+      document.body.style.top = prevTop;
+      document.body.style.width = prevWidth;
+      window.scrollTo(0, scrollY);
+    };
+  }, [isClient, isSidePanelOpen, isMobileViewport]);
+
+  useEffect(() => {
+    if (!isClient) return;
     if (!hasLoadedFromDatabase) return;
 
     const hasWeek2Data = getWeekTotalItems(1) > 0;
@@ -799,6 +845,10 @@ const WeeklyMenuPage = () => {
     const mealItems = getWeekMealItems(panelDay, panelMealType, selectedWeek);
     return mealItems.filter(planItem => planItem.id === itemId);
   };
+
+  const filteredPanelMenuItems = useMemo(() => {
+    return applyPreferenceFilter(panelMenuItems || [], planningSelectedPreferences || []);
+  }, [panelMenuItems, planningSelectedPreferences]);
 
   const handleClearAll = () => {
     if (window.confirm(`Are you sure you want to clear all planned meals from ${selectedWeek === 0 ? 'Week 1' : 'Week 2'}? Your selected restaurants will remain.`)) {
@@ -1939,7 +1989,16 @@ const WeeklyMenuPage = () => {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-4">
+              <div className="flex-1 overflow-y-auto overscroll-contain px-3 sm:px-4 pt-4 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:pb-4">
+                <div className="mb-4">
+                  <PreferencesSelector
+                    selectedPreferences={planningSelectedPreferences || []}
+                    onPreferencesChange={updatePreferences}
+                    showPreferences={showDietaryPreferences}
+                    onTogglePreferences={setShowDietaryPreferences}
+                    userType={user?.userType || 'normal'}
+                  />
+                </div>
                 {panelLoading ? (
                   <div className="flex items-center justify-center py-10">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-grub-red" />
@@ -1950,7 +2009,7 @@ const WeeklyMenuPage = () => {
                   </div>
                 ) : (
                   <MenuItemsGrid
-                    items={panelMenuItems || []}
+                    items={filteredPanelMenuItems || []}
                     userType={user?.userType || 'normal'}
                     selectedDay={panelDay || 'monday'}
                     selectedMealType={panelMealType || 'lunch'}
