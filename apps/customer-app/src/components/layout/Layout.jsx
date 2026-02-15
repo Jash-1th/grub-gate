@@ -5,6 +5,7 @@ import Footer from './Footer';
 import MobileBottomNav from './MobileBottomNav';
 import SignupModal from '../auth/SignupModal';
 import LoginModal from '../auth/LoginModal';
+import UserProfileModal from '../modals/UserProfileModal';
 import { useModal } from '../../context/ModalContext';
 import { useResponsiveNavigation } from '../../hooks/useResponsiveNavigation';
 
@@ -13,15 +14,16 @@ import { useResponsiveNavigation } from '../../hooks/useResponsiveNavigation';
  * Handles responsive layout, modals, and common UI elements
  */
 const Layout = ({ children }) => {
-  const { isSignupModalOpen, isLoginModalOpen } = useModal();
+  const { isSignupModalOpen, isLoginModalOpen, isUserProfileModalOpen } = useModal();
   const { isMobile } = useResponsiveNavigation();
-  const isModalOpen = isSignupModalOpen || isLoginModalOpen;
+  const isModalOpen = isSignupModalOpen || isLoginModalOpen || isUserProfileModalOpen;
 
   return (
     <>
       {/* Modals */}
       {isSignupModalOpen && <SignupModal />}
       {isLoginModalOpen && <LoginModal />}
+      {isUserProfileModalOpen && <UserProfileModal />}
       
       {/* Main content with conditional blur effect when modals are open */}
       <div className={`min-h-screen w-full flex flex-col transition-all duration-300 ${

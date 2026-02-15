@@ -17,6 +17,7 @@ export const ModalProvider = ({ children }) => {
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isOTPAuthModalOpen, setIsOTPAuthModalOpen] = useState(false);
+  const [isUserProfileModalOpen, setIsUserProfileModalOpen] = useState(false);
 
   const openSignupModal = () => {
     console.log('📝 Opening signup modal');
@@ -126,6 +127,28 @@ export const ModalProvider = ({ children }) => {
     }
   };
 
+  const openUserProfileModal = () => {
+    setIsUserProfileModalOpen(true);
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = 'hidden';
+    }
+  };
+
+  const closeUserProfileModal = () => {
+    setIsUserProfileModalOpen(false);
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = 'unset';
+    }
+  };
+
+  const toggleUserProfileModal = (isOpen) => {
+    if (typeof isOpen === 'boolean') {
+      isOpen ? openUserProfileModal() : closeUserProfileModal();
+    } else {
+      isUserProfileModalOpen ? closeUserProfileModal() : openUserProfileModal();
+    }
+  };
+
   // Function to switch to OTP auth from other modals
   const switchToOTPAuth = () => {
     console.log('🔄 Switching to OTP auth modal');
@@ -152,6 +175,10 @@ export const ModalProvider = ({ children }) => {
     closeOTPAuthModal,
     toggleOTPAuthModal,
     switchToOTPAuth,
+    isUserProfileModalOpen,
+    openUserProfileModal,
+    closeUserProfileModal,
+    toggleUserProfileModal,
   };
 
   return (

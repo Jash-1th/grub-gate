@@ -14,7 +14,7 @@ import { navigation } from '../../data';
  */
 const AuthButtons = ({ className = '', isMobile = false }) => {
   const { t, i18n } = useTranslation();
-  const { openLoginModal, openOTPAuthModal } = useModal();
+  const { openLoginModal, openOTPAuthModal, openUserProfileModal } = useModal();
   const { isAuthenticated, user, logout, isLoading } = useAuth();
   const { showSuccess } = useToast();
 
@@ -40,19 +40,18 @@ const AuthButtons = ({ className = '', isMobile = false }) => {
       <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'items-center space-x-2 lg:space-x-3 xl:space-x-4'} ${className}`}>
         {/* Enhanced user greeting */}
         <div className={`flex items-center space-x-1.5 xs:space-x-2 ${isMobile ? 'mb-2 xs:mb-3' : ''}`}>
-          <div className="w-7 h-7 xs:w-8 xs:h-8 bg-gradient-to-r from-grub-red to-red-600 rounded-full flex items-center justify-center">
+          <button
+            type="button"
+            onClick={openUserProfileModal}
+            disabled={isLoading}
+            className="w-7 h-7 xs:w-8 xs:h-8 bg-gradient-to-r from-grub-red to-red-600 rounded-full flex items-center justify-center transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red disabled:opacity-60 disabled:cursor-not-allowed"
+            aria-label="Open profile"
+            title="Profile"
+          >
             <span className="text-white text-xs xs:text-sm font-semibold">
               {displayName.charAt(0).toUpperCase()}
             </span>
-          </div>
-          <div className="flex flex-col">
-            <span className={`font-medium text-gray-900 ${isMobile ? 'text-sm xs:text-base' : 'text-xs lg:text-sm'}`}>
-              Welcome back, {displayName}! 👋
-            </span>
-            <span className={`text-gray-500 ${isMobile ? 'text-xs xs:text-sm' : 'text-[10px] lg:text-xs'}`}>
-              Ready to plan your meals?
-            </span>
-          </div>
+          </button>
         </div>
         
         {/* Logout button */}

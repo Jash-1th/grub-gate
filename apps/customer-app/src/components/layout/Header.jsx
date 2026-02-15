@@ -5,6 +5,7 @@ import { navigation, siteInfo } from '../../data';
 import LanguageSwitcher from '../common/LanguageSwitcher';
 import { useResponsiveNavigation } from '../../hooks/useResponsiveNavigation';
 import { useAuth } from '../../contexts/AuthContext';
+import { useModal } from '../../context/ModalContext';
 import AuthButtons from './AuthButtons';
 import MobileMenu from './MobileMenu';
 import NavIcon from './NavIcon';
@@ -23,6 +24,7 @@ const Header = () => {
   const { t } = useTranslation();
   const { isMobile } = useResponsiveNavigation();
   const { isAuthenticated, user } = useAuth();
+  const { openUserProfileModal } = useModal();
 
   // Set mounted state on client side
   useEffect(() => {
@@ -110,16 +112,17 @@ const Header = () => {
             {/* Mobile User Greeting */}
             {isAuthenticated && user && (
               <div className="flex items-center space-x-1.5 xs:space-x-2 max-w-[140px] xs:max-w-[180px] sm:max-w-none">
-                <div className="w-7 h-7 xs:w-8 xs:h-8 bg-gradient-to-r from-grub-red to-red-600 rounded-full flex items-center justify-center flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={openUserProfileModal}
+                  className="w-7 h-7 xs:w-8 xs:h-8 bg-gradient-to-r from-grub-red to-red-600 rounded-full flex items-center justify-center flex-shrink-0 transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red"
+                  aria-label="Open profile"
+                  title="Profile"
+                >
                   <span className="text-white text-xs xs:text-sm font-semibold">
                     {(user.firstName || user.name || user.email.split('@')[0]).charAt(0).toUpperCase()}
                   </span>
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-xs xs:text-sm font-medium text-gray-900 truncate">
-                    Hi, {user.firstName || user.name || user.email.split('@')[0]}! 👋
-                  </span>
-                </div>
+                </button>
               </div>
             )}
             
