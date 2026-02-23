@@ -532,6 +532,19 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
   };
 
+  const setUser = (nextUser) => {
+    if (!nextUser) return;
+    const token = state.token || getStorageItem('authToken');
+    setStorageItem('user', nextUser);
+    if (token) {
+      setStorageItem('authToken', token);
+    }
+    dispatch({
+      type: AUTH_ACTIONS.SET_USER,
+      payload: { user: nextUser, token },
+    });
+  };
+
   const value = {
     ...state,
     loading: state.isLoading,
@@ -540,6 +553,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     otpLogin,
     clearError,
+    setUser,
     isClient,
     isHydrating,
   };
