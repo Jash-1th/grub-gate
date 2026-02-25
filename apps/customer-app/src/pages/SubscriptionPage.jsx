@@ -81,7 +81,7 @@ const SubscriptionPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       {/* Header */}
-      <div className="bg-gradient-to-r from-grub-red to-red-600 text-white">
+      <div className="bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="text-center sm:text-left">

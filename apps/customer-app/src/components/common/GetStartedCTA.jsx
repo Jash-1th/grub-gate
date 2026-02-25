@@ -71,7 +71,7 @@ const GetStartedCTA = () => {
             <button
               onClick={handleGetStarted}
               disabled={loading}
-              className="w-full xs:w-auto bg-grub-red text-white px-6 xs:px-7 sm:px-8 md:px-10 py-3 xs:py-3.5 sm:py-4 md:py-5 rounded-lg sm:rounded-xl font-semibold text-base xs:text-lg sm:text-xl hover:bg-red-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-transform duration-200"
+              className="w-full xs:w-auto bg-grub-red text-white px-6 xs:px-7 sm:px-8 md:px-10 py-3 xs:py-3.5 sm:py-4 md:py-5 rounded-lg sm:rounded-xl font-semibold text-base xs:text-lg sm:text-xl hover:bg-grub-red transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-transform duration-200"
             >
               {loading ? (
                 <div className="flex items-center justify-center">

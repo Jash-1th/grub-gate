@@ -182,7 +182,7 @@ const BillingFormModal = ({ isOpen, onClose, selectedPlan, onSuccess }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-grub-red to-red-600 text-white p-6 rounded-t-2xl">
+        <div className="bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white p-6 rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold">Complete Your Subscription</h2>

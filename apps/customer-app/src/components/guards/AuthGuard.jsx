@@ -89,7 +89,7 @@ const AuthGuard = ({ children, redirectTo = '/login', showModal = true, requireA
             </p>
             <button
               onClick={() => openLoginModal()}
-              className="bg-grub-red text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors duration-200"
+              className="bg-grub-red text-white px-6 py-3 rounded-lg font-medium hover:bg-grub-red transition-colors duration-200"
             >
               Open Login
             </button>
@@ -113,7 +113,7 @@ const AuthGuard = ({ children, redirectTo = '/login', showModal = true, requireA
             <div className="space-y-3">
               <button
                 onClick={() => openLoginModal()}
-                className="w-full bg-grub-red text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors duration-200"
+                className="w-full bg-grub-red text-white px-6 py-3 rounded-lg font-medium hover:bg-grub-red transition-colors duration-200"
               >
                 Sign In
               </button>

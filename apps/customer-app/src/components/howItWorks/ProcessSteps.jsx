@@ -54,7 +54,7 @@ const ProcessSteps = () => {
               {t('howItWorks.ctaSubtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-grub-red text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-red-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+              <button className="bg-grub-red text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-grub-red transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
                 {t('howItWorks.startPlan')}
               </button>
               <button className="border-2 border-grub-red text-grub-red px-8 py-4 rounded-lg font-semibold text-lg hover:bg-grub-red hover:text-white transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1">

@@ -488,7 +488,7 @@ const RestaurantDetailPage = () => {
     
     if (isMenuBrowse) {
       // Back to Weekly Menu button - always red
-      return `${baseClasses} bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white`;
+      return `${baseClasses} bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white hover:shadow-grub-red/20`;
     }
     
     if (isSelected) {
@@ -502,7 +502,7 @@ const RestaurantDetailPage = () => {
       return `${baseClasses} bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white`;
     } else {
       // When footer is not visible, use red
-      return `${baseClasses} bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white`;
+      return `${baseClasses} bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white hover:shadow-grub-red/20`;
     }
   };
 
@@ -698,7 +698,7 @@ const RestaurantDetailPage = () => {
           <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={() => navigate('/plan')}
-            className="bg-grub-red text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors duration-200"
+            className="bg-grub-red text-white px-6 py-3 rounded-lg font-medium hover:bg-grub-red transition-colors duration-200"
           >
             Back to Planning
           </button>

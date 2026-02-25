@@ -348,7 +348,7 @@ const YourOrdersPage = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         {/* Hero Section Skeleton */}
-        <section className="relative py-8 xs:py-10 sm:py-12 md:py-16 bg-gradient-to-r from-grub-red via-red-600 to-red-700">
+        <section className="relative py-8 xs:py-10 sm:py-12 md:py-16 bg-gradient-to-r from-grub-red via-grub-red to-grub-red">
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItMnptMC0ydjJoLTJ2LTJoMnptLTItMmgydjJoLTJ2LTJ6bTItMmgydjJoLTJ2LTJ6bTAtMmgydjJoLTJ2LTJ6bTItMmgydjJoLTJ2LTJ6bTAtMmgydjJoLTJ2LTJ6bTItMmgydjJoLTJ2LTJ6bTAtMmgydjJoLTJ2LTJ6bTItMmgydjJoLTJ2LTJ6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-30"></div>
           <div className="relative z-10 max-w-7xl mx-auto px-3 xs:px-4 sm:px-6 md:px-8 lg:px-10 text-center">
@@ -498,7 +498,7 @@ const YourOrdersPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Hero Section */}
-      <section className="relative py-8 xs:py-10 sm:py-12 md:py-16 bg-gradient-to-r from-grub-red via-red-600 to-red-700">
+      <section className="relative py-8 xs:py-10 sm:py-12 md:py-16 bg-gradient-to-r from-grub-red via-grub-red to-grub-red">
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItMnptMC0ydjJoLTJ2LTJoMnptLTItMmgydjJoLTJ2LTJ6bTItMmgydjJoLTJ2LTJ6bTAtMmgydjJoLTJ2LTJ6bTItMmgydjJoLTJ2LTJ6bTAtMmgydjJoLTJ2LTJ6bTItMmgydjJoLTJ2LTJ6bTAtMmgydjJoLTJ2LTJ6bTItMmgydjJoLTJ2LTJ6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-30"></div>
         <div className="relative z-10 max-w-7xl mx-auto px-3 xs:px-4 sm:px-6 md:px-8 lg:px-10 text-center">
@@ -527,7 +527,7 @@ const YourOrdersPage = () => {
                 disabled={filterLoading}
                 className={`px-3 xs:px-4 sm:px-5 py-2 xs:py-2.5 rounded-full text-xs xs:text-sm sm:text-base font-semibold transition-all duration-300 transform hover:scale-105 ${
                   activeFilter === filter 
-                    ? 'bg-gradient-to-r from-grub-red to-red-600 text-white shadow-lg' 
+                    ? 'bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white shadow-lg shadow-grub-red/20' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-md'
                 } ${filterLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
               >
@@ -550,7 +550,7 @@ const YourOrdersPage = () => {
               <p className="text-sm xs:text-base sm:text-lg text-gray-600 mb-6 xs:mb-7 sm:mb-8 leading-relaxed">{t('yourOrders.noOrders')}</p>
               <button 
                 onClick={() => navigate('/')}
-                className="bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 xs:px-7 sm:px-8 py-3 xs:py-3.5 sm:py-4 rounded-lg sm:rounded-xl hover:shadow-xl transition-all duration-300 font-semibold text-sm xs:text-base sm:text-lg transform hover:scale-105"
+                className="bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white px-6 xs:px-7 sm:px-8 py-3 xs:py-3.5 sm:py-4 rounded-lg sm:rounded-xl hover:shadow-xl hover:shadow-grub-red/20 transition-all duration-300 font-semibold text-sm xs:text-base sm:text-lg transform hover:scale-105"
               >
                 {t('yourOrders.browseRestaurants') || 'Browse Restaurants'}
               </button>
@@ -612,7 +612,7 @@ const YourOrdersPage = () => {
                               <div className="flex-1 space-y-3 xs:space-y-4">
                                 {/* Restaurant Info */}
                                 <div className="flex items-start gap-3">
-                                  <div className="flex-shrink-0 w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-grub-red to-red-600 rounded-xl flex items-center justify-center text-white font-bold text-lg xs:text-xl sm:text-2xl shadow-md">
+                                  <div className="flex-shrink-0 w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-grub-red via-grub-red to-grub-red rounded-xl flex items-center justify-center text-white font-bold text-lg xs:text-xl sm:text-2xl shadow-md">
                                     {(order.restaurantId?.name || order.restaurantName || order.restaurant?.name || 'R').charAt(0).toUpperCase()}
                                   </div>
                                   <div className="flex-1 min-w-0">
@@ -687,7 +687,7 @@ const YourOrdersPage = () => {
                               {/* Right Section - Price & Time */}
                               <div className="lg:w-44 xl:w-48 flex flex-row lg:flex-col justify-between lg:justify-start gap-3 xs:gap-4 lg:gap-5">
                                 {/* Total Price */}
-                                <div className="flex-1 lg:flex-none bg-gradient-to-br from-grub-red to-red-700 rounded-xl p-3 xs:p-4 text-white text-center lg:text-left">
+                                <div className="flex-1 lg:flex-none bg-gradient-to-br from-grub-red via-grub-red to-grub-red rounded-xl p-3 xs:p-4 text-white text-center lg:text-left">
                                   <p className="text-xs opacity-90 mb-1">Total Amount</p>
                                   <p className="text-xl xs:text-2xl sm:text-3xl font-bold">${(order.total || 0).toFixed(2)}</p>
                                 </div>
@@ -716,7 +716,7 @@ const YourOrdersPage = () => {
                     <button
                       onClick={handleLoadMore}
                       disabled={loadingMore}
-                      className="bg-grub-red hover:bg-red-700 text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-grub-red hover:bg-grub-red text-white px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300 font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {loadingMore ? (
                         <div className="flex items-center justify-center">

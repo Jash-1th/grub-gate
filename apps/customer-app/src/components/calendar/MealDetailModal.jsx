@@ -32,7 +32,7 @@ const MealDetailModal = ({ isOpen, onClose, meals, date, mealType, userType }) =
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-grub-red to-red-600 text-white p-6">
+        <div className="bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
@@ -238,7 +238,7 @@ const MealDetailModal = ({ isOpen, onClose, meals, date, mealType, userType }) =
                       {/* Action buttons for different statuses */}
                       {userType === 'subscribed' && meal.status === 'scheduled' && (
                         <div className="mt-3 pt-3 border-t border-gray-200">
-                          <button className="text-sm text-grub-red hover:text-red-700 font-medium">
+                          <button className="text-sm text-grub-red hover:text-grub-red font-medium">
                             Modify Delivery Time
                           </button>
                         </div>
@@ -262,7 +262,7 @@ const MealDetailModal = ({ isOpen, onClose, meals, date, mealType, userType }) =
           </div>
           <button
             onClick={onClose}
-            className="bg-grub-red text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors"
+            className="bg-grub-red text-white px-6 py-2 rounded-lg font-semibold hover:bg-grub-red transition-colors"
           >
             Close
           </button>

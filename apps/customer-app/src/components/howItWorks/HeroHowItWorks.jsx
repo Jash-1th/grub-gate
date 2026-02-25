@@ -188,13 +188,13 @@ const HeroHowItWorks = () => {
           {/* CTA Button with frosted glass effect */}
           <div className="relative inline-flex items-center justify-center w-full max-w-xs sm:max-w-sm md:max-w-md">
             <motion.div
-              className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-r from-grub-red via-red-600 to-grub-red opacity-75 blur-lg"
-              animate={shouldReduceMotion ? { opacity: 0.75 } : { opacity: [0.45, 0.85, 0.45], scale: [1, 1.06, 1] }}
+              className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-r from-grub-red via-grub-red to-grub-red opacity-60 blur-md"
+              animate={shouldReduceMotion ? { opacity: 0.6 } : { opacity: [0.3, 0.62, 0.3], scale: [1, 1.05, 1] }}
               transition={shouldReduceMotion ? { duration: 0 } : { duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
             />
             <motion.div
-              className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-r from-grub-red via-red-600 to-grub-red opacity-40"
-              animate={shouldReduceMotion ? { opacity: 0.35 } : { opacity: [0.15, 0.55, 0.15], scale: [1, 1.12, 1] }}
+              className="absolute inset-0 rounded-xl sm:rounded-2xl bg-gradient-to-r from-grub-red via-grub-red to-grub-red opacity-30 blur-sm"
+              animate={shouldReduceMotion ? { opacity: 0.3 } : { opacity: [0.1, 0.38, 0.1], scale: [1, 1.09, 1] }}
               transition={shouldReduceMotion ? { duration: 0 } : { duration: 3.4, repeat: Infinity, ease: 'easeInOut' }}
             />
             <div className="relative rounded-xl sm:rounded-2xl bg-black/30 backdrop-blur-md p-0.5 sm:p-1 border border-white/20 w-full">
@@ -207,7 +207,7 @@ const HeroHowItWorks = () => {
                 whileHover={shouldReduceMotion ? undefined : { scale: 1.06, y: -4 }}
                 whileTap={shouldReduceMotion ? undefined : { scale: 0.98, y: -2 }}
                 transition={{ type: 'spring', stiffness: 260, damping: 18 }}
-                className="group relative w-full px-6 xs:px-8 sm:px-10 md:px-12 py-3 xs:py-4 sm:py-5 md:py-6 bg-gradient-to-r from-grub-red via-red-600 to-red-700 text-white rounded-lg sm:rounded-xl font-bold text-base xs:text-lg sm:text-xl md:text-2xl shadow-2xl hover:shadow-red-500/50 transition-shadow duration-300 overflow-hidden"
+                className="group relative w-full px-6 xs:px-8 sm:px-10 md:px-12 py-3 xs:py-4 sm:py-5 md:py-6 bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white rounded-lg sm:rounded-xl font-bold text-base xs:text-lg sm:text-xl md:text-2xl shadow-2xl hover:shadow-grub-red/50 transition-shadow duration-300 overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                 <div className="relative flex items-center justify-center">

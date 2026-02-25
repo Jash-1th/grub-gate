@@ -383,7 +383,7 @@ const RoleCards = () => {
           <div className="flex flex-col sm:flex-row gap-3 xs:gap-4 justify-center items-center px-3">
             <button
               onClick={handleCustomerClick}
-              className="w-full sm:w-auto bg-grub-red text-white px-6 xs:px-7 sm:px-8 py-2.5 xs:py-3 rounded-lg sm:rounded-xl font-semibold text-base hover:bg-red-700 transition-colors duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+              className="w-full sm:w-auto bg-grub-red text-white px-6 xs:px-7 sm:px-8 py-2.5 xs:py-3 rounded-lg sm:rounded-xl font-semibold text-base hover:bg-grub-red transition-colors duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
             >
               {isAuthenticated ? `🚀 ${t('common.startPlanning')}` : '✨ Join as Customer'}
             </button>

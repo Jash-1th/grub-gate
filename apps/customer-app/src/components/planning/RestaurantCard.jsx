@@ -205,7 +205,7 @@ const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore, isSel
               className={`gg-cta relative overflow-hidden w-full font-semibold py-1.5 sm:py-2 px-3 rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-lg hover:shadow-xl text-sm sm:text-base ${
                 isSelected
                   ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white focus:ring-green-500' 
-                  : 'bg-gradient-to-r from-grub-red to-red-600 hover:from-grub-red hover:to-red-700 text-white focus:ring-grub-red'
+                  : 'bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white focus:ring-grub-red'
               }`}
             >
               <span aria-hidden="true" className="gg-btn-fill" />

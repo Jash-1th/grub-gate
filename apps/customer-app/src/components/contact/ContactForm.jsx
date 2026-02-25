@@ -305,7 +305,7 @@ const ContactForm = () => {
             className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition-colors duration-200 shadow-lg hover:shadow-xl transform transition-transform duration-200 ${
               loading
                 ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                : 'bg-grub-red text-white hover:bg-red-700 hover:-translate-y-1'
+                : 'bg-grub-red text-white hover:bg-grub-red hover:-translate-y-1'
             }`}
           >
             {loading ? (

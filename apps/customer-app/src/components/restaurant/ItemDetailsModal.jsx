@@ -227,11 +227,11 @@ const ItemDetailsModal = ({
           {/* Popular Badge */}
           {item.isPopular && (
             <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-10">
-              <span className="px-3 py-1.5 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs sm:text-sm font-bold rounded-full shadow-lg flex items-center gap-1.5 animate-pulse">
+              <span className="px-3 py-1.5 bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white text-xs sm:text-sm font-bold rounded-full shadow-lg shadow-grub-red/20 flex items-center gap-1.5 animate-pulse">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
-                {t('itemDetails.popular')}
+                {t('menuItemDetails.popular')}
               </span>
             </div>
           )}
@@ -450,7 +450,7 @@ const ItemDetailsModal = ({
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
                         {/* User Avatar */}
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-grub-red to-red-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md flex-shrink-0">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-grub-red via-grub-red to-grub-red rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md shadow-grub-red/10 flex-shrink-0">
                           {(review.customerName || 'A').charAt(0).toUpperCase()}
                         </div>
                         <div>
@@ -509,7 +509,7 @@ const ItemDetailsModal = ({
                     <button
                       onClick={loadMoreReviews}
                       disabled={loadingMore}
-                      className="px-6 py-3 bg-gradient-to-r from-grub-red to-red-600 text-white font-semibold rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                      className="px-6 py-3 bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white font-semibold rounded-xl transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:shadow-grub-red/20 transform hover:-translate-y-0.5"
                     >
                       {loadingMore ? (
                         <>

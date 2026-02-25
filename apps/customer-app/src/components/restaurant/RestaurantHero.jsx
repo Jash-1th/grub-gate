@@ -36,7 +36,7 @@ const RestaurantHero = ({
           />
         ) : (
           // Fallback gradient background when no image is available
-          <div className="w-full h-full bg-gradient-to-br from-red-500 via-red-600 to-red-700">
+          <div className="w-full h-full bg-gradient-to-br from-grub-red via-grub-red to-grub-red">
             <div className="flex items-center justify-center h-full">
               <div className="text-center text-white">
                 <svg className="w-16 h-16 mx-auto mb-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">

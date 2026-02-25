@@ -16,14 +16,14 @@ const UserTypeSelectionModal = ({ isOpen, onClose, onConfirm, restaurantName }) 
       <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gradient-to-r from-grub-red via-grub-red to-grub-red rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Experience</h2>
           <p className="text-gray-600">
-            How would you like to plan your meals at <span className="font-semibold text-red-600">{restaurantName}</span>?
+            How would you like to plan your meals at <span className="font-semibold text-grub-red">{restaurantName}</span>?
           </p>
         </div>
 
@@ -109,7 +109,7 @@ const UserTypeSelectionModal = ({ isOpen, onClose, onConfirm, restaurantName }) 
             disabled={!selectedType}
             className={`flex-1 px-4 py-2 font-medium rounded-lg transition-colors duration-200 ${
               selectedType
-                ? 'bg-red-600 hover:bg-red-700 text-white'
+                ? 'bg-grub-red hover:bg-grub-red text-white'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >

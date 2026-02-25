@@ -121,7 +121,7 @@ const RestaurantStep = ({ onNext, onBack }) => {
               className={`inline-flex items-center px-6 py-2 text-white font-medium rounded-lg transition-colors duration-200 ${
                 isProcessing 
                   ? 'bg-gray-400 cursor-not-allowed' 
-                  : 'bg-grub-red hover:bg-red-700'
+                  : 'bg-grub-red hover:bg-grub-red'
               }`}
             >
               {isProcessing ? t('restaurantStep.processing') : t('restaurantStep.continueToPlans')}
@@ -185,7 +185,7 @@ const RestaurantStep = ({ onNext, onBack }) => {
                 className={`px-8 py-2 text-white font-semibold rounded-lg transition-all duration-300 shadow-lg ${
                   isProcessing
                     ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-grub-red to-red-700 hover:from-grub-red hover:to-red-800 transform hover:-translate-y-0.5 hover:shadow-xl'
+                    : 'bg-gradient-to-r from-grub-red via-grub-red to-grub-red transform hover:-translate-y-0.5 hover:shadow-xl hover:shadow-grub-red/30'
                 }`}
               >
                 {isProcessing ? t('restaurantStep.processing') : t('restaurantStep.continueToSubscriptionPlans')}

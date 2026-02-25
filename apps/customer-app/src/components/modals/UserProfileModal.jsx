@@ -111,7 +111,7 @@ const UserProfileModal = () => {
         className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="bg-gradient-to-r from-grub-red to-red-600 px-5 py-4 text-white sm:px-6 sm:py-5">
+        <div className="bg-gradient-to-r from-grub-red via-grub-red to-grub-red px-5 py-4 text-white sm:px-6 sm:py-5">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <div className="flex items-center gap-3">

@@ -40,7 +40,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="w-full bg-gradient-to-r from-grub-red to-red-700 text-white">
+    <footer className="w-full bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white">
       <div className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
         <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12">
           {/* Column 1: Logo + Tagline */}
@@ -98,11 +98,11 @@ const Footer = () => {
                     href={item.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-red-100 hover:text-white transition-all duration-300 group flex flex-col sm:flex-row items-center justify-center sm:justify-start p-2 sm:p-1 rounded-lg hover:bg-red-700/30"
+                    className="text-red-100 hover:text-white transition-all duration-300 group flex flex-col sm:flex-row items-center justify-center sm:justify-start p-2 sm:p-1 rounded-lg hover:bg-grub-red/20"
                     aria-label={item.name}
                   >
                     <span className="sr-only">{item.name}</span>
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-red-700/50 flex items-center justify-center hover:bg-red-600 transition-all duration-300 group-hover:scale-110 transform shadow-lg mb-1 sm:mb-0 sm:mr-2 text-white">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-grub-red/40 flex items-center justify-center hover:bg-grub-red/55 transition-all duration-300 group-hover:scale-110 transform shadow-lg mb-1 sm:mb-0 sm:mr-2 text-white">
                       <div className="scale-75 sm:scale-90 md:scale-100 text-white">
                         {getSocialIcon(item.name)}
                       </div>

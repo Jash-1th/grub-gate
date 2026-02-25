@@ -89,7 +89,7 @@ const EditProfilePage = () => {
     <div className="w-full bg-gray-50">
       <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
         <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <div className="bg-gradient-to-r from-grub-red to-red-600 px-5 py-4 text-white sm:px-6 sm:py-5">
+          <div className="bg-gradient-to-r from-grub-red via-grub-red to-grub-red px-5 py-4 text-white sm:px-6 sm:py-5">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <h1 className="truncate text-lg font-semibold sm:text-xl">Edit Profile</h1>

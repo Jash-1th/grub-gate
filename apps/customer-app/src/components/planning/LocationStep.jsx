@@ -224,7 +224,7 @@ const LocationStep = ({ onNext }) => {
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-grub-red mb-4 sm:mb-6 leading-tight">
                   {t('mealPlanning.hero.title')}
                   <br />
-                  <span className="text-grub-red bg-gradient-to-r from-grub-red to-red-500 bg-clip-text text-transparent">
+                  <span className="text-grub-red bg-gradient-to-r from-grub-red via-grub-red to-grub-red bg-clip-text text-transparent">
                     {t('mealPlanning.hero.subtitle')}
                   </span>
                 </h1>
@@ -242,7 +242,7 @@ const LocationStep = ({ onNext }) => {
                   onMouseLeave={() => setIsPostalHover(false)}
                 >
                   <motion.div
-                    className="absolute -inset-1 bg-gradient-to-r from-grub-red to-pink-500 rounded-3xl blur"
+                    className="absolute -inset-1 bg-gradient-to-r from-grub-red via-grub-red to-grub-red rounded-3xl blur-sm"
                     animate={shouldReduceMotion ? undefined : { opacity: glowOpacity }}
                     transition={shouldReduceMotion ? undefined : { duration: 0.25, ease: 'easeOut' }}
                     style={{ opacity: glowOpacity }}
@@ -273,7 +273,7 @@ const LocationStep = ({ onNext }) => {
                       <button
                         onClick={handleFindMeals}
                         disabled={isSearching || !postalCode.trim()}
-                        className="relative overflow-hidden px-4 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-grub-red to-red-600 text-white rounded-xl font-semibold text-sm sm:text-lg hover:from-grub-red hover:to-grub-red transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-grub-red focus:ring-offset-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 sm:mr-1 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-lg"
+                        className="relative overflow-hidden px-4 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white rounded-xl font-semibold text-sm sm:text-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-grub-red focus:ring-offset-2 shadow-lg hover:shadow-xl hover:shadow-grub-red/30 transform hover:-translate-y-0.5 sm:mr-1 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-lg"
                       >
                         {!shouldReduceMotion && !isSearching && postalCode.trim() ? (
                           <span aria-hidden="true" className="gg-btn-shine" />
@@ -311,11 +311,11 @@ const LocationStep = ({ onNext }) => {
                 <div className="text-center mt-4 sm:mt-6">
                   <div className="relative inline-block group">
                     {/* Glowing background effect */}
-                    <div className="absolute -inset-1 bg-gradient-to-r from-red-300 via-pink-300 to-red-400 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-500 group-hover:duration-200"></div>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-grub-red via-grub-red to-grub-red rounded-xl blur-sm opacity-15 group-hover:opacity-25 transition duration-500 group-hover:duration-200"></div>
                     
                     <button
                       onClick={handleUseCurrentLocation}
-                      className="relative inline-flex items-center text-gray-700 hover:text-gray-900 font-medium transition-all duration-300 focus:outline-none bg-white/80 hover:bg-red-50 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl border border-gray-200/50 hover:border-red-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 backdrop-blur-sm group text-sm sm:text-base"
+                      className="relative inline-flex items-center text-gray-700 hover:text-gray-900 font-medium transition-all duration-300 focus:outline-none bg-white/80 hover:bg-grub-red/5 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl border border-gray-200/50 hover:border-grub-red/30 shadow-lg hover:shadow-xl transform hover:-translate-y-1 backdrop-blur-sm group text-sm sm:text-base"
                     >
                       {/* Animated location icon */}
                       <div className="relative mr-2 sm:mr-3">
@@ -323,7 +323,7 @@ const LocationStep = ({ onNext }) => {
                           <motion.span
                             aria-hidden="true"
                             className="absolute inset-0 rounded-full"
-                            style={{ border: '2px solid rgba(239, 68, 68, 0.35)' }}
+                            style={{ border: '2px solid rgba(128, 0, 32, 0.35)' }}
                             animate={{ scale: [1, 2.15], opacity: [0.55, 0] }}
                             transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
                           />
@@ -351,7 +351,7 @@ const LocationStep = ({ onNext }) => {
                         
                         {/* Pulsing dot effect */}
                         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 animate-ping"></div>
+                          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-grub-red rounded-full opacity-0 group-hover:opacity-100 animate-ping"></div>
                         </div>
                       </div>
                       

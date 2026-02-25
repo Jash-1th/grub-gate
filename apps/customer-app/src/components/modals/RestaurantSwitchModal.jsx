@@ -83,7 +83,7 @@ const RestaurantSwitchModal = ({
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 px-4 py-2 bg-grub-red text-white rounded-lg font-medium hover:bg-red-700 transition-all duration-200"
+            className="flex-1 px-4 py-2 bg-grub-red text-white rounded-lg font-medium hover:bg-grub-red transition-all duration-200"
           >
             Switch Restaurant
           </button>

@@ -82,7 +82,7 @@ const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postal
         ) : hasItems ? (
           <div className="space-y-1 sm:space-y-2">
             <div className="flex items-center justify-between mb-1 sm:mb-3">
-              <div className="font-semibold text-grub-red truncate group-hover:text-red-700 transition-colors duration-200 text-xs sm:text-sm">
+              <div className="font-semibold text-grub-red truncate group-hover:text-grub-red transition-colors duration-200 text-xs sm:text-sm">
                 {firstItem.restaurantName}
               </div>
               <div className="flex items-center space-x-1 sm:space-x-2">
@@ -108,7 +108,7 @@ const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postal
             </div>
             
             <div className="flex items-center justify-between">
-              <div className="font-bold text-grub-red group-hover:text-red-700 transition-colors duration-200 text-sm sm:text-base">
+              <div className="font-bold text-grub-red group-hover:text-grub-red transition-colors duration-200 text-sm sm:text-base">
                 ${firstItem.price}
               </div>
               {firstItem.preferences && firstItem.preferences.length > 0 && (
@@ -1219,7 +1219,7 @@ const WeeklyMenuPage = () => {
   return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-grub-red to-red-600 text-white">
+      <div className="bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white">
         <div className="w-full max-w-none px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
           <div className="flex flex-col gap-6">
             {/* Title Section */}
@@ -1282,10 +1282,10 @@ const WeeklyMenuPage = () => {
                         </svg>
                       </div>
                       <div className="text-center">
-                        <div className="text-base font-bold text-grub-red group-hover:text-red-700 transition-colors duration-300">
+                        <div className="text-base font-bold text-grub-red group-hover:text-grub-red transition-colors duration-300">
                           {t('weeklyMenu.viewMyCalendar')}
                         </div>
-                        <div className="text-xs text-red-600 group-hover:text-red-700 transition-colors duration-300">
+                        <div className="text-xs text-grub-red/80 group-hover:text-grub-red transition-colors duration-300">
                           {t('weeklyMenu.checkScheduledMeals')}
                         </div>
                       </div>
@@ -1345,7 +1345,7 @@ const WeeklyMenuPage = () => {
 
               <button
                 onClick={handleEnableWeek2}
-                className="w-full max-w-md px-4 py-3 bg-grub-red text-white rounded-xl hover:bg-red-700 transition-colors text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] touch-manipulation"
+                className="w-full max-w-md px-4 py-3 bg-grub-red text-white rounded-xl hover:bg-grub-red transition-colors text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] touch-manipulation"
               >
                 Plan Week 2 as well
               </button>
@@ -1448,7 +1448,7 @@ const WeeklyMenuPage = () => {
               {/* Restaurant Info */}
               {(selectedRestaurant || (isAuthenticated && !hasLoadedFromDatabase)) && (
                 <div className="flex items-center space-x-4 flex-1">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-grub-red to-red-600 rounded-full flex items-center justify-center shadow-lg">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-grub-red via-grub-red to-grub-red rounded-full flex items-center justify-center shadow-lg shadow-grub-red/15">
                     <span className="text-white font-bold text-xl sm:text-2xl">🍽️</span>
                   </div>
                   <div className="flex-1 min-w-0">
@@ -1479,7 +1479,7 @@ const WeeklyMenuPage = () => {
                             <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0 sm:inline-flex">
                               {currentRestaurants.map((restaurant, index) => (
                                 <span key={index} className="inline-flex items-center">
-                                  <span className="inline-flex items-center px-2 sm:px-3 py-1 bg-gradient-to-r from-grub-red to-red-600 text-white text-xs sm:text-sm font-medium rounded-full shadow-sm">
+                                  <span className="inline-flex items-center px-2 sm:px-3 py-1 bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white text-xs sm:text-sm font-medium rounded-full shadow-sm shadow-grub-red/10">
                                     {restaurant}
                                   </span>
                                   {index < currentRestaurants.length - 1 && (
@@ -1515,7 +1515,7 @@ const WeeklyMenuPage = () => {
                 ) : !hasAnySelectedRestaurant ? (
                   <button
                     onClick={handleAddRestaurant}
-                    className="px-4 py-3 bg-grub-red text-white rounded-xl hover:bg-red-700 transition-colors text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 touch-manipulation"
+                    className="px-4 py-3 bg-grub-red text-white rounded-xl hover:bg-grub-red transition-colors text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 touch-manipulation"
                   >
                     <div className="flex items-center justify-center space-x-2">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1529,7 +1529,7 @@ const WeeklyMenuPage = () => {
                     {user?.isGrubPass || getSelectedRestaurantCount() < 2 ? (
                       <button
                         onClick={handleAddRestaurant}
-                        className="px-4 py-3 bg-grub-red text-white rounded-xl hover:bg-red-700 transition-colors text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 touch-manipulation"
+                        className="px-4 py-3 bg-grub-red text-white rounded-xl hover:bg-grub-red transition-colors text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 touch-manipulation"
                       >
                         <div className="flex items-center justify-center space-x-2">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

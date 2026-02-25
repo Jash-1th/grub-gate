@@ -483,7 +483,7 @@ const OrderHistoryCard = ({ order, onReviewClick, lastReviewSubmission }) => {
             </h4>
             <p className="text-gray-700 text-sm leading-relaxed">{formatDeliveryAddress(order.deliveryAddress)}</p>
           </div>
-          <div className="bg-gradient-to-br from-grub-red to-red-700 p-5 rounded-xl text-white">
+          <div className="bg-gradient-to-br from-grub-red via-grub-red to-grub-red p-5 rounded-xl text-white">
             <div className="flex justify-between items-center">
               <div>
                 <p className="text-gray-200 text-sm">{t('orders.total')}</p>

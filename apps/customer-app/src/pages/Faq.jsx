@@ -16,7 +16,7 @@ const Faq = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative py-20 lg:py-32 bg-gradient-to-r from-grub-red to-red-700">
+      <section className="relative py-20 lg:py-32 bg-gradient-to-r from-grub-red via-grub-red to-grub-red">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">

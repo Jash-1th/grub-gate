@@ -46,7 +46,7 @@ const WelcomeBackModal = ({ isOpen, onClose, userName }) => {
       {/* Modal */}
       <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 sm:mx-6 overflow-hidden animate-slide-up">
         {/* Gradient Header */}
-        <div className="bg-gradient-to-r from-grub-red to-red-600 px-6 py-6 text-center relative overflow-hidden">
+        <div className="bg-gradient-to-r from-grub-red via-grub-red to-grub-red px-6 py-6 text-center relative overflow-hidden">
           {/* Decorative elements */}
           <div className="absolute top-2 left-4 text-white opacity-20">
             <FontAwesomeIcon icon={faCoffee} className="w-5 h-5" />
@@ -104,7 +104,7 @@ const WelcomeBackModal = ({ isOpen, onClose, userName }) => {
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="w-full bg-grub-red text-white py-2.5 px-6 rounded-lg font-semibold hover:bg-red-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-transform"
+            className="w-full bg-grub-red text-white py-2.5 px-6 rounded-lg font-semibold hover:bg-grub-red transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-transform"
           >
             Continue Planning 🚀
           </button>

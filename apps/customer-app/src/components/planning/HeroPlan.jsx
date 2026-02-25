@@ -33,7 +33,7 @@ const HeroPlan = ({ onNext }) => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-grub-red via-red-600 to-red-700 text-white">
+    <div className="bg-gradient-to-br from-grub-red via-grub-red to-grub-red text-white">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
         <div className="text-center mb-12">
           <h1 className="text-4xl lg:text-6xl font-bold mb-6">
@@ -112,7 +112,7 @@ const HeroPlan = ({ onNext }) => {
               disabled={!localPostalCode.trim()}
               className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all duration-200 ${
                 localPostalCode.trim()
-                  ? 'bg-grub-red text-white hover:bg-red-600 transform hover:scale-[1.02]'
+                  ? 'bg-grub-red text-white hover:opacity-95 transform hover:scale-[1.02]'
                   : 'bg-gray-200 text-gray-500 cursor-not-allowed'
               }`}
             >

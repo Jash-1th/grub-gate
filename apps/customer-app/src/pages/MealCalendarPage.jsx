@@ -1051,7 +1051,7 @@ const MealCalendarPage = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         {/* Hero Section Skeleton */}
-        <section className="relative bg-gradient-to-r from-grub-red to-red-600 text-white py-12 sm:py-16 overflow-hidden">
+        <section className="relative bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white py-12 sm:py-16 overflow-hidden">
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10"></div>
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 md:px-8 text-center">
@@ -1135,7 +1135,7 @@ const MealCalendarPage = () => {
               <div className="space-y-4">
                 <button
                   onClick={() => navigate('/weekly-menu')}
-                  className="w-full bg-grub-red text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
+                  className="w-full bg-grub-red text-white px-6 py-3 rounded-lg font-semibold hover:bg-grub-red transition-colors flex items-center justify-center space-x-2"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -1268,7 +1268,7 @@ const MealCalendarPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Enhanced Hero Header */}
-      <div className="bg-gradient-to-r from-grub-red to-red-600 text-white">
+      <div className="bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white">
         <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
           <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex-1">
@@ -1399,7 +1399,7 @@ const MealCalendarPage = () => {
                   className={`h-3 rounded-full transition-all duration-500 shadow-sm ${
                     calendarMode === 'PREVIEW' 
                       ? 'bg-gradient-to-r from-blue-500 to-blue-600' 
-                      : 'bg-gradient-to-r from-grub-red to-red-500'
+                      : 'bg-gradient-to-r from-grub-red via-grub-red to-grub-red'
                   }`}
                   style={{ 
                     width: calendarMode === 'PREVIEW' ? '100%' : `${displayData.calendar.progressPercentage}%` 
@@ -2051,7 +2051,7 @@ const MealCalendarPage = () => {
                   <svg className="w-4 h-4 text-grub-red flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
-                  <span className="text-sm font-medium text-grub-red group-hover:text-red-700">{t('mealCalendar.planNewMeals')}</span>
+                  <span className="text-sm font-medium text-grub-red group-hover:text-grub-red">{t('mealCalendar.planNewMeals')}</span>
                 </button>
                 
                 <button
@@ -2086,7 +2086,7 @@ const MealCalendarPage = () => {
           <div className="mt-8 px-2 sm:px-0 max-w-4xl mx-auto">
             <button
               onClick={() => navigate('/subscription')}
-              className="group w-full text-left p-4 sm:p-6 rounded-2xl bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-xl hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 border-2 border-red-500 relative overflow-hidden touch-manipulation"
+              className="group w-full text-left p-4 sm:p-6 rounded-2xl bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white shadow-xl hover:shadow-2xl hover:shadow-grub-red/20 transform hover:scale-[1.02] transition-all duration-300 border-2 border-grub-red/30 relative overflow-hidden touch-manipulation"
             >
               {/* Highlight badge */}
               <div className="absolute top-3 right-3 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse">

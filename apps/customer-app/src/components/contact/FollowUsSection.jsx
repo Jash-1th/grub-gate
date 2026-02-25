@@ -50,7 +50,7 @@ const FollowUsSection = () => {
             className="flex flex-col items-center justify-center p-3 sm:p-4 md:p-6 rounded-xl hover:bg-gray-50 transition-all duration-300 group border border-transparent hover:border-grub-red/20 hover:shadow-md transform hover:-translate-y-1"
             aria-label={`Follow us on ${social.name}`}
           >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-full bg-gradient-to-br from-grub-red to-red-700 flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-all duration-300 mb-2 sm:mb-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-full bg-gradient-to-br from-grub-red via-grub-red to-grub-red flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-all duration-300 mb-2 sm:mb-3">
               <div className="scale-75 sm:scale-100 md:scale-110">
                 {getSocialIcon(social.name)}
               </div>

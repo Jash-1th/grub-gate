@@ -35,7 +35,7 @@ const SelectedRestaurantsModal = ({ isOpen, onClose, restaurants = [] }) => {
                   return (
                     <span
                       key={`${name}-${idx}`}
-                      className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-grub-red to-red-600 text-white text-xs sm:text-sm font-medium rounded-full shadow-sm"
+                      className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white text-xs sm:text-sm font-medium rounded-full shadow-sm"
                     >
                       {name}
                     </span>

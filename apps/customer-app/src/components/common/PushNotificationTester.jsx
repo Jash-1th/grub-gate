@@ -134,7 +134,7 @@ const PushNotificationTester = () => {
           <button
             onClick={handleRequestPermission}
             disabled={isLoading || permissionStatus === 'denied'}
-            className="w-full px-4 py-2 bg-grub-red text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-2 bg-grub-red text-white rounded-lg font-medium hover:bg-grub-red transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Requesting...' : 'Request Permission'}
           </button>

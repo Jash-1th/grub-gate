@@ -251,14 +251,14 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
   return (
     <div className="min-h-screen bg-gray-50 pb-32 sm:pb-40">
       {/* Header */}
-      <div className="bg-gradient-to-r from-grub-red to-red-600 text-white">
+      <div className="bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
           <div className="text-center">
             <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4 leading-tight px-2 sm:px-0">
               {isFromPlan ? (
                 <>
                   <span className="block sm:inline">{t('menuSelection.restaurantsNear', { postalCode: '' })}</span>
-                  <span className="block sm:inline font-black text-red-200"> {effectivePostalCode?.toUpperCase() || t('menuSelection.you')}</span>
+                  <span className="block sm:inline font-black text-white/90"> {effectivePostalCode?.toUpperCase() || t('menuSelection.you')}</span>
                 </>
               ) : (
                 <>
@@ -267,7 +267,7 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
                 </>
               )}
             </h1>
-            <p className="text-red-100 text-xs sm:text-base lg:text-lg mb-4 sm:mb-8 px-4 sm:px-0 max-w-lg mx-auto">
+            <p className="text-white/85 text-xs sm:text-base lg:text-lg mb-4 sm:mb-8 px-4 sm:px-0 max-w-lg mx-auto">
               {isFromPlan 
                 ? t('menuSelection.highlyRatedRestaurants')
                 : t('menuSelection.bestOptionsAvailable', { slot })
@@ -388,7 +388,7 @@ const MenuSelectionStep = ({ onNext, onBack }) => {
                       navigate('/weekly-menu');
                     }
                   }}
-                  className="group relative px-6 sm:px-8 lg:px-10 py-2 lg:py-2.5 bg-gradient-to-r from-red-600 via-red-600 to-red-700 hover:from-red-700 hover:via-red-700 hover:to-red-800 text-white font-bold rounded-xl transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 text-sm sm:text-base lg:min-w-[220px] overflow-hidden"
+                  className="group relative px-6 sm:px-8 lg:px-10 py-2 lg:py-2.5 bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white font-bold rounded-xl transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl hover:shadow-grub-red/30 flex items-center justify-center space-x-2 text-sm sm:text-base lg:min-w-[220px] overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700 hidden lg:block"></div>
                   

@@ -183,7 +183,7 @@ const NotificationManager = () => {
                 <button
                   onClick={handleEnableNotifications}
                   disabled={isLoading}
-                  className="w-full mb-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full mb-3 px-4 py-2 bg-grub-red text-white rounded-lg hover:bg-grub-red disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? 'Enabling...' : 'Enable Notifications'}
                 </button>

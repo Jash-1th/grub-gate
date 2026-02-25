@@ -139,7 +139,7 @@ const FilterSection = ({
             <div className="relative meal-dropdown">
               <button
                 onClick={onToggleMealDropdown}
-                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 active:from-red-700 active:to-red-800 text-white py-2.5 px-4 rounded-lg shadow-md transition-all duration-200 transform active:scale-95 flex items-center space-x-2 touch-manipulation min-w-[100px]"
+                className="bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white py-2.5 px-4 rounded-lg shadow-md hover:shadow-lg hover:shadow-grub-red/20 transition-all duration-200 transform active:scale-95 flex items-center space-x-2 touch-manipulation min-w-[100px]"
               >
                 <div className="flex items-center space-x-1.5">
                   {selectedMealType === 'lunch' ? (

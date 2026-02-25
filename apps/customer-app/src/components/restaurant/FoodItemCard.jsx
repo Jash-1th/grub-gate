@@ -386,7 +386,7 @@ const FoodItemCard = ({
                   e.stopPropagation();
                   onRemoveFromPlan && onRemoveFromPlan(item);
                 }}
-                className="w-full font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-lg hover:shadow-xl text-sm bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white focus:ring-red-500 touch-manipulation active:scale-95"
+                className="w-full font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-lg hover:shadow-xl hover:shadow-grub-red/20 text-sm bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white focus:ring-grub-red touch-manipulation active:scale-95"
               >
                 <div className="flex items-center justify-center space-x-1.5">
                   <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

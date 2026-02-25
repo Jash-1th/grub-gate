@@ -116,7 +116,7 @@ const HowItWorksPlan = () => {
 
         {/* Call to Action */}
         <div className="text-center mt-16">
-          <div className="bg-gradient-to-r from-grub-red to-red-600 rounded-2xl p-8 text-white">
+          <div className="bg-gradient-to-r from-grub-red via-grub-red to-grub-red rounded-2xl p-8 text-white">
             <h3 className="text-2xl font-bold mb-4">
               Ready to Start Planning?
             </h3>

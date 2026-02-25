@@ -8,6 +8,11 @@ export default {
     extend: {
       colors: {
         'grub-red': '#800020',
+        red: {
+          500: '#9a0030',
+          600: '#800020',
+          700: '#660019'
+        }
       },
       screens: {
         'xs': '480px',

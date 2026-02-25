@@ -710,7 +710,7 @@ const OTPAuthModal = () => {
                   className={`w-full py-2 px-4 rounded-lg font-semibold text-base transition-colors duration-200 shadow-lg ${
                     (isLoading || isLocalLoading)
                       ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-grub-red text-white hover:bg-red-700 hover:shadow-xl transform hover:-translate-y-0.5 transition-transform'
+                      : 'bg-grub-red text-white hover:bg-grub-red hover:shadow-xl hover:shadow-grub-red/30 transform hover:-translate-y-0.5 transition-transform'
                   }`}
                 >
                   {(isLoading || isLocalLoading) ? (
@@ -736,7 +736,7 @@ const OTPAuthModal = () => {
                         closeOTPAuthModal();
                         setTimeout(() => openLoginModal(), 100);
                       }}
-                      className="text-grub-red hover:text-red-700 font-medium transition-colors duration-200"
+                      className="text-grub-red hover:text-grub-red font-medium transition-colors duration-200"
                     >
                       Sign in here
                     </button>
@@ -782,7 +782,7 @@ const OTPAuthModal = () => {
                       type="button"
                       onClick={handleResendOTP}
                       disabled={!canResend || isLoading || isLocalLoading}
-                      className="text-sm text-grub-red hover:text-red-700 font-medium transition-colors duration-200 disabled:text-gray-400 disabled:cursor-not-allowed"
+                      className="text-sm text-grub-red hover:text-grub-red font-medium transition-colors duration-200 disabled:text-gray-400 disabled:cursor-not-allowed"
                     >
                       Resend Code
                     </button>
@@ -803,7 +803,7 @@ const OTPAuthModal = () => {
                     className={`flex-1 py-2 px-4 rounded-lg font-semibold text-base transition-colors duration-200 shadow-lg ${
                       (isLoading || isLocalLoading)
                         ? 'bg-gray-400 cursor-not-allowed'
-                        : 'bg-grub-red text-white hover:bg-red-700 hover:shadow-xl transform hover:-translate-y-0.5 transition-transform'
+                        : 'bg-grub-red text-white hover:bg-grub-red hover:shadow-xl hover:shadow-grub-red/30 transform hover:-translate-y-0.5 transition-transform'
                     }`}
                   >
                     {(isLoading || isLocalLoading) ? (
@@ -974,7 +974,7 @@ const OTPAuthModal = () => {
                     className={`flex-1 py-2 px-4 rounded-lg font-semibold text-base transition-colors duration-200 shadow-lg ${
                       (isLoading || isLocalLoading)
                         ? 'bg-gray-400 cursor-not-allowed'
-                        : 'bg-grub-red text-white hover:bg-red-700 hover:shadow-xl transform hover:-translate-y-0.5 transition-transform'
+                        : 'bg-grub-red text-white hover:bg-grub-red hover:shadow-xl hover:shadow-grub-red/30 transform hover:-translate-y-0.5 transition-transform'
                     }`}
                   >
                     {(isLoading || isLocalLoading) ? (
@@ -1164,7 +1164,7 @@ const OTPAuthModal = () => {
                     className={`flex-1 py-2 px-4 rounded-lg font-semibold text-base transition-colors duration-200 shadow-lg ${
                       (isLoading || isLocalLoading)
                         ? 'bg-gray-400 cursor-not-allowed'
-                        : 'bg-grub-red text-white hover:bg-red-700 hover:shadow-xl transform hover:-translate-y-0.5 transition-transform'
+                        : 'bg-grub-red text-white hover:bg-grub-red hover:shadow-xl hover:shadow-grub-red/30 transform hover:-translate-y-0.5 transition-transform'
                     }`}
                   >
                     {(isLoading || isLocalLoading) ? (

@@ -44,7 +44,7 @@ const AuthButtons = ({ className = '', isMobile = false }) => {
             type="button"
             onClick={openUserProfileModal}
             disabled={isLoading}
-            className="w-7 h-7 xs:w-8 xs:h-8 bg-gradient-to-r from-grub-red to-red-600 rounded-full flex items-center justify-center transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-7 h-7 xs:w-8 xs:h-8 bg-gradient-to-r from-grub-red via-grub-red to-grub-red rounded-full flex items-center justify-center transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red disabled:opacity-60 disabled:cursor-not-allowed"
             aria-label="Open profile"
             title="Profile"
           >
@@ -101,7 +101,7 @@ const AuthButtons = ({ className = '', isMobile = false }) => {
       {/* Signup Button - OTP Verification */}
       <button
         onClick={() => openOTPAuthModal('signup')}
-        className={`whitespace-nowrap font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red/80 text-white bg-gradient-to-r from-grub-red to-red-600 hover:from-grub-red/90 hover:to-red-700 shadow hover:shadow-md transform hover:-translate-y-0.5 ${
+        className={`whitespace-nowrap font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red/80 text-white bg-gradient-to-r from-grub-red via-grub-red to-grub-red shadow hover:shadow-md transform hover:-translate-y-0.5 ${
           isMobile ? 'w-full text-sm xs:text-base py-2.5 xs:py-3 px-4' : 'text-xs lg:text-sm px-3 lg:px-4 py-1.5 lg:py-2'
         }`}
       >

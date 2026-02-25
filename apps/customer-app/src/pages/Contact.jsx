@@ -14,7 +14,7 @@ const Contact = () => {
       
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="bg-gradient-to-r from-grub-red to-red-700 py-16 sm:py-20 lg:py-24">
+        <section className="bg-gradient-to-r from-grub-red via-grub-red to-grub-red py-16 sm:py-20 lg:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">

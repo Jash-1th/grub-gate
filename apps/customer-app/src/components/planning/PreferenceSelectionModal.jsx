@@ -119,15 +119,15 @@ const PreferenceSelectionModal = ({
           {/* Modal Content */}
           <div className="relative bg-white rounded-2xl shadow-2xl overflow-hidden">
             {/* Decorative Background */}
-            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 opacity-10"></div>
-            <div className="absolute top-4 right-4 w-20 h-20 bg-red-200 rounded-full opacity-30 animate-pulse"></div>
+            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-grub-red via-grub-red to-yellow-500 opacity-10"></div>
+            <div className="absolute top-4 right-4 w-20 h-20 bg-grub-red/15 rounded-full opacity-30 animate-pulse"></div>
             <div className="absolute bottom-4 left-4 w-16 h-16 bg-orange-200 rounded-full opacity-30 animate-pulse delay-1000"></div>
             
             {/* Header */}
             <div className="relative px-6 sm:px-8 pt-8 pb-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-orange-500 rounded-xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-gradient-to-r from-grub-red via-grub-red to-grub-red rounded-xl flex items-center justify-center shadow-md shadow-grub-red/10">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -169,14 +169,14 @@ const PreferenceSelectionModal = ({
                     className={`
                       relative p-4 rounded-xl border-2 transition-all duration-300 transform hover:scale-105
                       ${selectedPreferences.includes(preference.id)
-                        ? 'border-red-500 bg-red-50 shadow-lg shadow-red-500/20'
-                        : 'border-gray-200 bg-white hover:border-red-300 hover:bg-red-50/50'
+                        ? 'border-grub-red bg-red-50 shadow-lg shadow-grub-red/15'
+                        : 'border-gray-200 bg-white hover:border-grub-red/60 hover:bg-red-50/50'
                       }
                     `}
                   >
                     {/* Selection indicator */}
                     {selectedPreferences.includes(preference.id) && (
-                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-grub-red rounded-full flex items-center justify-center shadow-md shadow-grub-red/15">
                         <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
@@ -197,12 +197,12 @@ const PreferenceSelectionModal = ({
             {/* Selected Count */}
             {selectedPreferences.length > 0 && (
               <div className="px-6 sm:px-8 pb-4">
-                <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-lg p-3 border border-red-200">
+                <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-lg p-3 border border-grub-red/20">
                   <div className="flex items-center justify-center space-x-2">
-                    <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-grub-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="text-sm font-medium text-red-700">
+                    <span className="text-sm font-medium text-grub-red">
                       {selectedPreferences.length} preference{selectedPreferences.length !== 1 ? 's' : ''} selected
                     </span>
                   </div>
@@ -215,7 +215,7 @@ const PreferenceSelectionModal = ({
               {isProcessing && (
                 <div className="absolute inset-0 bg-white/90 backdrop-blur-sm rounded-2xl flex items-center justify-center z-10">
                   <div className="text-center">
-                    <div className="w-12 h-12 mx-auto mb-4 border-4 border-red-200 border-t-red-500 rounded-full animate-spin"></div>
+                    <div className="w-12 h-12 mx-auto mb-4 border-4 border-red-200 border-t-grub-red rounded-full animate-spin"></div>
                     <p className="text-gray-700 font-medium">Finding restaurants...</p>
                     <p className="text-sm text-gray-500 mt-1">Preparing your results</p>
                   </div>
@@ -241,7 +241,7 @@ const PreferenceSelectionModal = ({
                   className={`flex-1 px-6 py-3 font-semibold rounded-xl transition-all duration-300 shadow-lg ${
                     isProcessing
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white transform hover:scale-105 hover:shadow-xl'
+                      : 'bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white transform hover:scale-105 hover:shadow-xl hover:shadow-grub-red/20'
                   }`}
                 >
                   <div className="flex items-center justify-center space-x-2">

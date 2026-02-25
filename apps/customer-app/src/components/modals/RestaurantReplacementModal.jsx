@@ -337,7 +337,7 @@ const RestaurantReplacementModal = ({
               disabled={selectedRestaurantsToRemove.length === 0 || isRemoving}
               className={`flex-1 px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-all duration-200 text-sm sm:text-base touch-manipulation ${
                 selectedRestaurantsToRemove.length > 0 && !isRemoving
-                  ? 'bg-grub-red text-white hover:bg-red-700 shadow-lg active:scale-95'
+                  ? 'bg-grub-red text-white hover:bg-grub-red shadow-lg active:scale-95'
                   : 'bg-gray-200 text-gray-400 cursor-not-allowed'
               }`}
             >

@@ -115,7 +115,7 @@ const Header = () => {
                 <button
                   type="button"
                   onClick={openUserProfileModal}
-                  className="w-7 h-7 xs:w-8 xs:h-8 bg-gradient-to-r from-grub-red to-red-600 rounded-full flex items-center justify-center flex-shrink-0 transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red"
+                  className="w-7 h-7 xs:w-8 xs:h-8 bg-gradient-to-r from-grub-red via-grub-red to-grub-red rounded-full flex items-center justify-center flex-shrink-0 transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-grub-red"
                   aria-label="Open profile"
                   title="Profile"
                 >

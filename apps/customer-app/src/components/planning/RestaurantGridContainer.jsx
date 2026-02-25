@@ -79,7 +79,7 @@ const RestaurantGridContainer = ({ postalCode }) => {
                 </p>
                 {/* Progress bar animation */}
                 <div className="w-64 h-2 bg-gray-200 rounded-full mx-auto overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-grub-red to-red-500 rounded-full animate-pulse"></div>
+                  <div className="h-full bg-gradient-to-r from-grub-red via-grub-red to-grub-red rounded-full animate-pulse"></div>
                 </div>
               </div>
             )}
@@ -182,7 +182,7 @@ const RestaurantGridContainer = ({ postalCode }) => {
             </p>
             <button 
               onClick={() => window.location.reload()}
-              className="bg-grub-red text-white px-6 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors duration-200"
+              className="bg-grub-red text-white px-6 py-2 rounded-lg font-medium hover:bg-grub-red transition-colors duration-200"
             >
               {t('restaurantGrid.tryAgain')}
             </button>

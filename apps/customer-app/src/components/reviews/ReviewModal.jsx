@@ -278,7 +278,7 @@ const ReviewModal = ({ isOpen, onClose, order, menuItem, onSubmit }) => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-grub-red hover:bg-red-700 text-white py-3 rounded-lg hover:shadow-lg transition-all duration-300 font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="w-full bg-grub-red hover:bg-grub-red text-white py-3 rounded-lg hover:shadow-lg transition-all duration-300 font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <div className="flex items-center justify-center">
