@@ -368,7 +368,7 @@ const RegisterPage = () => {
               <div className="relative">
               {/* Card Header */}
               <div className="text-center mb-4 sm:mb-6">
-                <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-grub-red to-red-600 rounded-xl shadow-lg mb-3">
+                <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-grub-red via-grub-red to-grub-red rounded-xl shadow-lg mb-3">
                   <FontAwesomeIcon icon={faKey} className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                 </div>
                 <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Create Partner Account</h2>
@@ -604,7 +604,7 @@ const RegisterPage = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="auth-button w-full py-3 sm:py-4 px-6 bg-gradient-to-r from-grub-red to-red-600 text-white text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
+                  className="auth-button w-full py-3 sm:py-4 px-6 bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
                 >
                 {loading ? (
                   <div className="flex items-center justify-center">

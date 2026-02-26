@@ -144,7 +144,7 @@ const LandingPage = () => {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           {/* Centered Hero Content */}
           <div className={`text-center transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <div className="inline-flex items-center gap-2 bg-red-800/40 backdrop-blur-sm px-4 py-2 rounded-full mb-6 text-sm font-medium">
+            <div className="inline-flex items-center gap-2 bg-grub-red/40 backdrop-blur-sm px-4 py-2 rounded-full mb-6 text-sm font-medium">
               <FontAwesomeIcon icon={faRocket} className="h-4 w-4" />
               <span>{t('landingPage.hero.badge')}</span>
             </div>
@@ -250,7 +250,7 @@ const LandingPage = () => {
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <CardContent className="p-6 md:p-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-grub-red to-red-600 rounded-2xl mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-grub-red via-grub-red to-grub-red rounded-2xl mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300">
                       <FontAwesomeIcon icon={iconDef} className="h-8 w-8 md:h-10 md:w-10 text-white" />
                     </div>
                     <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">
@@ -374,11 +374,11 @@ const LandingPage = () => {
               <div key={index} className="relative scroll-animate" style={{ animationDelay: `${index * 150}ms` }}>
                 <Card className="h-full hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-2 border-transparent hover:border-grub-red/20 bg-white">
                   <CardContent className="p-6 md:p-8 text-center">
-                    <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-grub-red to-red-600 text-white rounded-2xl text-xl md:text-2xl font-bold mb-6 shadow-lg">
+                    <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-grub-red via-grub-red to-grub-red text-white rounded-2xl text-xl md:text-2xl font-bold mb-6 shadow-lg">
                       {step.number}
                     </div>
                     <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">
-                      {step.title}
+                      {t(`landingPage.steps.${step.number}.title`)}
                     </h3>
                     <p className="text-sm md:text-base text-gray-600 leading-relaxed">
                       {step.description}
@@ -414,7 +414,7 @@ const LandingPage = () => {
             </div>
             
             <div className="p-6 sm:p-8 md:p-12 lg:p-16 text-center relative z-10">
-              <div className="inline-flex items-center gap-2 bg-red-800/40 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-full mb-4 sm:mb-6 text-xs sm:text-sm font-semibold text-white">
+              <div className="inline-flex items-center gap-2 bg-grub-red/40 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-full mb-4 sm:mb-6 text-xs sm:text-sm font-semibold text-white">
                 <FontAwesomeIcon icon={faRocket} className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>{t('landingPage.cta.badge')}</span>
               </div>

@@ -517,17 +517,17 @@ const MenuPage = () => {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="rounded-xl bg-gradient-to-r from-grub-red to-red-600 text-white p-4 sm:p-6">
+      <div className="rounded-xl bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white p-4 sm:p-6">
         <div className="flex flex-col gap-3">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold">{t('menu.title')}</h1>
-            <p className="text-red-100 text-sm">{t('menu.subtitle')}</p>
+            <p className="text-sm sm:text-base text-white/90">{t('menu.subtitle')}</p>
           </div>
           <div className="flex justify-start">
             <Button
               variant="primary"
               onClick={handleAddNewItem}
-              className="w-full sm:w-auto px-4 bg-white bg-opacity-20 hover:bg-opacity-30 text-white shadow focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 backdrop-blur-sm"
+              className="w-full sm:w-auto px-4 bg-white bg-opacity-20 hover:bg-opacity-30 text-white shadow focus:outline-none focus:ring-2 focus:ring-grub-red focus:ring-opacity-50 backdrop-blur-sm"
             >
               <FontAwesomeIcon icon={faPlus} className="h-4 w-4 mr-2" />{t('menu.addItem')}
             </Button>
@@ -598,7 +598,7 @@ const MenuPage = () => {
             </div>
             <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No menu items yet</h3>
             <p className="text-sm sm:text-base text-gray-600 mb-4">Start building your menu by adding your first item.</p>
-            <Button onClick={handleAddNewItem} variant="primary" className="w-full sm:w-auto bg-grub-red hover:bg-red-700">
+            <Button onClick={handleAddNewItem} variant="primary" className="w-full sm:w-auto bg-grub-red hover:bg-grub-red">
               <FontAwesomeIcon icon={faPlus} className="h-4 w-4 mr-2" />
               Add Your First Item
             </Button>
@@ -682,7 +682,7 @@ const MenuPage = () => {
         variant="primary"
         aria-label="Add menu item"
         onClick={handleAddNewItem}
-        className="sm:hidden fixed bottom-20 right-4 z-20 rounded-full bg-grub-red hover:bg-red-700 text-white shadow-xl w-14 h-14 flex items-center justify-center active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-300 transition-transform"
+        className="sm:hidden fixed bottom-20 right-4 z-20 rounded-full bg-grub-red hover:bg-grub-red text-white shadow-xl w-14 h-14 flex items-center justify-center active:scale-95 focus:outline-none focus:ring-2 focus:ring-grub-red/30 transition-transform"
       >
         <FontAwesomeIcon icon={faPlus} className="h-5 w-5" />
       </Button>
@@ -1446,7 +1446,7 @@ const MenuPage = () => {
                 {activeTab === 'details' && (
                   <Button
                     variant="primary"
-                    className="w-full bg-grub-red hover:bg-red-700 text-white text-sm py-2.5 active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-300"
+                    className="w-full bg-grub-red hover:bg-grub-red text-white text-sm py-2.5 active:scale-95 focus:outline-none focus:ring-2 focus:ring-grub-red/30"
                     onClick={handleSubmit}
                     disabled={submitting}
                   >
@@ -1538,7 +1538,7 @@ const MenuPage = () => {
                 {activeTab === 'details' && (
                   <Button
                     variant="primary"
-                    className="bg-grub-red hover:bg-red-700 text-white active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-300"
+                    className="bg-grub-red hover:bg-grub-red text-white active:scale-95 focus:outline-none focus:ring-2 focus:ring-grub-red/30"
                     onClick={handleSubmit}
                     disabled={submitting}
                   >

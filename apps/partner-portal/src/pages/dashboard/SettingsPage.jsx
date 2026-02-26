@@ -1274,17 +1274,17 @@ const SettingsPage = () => {
               )}
               
               <Button
-                onClick={handleSave}
+                type="submit"
                 disabled={loading || Object.keys(errors).length > 0}
                 className={`w-full sm:w-auto min-w-[140px] text-white text-sm sm:text-base py-2.5 sm:py-2 transition-all duration-200 ${
                   Object.keys(errors).length > 0
                     ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-grub-red hover:bg-red-700 hover:scale-105'
+                    : 'bg-grub-red hover:bg-grub-red hover:scale-105'
                 }`}
               >
                 {loading ? (
                   <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                     Saving...
                   </div>
                 ) : Object.keys(errors).length > 0 ? (

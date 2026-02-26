@@ -175,12 +175,12 @@ const DashboardHome = () => {
   const LoadingSkeleton = () => (
     <div className="space-y-4 lg:space-y-6 animate-pulse">
       {/* Hero Section Skeleton */}
-      <div className="bg-gradient-to-r from-grub-red to-red-600 rounded-2xl p-6 lg:p-8 text-white relative overflow-hidden">
+      <div className="bg-gradient-to-r from-grub-red via-grub-red to-grub-red rounded-2xl p-6 lg:p-8 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent animate-shimmer"></div>
         <div className="relative z-10">
           <div className="flex justify-between items-start mb-4">
-            <div>
-              <div className="h-8 bg-white/20 rounded-lg w-64 mb-2"></div>
+            <div className="space-y-2">
+              <div className="h-6 bg-white/20 rounded w-32"></div>
               <div className="h-4 bg-white/15 rounded w-48"></div>
             </div>
             <div className="h-10 w-10 bg-white/20 rounded-lg"></div>
@@ -282,11 +282,11 @@ const DashboardHome = () => {
         </div>
       )}
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-grub-red to-red-600 rounded-2xl p-6 lg:p-8 text-white animate-fadeInUp shadow-lg">
+      <div className="bg-gradient-to-r from-grub-red via-grub-red to-grub-red rounded-2xl p-6 lg:p-8 text-white animate-fadeInUp shadow-lg">
         <div className="flex justify-between items-start mb-2">
           <h1 className="text-xl lg:text-2xl font-bold">
             {loading ? (
-              t('dashboard.loadingDashboard')
+              <div className="h-7 bg-white/20 rounded w-64"></div>
             ) : (
               t('dashboard.welcome', { name: getRestaurantName() })
             )}

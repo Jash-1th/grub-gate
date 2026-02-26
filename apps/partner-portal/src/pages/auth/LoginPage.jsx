@@ -208,7 +208,7 @@ const LoginPage = () => {
             {/* Card header with gradient accent */}
             <div className="relative mb-4 sm:mb-5">
               <div className="text-center mb-3">
-                <div className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-grub-red to-red-600 rounded-xl shadow-lg mb-2">
+                <div className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-grub-red via-grub-red to-grub-red rounded-xl shadow-lg mb-2">
                   <FontAwesomeIcon icon={faLock} className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1">{t('auth.login.title')}</h3>
@@ -319,7 +319,7 @@ const LoginPage = () => {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="auth-button w-full py-3 sm:py-4 px-6 bg-gradient-to-r from-grub-red to-red-600 text-white text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
+                  className="auth-button w-full py-3 sm:py-4 px-6 bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
                 >
                   {isLoading ? (
                     <div className="flex items-center justify-center">

@@ -250,7 +250,7 @@ const StatusUpdateButton = ({ order, onStatusUpdate, isLoading }) => {
             className={`group relative inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 ${
               isLoading 
                 ? 'bg-gray-400 cursor-not-allowed' 
-                : 'bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 shadow-md hover:shadow-lg'
+                : 'bg-gradient-to-r from-grub-red via-grub-red to-grub-red shadow-md hover:shadow-lg'
             } text-white disabled:opacity-50 disabled:transform-none`}
           >
             {isLoading ? (

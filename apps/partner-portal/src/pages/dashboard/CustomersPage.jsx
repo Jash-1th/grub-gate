@@ -176,7 +176,7 @@ const CustomersPage = () => {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-grub-red to-red-600 rounded-xl p-4 sm:p-6 text-white">
+      <div className="bg-gradient-to-r from-grub-red via-grub-red to-grub-red rounded-xl p-4 sm:p-6 text-white">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold">

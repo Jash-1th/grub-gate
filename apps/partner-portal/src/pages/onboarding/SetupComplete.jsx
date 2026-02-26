@@ -219,7 +219,7 @@ const SetupComplete = () => {
                   e.stopPropagation();
                   handleGoToRoute(step.route);
                 }}
-                className="w-full bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-3 shadow-md hover:shadow-lg transition-all duration-200"
+                className="w-full bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white font-semibold py-3 shadow-md hover:shadow-lg transition-all duration-200"
               >
                 {step.action}
                 <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
@@ -260,7 +260,7 @@ const SetupComplete = () => {
           className={`px-10 sm:px-12 py-4 sm:py-5 text-lg sm:text-xl font-bold transition-all duration-300 shadow-2xl ${
             isActivating 
               ? 'bg-gray-400 cursor-not-allowed' 
-              : 'bg-gradient-to-r from-grub-red via-red-600 to-red-700 hover:from-red-600 hover:via-red-700 hover:to-red-800 text-white hover:scale-105 hover:shadow-3xl'
+              : 'bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white hover:scale-105 hover:shadow-3xl'
           }`}
         >
           {isActivating ? (

@@ -967,42 +967,6 @@ const AnalyticsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-grub-red to-red-600 rounded-2xl p-6 text-white">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold">{t('analytics.title')}</h1>
-              <p className="text-red-100 mt-1">{t('analytics.subtitle')}</p>
-            </div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-              <select
-                value={timeRange}
-                onChange={(e) => setTimeRange(e.target.value)}
-                className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-red-200 focus:outline-none focus:ring-2 focus:ring-white/30"
-              >
-                {timeRanges.map(range => (
-                  <option key={range.value} value={range.value} className="text-gray-900">
-                    {range.label}
-                  </option>
-                ))}
-              </select>
-              <div className="flex items-center space-x-2">
-                <Button 
-                  onClick={() => window.location.reload()}
-                  disabled={loading}
-                  className="bg-white/20 hover:bg-white/30 text-white border-white/30 disabled:opacity-50"
-                >
-                  <FontAwesomeIcon icon={faSync} className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                  {t('analytics.refresh')}
-                </Button>
-                <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30">
-                  <FontAwesomeIcon icon={faDownload} className="h-4 w-4 mr-2" />
-                  {t('analytics.export')}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Navigation Tabs */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
@@ -1046,7 +1010,7 @@ const AnalyticsPage = () => {
                 <p className="text-gray-600 mb-4">{error}</p>
                 <Button 
                   onClick={() => window.location.reload()}
-                  className="bg-grub-red hover:bg-red-700 text-white"
+                  className="bg-grub-red hover:bg-grub-red text-white"
                 >
                   <FontAwesomeIcon icon={faSync} className="h-4 w-4 mr-2" />
                   Retry

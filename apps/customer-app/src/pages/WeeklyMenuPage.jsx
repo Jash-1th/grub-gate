@@ -62,7 +62,7 @@ const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postal
           ? 'cursor-not-allowed opacity-50 bg-gray-100 border-gray-300' 
           : hasItems 
             ? 'cursor-pointer border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg hover:shadow-xl hover:border-green-400 transform hover:scale-[1.02] hover:-translate-y-1 active:scale-95' 
-            : 'cursor-pointer border-gray-200 bg-gradient-to-br from-white to-gray-50 hover:border-grub-red/60 hover:shadow-lg hover:from-red-50/30 hover:to-orange-50/30 transform hover:scale-[1.02] hover:-translate-y-1 active:scale-95'
+            : 'cursor-pointer border-gray-200 bg-gradient-to-br from-white to-gray-50 hover:border-grub-red/60 hover:shadow-lg hover:from-grub-red/5 hover:to-orange-50/30 transform hover:scale-[1.02] hover:-translate-y-1 active:scale-95'
         }
         ${isActive ? 'ring-2 ring-grub-red ring-offset-2' : ''}
       `}
@@ -71,7 +71,7 @@ const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postal
       <div className={`absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
         hasItems 
           ? 'bg-gradient-to-br from-green-100/50 to-emerald-100/50' 
-          : 'bg-gradient-to-br from-red-50/30 to-orange-50/30'
+          : 'bg-gradient-to-br from-grub-red/5 to-orange-50/30'
       }`}></div>
       
       <div className="relative z-10">
@@ -158,15 +158,15 @@ const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postal
               </>
             ) : (
               <>
-                <div className="w-6 h-6 sm:w-10 sm:h-10 mx-auto bg-gray-100 group-hover:bg-red-100 rounded-full flex items-center justify-center transition-colors duration-200">
-                  <svg className="w-3 h-3 sm:w-5 sm:h-5 text-gray-400 group-hover:text-red-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-6 h-6 sm:w-10 sm:h-10 mx-auto bg-gray-100 group-hover:bg-grub-red/10 rounded-full flex items-center justify-center transition-colors duration-200">
+                  <svg className="w-3 h-3 sm:w-5 sm:h-5 text-gray-400 group-hover:text-grub-red transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
                 </div>
                 <div className="text-xs sm:text-sm text-gray-500 group-hover:text-gray-600 transition-colors duration-200">
                   {t('weeklyMenu.addMeal', { mealType })}
                 </div>
-                <div className="hidden sm:flex text-xs text-grub-red/70 font-medium group-hover:text-red-600 transition-colors duration-200 items-center justify-center">
+                <div className="hidden sm:flex text-xs text-grub-red/70 font-medium group-hover:text-grub-red transition-colors duration-200 items-center justify-center">
                   <span>
                     {isAuthenticated && !hasLoadedFromDatabase 
                       ? t('weeklyMenu.loading')
@@ -1798,7 +1798,7 @@ const WeeklyMenuPage = () => {
               <h4 className="text-sm font-semibold text-gray-900 mb-3 sm:hidden">{t('weeklyMenu.legend')}</h4>
               <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-3 sm:gap-6 text-sm text-gray-700">
                 <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-200">
-                  <div className="w-5 h-5 bg-gradient-to-br from-red-50 to-orange-50 border-2 border-grub-red rounded-lg shadow-sm flex-shrink-0"></div>
+                  <div className="w-5 h-5 bg-gradient-to-br from-grub-red/5 to-orange-50 border-2 border-grub-red rounded-lg shadow-sm flex-shrink-0"></div>
                   <span className="font-medium">{t('weeklyMenu.plannedMeals')}</span>
                 </div>
                 <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-200">

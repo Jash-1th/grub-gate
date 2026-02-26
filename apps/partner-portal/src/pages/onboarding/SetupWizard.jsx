@@ -308,7 +308,7 @@ const SetupWizard = () => {
                 <div className="flex flex-col items-center">
                   <div className={`flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full border-4 transition-all duration-300 shadow-lg ${
                       currentWizardStep > step.id ? 'bg-gradient-to-br from-green-500 to-green-600 border-green-500 text-white scale-110' :
-                      currentWizardStep === step.id ? 'bg-gradient-to-br from-grub-red to-red-600 border-grub-red text-white scale-110 animate-pulse' : 'border-gray-300 text-gray-400 bg-white'
+                      currentWizardStep === step.id ? 'bg-gradient-to-br from-grub-red via-grub-red to-grub-red border-grub-red text-white scale-110 animate-pulse' : 'border-gray-300 text-gray-400 bg-white'
                   }`}>
                     <FontAwesomeIcon icon={currentWizardStep > step.id ? faCheck : step.icon} className="text-xl sm:text-2xl" />
                   </div>
@@ -350,7 +350,7 @@ const SetupWizard = () => {
           <Button
             onClick={handleNext}
             disabled={isLoading}
-            className="flex items-center justify-center min-w-full sm:min-w-[160px] px-4 sm:px-6 py-3 sm:py-3 text-sm sm:text-base font-bold bg-gradient-to-r from-grub-red to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 order-3"
+            className="flex items-center justify-center min-w-full sm:min-w-[160px] px-4 sm:px-6 py-3 sm:py-3 text-sm sm:text-base font-bold bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white shadow-lg hover:shadow-xl transition-all duration-200 order-3"
           >
             {isLoading ? (
               <FontAwesomeIcon icon={faSpinner} className="mr-2 animate-spin" />

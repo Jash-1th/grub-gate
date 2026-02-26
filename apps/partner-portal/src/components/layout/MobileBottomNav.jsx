@@ -68,7 +68,7 @@ const MobileBottomNav = () => {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] pb-[max(env(safe-area-inset-bottom),4px)] safe-area-inset-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] pb-[max(env(safe-area-inset-bottom),4px)] safe-area-inset-bottom">
       {/* Main Navigation */}
       <ul className="flex items-stretch justify-between px-1 py-1">
         {mobileNavigation.map((item) => {

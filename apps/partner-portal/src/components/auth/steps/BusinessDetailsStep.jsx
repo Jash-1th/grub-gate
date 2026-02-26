@@ -406,7 +406,7 @@ const BusinessDetailsStep = ({
               name="firstName"
               value={formData.firstName}
               onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors ${
                 errors.firstName ? 'border-red-300 bg-red-50' : 'border-gray-300'
               }`}
               required
@@ -427,7 +427,7 @@ const BusinessDetailsStep = ({
               name="lastName"
               value={formData.lastName}
               onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors ${
                 errors.lastName ? 'border-red-300 bg-red-50' : 'border-gray-300'
               }`}
               required
@@ -452,7 +452,7 @@ const BusinessDetailsStep = ({
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+                className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors ${
                   errors.password ? 'border-red-300 bg-red-50' : 'border-gray-300'
                 }`}
                 required
@@ -485,7 +485,7 @@ const BusinessDetailsStep = ({
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+                className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors ${
                   errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-300'
                 }`}
                 required
@@ -523,7 +523,7 @@ const BusinessDetailsStep = ({
               name="email"
               value={formData.email}
               onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors ${
                 errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
               } ${data.channel === 'email' ? 'bg-gray-50' : ''}`}
               required
@@ -551,7 +551,7 @@ const BusinessDetailsStep = ({
               name="phoneNumber"
               value={formData.phoneNumber}
               onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors ${
                 errors.phoneNumber ? 'border-red-300 bg-red-50' : 'border-gray-300'
               } ${data.channel === 'sms' ? 'bg-gray-50' : ''}`}
               required
@@ -582,7 +582,7 @@ const BusinessDetailsStep = ({
             name="restaurantName"
             value={formData.restaurantName}
             onChange={handleInputChange}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors ${
               errors.restaurantName ? 'border-red-300 bg-red-50' : 'border-gray-300'
             }`}
             required
@@ -603,7 +603,7 @@ const BusinessDetailsStep = ({
               name="cuisine"
               value={formData.cuisine}
               onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors ${
                 errors.cuisine ? 'border-red-300 bg-red-50' : 'border-gray-300'
               }`}
               required
@@ -628,7 +628,7 @@ const BusinessDetailsStep = ({
               name="businessType"
               value={formData.businessType}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors"
               disabled={isLoading}
             >
               {businessTypes.map(type => (
@@ -648,7 +648,7 @@ const BusinessDetailsStep = ({
             value={formData.description}
             onChange={handleInputChange}
             rows={3}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors ${
               errors.description ? 'border-red-300 bg-red-50' : 'border-gray-300'
             }`}
             placeholder="Tell us about your restaurant..."
@@ -705,7 +705,7 @@ const BusinessDetailsStep = ({
               onChange={handleInputChange}
               min="1"
               max="50"
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors ${
                 errors.deliveryRadius ? 'border-red-300 bg-red-50' : 'border-gray-300'
               }`}
               placeholder="5"
@@ -729,7 +729,7 @@ const BusinessDetailsStep = ({
               onChange={handleInputChange}
               min="0"
               step="0.01"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors"
               placeholder="2.99"
               disabled={isLoading}
             />
@@ -750,7 +750,7 @@ const BusinessDetailsStep = ({
               onChange={handleInputChange}
               min="0"
               step="0.01"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors"
               placeholder="15.00"
               disabled={isLoading}
             />
@@ -770,7 +770,7 @@ const BusinessDetailsStep = ({
               onChange={handleInputChange}
               min="10"
               max="120"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors"
               placeholder="30"
               disabled={isLoading}
             />
@@ -797,7 +797,7 @@ const BusinessDetailsStep = ({
               name="businessPhone"
               value={formData.businessPhone}
               onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors ${
                 errors.businessPhone ? 'border-red-300 bg-red-50' : 'border-gray-300'
               } ${data.channel === 'sms' ? 'bg-gray-50' : ''}`}
               required
@@ -825,7 +825,7 @@ const BusinessDetailsStep = ({
               name="businessEmail"
               value={formData.businessEmail}
               onChange={handleInputChange}
-              className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+              className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors ${
                 data.channel === 'email' ? 'bg-gray-50' : ''
               }`}
               disabled={isLoading || data.channel === 'email'}
@@ -847,7 +847,7 @@ const BusinessDetailsStep = ({
             name="website"
             value={formData.website}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors"
             placeholder="https://yourrestaurant.com"
             disabled={isLoading}
           />
@@ -871,7 +871,7 @@ const BusinessDetailsStep = ({
                 id="logo"
                 accept="image/jpeg,image/jpg,image/png,image/webp"
                 onChange={(e) => handleFileChange(e, 'logo')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors"
                 disabled={isLoading}
               />
               {files.logo && (
@@ -909,7 +909,7 @@ const BusinessDetailsStep = ({
             multiple
             accept="image/jpeg,image/jpg,image/png,image/webp"
             onChange={(e) => handleFileChange(e, 'images')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors"
             disabled={isLoading}
           />
           {files.images.length > 0 && (
@@ -950,7 +950,7 @@ const BusinessDetailsStep = ({
                 id="businessLicense"
                 accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf"
                 onChange={(e) => handleFileChange(e, 'businessLicense')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors"
                 disabled={isLoading}
               />
               {files.businessLicense && (

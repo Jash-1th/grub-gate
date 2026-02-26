@@ -283,7 +283,7 @@ const OrdersPage = () => {
           </div>
         )}
         {/* Header */}
-        <div className="bg-gradient-to-r from-grub-red to-red-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
+        <div className="bg-gradient-to-r from-grub-red via-grub-red to-grub-red rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
           <div className="flex flex-col gap-4">
             <div className="flex-1">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">
@@ -465,7 +465,7 @@ const OrdersPage = () => {
                                   <div className="bg-blue-500 rounded-full p-2 flex-shrink-0">
                                     <FontAwesomeIcon icon={faUser} className="h-4 w-4 text-white" />
                                   </div>
-                                  <div className="min-w-0">
+                                  <div className="flex-1 min-w-0">
                                     <div className="font-semibold text-gray-900 text-sm xl:text-base truncate">
                                       {order.customerId?.firstName} {order.customerId?.lastName}
                                     </div>
@@ -581,10 +581,10 @@ const OrdersPage = () => {
                               <FontAwesomeIcon icon={faUser} className="h-4 w-4 text-white" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="font-semibold text-gray-900 text-sm truncate">
+                              <div className="font-semibold text-gray-900 text-sm xl:text-base truncate">
                                 {order.customerId?.firstName} {order.customerId?.lastName}
                               </div>
-                              <div className="text-xs text-gray-500 flex items-center gap-1.5 mt-1">
+                              <div className="text-xs xl:text-sm text-gray-500 flex items-center gap-1.5 mt-1">
                                 <FontAwesomeIcon icon={faClock} className="h-3 w-3" />
                                 {order.deliveryTime?.estimated ? 
                                   new Date(order.deliveryTime.estimated).toLocaleTimeString('en-US', {
@@ -640,21 +640,23 @@ const OrdersPage = () => {
         {selectedOrder && (
           <div className="flex flex-col h-full bg-gray-50">
             {/* Modern Header with Gradient - Mobile Optimized */}
-            <div className="bg-gradient-to-br from-grub-red via-red-600 to-red-700 text-white p-4 sm:p-6 -m-4 sm:-m-6 mb-4 sm:mb-6 rounded-t-2xl">
+            <div className="bg-gradient-to-br from-grub-red via-grub-red to-grub-red text-white p-4 sm:p-6 -m-4 sm:-m-6 mb-4 sm:mb-6 rounded-t-2xl">
               <div className="flex flex-col gap-3 sm:gap-4">
                 {/* Order Number and Type */}
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                    <div className="bg-white/20 backdrop-blur-sm rounded-full p-1.5 sm:p-2 flex-shrink-0">
-                      <FontAwesomeIcon icon={faBox} className="h-4 w-4 sm:h-5 sm:w-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h2 className="text-lg sm:text-2xl font-bold truncate">
-                        {t('orders.modal.order')} #{selectedOrder.orderNumber}
-                      </h2>
-                      <p className="text-red-100 text-xs sm:text-sm">
-                        {selectedOrder.type === 'weekly-plan' ? t('orders.modal.weeklyPlanOrder') : t('orders.modal.singleOrder')}
-                      </p>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="bg-white/20 backdrop-blur-sm rounded-full p-1.5 sm:p-2 flex-shrink-0">
+                        <FontAwesomeIcon icon={faBox} className="h-4 w-4 sm:h-5 sm:w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h2 className="text-lg sm:text-2xl font-bold truncate">
+                          {t('orders.modal.order')} #{selectedOrder.orderNumber}
+                        </h2>
+                        <p className="text-red-100 text-xs sm:text-sm">
+                          {selectedOrder.type === 'weekly-plan' ? t('orders.modal.weeklyPlanOrder') : t('orders.modal.singleOrder')}
+                        </p>
+                      </div>
                     </div>
                   </div>
                   

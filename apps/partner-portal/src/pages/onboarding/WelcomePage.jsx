@@ -319,13 +319,13 @@ const WelcomePage = () => {
                 </p>
               </div>
               
-              <Button
+              <button
                 onClick={action.onClick}
                 disabled={isLoading}
                 className={`w-full py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-xl transition-all duration-300 ${
                   action.primary 
-                    ? 'bg-grub-red hover:bg-red-700 text-white shadow-lg hover:shadow-xl' 
-                    : 'bg-grub-red hover:bg-red-700 text-white shadow-lg hover:shadow-xl'
+                    ? 'bg-grub-red hover:bg-grub-red text-white shadow-lg hover:shadow-xl' 
+                    : 'bg-grub-red hover:bg-grub-red text-white shadow-lg hover:shadow-xl'
                 }`}
               >
                 {isLoading && action.primary ? (
@@ -339,7 +339,7 @@ const WelcomePage = () => {
                     <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
                   </>
                 )}
-              </Button>
+              </button>
             </div>
           ))}
         </div>

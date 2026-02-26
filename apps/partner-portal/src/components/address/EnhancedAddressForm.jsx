@@ -223,12 +223,11 @@ const EnhancedAddressForm = ({
         </label>
         <input
           type="text"
-          id="street"
-          name="street"
+          id={`${prefix}street`}
           value={formData.street || ''}
           onChange={(e) => handleInputChange('street', e.target.value)}
           onBlur={(e) => onFieldBlur && onFieldBlur('street', e.target.value)}
-          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors ${
             errors.street ? 'border-red-300 bg-red-50' : 'border-gray-300'
           }`}
           placeholder="456 College Street"
@@ -247,12 +246,11 @@ const EnhancedAddressForm = ({
           </label>
           <input
             type="text"
-            id="city"
-            name="city"
+            id={`${prefix}city`}
             value={formData.city || ''}
             onChange={(e) => handleInputChange('city', e.target.value)}
             onBlur={(e) => onFieldBlur && onFieldBlur('city', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors ${
               errors.city ? 'border-red-300 bg-red-50' : 'border-gray-300'
             }`}
             placeholder="Toronto"
@@ -269,12 +267,11 @@ const EnhancedAddressForm = ({
           </label>
           <input
             type="text"
-            id="province"
-            name="province"
+            id={`${prefix}province`}
             value={formData.province || ''}
             onChange={(e) => handleInputChange('province', e.target.value)}
             onBlur={(e) => onFieldBlur && onFieldBlur('province', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors ${
               errors.province ? 'border-red-300 bg-red-50' : 'border-gray-300'
             }`}
             placeholder={formData.country === 'US' ? 'NY' : 'ON'}
@@ -295,12 +292,11 @@ const EnhancedAddressForm = ({
               Country *
             </label>
             <select
-              id="country"
-              name="country"
+              id={`${prefix}country`}
               value={formData.country || ''}
               onChange={(e) => handleInputChange('country', e.target.value)}
               onBlur={(e) => onFieldBlur && onFieldBlur('country', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors ${
                 errors.country ? 'border-red-300 bg-red-50' : 'border-gray-300'
               }`}
               disabled={loading}
@@ -326,12 +322,9 @@ const EnhancedAddressForm = ({
           <div className="relative">
             <input
               type="text"
-              id="postalCode"
-              name="postalCode"
+              id={`${prefix}postalCode`}
               value={formData.postalCode || ''}
-              onChange={(e) => {
-                handleInputChange('postalCode', e.target.value);
-              }}
+              onChange={(e) => handleInputChange('postalCode', e.target.value)}
               onBlur={(e) => {
                 // Trigger country detection only when user finishes typing (focus leaves field)
                 if (e.target.value.length >= 3) {
@@ -342,7 +335,7 @@ const EnhancedAddressForm = ({
                   onFieldBlur('postalCode', e.target.value);
                 }
               }}
-              className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-red-800 focus:border-red-800 transition-colors ${
+              className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-grub-red focus:border-grub-red transition-colors ${
                 errors.postalCode ? 'border-red-300 bg-red-50' : 'border-gray-300'
               }`}
               placeholder={getPostalCodePlaceholder()}

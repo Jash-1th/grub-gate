@@ -222,7 +222,7 @@ const DashboardLayout = ({ onLanguageChange }) => {
       {/* Main content */}
       <div className="lg:ml-64">
         {/* Top bar */}
-        <div className="sticky top-0 z-10 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-gray-200">
+        <div className="sticky top-0 z-10 bg-white border-b border-gray-200">
           <div className="mx-auto w-full max-w-7xl flex items-center justify-between h-14 lg:h-16 px-4 sm:px-6 lg:px-8">
             <div className="flex items-center">
               {/* Mobile menu button */}
