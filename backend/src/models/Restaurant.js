@@ -565,25 +565,55 @@ restaurantSchema.methods.deliversTo = function(coordinates) {
 // Instance method to update rating
 restaurantSchema.methods.updateRating = async function() {
   const Review = mongoose.model('Review');
-  const stats = await Review.aggregate([
-    { $match: { restaurantId: this._id, status: 'approved' } },
-    {
-      $group: {
-        _id: '$restaurantId',
-        averageRating: { $avg: '$rating' },
-        totalReviews: { $sum: 1 }
+  let PublicRestaurantReview = null;
+  try {
+    require('./PublicRestaurantReview');
+    PublicRestaurantReview = mongoose.model('PublicRestaurantReview');
+  } catch (e) {
+    PublicRestaurantReview = null;
+  }
+
+  const [reviewStats, publicStats] = await Promise.all([
+    Review.aggregate([
+      { $match: { restaurantId: this._id, status: 'approved' } },
+      {
+        $group: {
+          _id: '$restaurantId',
+          averageRating: { $avg: '$rating' },
+          totalReviews: { $sum: 1 }
+        }
       }
-    }
+    ]),
+    PublicRestaurantReview
+      ? PublicRestaurantReview.aggregate([
+          { $match: { restaurantId: this._id } },
+          {
+            $group: {
+              _id: '$restaurantId',
+              averageRating: { $avg: '$rating' },
+              totalReviews: { $sum: 1 }
+            }
+          }
+        ])
+      : Promise.resolve([])
   ]);
-  
-  if (stats.length > 0) {
-    this.rating = Math.round(stats[0].averageRating * 10) / 10;
-    this.reviewCount = stats[0].totalReviews;
+
+  const approvedCount = reviewStats[0]?.totalReviews || 0;
+  const approvedAvg = reviewStats[0]?.averageRating || 0;
+
+  const publicCount = publicStats[0]?.totalReviews || 0;
+  const publicAvg = publicStats[0]?.averageRating || 0;
+
+  const totalReviews = approvedCount + publicCount;
+  if (totalReviews > 0) {
+    const weighted = (approvedAvg * approvedCount + publicAvg * publicCount) / totalReviews;
+    this.rating = Math.round(weighted * 10) / 10;
+    this.reviewCount = totalReviews;
   } else {
     this.rating = 0;
     this.reviewCount = 0;
   }
-  
+
   return this.save();
 };
 

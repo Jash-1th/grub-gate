@@ -48,6 +48,7 @@ const dasherAuthRoutes = require('./src/routes/dasher.auth.routes');
 const mealCalendarRoutes = require('./src/routes/mealCalendar.routes');
 const restaurantValidationRoutes = require('./src/routes/restaurantValidation.routes');
 const orderActivationRoutes = require('./src/routes/orderActivation.routes');
+const publicRestaurantReviewRoutes = require('./src/routes/publicRestaurantReview.routes');
 
 const app = express();
 
@@ -183,10 +184,12 @@ app.get('/cors-test', (req, res) => {
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/restaurants', restaurantRoutes);
+app.use('/api/v1/restaurants', publicRestaurantReviewRoutes);
 app.use('/api/v1/menu-items', menuItemRoutes);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/weekly-plans', weeklyPlanRoutes);
 app.use('/api/v1/subscriptions', subscriptionRoutes);
+
 app.use('/api/v1/reviews', reviewRoutes);
 app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/analytics', analyticsRoutes);
