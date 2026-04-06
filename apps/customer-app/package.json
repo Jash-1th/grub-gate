@@ -19,6 +19,8 @@
     "@fortawesome/free-solid-svg-icons": "^7.1.0",
     "@fortawesome/react-fontawesome": "^3.1.0",
     "@heroicons/react": "^2.2.0",
+    "@stripe/react-stripe-js": "^2.9.0",
+    "@stripe/stripe-js": "^4.10.0",
     "autoprefixer": "^10.4.21",
     "axios": "^1.12.2",
     "compression": "^1.8.1",

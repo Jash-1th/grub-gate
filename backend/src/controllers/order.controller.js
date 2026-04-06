@@ -13,6 +13,7 @@ const {
 } = require('../utils/apiResponse');
 const { asyncHandler } = require('../middlewares/errorHandler');
 const pushNotificationService = require('../services/pushNotificationService');
+const { calculateOrderTotals, DEFAULT_DELIVERY_FEE, DEFAULT_TAX_RATE } = require('../utils/pricingCalculator');
 
 /**
  * @desc    Get orders (customer orders or restaurant orders)
@@ -368,11 +369,19 @@ const createOrder = asyncHandler(async (req, res) => {
     };
   });
 
-  // Use provided totals or calculate them
-  const finalSubtotal = subtotal || calculatedSubtotal;
-  const finalDeliveryFee = deliveryFee || restaurant.deliverySettings?.fee || 2.99;
-  const finalTax = tax || (finalSubtotal * 0.13); // 13% tax (adjust based on location)
-  const finalTotal = total || (finalSubtotal + finalDeliveryFee + finalTax);
+  // Use unified pricing calculator
+  const pricing = calculateOrderTotals({
+    items: orderItems.map(item => ({ price: item.price, quantity: item.quantity })),
+    restaurantDeliveryFee: restaurant.deliverySettings?.fee,
+    planType: 'single'
+  });
+
+  // Use provided totals or calculated ones
+  const finalSubtotal = subtotal || pricing.subtotal;
+  const finalDeliveryFee = deliveryFee || pricing.deliveryFee;
+  const finalServiceFee = pricing.serviceFee; // Always calculate service fee
+  const finalTax = tax || pricing.tax;
+  const finalTotal = total || pricing.total;
 
   // Generate unique order number
   const orderNumber = `GG${Date.now()}${Math.floor(Math.random() * 1000)}`;

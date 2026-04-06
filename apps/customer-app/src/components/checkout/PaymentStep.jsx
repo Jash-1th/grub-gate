@@ -1,5 +1,5 @@
 // FILE: apps/customer-app/src/components/checkout/PaymentStep.jsx
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faCreditCard, 
@@ -10,6 +10,188 @@ import {
   faSpinner
 } from '@fortawesome/free-solid-svg-icons';
 import { useToast } from '../../contexts/ToastContext';
+import apiClient from '../../api/apiClient';
+import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+
+const StripePaymentForm = ({ checkoutData, onPaymentSuccess, setLoading, isLoading }) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const { showError, showSuccess } = useToast();
+
+  const [clientSecret, setClientSecret] = useState(null);
+  const [intentLoading, setIntentLoading] = useState(false);
+
+  const restaurantStripeAccountId =
+    checkoutData.restaurant?.stripeAccountId ||
+    checkoutData.restaurant?.stripeConnectAccountId ||
+    checkoutData.restaurant?.stripe_account_id ||
+    checkoutData.restaurant?.stripeAccount?.id ||
+    checkoutData.restaurant?.stripeAccount;
+
+  useEffect(() => {
+    const createIntent = async () => {
+      if (!checkoutData?.total) return;
+      if (!restaurantStripeAccountId) {
+        showError('Payment Error', 'Restaurant payout account is not configured.');
+        return;
+      }
+
+      setIntentLoading(true);
+      try {
+        // Build items array from checkoutData.items with proper price/quantity structure
+        const items = checkoutData.items?.map(item => ({
+          price: item.price || item.meal?.price || 0,
+          quantity: item.quantity || 1
+        })) || [];
+
+        // Get restaurant delivery fee if available
+        const restaurantDeliveryFee = checkoutData.restaurant?.deliverySettings?.fee || 
+                                      checkoutData.restaurant?.deliveryFee || 
+                                      null;
+
+        // Get plan type and deliveries from checkoutData
+        const planType = checkoutData.planType || 'single';
+        const totalDeliveries = checkoutData.totalDeliveries || 1;
+
+        const response = await apiClient.post('/payments/create-intent', {
+          items: items.length > 0 ? items : undefined,
+          orderTotal: checkoutData.total,
+          restaurantStripeAccountId,
+          planType,
+          totalDeliveries,
+          restaurantDeliveryFee
+        });
+
+        const secret = response.data?.data?.clientSecret;
+        if (!secret) {
+          throw new Error('Payment initialization failed');
+        }
+        setClientSecret(secret);
+      } catch (error) {
+        console.error('Error creating payment intent:', error);
+        showError('Payment Error', error.response?.data?.message || error.message || 'Unable to initialize payment.');
+      } finally {
+        setIntentLoading(false);
+      }
+    };
+
+    createIntent();
+  }, [checkoutData?.total, restaurantStripeAccountId]);
+
+  const handleSubmit = async () => {
+    if (!stripe || !elements) return;
+    if (!clientSecret) return;
+
+    setLoading(true);
+
+    // 1. MUST CALL THIS FIRST: Validates the form and prepares the data
+    const { error: submitError } = await elements.submit();
+    if (submitError) {
+      showError('Payment Validation Failed', submitError.message);
+      setLoading(false);
+      return;
+    }
+
+    // 2. NOW you can confirm the payment
+    try {
+      const { error, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        clientSecret,
+        confirmParams: {
+          return_url: `${window.location.origin}/checkout`
+        },
+        redirect: 'if_required'
+      });
+
+      if (error) {
+        showError('Payment Failed', error.message || 'Your payment could not be processed.');
+        return;
+      }
+
+      if (!paymentIntent) {
+        showError('Payment Failed', 'Payment could not be confirmed. Please try again.');
+        return;
+      }
+
+      if (paymentIntent.status !== 'succeeded') {
+        showError('Payment Pending', `Payment status: ${paymentIntent.status}`);
+        return;
+      }
+
+      showSuccess('Payment Successful', 'Your payment has been processed successfully!');
+      onPaymentSuccess({
+        paymentMethod: 'card',
+        paymentId: paymentIntent.id,
+        status: paymentIntent.status
+      });
+    } catch (err) {
+      console.error('Payment confirmation error:', err);
+      showError('Payment Failed', err.message || 'There was an error processing your payment.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (intentLoading) {
+    return (
+      <div className="mb-6 bg-gray-50 rounded-xl p-6">
+        <div className="flex items-center text-gray-700">
+          <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-3" />
+          Preparing secure payment...
+        </div>
+      </div>
+    );
+  }
+
+  if (!clientSecret) {
+    return (
+      <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
+        <p className="text-sm text-red-700">Unable to initialize secure payment. Please try again.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-6 bg-gray-50 rounded-xl p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <FontAwesomeIcon icon={faLock} className="mr-2 text-green-600" />
+        Secure Card Payment
+      </h3>
+
+      <PaymentElement />
+
+      <div className="mt-4">
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={isLoading || !stripe || !elements}
+          className={`
+            w-full sm:w-auto flex items-center justify-center px-8 py-3 font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+            ${isLoading
+              ? 'bg-gray-400 text-white cursor-not-allowed'
+              : 'bg-green-600 text-white hover:bg-green-700 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl'
+            }
+          `}
+        >
+          {isLoading ? (
+            <>
+              <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
+              Processing...
+            </>
+          ) : (
+            <>
+              <FontAwesomeIcon icon={faLock} className="mr-2" />
+              Complete Order - ${checkoutData.total.toFixed(2)}
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+};
 
 /**
  * Payment Step for Checkout
@@ -21,12 +203,6 @@ const PaymentStep = ({ checkoutData, onNext, onPrevious, isLoading, setLoading }
   
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('card');
   const [paymentData, setPaymentData] = useState({
-    // Card payment data
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
-    cardholderName: '',
-    
     // Billing address (can be same as delivery)
     billingAddress: checkoutData.deliveryAddress,
     sameAsDelivery: true,
@@ -35,6 +211,12 @@ const PaymentStep = ({ checkoutData, onNext, onPrevious, isLoading, setLoading }
     specialInstructions: ''
   });
   const [errors, setErrors] = useState({});
+
+  const stripeElementsOptions = useMemo(() => {
+    return {
+      appearance: { theme: 'stripe' }
+    };
+  }, []);
 
   // Payment method options
   const paymentMethods = [
@@ -77,60 +259,9 @@ const PaymentStep = ({ checkoutData, onNext, onPrevious, isLoading, setLoading }
     }
   };
 
-  // Format card number input
-  const formatCardNumber = (value) => {
-    // Remove all non-digits
-    const digits = value.replace(/\D/g, '');
-    
-    // Add spaces every 4 digits
-    const formatted = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
-    
-    return formatted.substring(0, 19); // Max 16 digits + 3 spaces
-  };
-
-  // Format expiry date input
-  const formatExpiryDate = (value) => {
-    // Remove all non-digits
-    const digits = value.replace(/\D/g, '');
-    
-    // Add slash after 2 digits
-    if (digits.length >= 2) {
-      return `${digits.substring(0, 2)}/${digits.substring(2, 4)}`;
-    }
-    
-    return digits;
-  };
-
   // Validate payment form
   const validatePaymentForm = () => {
     const newErrors = {};
-
-    if (selectedPaymentMethod === 'card') {
-      // Card validation
-      if (!paymentData.cardNumber || paymentData.cardNumber.replace(/\s/g, '').length < 13) {
-        newErrors.cardNumber = 'Please enter a valid card number';
-      }
-
-      if (!paymentData.expiryDate || !/^\d{2}\/\d{2}$/.test(paymentData.expiryDate)) {
-        newErrors.expiryDate = 'Please enter expiry date (MM/YY)';
-      } else {
-        // Check if card is expired
-        const [month, year] = paymentData.expiryDate.split('/');
-        const expiry = new Date(2000 + parseInt(year), parseInt(month) - 1);
-        const now = new Date();
-        if (expiry < now) {
-          newErrors.expiryDate = 'Card has expired';
-        }
-      }
-
-      if (!paymentData.cvv || paymentData.cvv.length < 3) {
-        newErrors.cvv = 'Please enter CVV';
-      }
-
-      if (!paymentData.cardholderName || paymentData.cardholderName.trim().length < 2) {
-        newErrors.cardholderName = 'Please enter cardholder name';
-      }
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -146,48 +277,24 @@ const PaymentStep = ({ checkoutData, onNext, onPrevious, isLoading, setLoading }
     setLoading(true);
 
     try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      if (selectedPaymentMethod === 'cash') {
+        const paymentResult = {
+          paymentMethod: selectedPaymentMethod,
+          paymentData: null,
+          specialInstructions: paymentData.specialInstructions,
+          paymentId: `cash_${Date.now()}`,
+          status: 'pending'
+        };
 
-      // In a real implementation, you would:
-      // 1. Process payment with Stripe/PayPal/etc.
-      // 2. Create order in database
-      // 3. Send confirmation emails
-      // 4. Handle payment errors
-
-      const paymentResult = {
-        paymentMethod: selectedPaymentMethod,
-        paymentData: selectedPaymentMethod === 'card' ? {
-          last4: paymentData.cardNumber.slice(-4),
-          cardType: getCardType(paymentData.cardNumber),
-          cardholderName: paymentData.cardholderName
-        } : null,
-        specialInstructions: paymentData.specialInstructions,
-        paymentId: `pay_${Date.now()}`, // Mock payment ID
-        status: 'completed'
-      };
-
-      showSuccess('Payment Successful', 'Your payment has been processed successfully!');
-      onNext(paymentResult);
-
+        showSuccess('Cash on Delivery Selected', 'You can pay in cash when your order arrives.');
+        onNext(paymentResult);
+      }
     } catch (error) {
       console.error('Payment processing error:', error);
       showError('Payment Failed', 'There was an error processing your payment. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
-
-  // Get card type from number
-  const getCardType = (cardNumber) => {
-    const number = cardNumber.replace(/\s/g, '');
-    
-    if (number.startsWith('4')) return 'Visa';
-    if (number.startsWith('5') || number.startsWith('2')) return 'Mastercard';
-    if (number.startsWith('3')) return 'American Express';
-    if (number.startsWith('6')) return 'Discover';
-    
-    return 'Unknown';
   };
 
   return (
@@ -271,102 +378,19 @@ const PaymentStep = ({ checkoutData, onNext, onPrevious, isLoading, setLoading }
 
       {/* Card Payment Form */}
       {selectedPaymentMethod === 'card' && (
-        <div className="mb-6 bg-gray-50 rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <FontAwesomeIcon icon={faLock} className="mr-2 text-green-600" />
-            Secure Card Payment
-          </h3>
-          
-          <div className="space-y-4">
-            {/* Card Number */}
-            <div>
-              <label htmlFor="cardNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                Card Number *
-              </label>
-              <input
-                type="text"
-                id="cardNumber"
-                value={paymentData.cardNumber}
-                onChange={(e) => handleInputChange('cardNumber', formatCardNumber(e.target.value))}
-                className={`
-                  w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors
-                  ${errors.cardNumber ? 'border-red-300 bg-red-50' : 'border-gray-300'}
-                `}
-                placeholder="1234 5678 9012 3456"
-                maxLength={19}
-              />
-              {errors.cardNumber && (
-                <p className="mt-1 text-sm text-red-600">{errors.cardNumber}</p>
-              )}
-            </div>
-
-            {/* Expiry and CVV */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="expiryDate" className="block text-sm font-medium text-gray-700 mb-1">
-                  Expiry Date *
-                </label>
-                <input
-                  type="text"
-                  id="expiryDate"
-                  value={paymentData.expiryDate}
-                  onChange={(e) => handleInputChange('expiryDate', formatExpiryDate(e.target.value))}
-                  className={`
-                    w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors
-                    ${errors.expiryDate ? 'border-red-300 bg-red-50' : 'border-gray-300'}
-                  `}
-                  placeholder="MM/YY"
-                  maxLength={5}
-                />
-                {errors.expiryDate && (
-                  <p className="mt-1 text-sm text-red-600">{errors.expiryDate}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="cvv" className="block text-sm font-medium text-gray-700 mb-1">
-                  CVV *
-                </label>
-                <input
-                  type="text"
-                  id="cvv"
-                  value={paymentData.cvv}
-                  onChange={(e) => handleInputChange('cvv', e.target.value.replace(/\D/g, '').substring(0, 4))}
-                  className={`
-                    w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors
-                    ${errors.cvv ? 'border-red-300 bg-red-50' : 'border-gray-300'}
-                  `}
-                  placeholder="123"
-                  maxLength={4}
-                />
-                {errors.cvv && (
-                  <p className="mt-1 text-sm text-red-600">{errors.cvv}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Cardholder Name */}
-            <div>
-              <label htmlFor="cardholderName" className="block text-sm font-medium text-gray-700 mb-1">
-                Cardholder Name *
-              </label>
-              <input
-                type="text"
-                id="cardholderName"
-                value={paymentData.cardholderName}
-                onChange={(e) => handleInputChange('cardholderName', e.target.value)}
-                className={`
-                  w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors
-                  ${errors.cardholderName ? 'border-red-300 bg-red-50' : 'border-gray-300'}
-                `}
-                placeholder="John Smith"
-              />
-              {errors.cardholderName && (
-                <p className="mt-1 text-sm text-red-600">{errors.cardholderName}</p>
-              )}
-            </div>
-          </div>
-        </div>
+        <Elements stripe={stripePromise} options={stripeElementsOptions}>
+          <StripePaymentForm
+            checkoutData={checkoutData}
+            setLoading={setLoading}
+            isLoading={isLoading}
+            onPaymentSuccess={(paymentResult) => {
+              onNext({
+                ...paymentResult,
+                specialInstructions: paymentData.specialInstructions
+              });
+            }}
+          />
+        </Elements>
       )}
 
       {/* Cash on Delivery Info */}
@@ -410,29 +434,31 @@ const PaymentStep = ({ checkoutData, onNext, onPrevious, isLoading, setLoading }
           Back to Address
         </button>
 
-        <button
-          onClick={handlePayment}
-          disabled={isLoading}
-          className={`
-            w-full sm:w-auto flex items-center justify-center px-8 py-3 font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-            ${isLoading
-              ? 'bg-gray-400 text-white cursor-not-allowed'
-              : 'bg-green-600 text-white hover:bg-green-700 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl'
-            }
-          `}
-        >
-          {isLoading ? (
-            <>
-              <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
-              Processing...
-            </>
-          ) : (
-            <>
-              <FontAwesomeIcon icon={faLock} className="mr-2" />
-              Complete Order - ${checkoutData.total.toFixed(2)}
-            </>
-          )}
-        </button>
+        {selectedPaymentMethod === 'cash' && (
+          <button
+            onClick={handlePayment}
+            disabled={isLoading}
+            className={`
+              w-full sm:w-auto flex items-center justify-center px-8 py-3 font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+              ${isLoading
+                ? 'bg-gray-400 text-white cursor-not-allowed'
+                : 'bg-green-600 text-white hover:bg-green-700 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl'
+              }
+            `}
+          >
+            {isLoading ? (
+              <>
+                <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <FontAwesomeIcon icon={faLock} className="mr-2" />
+                Continue - ${checkoutData.total.toFixed(2)}
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       {/* Security Notice */}

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMealPlan } from '../../contexts/MealPlanContext_SSR_FIXED';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
+import { calculateOrderTotals, SERVICE_FEE_PERCENTAGE, DEFAULT_TAX_RATE } from '../../utils/pricingCalculator';
 import BillingFormModal from '../modals/BillingFormModal';
 import EnhancedSubscriptionFlow from '../subscription/EnhancedSubscriptionFlow';
 
@@ -31,14 +32,43 @@ const SubscriptionPlans = () => {
   const biweeklyMealCost = getWeekTotalCost(0) + getWeekTotalCost(1);
   const totalItems = getWeekTotalItems(0) + getWeekTotalItems(1);
 
-  // Calculate costs based on selected plan
+  // Calculate costs based on selected plan using unified pricing calculator
   const getMealCostForPlan = (planId) => {
+    // biweeklyMealCost is the cost for 2 weeks (base)
+    const baseBiweeklyCost = biweeklyMealCost;
+    let mealCostMultiplier = 1;
+    let deliveries = 2; // Default to bi-weekly (2 deliveries)
+    
     switch (planId) {
-      case 'bi-weekly': return biweeklyMealCost;
-      case 'monthly': return biweeklyMealCost * 2; // 1 month = 2 biweeks
-      case 'quarterly': return biweeklyMealCost * 6; // 3 months = 6 biweeks
-      default: return biweeklyMealCost;
+      case 'bi-weekly': 
+        mealCostMultiplier = 1;  // Base cost is already for 2 weeks
+        deliveries = 2; 
+        break;
+      case 'monthly': 
+        mealCostMultiplier = 2;  // Monthly = 2x the bi-weekly cost
+        deliveries = 4; 
+        break;
+      case 'quarterly': 
+        mealCostMultiplier = 6;  // Quarterly = 6x the bi-weekly cost
+        deliveries = 12; 
+        break;
+      default: 
+        mealCostMultiplier = 1;
+        deliveries = 2;
     }
+    
+    // Scale the meal cost by the plan duration multiplier
+    const scaledMealCost = baseBiweeklyCost * mealCostMultiplier;
+    
+    // Create items array for pricing calculator with scaled meal cost
+    const pricing = calculateOrderTotals({
+      items: [{ price: scaledMealCost, quantity: 1 }],
+      restaurantDeliveryFee: null,
+      planType: planId,
+      totalDeliveries: deliveries
+    });
+    
+    return pricing;
   };
 
   const getPlanDurationText = (planId) => {
@@ -50,10 +80,12 @@ const SubscriptionPlans = () => {
     }
   };
 
-  const currentMealCost = getMealCostForPlan(selectedPlan);
-  const currentServiceFee = currentMealCost * 0.10;
-  const currentTax = currentMealCost * 0.15;
-  const currentTotalCost = currentMealCost + currentServiceFee + currentTax;
+  const currentPricing = getMealCostForPlan(selectedPlan);
+  const currentMealCost = currentPricing.subtotal;
+  const currentDeliveryFee = currentPricing.deliveryFee;
+  const currentServiceFee = currentPricing.serviceFee;
+  const currentTax = currentPricing.tax;
+  const currentTotalCost = currentPricing.total;
 
   // Handle Get Started button click
   const handleGetStarted = (planId) => {
@@ -140,11 +172,15 @@ const SubscriptionPlans = () => {
     navigate('/meal-calendar', { replace: true });
   };
 
+  // Get dynamic pricing for each plan to show accurate prices
+  const biWeeklyPricing = getMealCostForPlan('bi-weekly');
+  const monthlyPricing = getMealCostForPlan('monthly');
+
   const plans = [
     {
       id: 'bi-weekly',
       name: t('subscription.biWeeklyPlan'),
-      price: '$19.99',
+      get price() { return `$${biWeeklyPricing.total.toFixed(2)}`; },
       period: t('subscription.everyTwoWeeks'),
       description: t('subscription.perfectForRegular'),
       features: [
@@ -161,7 +197,7 @@ const SubscriptionPlans = () => {
     {
       id: 'monthly',
       name: t('subscription.monthlyPlan'),
-      price: '$39.99',
+      get price() { return `$${monthlyPricing.total.toFixed(2)}`; },
       period: t('subscription.everyMonth'),
       description: t('subscription.bestValueConsistent'),
       features: [
@@ -176,25 +212,6 @@ const SubscriptionPlans = () => {
       popular: true,
       color: 'grub-red'
     }
-    // {
-    //   id: 'quarterly',
-    //   name: '3 Months Plan',
-    //   price: '$59.99',
-    //   period: 'every 3 months',
-    //   description: 'Maximum savings for committed users',
-    //   features: [
-    //     'Everything in Monthly',
-    //     '90 days of meal planning',
-    //     'Personal meal consultant',
-    //     'Custom meal plans',
-    //     'Restaurant partnerships',
-    //     '24/7 phone support',
-    //     'Early access to new features',
-    //     '25% savings vs bi-weekly'
-    //   ],
-    //   popular: false,
-    //   color: 'purple'
-    // }
   ];
 
   const getColorClasses = (color, isPopular = false) => {
@@ -256,7 +273,7 @@ const SubscriptionPlans = () => {
                 <p className="text-sm sm:text-base text-gray-600">{totalItems === 1 ? t('subscription.basedOnMeals', { count: totalItems, duration: getPlanDurationText(selectedPlan) }) : t('subscription.basedOnMealsPlural', { count: totalItems, duration: getPlanDurationText(selectedPlan) })}</p>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 sm:gap-6 max-w-5xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-3 sm:gap-6 max-w-6xl mx-auto">
                 {/* Service Fee */}
                 <div className="text-center p-3 sm:p-4 bg-white rounded-lg border border-gray-200">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 bg-blue-500 rounded-full flex items-center justify-center">
@@ -279,6 +296,18 @@ const SubscriptionPlans = () => {
                   <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{t('subscription.mealCosts')}</h4>
                   <p className="text-xl sm:text-2xl font-bold text-green-600">${currentMealCost.toFixed(2)}</p>
                   <p className="text-xs sm:text-sm text-gray-600 mt-1">{t('subscription.restaurantFoodCosts')}</p>
+                </div>
+
+                {/* Delivery Fee */}
+                <div className="text-center p-3 sm:p-4 bg-white rounded-lg border border-gray-200">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 bg-orange-500 rounded-full flex items-center justify-center">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{t('subscription.deliveryFee')}</h4>
+                  <p className="text-xl sm:text-2xl font-bold text-orange-600">${currentDeliveryFee.toFixed(2)}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-1">{t('subscription.deliveryForAll')}</p>
                 </div>
 
                 {/* Tax */}

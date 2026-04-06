@@ -242,6 +242,10 @@ const restaurantSchema = new mongoose.Schema({
     min: [0, 'Commission rate cannot be negative'],
     max: [50, 'Commission rate cannot exceed 50%']
   },
+  stripeAccountId: {
+    type: String,
+    trim: true
+  },
   businessLicense: {
     type: String,
     trim: true

@@ -184,6 +184,37 @@ const updateRestaurantSettings = asyncHandler(async (req, res) => {
 });
 
 /**
+ * @desc    Update restaurant Stripe connected account id
+ * @route   PATCH /api/v1/partner/restaurants/:id/stripe-account
+ * @access  Private (Partner)
+ */
+const updateRestaurantStripeAccount = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { stripeAccountId } = req.body;
+
+  if (!stripeAccountId || typeof stripeAccountId !== 'string') {
+    return errorResponse(res, 'stripeAccountId is required', 400);
+  }
+
+  if (!stripeAccountId.startsWith('acct_')) {
+    return errorResponse(res, 'Invalid stripeAccountId. It must start with "acct_".', 400);
+  }
+
+  const restaurant = await findRestaurantById(id, req.user._id);
+  if (!restaurant) {
+    return notFoundResponse(res, 'Restaurant not found or access denied');
+  }
+
+  const updatedRestaurant = await Restaurant.findOneAndUpdate(
+    { _id: restaurant._id },
+    { stripeAccountId: stripeAccountId.trim() },
+    { new: true, runValidators: true }
+  );
+
+  successResponse(res, { restaurant: updatedRestaurant }, 'Stripe account updated successfully');
+});
+
+/**
  * @desc    Get user notification preferences
  * @route   GET /api/v1/partner/users/me/notification-preferences
  * @access  Private (Partner)
@@ -348,6 +379,7 @@ module.exports = {
   getMyRestaurant,
   getRestaurantSettings,
   updateRestaurantSettings,
+  updateRestaurantStripeAccount,
   getNotificationPreferences,
   updateNotificationPreferences,
   getBillingInfo,

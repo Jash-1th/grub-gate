@@ -5,6 +5,7 @@ const {
   getMyRestaurant,
   getRestaurantSettings,
   updateRestaurantSettings,
+  updateRestaurantStripeAccount,
   getNotificationPreferences,
   updateNotificationPreferences,
   getBillingInfo,
@@ -146,6 +147,9 @@ router.get('/restaurants/me', getMyRestaurant);
 router.route('/restaurants/:restaurantId/settings')
   .get(getRestaurantSettings)
   .patch(validateRequest(updateRestaurantSettingsSchema), updateRestaurantSettings);
+
+// Stripe Connect account routing (Connected Account ID)
+router.patch('/restaurants/:id/stripe-account', updateRestaurantStripeAccount);
 
 // Restaurant activation route
 router.patch('/restaurants/:restaurantId/activate', activateRestaurant);

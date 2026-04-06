@@ -1,5 +1,5 @@
 // FILE: apps/customer-app/src/components/subscription/EnhancedSubscriptionFlow.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -9,18 +9,24 @@ import {
   faCalendarAlt,
   faMapMarkerAlt,
   faCreditCard,
-  faSpinner
+  faSpinner,
+  faMoneyBillWave,
+  faLock
 } from '@fortawesome/free-solid-svg-icons';
 import AddressSelectionStep from '../checkout/AddressSelectionStep';
 import { useToast } from '../../contexts/ToastContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMealPlan } from '../../contexts/MealPlanContext_SSR_FIXED';
 import apiClient from '../../api/apiClient';
+import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 import { 
   getSubscriptionStartSunday, 
   getSubscriptionWeekInfo,
   formatSubscriptionDateRange 
 } from '../../utils/subscriptionDateUtils';
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 /**
  * Enhanced Subscription Flow with Address Integration
@@ -208,9 +214,11 @@ const EnhancedSubscriptionFlow = ({ selectedPlan, onComplete, onCancel }) => {
         return (
           <PaymentStep
             subscriptionData={subscriptionData}
+            selectedRestaurantId={selectedRestaurantId}
             onNext={handleNextStep}
             onPrevious={handlePreviousStep}
             isLoading={loading}
+            setLoading={setLoading}
           />
         );
       
@@ -311,20 +319,211 @@ const EnhancedSubscriptionFlow = ({ selectedPlan, onComplete, onCancel }) => {
   );
 };
 
-// Payment Step Component
-const PaymentStep = ({ subscriptionData, onNext, onPrevious, isLoading }) => {
-  const { t } = useTranslation();
-  const [paymentMethod, setPaymentMethod] = useState('card');
+// Payment Step Component with Stripe Integration
+const StripePaymentForm = ({ 
+  clientSecret,
+  planPrice,
+  onPaymentSuccess, 
+  setLoading, 
+  isLoading 
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const { showError, showSuccess } = useToast();
 
-  const handleContinue = () => {
+  const handleSubmit = async () => {
+    if (!stripe || !elements) return;
+    if (!clientSecret) return;
+
+    setLoading(true);
+
+    // 1. MUST CALL THIS FIRST: Validates the form and prepares the data
+    const { error: submitError } = await elements.submit();
+    if (submitError) {
+      showError('Payment Validation Failed', submitError.message);
+      setLoading(false);
+      return;
+    }
+
+    // 2. NOW you can confirm the payment
+    try {
+      const { error, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        clientSecret,
+        confirmParams: {
+          return_url: `${window.location.origin}/subscription`
+        },
+        redirect: 'if_required'
+      });
+
+      if (error) {
+        showError('Payment Failed', error.message || 'Your payment could not be processed.');
+        return;
+      }
+
+      if (!paymentIntent) {
+        showError('Payment Failed', 'Payment could not be confirmed. Please try again.');
+        return;
+      }
+
+      if (paymentIntent.status !== 'succeeded') {
+        showError('Payment Pending', `Payment status: ${paymentIntent.status}`);
+        return;
+      }
+
+      showSuccess('Payment Successful', 'Your payment has been processed successfully!');
+      onPaymentSuccess({
+        paymentMethod: 'card',
+        paymentId: paymentIntent.id,
+        status: paymentIntent.status
+      });
+    } catch (err) {
+      console.error('Payment confirmation error:', err);
+      showError('Payment Failed', err.message || 'There was an error processing your payment.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="mb-6 bg-gray-50 rounded-xl p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+        <FontAwesomeIcon icon={faLock} className="mr-2 text-green-600" />
+        Secure Card Payment
+      </h3>
+
+      <PaymentElement />
+
+      <div className="mt-4">
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={isLoading || !stripe || !elements}
+          className={`
+            w-full flex items-center justify-center px-8 py-3 font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+            ${isLoading
+              ? 'bg-gray-400 text-white cursor-not-allowed'
+              : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl'
+            }
+          `}
+        >
+          {isLoading ? (
+            <>
+              <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
+              Processing...
+            </>
+          ) : (
+            <>
+              <FontAwesomeIcon icon={faCheck} className="mr-2" />
+              Complete Subscription - ${planPrice.toFixed(2)}
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Payment Step Component
+const PaymentStep = ({ subscriptionData, selectedRestaurantId, onNext, onPrevious, isLoading, setLoading }) => {
+  const { t } = useTranslation();
+  const { showError } = useToast();
+  const [paymentMethod, setPaymentMethod] = useState('card');
+  const [clientSecret, setClientSecret] = useState(null);
+  const [intentLoading, setIntentLoading] = useState(false);
+
+  // Parse plan price
+  const planPrice = useMemo(() => {
+    const price = subscriptionData.planData?.price;
+    if (typeof price === 'string') {
+      return parseFloat(price.replace('$', '')) || 0;
+    }
+    return price || 0;
+  }, [subscriptionData.planData?.price]);
+
+  // Fetch clientSecret when card is selected
+  useEffect(() => {
+    const createIntent = async () => {
+      if (paymentMethod !== 'card') return;
+      if (!planPrice || planPrice <= 0) return;
+      if (!selectedRestaurantId) {
+        showError('Payment Error', 'Restaurant information is missing.');
+        return;
+      }
+
+      setIntentLoading(true);
+      try {
+        // Fetch restaurant details to get stripeAccountId
+        const restaurantRes = await apiClient.get(`/restaurants/${selectedRestaurantId}`);
+        const restaurant = restaurantRes.data?.data?.restaurant || restaurantRes.data?.data;
+        
+        const restaurantStripeAccountId = 
+          restaurant?.stripeAccountId || 
+          restaurant?.stripeConnectAccountId ||
+          restaurant?.stripe_account_id;
+
+        if (!restaurantStripeAccountId) {
+          showError('Payment Error', 'Restaurant payout account is not configured.');
+          setIntentLoading(false);
+          return;
+        }
+
+        // Calculate deliveries based on plan type
+        const totalDeliveries = subscriptionData.planType === 'bi-weekly' ? 2 : (subscriptionData.planType === 'monthly' ? 4 : (subscriptionData.planType === 'quarterly' ? 12 : 1));
+
+        // 1. Remove 13% Tax from the Grand Total
+        const totalBeforeTax = planPrice / 1.13;
+
+        // 2. Calculate Total Delivery Fee based on plan
+        const totalDeliveryFee = 3.99 * totalDeliveries;
+
+        // 3. Remove Delivery Fee
+        const foodAndServiceFee = totalBeforeTax - totalDeliveryFee;
+
+        // 4. Remove the 10% Service Fee to get the raw Food Cost
+        // Since foodAndServiceFee = Food * 1.10, we divide by 1.10
+        const rawFoodCost = foodAndServiceFee / 1.10;
+
+        // Ensure we don't pass negative numbers if math gets weird
+        const finalFoodCost = Math.max(rawFoodCost, 0.01);
+
+        const response = await apiClient.post('/payments/create-intent', {
+          items: [{ price: finalFoodCost, quantity: 1 }], // Dynamically calculated base cost!
+          orderTotal: planPrice,
+          restaurantStripeAccountId,
+          planType: subscriptionData.planType || 'single',
+          totalDeliveries,
+          restaurantDeliveryFee: 3.99
+        });
+
+        const secret = response.data?.data?.clientSecret;
+        if (!secret) {
+          throw new Error('Payment initialization failed');
+        }
+        setClientSecret(secret);
+      } catch (error) {
+        console.error('Error creating payment intent:', error);
+        showError('Payment Error', error.response?.data?.message || error.message || 'Unable to initialize payment.');
+      } finally {
+        setIntentLoading(false);
+      }
+    };
+
+    createIntent();
+  }, [paymentMethod, planPrice, selectedRestaurantId]);
+
+  const handleCashContinue = () => {
     onNext({
-      paymentMethod
+      paymentMethod: 'cash',
+      paymentData: null,
+      paymentId: `cash_${Date.now()}`,
+      status: 'pending'
     });
   };
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 pb-24 sm:pb-6 lg:pb-8">
-'      <div className="mb-4 sm:mb-6 text-center">'
+      <div className="mb-4 sm:mb-6 text-center">
         <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full mb-3 shadow-lg">
           <FontAwesomeIcon icon={faCreditCard} className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
         </div>
@@ -379,13 +578,14 @@ const PaymentStep = ({ subscriptionData, onNext, onPrevious, isLoading }) => {
         )}
       </div>
 
-      {/* Payment Method */}
+      {/* Payment Method Selection */}
       <div className="mb-6 sm:mb-8">
         <div className="text-center mb-4">
           <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">{t('subscription.choosePaymentMethodTitle')}</h3>
           <p className="text-xs sm:text-sm text-gray-600">{t('subscription.selectHowToPay')}</p>
         </div>
         <div className="space-y-3">
+          {/* Card Payment Option */}
           <label className={`flex items-center p-4 sm:p-5 border-2 rounded-xl cursor-pointer transition-all duration-200 touch-manipulation shadow-sm ${
             paymentMethod === 'card' 
               ? 'border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-md ring-2 ring-blue-200' 
@@ -414,8 +614,74 @@ const PaymentStep = ({ subscriptionData, onNext, onPrevious, isLoading }) => {
               )}
             </div>
           </label>
+
+          {/* Cash on Delivery Option */}
+          <label className={`flex items-center p-4 sm:p-5 border-2 rounded-xl cursor-pointer transition-all duration-200 touch-manipulation shadow-sm ${
+            paymentMethod === 'cash' 
+              ? 'border-green-500 bg-gradient-to-r from-green-50 to-emerald-50 shadow-md ring-2 ring-green-200' 
+              : 'border-gray-200 bg-white hover:border-green-300 hover:shadow-md'
+          }`}>
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="cash"
+              checked={paymentMethod === 'cash'}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="mr-3 w-5 h-5 text-green-600"
+            />
+            <div className="flex items-center gap-3 flex-1">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-md">
+                <FontAwesomeIcon icon={faMoneyBillWave} className="text-white text-lg sm:text-xl" />
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-gray-900 text-sm sm:text-base">Cash on Delivery</p>
+                <p className="text-xs sm:text-sm text-gray-600">Pay when your order arrives</p>
+              </div>
+              {paymentMethod === 'cash' && (
+                <div className="bg-green-600 text-white rounded-full p-1.5">
+                  <FontAwesomeIcon icon={faCheck} className="w-3 h-3" />
+                </div>
+              )}
+            </div>
+          </label>
         </div>
       </div>
+
+      {/* Card Payment Form with Stripe */}
+      {paymentMethod === 'card' && clientSecret && (
+        <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'stripe' } }}>
+          <StripePaymentForm
+            clientSecret={clientSecret}
+            planPrice={planPrice}
+            setLoading={setLoading}
+            isLoading={isLoading}
+            onPaymentSuccess={(paymentResult) => {
+              onNext(paymentResult);
+            }}
+          />
+        </Elements>
+      )}
+
+      {/* Loading State for Stripe */}
+      {paymentMethod === 'card' && !clientSecret && (
+        <div className="mb-6 bg-gray-50 rounded-xl p-6">
+          <div className="flex items-center justify-center text-gray-700">
+            <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-3" />
+            Loading secure checkout...
+          </div>
+        </div>
+      )}
+
+      {/* Cash on Delivery Info */}
+      {paymentMethod === 'cash' && (
+        <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+          <h3 className="font-semibold text-yellow-900 mb-2">Cash on Delivery</h3>
+          <p className="text-yellow-800 text-sm">
+            You will pay ${planPrice.toFixed(2)} in cash when your subscription meals arrive. 
+            Please have the exact amount ready.
+          </p>
+        </div>
+      )}
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3 sm:justify-between pb-20 sm:pb-0">
@@ -428,29 +694,31 @@ const PaymentStep = ({ subscriptionData, onNext, onPrevious, isLoading }) => {
           <span className="text-sm sm:text-base">{t('subscription.backToAddress')}</span>
         </button>
 
-        <button
-          onClick={handleContinue}
-          disabled={isLoading}
-          className={`
-            w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3 font-bold rounded-xl transition-all duration-200 touch-manipulation order-1 sm:order-2 text-sm sm:text-base
-            ${!isLoading
-              ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 active:from-green-700 active:to-emerald-800 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }
-          `}
-        >
-          {isLoading ? (
-            <>
-              <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
-              <span>{t('subscription.creatingSubscription')}</span>
-            </>
-          ) : (
-            <>
-              <FontAwesomeIcon icon={faCheck} className="mr-2" />
-              <span>{t('subscription.completeSubscription')}</span>
-            </>
-          )}
-        </button>
+        {paymentMethod === 'cash' && (
+          <button
+            onClick={handleCashContinue}
+            disabled={isLoading}
+            className={`
+              w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3 font-bold rounded-xl transition-all duration-200 touch-manipulation order-1 sm:order-2 text-sm sm:text-base
+              ${!isLoading
+                ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 active:from-green-700 active:to-emerald-800 transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }
+            `}
+          >
+            {isLoading ? (
+              <>
+                <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
+                <span>{t('subscription.creatingSubscription')}</span>
+              </>
+            ) : (
+              <>
+                <FontAwesomeIcon icon={faCheck} className="mr-2" />
+                <span>{t('subscription.completeSubscription')}</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );

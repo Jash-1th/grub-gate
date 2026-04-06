@@ -17,6 +17,7 @@ import OrderConfirmationStep from '../components/checkout/OrderConfirmationStep'
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useMealPlan } from '../contexts/MealPlanContext_SSR_FIXED';
+import { calculateOrderTotals } from '../utils/pricingCalculator';
 
 /**
  * Checkout Page
@@ -178,17 +179,21 @@ const CheckoutPage = () => {
       });
     });
 
-    const deliveryFee = 2.99; // Base delivery fee
-    const tax = subtotal * 0.13; // 13% tax (adjust based on location)
-    const total = subtotal + deliveryFee + tax;
+    // Use unified pricing calculator
+    const pricing = calculateOrderTotals({
+      items: items.map(item => ({ price: item.price, quantity: item.quantity })),
+      restaurantDeliveryFee: null, // Will use default
+      planType: 'single'
+    });
 
     return {
       items,
       restaurant,
-      subtotal,
-      deliveryFee,
-      tax,
-      total
+      subtotal: pricing.subtotal,
+      deliveryFee: pricing.deliveryFee,
+      serviceFee: pricing.serviceFee,
+      tax: pricing.tax,
+      total: pricing.total
     };
   };
 

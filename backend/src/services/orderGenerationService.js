@@ -5,6 +5,7 @@ const SubscriptionMealPlan = require('../models/SubscriptionMealPlan');
 const Restaurant = require('../models/Restaurant');
 const User = require('../models/User');
 const { findSubscriptionDayForDate } = require('../utils/dateHelpers');
+const { calculateOrderTotals } = require('../utils/pricingCalculator');
 
 /**
  * Generate daily orders from subscription meal plans
@@ -57,13 +58,14 @@ const generateDailyOrdersFromSubscriptions = async () => {
         // Create orders for each meal
         for (const meal of todaysMeals) {
           try {
-            // Calculate order totals
+            // Calculate order totals using unified pricing calculator
             const itemTotal = meal.item.price || 0;
-            const deliveryFee = 3.99; // Default delivery fee
-            const taxRate = 0.13; // 13% tax
-            const subtotal = itemTotal;
-            const tax = subtotal * taxRate;
-            const total = subtotal + deliveryFee + tax;
+            
+            const pricing = calculateOrderTotals({
+              items: [{ price: itemTotal, quantity: 1 }],
+              restaurantDeliveryFee: null,
+              planType: 'single'
+            });
             
             // Generate unique order number
             const orderNumber = `GG${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}${String(Date.now()).slice(-6)}`;
@@ -81,10 +83,10 @@ const generateDailyOrdersFromSubscriptions = async () => {
                 quantity: 1,
                 specialInstructions: meal.item.specialInstructions || ''
               }],
-              subtotal: Math.round(subtotal * 100) / 100,
-              deliveryFee: deliveryFee,
-              tax: Math.round(tax * 100) / 100,
-              total: Math.round(total * 100) / 100,
+              subtotal: pricing.subtotal,
+              deliveryFee: pricing.deliveryFee,
+              tax: pricing.tax,
+              total: pricing.total,
               deliveryAddress: meal.deliveryAddress || {
                 street: subscriptionPlan.deliveryAddress?.street || '',
                 city: subscriptionPlan.deliveryAddress?.city || '',
@@ -278,12 +280,17 @@ const createOrderFromMealPlanItems = async (mealPlan, mealItems, mealType, order
       };
     }
     
-    // Calculate totals
-    const subtotal = mealItems.reduce((sum, item) => sum + (item.price || 0), 0);
-    const deliveryFee = 3.99;
-    const taxRate = 0.13;
-    const tax = subtotal * taxRate;
-    const total = subtotal + deliveryFee + tax;
+    // Calculate totals using unified pricing calculator
+    const items = mealItems.map(item => ({
+      price: item.price || 0,
+      quantity: 1
+    }));
+    
+    const pricing = calculateOrderTotals({
+      items,
+      restaurantDeliveryFee: restaurant.deliverySettings?.fee,
+      planType: 'single'
+    });
     
     // Generate unique order number
     const orderNumber = `GG${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}${String(Date.now()).slice(-6)}`;
@@ -302,10 +309,10 @@ const createOrderFromMealPlanItems = async (mealPlan, mealItems, mealType, order
         quantity: 1,
         specialInstructions: item.specialInstructions || ''
       })),
-      subtotal: Math.round(subtotal * 100) / 100,
-      deliveryFee: deliveryFee,
-      tax: Math.round(tax * 100) / 100,
-      total: Math.round(total * 100) / 100,
+      subtotal: pricing.subtotal,
+      deliveryFee: pricing.deliveryFee,
+      tax: pricing.tax,
+      total: pricing.total,
       deliveryAddress: {
         street: mealPlan.userId.addresses?.[0]?.street || '',
         city: mealPlan.userId.addresses?.[0]?.city || '',
