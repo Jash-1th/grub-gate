@@ -483,9 +483,26 @@ orderSchema.statics.getRevenueStats = function(restaurantId, startDate, endDate)
     {
       $group: {
         _id: null,
-        totalRevenue: { $sum: '$total' },
+        // Calculate true payout: subtotal + tax + deliveryFee (excludes platform fees)
+        totalRevenue: { 
+          $sum: { 
+            $add: [
+              { $ifNull: ['$subtotal', 0] },
+              { $ifNull: ['$tax', 0] },
+              { $ifNull: ['$deliveryFee', 0] }
+            ]
+          }
+        },
         totalOrders: { $sum: 1 },
-        averageOrderValue: { $avg: '$total' }
+        averageOrderValue: { 
+          $avg: { 
+            $add: [
+              { $ifNull: ['$subtotal', 0] },
+              { $ifNull: ['$tax', 0] },
+              { $ifNull: ['$deliveryFee', 0] }
+            ]
+          }
+        }
       }
     }
   ]);

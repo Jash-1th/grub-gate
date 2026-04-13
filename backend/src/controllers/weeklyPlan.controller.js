@@ -136,6 +136,8 @@ const createSubscriptionMealPlan = asyncHandler(async (req, res) => {
     if (day.dinner && day.dinner.menuItemId) allMenuItemIds.push(day.dinner.menuItemId);
   });
 
+  let menuItemPriceMap = {};
+
   if (allMenuItemIds.length > 0) {
     const menuItems = await MenuItem.find({
       _id: { $in: allMenuItemIds },
@@ -146,7 +148,40 @@ const createSubscriptionMealPlan = asyncHandler(async (req, res) => {
     if (menuItems.length !== allMenuItemIds.length) {
       return errorResponse(res, 'Some menu items are not available', 400);
     }
+
+    // Create price map from fetched menu items
+    menuItems.forEach(item => {
+      menuItemPriceMap[item._id.toString()] = item.price;
+    });
   }
+
+  // Attach prices to meals object before saving
+  const mealsWithPrices = {};
+  Object.keys(meals).forEach(day => {
+    mealsWithPrices[day] = {};
+    
+    // Process lunch
+    if (meals[day].lunch) {
+      const lunchPrice = meals[day].lunch.menuItemId 
+        ? menuItemPriceMap[meals[day].lunch.menuItemId.toString()] || 0
+        : 0;
+      mealsWithPrices[day].lunch = {
+        ...meals[day].lunch,
+        price: lunchPrice
+      };
+    }
+    
+    // Process dinner
+    if (meals[day].dinner) {
+      const dinnerPrice = meals[day].dinner.menuItemId 
+        ? menuItemPriceMap[meals[day].dinner.menuItemId.toString()] || 0
+        : 0;
+      mealsWithPrices[day].dinner = {
+        ...meals[day].dinner,
+        price: dinnerPrice
+      };
+    }
+  });
 
   // Create weekly plan using the findOrCreateForUser method
   const weeklyPlan = await SubscriptionMealPlan.findOrCreateForUser(
@@ -156,12 +191,15 @@ const createSubscriptionMealPlan = asyncHandler(async (req, res) => {
     planType
   );
   
-  // Update with provided data
+  // Update with provided data including meals with prices
   if (deliveryAddress) {
     weeklyPlan.deliveryAddress = deliveryAddress;
   }
   if (specialInstructions) {
     weeklyPlan.specialInstructions = specialInstructions;
+  }
+  if (mealsWithPrices && Object.keys(mealsWithPrices).length > 0) {
+    weeklyPlan.meals = mealsWithPrices;
   }
   
   await weeklyPlan.save();

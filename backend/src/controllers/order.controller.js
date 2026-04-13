@@ -657,8 +657,25 @@ const getOrderStats = asyncHandler(async (req, res) => {
       $group: {
         _id: null,
         totalOrders: { $sum: 1 },
-        totalRevenue: { $sum: '$total' },
-        averageOrderValue: { $avg: '$total' },
+        // Calculate true payout: subtotal + tax + deliveryFee (excludes platform fees)
+        totalRevenue: { 
+          $sum: { 
+            $add: [
+              { $ifNull: ['$subtotal', 0] },
+              { $ifNull: ['$tax', 0] },
+              { $ifNull: ['$deliveryFee', 0] }
+            ]
+          }
+        },
+        averageOrderValue: { 
+          $avg: { 
+            $add: [
+              { $ifNull: ['$subtotal', 0] },
+              { $ifNull: ['$tax', 0] },
+              { $ifNull: ['$deliveryFee', 0] }
+            ]
+          }
+        },
         cancelledOrders: {
           $sum: { $cond: [{ $eq: ['$status', 'cancelled'] }, 1, 0] }
         },

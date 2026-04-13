@@ -20,10 +20,32 @@ const getUserMealCalendar = async (req, res) => {
       });
     }
 
-    // Populate restaurant details FIRST before processing
+    // Populate restaurant details and order details (with items for price)
     await calendar.populate('calendarEntries.restaurantId', 'name cuisine phone address');
+    await calendar.populate('calendarEntries.orderId', 'items price subtotal total');
     
     let meals = calendar.calendarEntries;
+    
+    // Attach price from Order items to each calendar entry
+    meals = meals.map(meal => {
+      // Safe object conversion - handle both Mongoose documents and plain objects
+      const mealObj = typeof meal.toObject === 'function' ? meal.toObject() : JSON.parse(JSON.stringify(meal));
+      
+      // Extract price from Order if available
+      if (meal.orderId && meal.orderId.items && Array.isArray(meal.orderId.items) && meal.orderId.items.length > 0) {
+        // Get price from first item (subscription meals have 1 item per order)
+        const firstItem = meal.orderId.items[0];
+        mealObj.price = parseFloat(firstItem.price) || 0;
+        mealObj.items = meal.orderId.items; // Attach items array for frontend
+        console.log(`💰 Backend: Attached price $${mealObj.price} to meal "${meal.mealName}" from Order ${meal.orderId._id}`);
+      } else if (meal.orderId && meal.orderId.subtotal) {
+        // Fallback to order subtotal if items not available
+        mealObj.price = parseFloat(meal.orderId.subtotal) || 0;
+        console.log(`💰 Backend: Attached price $${mealObj.price} to meal "${meal.mealName}" from Order subtotal`);
+      }
+      
+      return mealObj;
+    });
 
     // Filter by date range if provided
     if (startDate && endDate) {
@@ -47,7 +69,8 @@ const getUserMealCalendar = async (req, res) => {
       console.log(`🔍 Backend: Meal ${index + 1}: ${meal.mealName} (Key: ${mealKey})`);
       
       if (!groupedMeals[mealKey]) {
-        const mealObj = meal.toObject();
+        // Safe object conversion - handle both Mongoose documents and plain objects
+        const mealObj = typeof meal.toObject === 'function' ? meal.toObject() : JSON.parse(JSON.stringify(meal));
         groupedMeals[mealKey] = {
           ...mealObj,
           // Add restaurant name from populated data
@@ -213,7 +236,8 @@ const getMealCalendarRange = async (req, res) => {
   calendars.forEach(calendar => {
     const mealsInRange = calendar.getMealsForDateRange(start, end);
     allMeals = allMeals.concat(mealsInRange.map(meal => ({
-      ...meal.toObject(),
+      // Safe object conversion - handle both Mongoose documents and plain objects
+      ...(typeof meal.toObject === 'function' ? meal.toObject() : JSON.parse(JSON.stringify(meal))),
       calendarId: calendar._id,
       subscriptionPeriod: calendar.subscriptionPeriod
     })));

@@ -336,7 +336,16 @@ const getOrderAnalytics = async (req, res) => {
           $group: {
             _id: null,
             totalOrders: { $sum: 1 },
-            totalRevenue: { $sum: '$total' }
+            // Calculate true payout: subtotal + tax + deliveryFee (excludes platform fees)
+            totalRevenue: { 
+              $sum: { 
+                $add: [
+                  { $ifNull: ['$subtotal', 0] },
+                  { $ifNull: ['$tax', 0] },
+                  { $ifNull: ['$deliveryFee', 0] }
+                ]
+              }
+            }
           }
         }
       ]),
@@ -353,7 +362,16 @@ const getOrderAnalytics = async (req, res) => {
           $group: {
             _id: null,
             totalOrders: { $sum: 1 },
-            totalRevenue: { $sum: '$total' }
+            // Calculate true payout: subtotal + tax + deliveryFee (excludes platform fees)
+            totalRevenue: { 
+              $sum: { 
+                $add: [
+                  { $ifNull: ['$subtotal', 0] },
+                  { $ifNull: ['$tax', 0] },
+                  { $ifNull: ['$deliveryFee', 0] }
+                ]
+              }
+            }
           }
         }
       ])

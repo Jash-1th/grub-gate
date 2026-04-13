@@ -428,6 +428,7 @@ const StripePaymentForm = ({
 const PaymentStep = ({ subscriptionData, selectedRestaurantId, onNext, onPrevious, isLoading, setLoading }) => {
   const { t } = useTranslation();
   const { showError } = useToast();
+  const { getWeekPlan, getWeekTotalCost } = useMealPlan();
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [clientSecret, setClientSecret] = useState(null);
   const [intentLoading, setIntentLoading] = useState(false);
@@ -440,6 +441,67 @@ const PaymentStep = ({ subscriptionData, selectedRestaurantId, onNext, onPreviou
     }
     return price || 0;
   }, [subscriptionData.planData?.price]);
+
+  // Calculate raw meal cost using actual meal plan totals from useMealPlan (NOT hardcoded)
+  const getRawMealCost = useMemo(() => {
+    const planId = subscriptionData.planType;
+    let mealCostMultiplier = 1;
+    
+    // Get actual meal cost from user's meal plan context (dynamically calculated)
+    const week0Cost = getWeekTotalCost(0) || 0;
+    const week1Cost = getWeekTotalCost(1) || 0;
+    const baseBiweeklyCost = week0Cost + week1Cost; // Actual sum of selected items
+    
+    switch (planId) {
+      case 'bi-weekly':
+        mealCostMultiplier = 1;
+        break;
+      case 'monthly':
+        mealCostMultiplier = 2;
+        break;
+      case 'quarterly':
+        mealCostMultiplier = 6;
+        break;
+      case 'semi-annual':
+        mealCostMultiplier = 12;
+        break;
+      default:
+        mealCostMultiplier = 1;
+    }
+    
+    // Return raw meal cost based on actual selected items (no hardcoded fallback)
+    const rawCost = baseBiweeklyCost * mealCostMultiplier;
+    return Math.round(rawCost * 100) / 100; // Round to 2 decimals
+  }, [subscriptionData.planType, getWeekTotalCost]);
+
+  // Count actual unique delivery days from user's meal plan
+  const getActualDeliveryCount = useMemo(() => {
+    const countDeliveryDays = (weekIndex) => {
+      const weekPlan = getWeekPlan(weekIndex);
+      if (!weekPlan) return 0;
+      
+      let count = 0;
+      const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      
+      days.forEach(day => {
+        const dayMeals = weekPlan[day];
+        if (dayMeals) {
+          const hasLunch = dayMeals.lunch && dayMeals.lunch.length > 0;
+          const hasDinner = dayMeals.dinner && dayMeals.dinner.length > 0;
+          if (hasLunch) count++;
+          if (hasDinner) count++;
+        }
+      });
+      
+      return count;
+    };
+    
+    // Count deliveries for week 0 and week 1
+    const week0Deliveries = countDeliveryDays(0);
+    const week1Deliveries = countDeliveryDays(1);
+    
+    return week0Deliveries + week1Deliveries;
+  }, [getWeekPlan]);
 
   // Fetch clientSecret when card is selected
   useEffect(() => {
@@ -468,31 +530,22 @@ const PaymentStep = ({ subscriptionData, selectedRestaurantId, onNext, onPreviou
           return;
         }
 
-        // Calculate deliveries based on plan type
-        const totalDeliveries = subscriptionData.planType === 'bi-weekly' ? 2 : (subscriptionData.planType === 'monthly' ? 4 : (subscriptionData.planType === 'quarterly' ? 12 : 1));
+        // Get raw meal cost directly (NO reverse-engineering)
+        const rawMealCost = getRawMealCost;
+        
+        // Count actual delivery days from user's meal plan (NOT hardcoded)
+        const totalDeliveries = getActualDeliveryCount || 
+          (subscriptionData.planType === 'bi-weekly' ? 2 : 
+           subscriptionData.planType === 'monthly' ? 4 : 
+           subscriptionData.planType === 'quarterly' ? 12 : 1);
 
-        // 1. Remove 13% Tax from the Grand Total
-        const totalBeforeTax = planPrice / 1.13;
-
-        // 2. Calculate Total Delivery Fee based on plan
-        const totalDeliveryFee = 3.99 * totalDeliveries;
-
-        // 3. Remove Delivery Fee
-        const foodAndServiceFee = totalBeforeTax - totalDeliveryFee;
-
-        // 4. Remove the 10% Service Fee to get the raw Food Cost
-        // Since foodAndServiceFee = Food * 1.10, we divide by 1.10
-        const rawFoodCost = foodAndServiceFee / 1.10;
-
-        // Ensure we don't pass negative numbers if math gets weird
-        const finalFoodCost = Math.max(rawFoodCost, 0.01);
-
+        // Send the secure payload with raw meal cost
         const response = await apiClient.post('/payments/create-intent', {
-          items: [{ price: finalFoodCost, quantity: 1 }], // Dynamically calculated base cost!
+          items: [{ price: rawMealCost, quantity: 1 }], // Raw meal cost, no reverse-engineering
           orderTotal: planPrice,
           restaurantStripeAccountId,
           planType: subscriptionData.planType || 'single',
-          totalDeliveries,
+          totalDeliveries, // Dynamic count of actual scheduled days
           restaurantDeliveryFee: 3.99
         });
 
@@ -510,7 +563,7 @@ const PaymentStep = ({ subscriptionData, selectedRestaurantId, onNext, onPreviou
     };
 
     createIntent();
-  }, [paymentMethod, planPrice, selectedRestaurantId]);
+  }, [paymentMethod, planPrice, selectedRestaurantId, getRawMealCost, getActualDeliveryCount, subscriptionData.planType]);
 
   const handleCashContinue = () => {
     onNext({

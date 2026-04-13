@@ -1637,47 +1637,25 @@ const MealCalendarPage = () => {
                                 </button>
                                 <div className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
                                 ${lunchMeals.reduce((total, meal) => {
-                                  // Debug: Log meal structure to understand what fields are available
-                                  console.log('🔍 Lunch meal object:', meal);
-                                  
-                                  // Check multiple possible price locations
-                                  let price = 0;
-                                  
-                                  // If meal has items array, sum up item prices
-                                  if (meal.items && Array.isArray(meal.items) && meal.items.length > 0) {
-                                    price = meal.items.reduce((itemTotal, item) => {
-                                      return itemTotal + (parseFloat(item.price) || 0) * (parseInt(item.quantity) || 1);
-                                    }, 0);
-                                  } else {
-                                    // Try various price fields
-                                    price = parseFloat(
-                                      meal.subtotal || 
-                                      meal.total || 
-                                      meal.price || 
-                                      meal.menuItem?.price || 
-                                      meal.orderItem?.price || 
-                                      meal.cost ||
-                                      meal.amount ||
-                                      0
-                                    );
-                                    
-                                    // If no price found, use a reasonable estimate based on meal type
-                                    if (price === 0 && meal.mealName) {
-                                      // Simple price estimation based on meal name/type
-                                      if (meal.mealName.toLowerCase().includes('chicken')) {
-                                        price = 12.99;
-                                      } else if (meal.mealName.toLowerCase().includes('mutton')) {
-                                        price = 15.99;
-                                      } else if (meal.mealType === 'lunch') {
-                                        price = 10.99;
-                                      } else {
-                                        price = 12.99; // Default price
+                                  // Strict price extractor - NEVER use grand total
+                                  const extractRawFoodCost = (meal) => {
+                                    // Step A: If order items are attached, find the EXACT item matching this calendar entry
+                                    if (meal.items && Array.isArray(meal.items) && meal.items.length > 0 && meal.mealName) {
+                                      const matchingItem = meal.items.find(item => item.name === meal.mealName);
+                                      if (matchingItem) {
+                                        // Return ONLY the base unit price of this specific item.
+                                        // Do not multiply by quantity, because the calendar grid groups and counts quantities automatically.
+                                        return parseFloat(matchingItem.price) || 0;
                                       }
-                                      console.log(`💰 Using estimated lunch price for ${meal.mealName}: $${price}`);
                                     }
-                                  }
+                                    // Step B: Safe fallbacks
+                                    if (meal.price) return parseFloat(meal.price);
+                                    if (meal.subtotal) return parseFloat(meal.subtotal);
+                                    return 0;
+                                  };
                                   
-                                  console.log('🔍 Calculated price for lunch meal:', price);
+                                  const price = extractRawFoodCost(meal);
+                                  console.log('🔍 Lunch raw food cost:', price);
                                   const quantity = parseInt(meal.quantity) || 1;
                                   return total + (price * quantity);
                                 }, 0).toFixed(2)}
@@ -1738,44 +1716,25 @@ const MealCalendarPage = () => {
                                   // Debug: Log meal structure to understand what fields are available
                                   console.log('🔍 Dinner meal object:', meal);
                                   
-                                  // Check multiple possible price locations
-                                  let price = 0;
-                                  
-                                  // If meal has items array, sum up item prices
-                                  if (meal.items && Array.isArray(meal.items) && meal.items.length > 0) {
-                                    price = meal.items.reduce((itemTotal, item) => {
-                                      return itemTotal + (parseFloat(item.price) || 0) * (parseInt(item.quantity) || 1);
-                                    }, 0);
-                                  } else {
-                                    // Try various price fields
-                                    price = parseFloat(
-                                      meal.subtotal || 
-                                      meal.total || 
-                                      meal.price || 
-                                      meal.menuItem?.price || 
-                                      meal.orderItem?.price || 
-                                      meal.cost ||
-                                      meal.amount ||
-                                      0
-                                    );
-                                    
-                                    // If no price found, use a reasonable estimate based on meal type
-                                    if (price === 0 && meal.mealName) {
-                                      // Simple price estimation based on meal name/type
-                                      if (meal.mealName.toLowerCase().includes('chicken')) {
-                                        price = 14.99; // Dinner chicken slightly more expensive
-                                      } else if (meal.mealName.toLowerCase().includes('mutton')) {
-                                        price = 17.99; // Dinner mutton slightly more expensive
-                                      } else if (meal.mealType === 'dinner') {
-                                        price = 14.99;
-                                      } else {
-                                        price = 14.99; // Default dinner price
+                                  // Strict price extractor - NEVER use grand total
+                                  const extractRawFoodCost = (meal) => {
+                                    // Step A: If order items are attached, find the EXACT item matching this calendar entry
+                                    if (meal.items && Array.isArray(meal.items) && meal.items.length > 0 && meal.mealName) {
+                                      const matchingItem = meal.items.find(item => item.name === meal.mealName);
+                                      if (matchingItem) {
+                                        // Return ONLY the base unit price of this specific item.
+                                        // Do not multiply by quantity, because the calendar grid groups and counts quantities automatically.
+                                        return parseFloat(matchingItem.price) || 0;
                                       }
-                                      console.log(`💰 Using estimated dinner price for ${meal.mealName}: $${price}`);
                                     }
-                                  }
+                                    // Step B: Safe fallbacks
+                                    if (meal.price) return parseFloat(meal.price);
+                                    if (meal.subtotal) return parseFloat(meal.subtotal);
+                                    return 0;
+                                  };
                                   
-                                  console.log('🔍 Calculated price for dinner meal:', price);
+                                  const price = extractRawFoodCost(meal);
+                                  console.log('🔍 Dinner raw food cost:', price);
                                   const quantity = parseInt(meal.quantity) || 1;
                                   return total + (price * quantity);
                                 }, 0).toFixed(2)}
@@ -1879,23 +1838,24 @@ const MealCalendarPage = () => {
                                 </div>
                                 <div className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
                                 ${lunchMeals.reduce((total, meal) => {
-                                  let price = 0;
-                                  if (meal.items && Array.isArray(meal.items) && meal.items.length > 0) {
-                                    price = meal.items.reduce((itemTotal, item) => {
-                                      return itemTotal + (parseFloat(item.subtotal) || parseFloat(item.price) || parseFloat(item.total) || 0);
-                                    }, 0);
-                                  } else {
-                                    price = parseFloat(meal.subtotal) || parseFloat(meal.price) || parseFloat(meal.total) || 0;
-                                  }
-                                  if (price === 0 && meal.mealName) {
-                                    if (meal.mealName.toLowerCase().includes('chicken')) {
-                                      price = 12.99;
-                                    } else if (meal.mealName.toLowerCase().includes('mutton')) {
-                                      price = 15.99;
-                                    } else {
-                                      price = 10.99;
+                                  // Strict price extractor - NEVER use grand total
+                                  const extractRawFoodCost = (meal) => {
+                                    // Step A: If order items are attached, find the EXACT item matching this calendar entry
+                                    if (meal.items && Array.isArray(meal.items) && meal.items.length > 0 && meal.mealName) {
+                                      const matchingItem = meal.items.find(item => item.name === meal.mealName);
+                                      if (matchingItem) {
+                                        // Return ONLY the base unit price of this specific item.
+                                        // Do not multiply by quantity, because the calendar grid groups and counts quantities automatically.
+                                        return parseFloat(matchingItem.price) || 0;
+                                      }
                                     }
-                                  }
+                                    // Step B: Safe fallbacks
+                                    if (meal.price) return parseFloat(meal.price);
+                                    if (meal.subtotal) return parseFloat(meal.subtotal);
+                                    return 0;
+                                  };
+                                  
+                                  const price = extractRawFoodCost(meal);
                                   const quantity = parseInt(meal.quantity) || 1;
                                   return total + (price * quantity);
                                 }, 0).toFixed(2)}
@@ -1929,23 +1889,24 @@ const MealCalendarPage = () => {
                                 </div>
                                 <div className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
                                 ${dinnerMeals.reduce((total, meal) => {
-                                  let price = 0;
-                                  if (meal.items && Array.isArray(meal.items) && meal.items.length > 0) {
-                                    price = meal.items.reduce((itemTotal, item) => {
-                                      return itemTotal + (parseFloat(item.subtotal) || parseFloat(item.price) || parseFloat(item.total) || 0);
-                                    }, 0);
-                                  } else {
-                                    price = parseFloat(meal.subtotal) || parseFloat(meal.price) || parseFloat(meal.total) || 0;
-                                  }
-                                  if (price === 0 && meal.mealName) {
-                                    if (meal.mealName.toLowerCase().includes('chicken')) {
-                                      price = meal.mealType === 'dinner' ? 14.99 : 12.99;
-                                    } else if (meal.mealName.toLowerCase().includes('mutton')) {
-                                      price = meal.mealType === 'dinner' ? 17.99 : 15.99;
-                                    } else {
-                                      price = meal.mealType === 'dinner' ? 14.99 : 12.99;
+                                  // Strict price extractor - NEVER use grand total
+                                  const extractRawFoodCost = (meal) => {
+                                    // Step A: If order items are attached, find the EXACT item matching this calendar entry
+                                    if (meal.items && Array.isArray(meal.items) && meal.items.length > 0 && meal.mealName) {
+                                      const matchingItem = meal.items.find(item => item.name === meal.mealName);
+                                      if (matchingItem) {
+                                        // Return ONLY the base unit price of this specific item.
+                                        // Do not multiply by quantity, because the calendar grid groups and counts quantities automatically.
+                                        return parseFloat(matchingItem.price) || 0;
+                                      }
                                     }
-                                  }
+                                    // Step B: Safe fallbacks
+                                    if (meal.price) return parseFloat(meal.price);
+                                    if (meal.subtotal) return parseFloat(meal.subtotal);
+                                    return 0;
+                                  };
+                                  
+                                  const price = extractRawFoodCost(meal);
                                   const quantity = parseInt(meal.quantity) || 1;
                                   return total + (price * quantity);
                                 }, 0).toFixed(2)}

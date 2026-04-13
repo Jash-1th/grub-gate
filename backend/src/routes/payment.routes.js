@@ -4,7 +4,7 @@ const { authMiddleware, roleMiddleware } = require('../middlewares/auth');
 const { commonValidations } = require('../middlewares/validation');
 const { successResponse, errorResponse } = require('../utils/apiResponse');
 const { asyncHandler } = require('../middlewares/errorHandler');
-const { calculateOrderTotals, SERVICE_FEE_PERCENTAGE, DEFAULT_TAX_RATE, toCents } = require('../utils/pricingCalculator');
+const { calculateOrderTotals, SERVICE_FEE_PERCENTAGE, DEFAULT_TAX_RATE, PLATFORM_COMMISSION_PERCENTAGE, toCents } = require('../utils/pricingCalculator');
 
  const Stripe = require('stripe');
 
@@ -69,20 +69,32 @@ const createPaymentIntent = asyncHandler(async (req, res) => {
       totalDeliveries: getDeliveryMultiplier(planType, totalDeliveries)
     });
   } else {
-    // Use orderTotal directly - calculate platform fee and create pricing breakdown
-    const platformFee = orderTotal * (SERVICE_FEE_PERCENTAGE / 100);
+    // Use orderTotal directly - calculate pricing breakdown based on new financial rules
+    // Estimate: meal cost is approximately 70% of order total (reverse calculation)
+    const estimatedMealCost = orderTotal * 0.70;
+    const serviceFee = Math.round(estimatedMealCost * SERVICE_FEE_PERCENTAGE * 100) / 100;
+    const tax = Math.round(estimatedMealCost * DEFAULT_TAX_RATE * 100) / 100;
+    const platformCommission = Math.round((estimatedMealCost + serviceFee + tax) * PLATFORM_COMMISSION_PERCENTAGE * 100) / 100;
+    const deliveryFee = Math.round((orderTotal - estimatedMealCost - serviceFee - tax - platformCommission) * 100) / 100;
+    
     pricing = {
-      subtotal: orderTotal - (orderTotal * DEFAULT_TAX_RATE),
-      deliveryFee: 0,
-      serviceFee: platformFee,
-      tax: orderTotal * DEFAULT_TAX_RATE,
+      subtotal: Math.round(estimatedMealCost * 100) / 100,
+      deliveryFee: Math.max(0, deliveryFee),
+      serviceFee: serviceFee,
+      tax: tax,
+      platformCommission: platformCommission,
+      applicationFee: Math.round((serviceFee + platformCommission) * 100) / 100,
       total: orderTotal
     };
   }
 
-  // STRICT MATH: Convert ALL values to cents using Math.round() to avoid decimal errors
+  // STRICT MATH: Convert ALL values to cents using Math.round(value * 100) for every step
+  // CRITICAL: This prevents floating-point errors from crashing Stripe
   const amountCents = Math.round(pricing.total * 100);
-  const applicationFeeCents = Math.round(pricing.serviceFee * 100);
+  const serviceFeeCents = Math.round(pricing.serviceFee * 100);
+  const platformCommissionCents = Math.round((pricing.platformCommission || 0) * 100);
+  // Grub-Gate's Revenue = Service Fee + Platform Commission
+  const applicationFeeCents = Math.round((pricing.serviceFee + (pricing.platformCommission || 0)) * 100);
   const deliveryFeeCents = Math.round(pricing.deliveryFee * 100);
   const subtotalCents = Math.round(pricing.subtotal * 100);
   const taxCents = Math.round(pricing.tax * 100);
@@ -97,10 +109,12 @@ const createPaymentIntent = asyncHandler(async (req, res) => {
   // DEBUG LOGGING: Stripe Payment Intent Details
   console.log('\n========== STRIPE PAYMENT INTENT ==========');
   console.log(`Total Amount Charged: $${(amountCents / 100).toFixed(2)} CAD (${amountCents} cents)`);
-  console.log(`Application Fee (Platform): $${(applicationFeeCents / 100).toFixed(2)} CAD (${applicationFeeCents} cents)`);
+  console.log(`Application Fee (Service Fee + Platform Commission): $${(applicationFeeCents / 100).toFixed(2)} CAD (${applicationFeeCents} cents)`);
+  console.log(`  - Service Fee (9.9% of meal): $${(serviceFeeCents / 100).toFixed(2)} CAD`);
+  console.log(`  - Platform Commission (17% of meal+service+tax): $${(platformCommissionCents / 100).toFixed(2)} CAD`);
   console.log(`Delivery Fee: $${(deliveryFeeCents / 100).toFixed(2)} CAD (${deliveryFeeCents} cents)`);
-  console.log(`Subtotal: $${(subtotalCents / 100).toFixed(2)} CAD (${subtotalCents} cents)`);
-  console.log(`Tax: $${(taxCents / 100).toFixed(2)} CAD (${taxCents} cents)`);
+  console.log(`Meal Cost (Subtotal): $${(subtotalCents / 100).toFixed(2)} CAD (${subtotalCents} cents)`);
+  console.log(`Tax (15% of meal only): $${(taxCents / 100).toFixed(2)} CAD (${taxCents} cents)`);
   console.log(`Restaurant Stripe Account ID: ${restaurantStripeAccountId}`);
   console.log(`Net Amount to Restaurant: $${(netAmountCents / 100).toFixed(2)} CAD (${netAmountCents} cents)`);
   console.log('=========================================\n');
@@ -121,7 +135,9 @@ const createPaymentIntent = asyncHandler(async (req, res) => {
     metadata: {
       subtotal_cents: String(subtotalCents),
       delivery_fee_cents: String(deliveryFeeCents),
-      service_fee_cents: String(applicationFeeCents),
+      service_fee_cents: String(serviceFeeCents),
+      platform_commission_cents: String(platformCommissionCents),
+      application_fee_cents: String(applicationFeeCents),
       tax_cents: String(taxCents),
       total_cents: String(amountCents),
       restaurant_stripe_account_id: restaurantStripeAccountId

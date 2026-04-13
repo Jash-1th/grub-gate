@@ -8,8 +8,9 @@
 // ============================================
 // CONSTANTS - Single Source of Truth
 // ============================================
-const DEFAULT_TAX_RATE = 0.13;           // 13% tax
-const SERVICE_FEE_PERCENTAGE = 0.10;     // 10% platform service fee
+const DEFAULT_TAX_RATE = 0.15;           // 15% tax (on meal cost only)
+const SERVICE_FEE_PERCENTAGE = 0.099;    // 9.9% platform service fee (on meal cost)
+const PLATFORM_COMMISSION_PERCENTAGE = 0.17; // 17% platform commission (on meal + service fee + tax)
 const DEFAULT_DELIVERY_FEE = 3.99;       // Default delivery fee
 
 // ============================================
@@ -73,28 +74,44 @@ const calculateDeliveryFee = (restaurantDeliveryFee, planType, totalDeliveries =
 
 /**
  * Calculate service fee
- * @param {number} subtotal - Order subtotal
+ * @param {number} subtotal - Order subtotal (meal cost)
  * @param {number} [customRate] - Optional custom service fee percentage
  * @returns {number} Service fee amount
  */
 const calculateServiceFee = (subtotal, customRate) => {
   const rate = customRate !== undefined ? customRate : SERVICE_FEE_PERCENTAGE;
+  // Use Math.round(value * 100) for every calculation step to prevent floating-point errors
   return Math.round(subtotal * rate * 100) / 100;
 };
 
 /**
+ * Calculate platform commission
+ * @param {number} subtotal - Order subtotal (meal cost)
+ * @param {number} serviceFee - Service fee amount
+ * @param {number} tax - Tax amount
+ * @param {number} [customRate] - Optional custom commission percentage
+ * @returns {number} Platform commission amount
+ */
+const calculatePlatformCommission = (subtotal, serviceFee, tax, customRate) => {
+  const rate = customRate !== undefined ? customRate : PLATFORM_COMMISSION_PERCENTAGE;
+  const baseAmount = subtotal + serviceFee + tax;
+  // Use Math.round(value * 100) for every calculation step to prevent floating-point errors
+  return Math.round(baseAmount * rate * 100) / 100;
+};
+
+/**
  * Calculate tax
- * @param {number} subtotal - Order subtotal
- * @param {number} deliveryFee - Delivery fee
- * @param {number} serviceFee - Service fee
+ * @param {number} subtotal - Order subtotal (meal cost only - tax is calculated ONLY on meal cost)
+ * @param {number} deliveryFee - Delivery fee (not taxed)
+ * @param {number} serviceFee - Service fee (not taxed)
  * @param {number} [customRate] - Optional custom tax rate
  * @returns {number} Tax amount
  */
 const calculateTax = (subtotal, deliveryFee, serviceFee, customRate) => {
   const rate = customRate !== undefined ? customRate : DEFAULT_TAX_RATE;
-  // Note: In some jurisdictions, service fees are not taxed. Adjust as needed.
-  const taxableAmount = subtotal + deliveryFee + serviceFee;
-  return Math.round(taxableAmount * rate * 100) / 100;
+  // CRITICAL: Tax is calculated ONLY on the Meal Cost (subtotal), not on delivery fee or service fee
+  // Use Math.round(value * 100) for every calculation step to prevent floating-point errors
+  return Math.round(subtotal * rate * 100) / 100;
 };
 
 // ============================================
@@ -133,18 +150,25 @@ const calculateOrderTotals = ({
   const deliveryFee = calculateDeliveryFee(restaurantDeliveryFee, planType, totalDeliveries);
   const serviceFee = calculateServiceFee(subtotal, customServiceFeePercentage);
   const tax = calculateTax(subtotal, deliveryFee, serviceFee, customTaxRate);
+  const platformCommission = calculatePlatformCommission(subtotal, serviceFee, tax);
   
-  // Calculate total
-  const total = Math.round((subtotal + deliveryFee + serviceFee + tax) * 100) / 100;
+  // Customer Grand Total: Meal Cost + Service Fee + Tax + Delivery Fee + Platform Commission
+  // Use Math.round(value * 100) for every calculation step to prevent floating-point errors
+  const total = Math.round((subtotal + deliveryFee + serviceFee + tax + platformCommission) * 100) / 100;
 
   // Count items
   const itemCount = items.reduce((count, item) => count + (item.quantity || 1), 0);
+
+  // Grub-Gate's Revenue (application_fee_amount for Stripe): Service Fee + Platform Commission
+  const applicationFee = Math.round((serviceFee + platformCommission) * 100) / 100;
 
   return {
     subtotal: Math.round(subtotal * 100) / 100,
     deliveryFee: Math.round(deliveryFee * 100) / 100,
     serviceFee: Math.round(serviceFee * 100) / 100,
     tax: Math.round(tax * 100) / 100,
+    platformCommission: Math.round(platformCommission * 100) / 100,
+    applicationFee, // For Stripe Connect: Service Fee + Platform Commission
     total,
     itemCount
   };
@@ -191,6 +215,8 @@ module.exports = {
   TAX_RATE: DEFAULT_TAX_RATE,
   SERVICE_FEE_PERCENTAGE,
   SERVICE_FEE_RATE: SERVICE_FEE_PERCENTAGE,
+  PLATFORM_COMMISSION_PERCENTAGE,
+  PLATFORM_COMMISSION_RATE: PLATFORM_COMMISSION_PERCENTAGE,
   DEFAULT_DELIVERY_FEE,
   DELIVERY_FEE: DEFAULT_DELIVERY_FEE,
   
@@ -202,6 +228,7 @@ module.exports = {
   calculateDeliveryFee,
   calculateServiceFee,
   calculateTax,
+  calculatePlatformCommission,
   getDeliveryMultiplier,
   formatPrice,
   toCents,

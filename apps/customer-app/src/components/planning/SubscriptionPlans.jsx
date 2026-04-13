@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMealPlan } from '../../contexts/MealPlanContext_SSR_FIXED';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
-import { calculateOrderTotals, SERVICE_FEE_PERCENTAGE, DEFAULT_TAX_RATE } from '../../utils/pricingCalculator';
+import { calculateOrderTotals, SERVICE_FEE_PERCENTAGE, DEFAULT_TAX_RATE, PLATFORM_COMMISSION_PERCENTAGE } from '../../utils/pricingCalculator';
 import BillingFormModal from '../modals/BillingFormModal';
 import EnhancedSubscriptionFlow from '../subscription/EnhancedSubscriptionFlow';
 
@@ -13,7 +13,8 @@ const SubscriptionPlans = () => {
   const navigate = useNavigate();
   const { 
     getWeekTotalItems, 
-    getWeekTotalCost, 
+    getWeekTotalCost,
+    getWeekPlan,
     getRestaurantsInAllWeeks,
     getSelectedRestaurantCount,
     getSelectedRestaurants,
@@ -32,40 +33,70 @@ const SubscriptionPlans = () => {
   const biweeklyMealCost = getWeekTotalCost(0) + getWeekTotalCost(1);
   const totalItems = getWeekTotalItems(0) + getWeekTotalItems(1);
 
+  // Count actual unique delivery days from user's meal plan
+  const getActualDeliveryCount = () => {
+    const countDeliveryDays = (weekIndex) => {
+      const weekPlan = getWeekPlan(weekIndex);
+      if (!weekPlan) return 0;
+      
+      let count = 0;
+      const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      
+      days.forEach(day => {
+        const dayMeals = weekPlan[day];
+        if (dayMeals) {
+          const hasLunch = dayMeals.lunch && dayMeals.lunch.length > 0;
+          const hasDinner = dayMeals.dinner && dayMeals.dinner.length > 0;
+          if (hasLunch) count++;
+          if (hasDinner) count++;
+        }
+      });
+      
+      return count;
+    };
+    
+    // Count deliveries for week 0 and week 1
+    const week0Deliveries = countDeliveryDays(0);
+    const week1Deliveries = countDeliveryDays(1);
+    
+    return week0Deliveries + week1Deliveries;
+  };
+
   // Calculate costs based on selected plan using unified pricing calculator
   const getMealCostForPlan = (planId) => {
-    // biweeklyMealCost is the cost for 2 weeks (base)
-    const baseBiweeklyCost = biweeklyMealCost;
+    // Get actual meal cost from user's meal plan context (dynamically calculated)
+    const week0Cost = getWeekTotalCost(0) || 0;
+    const week1Cost = getWeekTotalCost(1) || 0;
+    const baseBiweeklyCost = week0Cost + week1Cost; // Actual sum of selected items
+    
     let mealCostMultiplier = 1;
-    let deliveries = 2; // Default to bi-weekly (2 deliveries)
     
     switch (planId) {
       case 'bi-weekly': 
         mealCostMultiplier = 1;  // Base cost is already for 2 weeks
-        deliveries = 2; 
         break;
       case 'monthly': 
         mealCostMultiplier = 2;  // Monthly = 2x the bi-weekly cost
-        deliveries = 4; 
         break;
       case 'quarterly': 
         mealCostMultiplier = 6;  // Quarterly = 6x the bi-weekly cost
-        deliveries = 12; 
         break;
       default: 
         mealCostMultiplier = 1;
-        deliveries = 2;
     }
     
     // Scale the meal cost by the plan duration multiplier
     const scaledMealCost = baseBiweeklyCost * mealCostMultiplier;
+    
+    // Get actual delivery count from meal plan (not hardcoded)
+    const actualDeliveries = getActualDeliveryCount();
     
     // Create items array for pricing calculator with scaled meal cost
     const pricing = calculateOrderTotals({
       items: [{ price: scaledMealCost, quantity: 1 }],
       restaurantDeliveryFee: null,
       planType: planId,
-      totalDeliveries: deliveries
+      totalDeliveries: actualDeliveries || 2 // Fallback to 2 if no meals scheduled
     });
     
     return pricing;
@@ -85,6 +116,7 @@ const SubscriptionPlans = () => {
   const currentDeliveryFee = currentPricing.deliveryFee;
   const currentServiceFee = currentPricing.serviceFee;
   const currentTax = currentPricing.tax;
+  const currentPlatformCommission = currentPricing.platformCommission;
   const currentTotalCost = currentPricing.total;
 
   // Handle Get Started button click
@@ -273,19 +305,7 @@ const SubscriptionPlans = () => {
                 <p className="text-sm sm:text-base text-gray-600">{totalItems === 1 ? t('subscription.basedOnMeals', { count: totalItems, duration: getPlanDurationText(selectedPlan) }) : t('subscription.basedOnMealsPlural', { count: totalItems, duration: getPlanDurationText(selectedPlan) })}</p>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-3 sm:gap-6 max-w-6xl mx-auto">
-                {/* Service Fee */}
-                <div className="text-center p-3 sm:p-4 bg-white rounded-lg border border-gray-200">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 bg-blue-500 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{t('subscription.serviceFee')}</h4>
-                  <p className="text-xl sm:text-2xl font-bold text-blue-600">${currentServiceFee.toFixed(2)}</p>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-1">{t('subscription.grubGatePlatformAccess')}</p>
-                </div>
-
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 max-w-7xl mx-auto">
                 {/* Meal Costs */}
                 <div className="text-center p-3 sm:p-4 bg-white rounded-lg border border-gray-200">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 bg-green-500 rounded-full flex items-center justify-center">
@@ -296,6 +316,30 @@ const SubscriptionPlans = () => {
                   <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{t('subscription.mealCosts')}</h4>
                   <p className="text-xl sm:text-2xl font-bold text-green-600">${currentMealCost.toFixed(2)}</p>
                   <p className="text-xs sm:text-sm text-gray-600 mt-1">{t('subscription.restaurantFoodCosts')}</p>
+                </div>
+
+                {/* Service Fee */}
+                <div className="text-center p-3 sm:p-4 bg-white rounded-lg border border-gray-200">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 bg-blue-500 rounded-full flex items-center justify-center">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{t('subscription.serviceFee')}</h4>
+                  <p className="text-xl sm:text-2xl font-bold text-blue-600">${currentServiceFee.toFixed(2)}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-1">{(SERVICE_FEE_PERCENTAGE * 100).toFixed(1)}% {t('subscription.ofMealCost')}</p>
+                </div>
+
+                {/* Tax */}
+                <div className="text-center p-3 sm:p-4 bg-white rounded-lg border border-gray-200">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 bg-purple-500 rounded-full flex items-center justify-center">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14l6-6m-5.5.5h.01m4.99 4.99h.01M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{t('subscription.tax')}</h4>
+                  <p className="text-xl sm:text-2xl font-bold text-purple-600">${currentTax.toFixed(2)}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-1">{(DEFAULT_TAX_RATE * 100).toFixed(0)}% {t('subscription.onMealOnly')}</p>
                 </div>
 
                 {/* Delivery Fee */}
@@ -310,16 +354,16 @@ const SubscriptionPlans = () => {
                   <p className="text-xs sm:text-sm text-gray-600 mt-1">{t('subscription.deliveryForAll')}</p>
                 </div>
 
-                {/* Tax */}
+                {/* Platform Commission */}
                 <div className="text-center p-3 sm:p-4 bg-white rounded-lg border border-gray-200">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 bg-purple-500 rounded-full flex items-center justify-center">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 bg-indigo-500 rounded-full flex items-center justify-center">
                     <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14l6-6m-5.5.5h.01m4.99 4.99h.01M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   </div>
-                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{t('subscription.tax')}</h4>
-                  <p className="text-xl sm:text-2xl font-bold text-purple-600">${currentTax.toFixed(2)}</p>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-1">{t('subscription.taxOnMealCost')}</p>
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{t('subscription.platformCommission')}</h4>
+                  <p className="text-xl sm:text-2xl font-bold text-indigo-600">${currentPlatformCommission.toFixed(2)}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-1">{(PLATFORM_COMMISSION_PERCENTAGE * 100).toFixed(0)}% {t('subscription.platformFee')}</p>
                 </div>
 
                 {/* Total Cost */}
@@ -331,13 +375,13 @@ const SubscriptionPlans = () => {
                   </div>
                   <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{t('subscription.total', { duration: getPlanDurationText(selectedPlan) })}</h4>
                   <p className="text-xl sm:text-2xl font-bold text-red-700">${currentTotalCost.toFixed(2)}</p>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-1">{t('subscription.servicePlusMeals')}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-1">{t('subscription.allFeesIncluded')}</p>
                 </div>
               </div>
 
               {/* Additional Info */}
               <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-white rounded-lg">
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 text-xs sm:text-sm text-gray-600">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 text-xs sm:text-sm text-gray-600 flex-wrap">
                   <span className="flex items-center">
                     <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -348,7 +392,13 @@ const SubscriptionPlans = () => {
                     <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                     </svg>
-                    {t('subscription.serviceFeeFixed')}
+                    {(SERVICE_FEE_PERCENTAGE * 100).toFixed(1)}% {t('subscription.serviceFee')} + {(PLATFORM_COMMISSION_PERCENTAGE * 100).toFixed(0)}% {t('subscription.platformFee')}
+                  </span>
+                  <span className="flex items-center">
+                    <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14l6-6m-5.5.5h.01m4.99 4.99h.01M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2z" />
+                    </svg>
+                    {(DEFAULT_TAX_RATE * 100).toFixed(0)}% {t('subscription.taxOnMealCost')}
                   </span>
                 </div>
               </div>
