@@ -6,6 +6,36 @@ import apiClient from './apiClient';
  */
 const mealCalendarApi = {
   /**
+   * Get user's meal plan (from /meal-plans/me, NOT /subscription-meal-plans)
+   * This fetches the regular meal plan data that contains the planned meals
+   * @returns {Promise} API response with meal plan data
+   */
+  getUserMealPlans: async () => {
+    try {
+      console.log('🍽️ mealCalendarApi: Fetching user meal plans from /meal-plans/me...');
+      
+      const response = await apiClient.get('/meal-plans/me', {
+        params: { _ts: Date.now() },
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          Pragma: 'no-cache'
+        }
+      });
+      
+      console.log('✅ mealCalendarApi: Meal plans received:', response.data);
+      return response.data;
+    } catch (error) {
+      // 404 is expected if user has no meal plan yet
+      if (error.response?.status === 404) {
+        console.log('📅 mealCalendarApi: No meal plan found (404) - user has not planned meals yet');
+        return { status: 'success', data: { weeklyPlans: {}, totalItems: 0, selectedRestaurants: [] } };
+      }
+      console.error('❌ mealCalendarApi: Error fetching meal plans:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  /**
    * Get user's active meal calendar
    * @param {Object} params - Query parameters
    * @param {string} params.startDate - Start date (YYYY-MM-DD)

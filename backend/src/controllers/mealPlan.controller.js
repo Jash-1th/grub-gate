@@ -117,29 +117,26 @@ const cleanMealPlanResponse = (mealPlan) => {
     updatedAt: mealPlan.updatedAt
   };
 
-  // Clean up weekly plans - only include days with meals
+  // Include ALL days that have dates assigned (for calendar display)
+  // Days with meals will have meals included, days without meals will have empty arrays
   ['week0', 'week1'].forEach(weekKey => {
     if (mealPlan.weeklyPlans && mealPlan.weeklyPlans[weekKey]) {
       cleaned.weeklyPlans[weekKey] = {};
-      
+
       const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
       dayNames.forEach(dayName => {
         const dayData = mealPlan.weeklyPlans[weekKey][dayName];
-        if (dayData) {
+        // Include day if it has a date assigned (needed for calendar display)
+        if (dayData && dayData.date) {
           const hasLunchMeals = dayData.lunch && Array.isArray(dayData.lunch) && dayData.lunch.length > 0;
           const hasDinnerMeals = dayData.dinner && Array.isArray(dayData.dinner) && dayData.dinner.length > 0;
-          
-          // Only include day if it has actual meals (strict check for non-empty arrays)
-          if (hasLunchMeals || hasDinnerMeals) {
-            console.log(`🍽️ Including ${weekKey}.${dayName}: lunch=${dayData.lunch?.length || 0}, dinner=${dayData.dinner?.length || 0}`);
-            cleaned.weeklyPlans[weekKey][dayName] = {
-              date: dayData.date,
-              lunch: cleanMealItems(dayData.lunch || []),
-              dinner: cleanMealItems(dayData.dinner || [])
-            };
-          } else {
-            console.log(`🗑️ Excluding ${weekKey}.${dayName}: no meals (lunch=${dayData.lunch?.length || 0}, dinner=${dayData.dinner?.length || 0})`);
-          }
+
+          console.log(`🍽️ Including ${weekKey}.${dayName}: date=${dayData.date}, lunch=${dayData.lunch?.length || 0}, dinner=${dayData.dinner?.length || 0}`);
+          cleaned.weeklyPlans[weekKey][dayName] = {
+            date: dayData.date,
+            lunch: cleanMealItems(dayData.lunch || []),
+            dinner: cleanMealItems(dayData.dinner || [])
+          };
         }
       });
     }
