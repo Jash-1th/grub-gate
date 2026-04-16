@@ -21,7 +21,7 @@ router.use(authMiddleware);
  * @access  Private (Customer)
  */
 const createPaymentIntent = asyncHandler(async (req, res) => {
-  const { items, orderTotal, restaurantStripeAccountId, planType = 'single', totalDeliveries = 1, restaurantDeliveryFee } = req.body;
+  const { items, orderTotal, restaurantStripeAccountId, planType = 'single', totalDeliveries = 1, restaurantDeliveryFee, planId } = req.body;
 
   // Support both: items array OR orderTotal amount
   if (!restaurantStripeAccountId) {
@@ -140,7 +140,8 @@ const createPaymentIntent = asyncHandler(async (req, res) => {
       application_fee_cents: String(applicationFeeCents),
       tax_cents: String(taxCents),
       total_cents: String(amountCents),
-      restaurant_stripe_account_id: restaurantStripeAccountId
+      restaurant_stripe_account_id: restaurantStripeAccountId,
+      planId: planId || null
     }
   });
 

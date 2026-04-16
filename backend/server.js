@@ -49,6 +49,7 @@ const mealCalendarRoutes = require('./src/routes/mealCalendar.routes');
 const restaurantValidationRoutes = require('./src/routes/restaurantValidation.routes');
 const orderActivationRoutes = require('./src/routes/orderActivation.routes');
 const publicRestaurantReviewRoutes = require('./src/routes/publicRestaurantReview.routes');
+const webhookRoutes = require('./src/routes/webhook.routes');
 
 const app = express();
 
@@ -145,7 +146,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// Body parsing middleware
+// Stripe webhook raw body middleware - MUST be before express.json()
+// This preserves the raw body for Stripe signature verification
+app.use('/api/v1/webhooks/stripe', express.raw({ type: 'application/json' }));
+
+// Mount webhook routes BEFORE global body parsing
+app.use('/api/v1/webhooks', webhookRoutes);
+
+// Body parsing middleware - AFTER webhook routes
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 

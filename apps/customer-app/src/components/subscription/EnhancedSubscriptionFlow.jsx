@@ -1,5 +1,5 @@
 // FILE: apps/customer-app/src/components/subscription/EnhancedSubscriptionFlow.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -106,17 +106,15 @@ const EnhancedSubscriptionFlow = ({ selectedPlan, onComplete, onCancel }) => {
   // Handle step navigation
   const handleNextStep = (stepData = {}) => {
     console.log('📝 Step data received:', stepData);
-    setSubscriptionData(prev => {
-      const updated = { ...prev, ...stepData };
-      console.log('📦 Updated subscription data:', updated);
-      return updated;
-    });
+    const updated = { ...subscriptionData, ...stepData };
+    setSubscriptionData(updated);
+    console.log('📦 Updated subscription data:', updated);
     
     if (currentStep < steps.length) {
       setCurrentStep(prev => prev + 1);
     } else {
-      // Complete subscription
-      handleCompleteSubscription();
+      // Complete subscription - pass updated data directly to avoid async state issue
+      handleCompleteSubscription(updated);
     }
   };
 
@@ -129,7 +127,7 @@ const EnhancedSubscriptionFlow = ({ selectedPlan, onComplete, onCancel }) => {
   };
 
   // Complete subscription creation
-  const handleCompleteSubscription = async () => {
+  const handleCompleteSubscription = async (finalData = subscriptionData) => {
     setLoading(true);
 
     try {
@@ -137,41 +135,37 @@ const EnhancedSubscriptionFlow = ({ selectedPlan, onComplete, onCancel }) => {
       if (!selectedRestaurantId) {
         throw new Error('Restaurant ID is required');
       }
-      if (!subscriptionData.deliveryAddress) {
+      if (!finalData.deliveryAddress) {
         throw new Error('Delivery address is required');
       }
 
-      // Create subscription with all collected data
+      // For card payments, subscription was already created in PaymentStep
+      // Just show success and complete
+      if (finalData.paymentMethod === 'card' || finalData.paymentId?.startsWith('pi_')) {
+        console.log('✅ Card payment subscription already created, completing flow');
+        showSuccess(t('subscriptionCompletion.title'), t('subscriptionCompletion.message'));
+        onComplete?.(finalData);
+        return;
+      }
+
+      // For cash payments, create subscription now
       const subscriptionPayload = {
-        // Required fields
         restaurantId: selectedRestaurantId,
-        planName: subscriptionData.planData?.name || 'Custom Meal Plan',
-        monthlyPrice: parseFloat(subscriptionData.planData?.price?.replace?.('$', '') || '0') || 19.99,
-        
-        // Optional fields
-        planType: subscriptionData.planType || 'bi-weekly',
-        deliveryAddress: subscriptionData.deliveryAddress,
-        paymentMethod: subscriptionData.paymentMethod || 'card',
-        features: subscriptionData.planData?.features || ['Flexible scheduling', 'Fresh ingredients'],
-        specialInstructions: subscriptionData.deliveryAddress?.instructions || '',
-        customerPhone: user.phoneNumber || user.phone || '',
-        
-        // Additional data (not sent to API but for local use)
-        customerId: user._id,
-        status: 'active'
+        planName: finalData.planData?.name || 'Custom Meal Plan',
+        monthlyPrice: parseFloat(finalData.planData?.price?.replace?.('$', '') || '0') || 19.99,
+        planType: finalData.planType || 'bi-weekly',
+        deliveryAddress: finalData.deliveryAddress,
+        paymentMethod: finalData.paymentMethod || 'cash',
+        features: finalData.planData?.features || ['Flexible scheduling', 'Fresh ingredients'],
+        specialInstructions: finalData.deliveryAddress?.instructions || '',
+        customerPhone: user.phoneNumber || user.phone || ''
       };
 
-      // Remove fields that shouldn't be sent to the API
-      delete subscriptionPayload.customerId;
-      delete subscriptionPayload.status;
-
-      // Call subscription creation API
-      console.log('🔄 Creating subscription:', subscriptionPayload);
+      console.log('🔄 Creating cash subscription:', subscriptionPayload);
       
       const response = await apiClient.post('/subscription-meal-plans/create-from-meal-plan', subscriptionPayload);
-      console.log('✅ Subscription created successfully:', response.data);
+      console.log('✅ Cash subscription created:', response.data);
 
-      // Use the backend success message instead of showing duplicate toast
       showSuccess(t('subscriptionCompletion.title'), response.data.message || t('subscriptionCompletion.message'));
       onComplete?.(subscriptionPayload);
 
@@ -427,11 +421,14 @@ const StripePaymentForm = ({
 // Payment Step Component
 const PaymentStep = ({ subscriptionData, selectedRestaurantId, onNext, onPrevious, isLoading, setLoading }) => {
   const { t } = useTranslation();
-  const { showError } = useToast();
-  const { getWeekPlan, getWeekTotalCost } = useMealPlan();
+  const { showError, showSuccess } = useToast();
+  const { getWeekPlan, getWeekTotalCost, weeklyPlans, totalItems, selectedRestaurants, maxRestaurants } = useMealPlan();
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [clientSecret, setClientSecret] = useState(null);
   const [intentLoading, setIntentLoading] = useState(false);
+  const [createdPlanId, setCreatedPlanId] = useState(null);
+  const { user } = useAuth();
+  const hasInitialized = useRef(false);
 
   // Parse plan price
   const planPrice = useMemo(() => {
@@ -503,19 +500,68 @@ const PaymentStep = ({ subscriptionData, selectedRestaurantId, onNext, onPreviou
     return week0Deliveries + week1Deliveries;
   }, [getWeekPlan]);
 
-  // Fetch clientSecret when card is selected
+  // Create subscription first, then PaymentIntent with planId
   useEffect(() => {
-    const createIntent = async () => {
+    const createSubscriptionAndIntent = async () => {
+      // Prevent React 18 Strict Mode double execution
+      if (hasInitialized.current) return;
+      hasInitialized.current = true;
+
       if (paymentMethod !== 'card') return;
       if (!planPrice || planPrice <= 0) return;
       if (!selectedRestaurantId) {
         showError('Payment Error', 'Restaurant information is missing.');
         return;
       }
+      // Skip if we already created the subscription and intent
+      if (createdPlanId && clientSecret) return;
 
       setIntentLoading(true);
       try {
-        // Fetch restaurant details to get stripeAccountId
+        // STEP 1: Save meal plan to database FIRST (required before creating subscription)
+        if (!user?._id) {
+          throw new Error('User not authenticated');
+        }
+
+        const mealPlanPayload = {
+          userId: user._id,
+          weeklyPlans: weeklyPlans,
+          totalItems: totalItems || 0,
+          selectedRestaurants: selectedRestaurants || [],
+          maxRestaurants: maxRestaurants || 2,
+          selectedRestaurantId: selectedRestaurantId,
+          selectedRestaurantName: subscriptionData.restaurantName || ''
+        };
+
+        console.log('💾 Saving meal plan to database:', mealPlanPayload);
+        await apiClient.post('/meal-plans', mealPlanPayload);
+        console.log('✅ Meal plan saved successfully');
+
+        // STEP 2: Create the subscription meal plan (now that meal plan exists in DB)
+        const subscriptionPayload = {
+          restaurantId: selectedRestaurantId,
+          planName: subscriptionData.planData?.name || 'Custom Meal Plan',
+          monthlyPrice: parseFloat(subscriptionData.planData?.price?.replace?.('$', '') || '0') || 19.99,
+          planType: subscriptionData.planType || 'bi-weekly',
+          deliveryAddress: subscriptionData.deliveryAddress,
+          paymentMethod: 'card',
+          features: subscriptionData.planData?.features || ['Flexible scheduling', 'Fresh ingredients'],
+          specialInstructions: subscriptionData.deliveryAddress?.instructions || '',
+          customerPhone: user?.phoneNumber || user?.phone || ''
+        };
+
+        console.log('🔄 Creating subscription before payment:', subscriptionPayload);
+        const subResponse = await apiClient.post('/subscription-meal-plans/create-from-meal-plan', subscriptionPayload);
+        const newPlanId = subResponse.data?.data?.subscriptionMealPlan?._id;
+
+        if (!newPlanId) {
+          throw new Error('Failed to create subscription - no plan ID returned');
+        }
+
+        console.log('✅ Subscription created with ID:', newPlanId);
+        setCreatedPlanId(newPlanId);
+
+        // STEP 2: Fetch restaurant details to get stripeAccountId
         const restaurantRes = await apiClient.get(`/restaurants/${selectedRestaurantId}`);
         const restaurant = restaurantRes.data?.data?.restaurant || restaurantRes.data?.data;
         
@@ -539,14 +585,15 @@ const PaymentStep = ({ subscriptionData, selectedRestaurantId, onNext, onPreviou
            subscriptionData.planType === 'monthly' ? 4 : 
            subscriptionData.planType === 'quarterly' ? 12 : 1);
 
-        // Send the secure payload with raw meal cost
+        // STEP 3: Create PaymentIntent WITH the planId
         const response = await apiClient.post('/payments/create-intent', {
-          items: [{ price: rawMealCost, quantity: 1 }], // Raw meal cost, no reverse-engineering
+          items: [{ price: rawMealCost, quantity: 1 }],
           orderTotal: planPrice,
           restaurantStripeAccountId,
           planType: subscriptionData.planType || 'single',
-          totalDeliveries, // Dynamic count of actual scheduled days
-          restaurantDeliveryFee: 3.99
+          totalDeliveries,
+          restaurantDeliveryFee: 3.99,
+          planId: newPlanId // <-- THIS IS THE KEY LINK FOR THE WEBHOOK
         });
 
         const secret = response.data?.data?.clientSecret;
@@ -554,16 +601,17 @@ const PaymentStep = ({ subscriptionData, selectedRestaurantId, onNext, onPreviou
           throw new Error('Payment initialization failed');
         }
         setClientSecret(secret);
+        console.log('✅ PaymentIntent created with planId:', newPlanId);
       } catch (error) {
-        console.error('Error creating payment intent:', error);
+        console.error('Error creating subscription or payment intent:', error);
         showError('Payment Error', error.response?.data?.message || error.message || 'Unable to initialize payment.');
       } finally {
         setIntentLoading(false);
       }
     };
 
-    createIntent();
-  }, [paymentMethod, planPrice, selectedRestaurantId, getRawMealCost, getActualDeliveryCount, subscriptionData.planType]);
+    createSubscriptionAndIntent();
+  }, [paymentMethod, planPrice, selectedRestaurantId, getRawMealCost, getActualDeliveryCount, subscriptionData, createdPlanId, clientSecret, showError, user, weeklyPlans, totalItems, selectedRestaurants, maxRestaurants]);
 
   const handleCashContinue = () => {
     onNext({
