@@ -1661,7 +1661,7 @@ const WeeklyMenuPage = () => {
                         onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
                         isAuthenticated={isAuthenticated}
                         hasLoadedFromDatabase={hasLoadedFromDatabase}
-                        disabled={!hasAnySelectedRestaurant || subscriptionStatus.hasActiveSubscription || subscriptionStatus.loading}
+                        disabled={!hasAnySelectedRestaurant || subscriptionStatus.hasActiveSubscription}
                         loading={subscriptionStatus.loading}
                         getSelectedRestaurantCount={getSelectedRestaurantCount}
                         getSelectedRestaurants={getSelectedRestaurants}
@@ -1688,7 +1688,7 @@ const WeeklyMenuPage = () => {
                         onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
                         isAuthenticated={isAuthenticated}
                         hasLoadedFromDatabase={hasLoadedFromDatabase}
-                        disabled={!hasAnySelectedRestaurant || subscriptionStatus.hasActiveSubscription || subscriptionStatus.loading}
+                        disabled={!hasAnySelectedRestaurant || subscriptionStatus.hasActiveSubscription}
                         loading={subscriptionStatus.loading}
                         getSelectedRestaurantCount={getSelectedRestaurantCount}
                         getSelectedRestaurants={getSelectedRestaurants}
@@ -1750,7 +1750,7 @@ const WeeklyMenuPage = () => {
                     onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
                     isAuthenticated={isAuthenticated}
                     hasLoadedFromDatabase={hasLoadedFromDatabase}
-                    disabled={!hasAnySelectedRestaurant || subscriptionStatus.hasActiveSubscription || subscriptionStatus.loading}
+                    disabled={!hasAnySelectedRestaurant || subscriptionStatus.hasActiveSubscription}
                     loading={subscriptionStatus.loading}
                     getSelectedRestaurantCount={getSelectedRestaurantCount}
                     getSelectedRestaurants={getSelectedRestaurants}
@@ -1782,7 +1782,7 @@ const WeeklyMenuPage = () => {
                     onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
                     isAuthenticated={isAuthenticated}
                     hasLoadedFromDatabase={hasLoadedFromDatabase}
-                    disabled={!hasAnySelectedRestaurant || subscriptionStatus.hasActiveSubscription || subscriptionStatus.loading}
+                    disabled={!hasAnySelectedRestaurant || subscriptionStatus.hasActiveSubscription}
                     loading={subscriptionStatus.loading}
                     getSelectedRestaurantCount={getSelectedRestaurantCount}
                     getSelectedRestaurants={getSelectedRestaurants}
