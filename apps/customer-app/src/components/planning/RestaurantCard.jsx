@@ -1,10 +1,43 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMapLocationDot } from '@fortawesome/free-solid-svg-icons';
+import RestaurantMapModal from '../modals/RestaurantMapModal';
 
 const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore, isSelected = false }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  
+  // Extract coordinates from restaurant data
+  const getRestaurantCoordinates = () => {
+    // Try different possible data structures
+    if (restaurant.coordinates) {
+      return {
+        lat: restaurant.coordinates.latitude || restaurant.coordinates.lat,
+        lng: restaurant.coordinates.longitude || restaurant.coordinates.lng || restaurant.coordinates.lon
+      };
+    }
+    if (restaurant.location?.coordinates) {
+      return {
+        lat: restaurant.location.coordinates[1],
+        lng: restaurant.location.coordinates[0]
+      };
+    }
+    if (restaurant.lat && restaurant.lng) {
+      return { lat: restaurant.lat, lng: restaurant.lng };
+    }
+    if (restaurant.latitude && restaurant.longitude) {
+      return { lat: restaurant.latitude, lng: restaurant.longitude };
+    }
+    return null;
+  };
+  
+  const coordinates = getRestaurantCoordinates();
+  const hasValidCoordinates = coordinates && 
+    !isNaN(parseFloat(coordinates.lat)) && 
+    !isNaN(parseFloat(coordinates.lng));
   
   // Debug logging
   console.log('🏪 RestaurantCard Debug:', {
@@ -15,6 +48,17 @@ const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore, isSel
   });
 
   
+  const handleOpenMap = (e) => {
+    e.stopPropagation();
+    if (hasValidCoordinates) {
+      setIsMapModalOpen(true);
+    }
+  };
+
+  const handleCloseMap = () => {
+    setIsMapModalOpen(false);
+  };
+
   const handleExploreRestaurant = () => {
     // If custom onExplore handler is provided, use it
     if (onExplore) {
@@ -72,7 +116,8 @@ const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore, isSel
   };
 
   return (
-    <div className="group relative h-full">
+    <>
+      <div className="group relative h-full">
       {/* Glowing background effect */}
       <div className={`absolute -inset-1 rounded-2xl blur opacity-0 group-hover:opacity-20 transition duration-500 ${
         isSelected
@@ -117,6 +162,18 @@ const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore, isSel
           {/* Selected Restaurant Border Glow */}
           {isSelected && (
             <div className="absolute inset-0 rounded-xl border-2 border-green-400 shadow-lg shadow-green-400/50 animate-pulse"></div>
+          )}
+
+          {/* Map Icon - Only show if coordinates available */}
+          {hasValidCoordinates && (
+            <button
+              onClick={handleOpenMap}
+              className="absolute bottom-3 left-3 w-10 h-10 bg-white/95 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center hover:bg-red-50 hover:scale-110 transition-all duration-300 z-20"
+              title="View on map"
+              aria-label="View restaurant location on map"
+            >
+              <FontAwesomeIcon icon={faMapLocationDot} className="text-red-500 text-lg" />
+            </button>
           )}
 
           {/* Popular/Top Rated Badges */}
@@ -239,6 +296,18 @@ const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore, isSel
         </div>
       </div>
     </div>
+      
+      {/* Map Modal */}
+      {hasValidCoordinates && (
+        <RestaurantMapModal
+          isOpen={isMapModalOpen}
+          onClose={handleCloseMap}
+          restaurantName={restaurant.name}
+          lat={coordinates.lat}
+          lng={coordinates.lng}
+        />
+      )}
+    </>
   );
 };
 
