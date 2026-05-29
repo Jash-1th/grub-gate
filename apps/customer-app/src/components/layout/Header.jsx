@@ -55,14 +55,14 @@ const Header = () => {
   return (
     <header className="w-full bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="w-full">
-        <div className="flex justify-between items-center h-16 xs:h-17 sm:h-18 md:h-19 lg:h-20 px-3 xs:px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 mx-auto max-w-[1920px]">
+        <div className="flex justify-between items-center h-14 sm:h-[3.75rem] md:h-16 px-3 xs:px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 mx-auto max-w-[1920px]">
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link to="/" className="flex items-center">
               <img
                 src={logoImage}
                 alt={siteInfo.logoText}
-                className="h-12 w-24 xs:h-14 xs:w-28 sm:h-16 sm:w-32 md:h-18 md:w-36 lg:h-20 lg:w-40 xl:h-22 xl:w-44 object-contain rounded-lg transition-all duration-300 ease-in-out"
+                className="h-10 w-20 xs:h-11 xs:w-[5.5rem] sm:h-12 sm:w-24 md:h-[3.25rem] md:w-[6.5rem] object-contain rounded-lg transition-all duration-300 ease-in-out"
                 loading="lazy"
               />
             </Link>

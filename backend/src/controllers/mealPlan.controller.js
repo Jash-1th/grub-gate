@@ -2,6 +2,7 @@ const { asyncHandler } = require('../middlewares/errorHandler');
 const MealPlan = require('../models/MealPlan');
 const { successResponse, errorResponse, notFoundResponse } = require('../utils/apiResponse');
 const { addDatesToMealPlan, needsDateRecalculation } = require('../utils/mealPlanDateCalculator');
+const { calculateNutritionTotalsFromWeeklyPlans } = require('../utils/nutritionTotals');
 
  const getMaxRestaurantsForUser = (user) => {
    return user?.isGrubPass ? null : 2;
@@ -22,6 +23,11 @@ const cleanMealItems = (mealItems) => {
     category: item.category,               // Meal category (appetizer, main, etc.)
     dietaryPreferences: item.dietaryPreferences || [], // Dietary preferences array
     spiceLevel: item.spiceLevel,           // Spice level (0-5)
+    prepTime: item.prepTime,
+    servings: item.servings,
+    ingredients: item.ingredients || [],
+    allergens: item.allergens || [],
+    nutritionInfo: item.nutritionInfo || item.nutritionalInfo || {},
     restaurantId: item.restaurantId,       // Restaurant ID
     restaurantName: item.restaurantName,   // Restaurant name
     planId: item.planId,                   // Unique plan item ID
@@ -100,6 +106,7 @@ const cleanMealPlanResponse = (mealPlan) => {
     userId: mealPlan.userId,
     weeklyPlans: {},
     totalItems: mealPlan.totalItems || 0,
+    totalNutrition: mealPlan.totalNutrition || calculateNutritionTotalsFromWeeklyPlans(mealPlan.weeklyPlans || {}),
     // Multi-restaurant support
     selectedRestaurants: mealPlan.selectedRestaurants || [],
     maxRestaurants: mealPlan.maxRestaurants === undefined ? 2 : mealPlan.maxRestaurants,
@@ -176,6 +183,12 @@ const getMealPlan = asyncHandler(async (req, res) => {
         week1: {}
       },
       totalItems: 0,
+      totalNutrition: {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fat: 0
+      },
       selectedRestaurants: [],
       maxRestaurants,
       // Legacy fields for backward compatibility
@@ -310,6 +323,7 @@ const createOrUpdateMealPlan = asyncHandler(async (req, res) => {
     // Update existing meal plan with dates
     mealPlan.weeklyPlans = mealPlanWithDates.weeklyPlans;
     mealPlan.totalItems = mealPlanWithDates.totalItems;
+    mealPlan.totalNutrition = calculateNutritionTotalsFromWeeklyPlans(mealPlanWithDates.weeklyPlans || {});
     mealPlan.datesCalculatedAt = mealPlanWithDates.datesCalculatedAt;
     
     // Update restaurant selection fields
@@ -335,6 +349,7 @@ const createOrUpdateMealPlan = asyncHandler(async (req, res) => {
       userId: mealPlanWithDates.userId,
       weeklyPlans: mealPlanWithDates.weeklyPlans,
       totalItems: mealPlanWithDates.totalItems,
+      totalNutrition: calculateNutritionTotalsFromWeeklyPlans(mealPlanWithDates.weeklyPlans || {}),
       selectedRestaurants: mealPlanWithDates.selectedRestaurants,
       maxRestaurants: mealPlanWithDates.maxRestaurants,
       selectedRestaurantId: mealPlanWithDates.selectedRestaurantId,
@@ -406,6 +421,7 @@ const addItemToMealPlan = asyncHandler(async (req, res) => {
 
   mealPlan.weeklyPlans[weekKey][day][mealType].push(mealPlanItem);
   mealPlan.totalItems += 1;
+  mealPlan.totalNutrition = calculateNutritionTotalsFromWeeklyPlans(mealPlan.weeklyPlans || {});
 
   await mealPlan.save();
 
@@ -454,6 +470,7 @@ const removeItemFromMealPlan = asyncHandler(async (req, res) => {
 
   mealItems.splice(itemIndex, 1);
   mealPlan.totalItems = Math.max(0, mealPlan.totalItems - 1);
+  mealPlan.totalNutrition = calculateNutritionTotalsFromWeeklyPlans(mealPlan.weeklyPlans || {});
 
   await mealPlan.save();
 
@@ -813,6 +830,7 @@ const clearItemsByRestaurant = asyncHandler(async (req, res) => {
   
   // Update total items count
   mealPlan.totalItems = Math.max(0, mealPlan.totalItems - itemsRemoved);
+  mealPlan.totalNutrition = calculateNutritionTotalsFromWeeklyPlans(mealPlan.weeklyPlans || {});
   mealPlan.lastUpdated = new Date();
   
   console.log(`🔍 Final result: ${itemsRemoved} items removed from restaurant ${restaurantId}, new total: ${mealPlan.totalItems}`);

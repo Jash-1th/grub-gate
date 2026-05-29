@@ -17,6 +17,8 @@ import MenuItemsGrid from '../components/restaurant/MenuItemsGrid';
 import PreferencesSelector from '../components/restaurant/PreferencesSelector';
 import { getRestaurant, getRestaurantMenu } from '../services/restaurantService';
 import { applyPreferenceFilter } from '../utils/filteringHelpers';
+import NutritionTotalsCard from '../components/nutrition/NutritionTotalsCard';
+import { calculateNutritionTotalsFromWeeklyPlans } from '../utils/nutritionTotals';
 
 // Enhanced Meal Slot Component with more features
 const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postalCode, selectedRestaurant, selectedWeek = 0, onShowRestaurantSelectionModal, isAuthenticated, hasLoadedFromDatabase, disabled = false, loading = false, getSelectedRestaurantCount, getSelectedRestaurants, isActive = false }) => {
@@ -1194,6 +1196,10 @@ const WeeklyMenuPage = () => {
   // Get combined totals for both weeks
   const totalItemsBothWeeks = getWeekTotalItems(0) + getWeekTotalItems(1);
   const totalCostBothWeeks = getWeekTotalCost(0) + getWeekTotalCost(1);
+  const nutritionTotalsBothWeeks = useMemo(() => calculateNutritionTotalsFromWeeklyPlans({
+    week0: getWeekPlan(0),
+    week1: getWeekPlan(1)
+  }), [mealPlan, getWeekPlan]);
   
   // Check if user has planned any meals
   const hasPlannedMeals = totalItemsBothWeeks > 0;
@@ -2127,6 +2133,13 @@ const WeeklyMenuPage = () => {
                   </div>
                   <div className="text-sm text-blue-600 mt-1">{t('weeklyMenu.costEfficiency')}</div>
                 </div>
+
+                <NutritionTotalsCard
+                  totals={nutritionTotalsBothWeeks}
+                  title="Nutrition Totals"
+                  subtitle="Calories, protein, carbs, and fat across both weeks"
+                  compact
+                />
                 
                 <div className="pt-4 border-t border-gray-200">
                   <div className="grid grid-cols-2 gap-4 text-center">

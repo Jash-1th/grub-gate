@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { findSubscriptionDayForDate, getNextSunday, getSubscriptionStartSunday, getWeekDateRange } = require('../utils/dateHelpers');
 const User = require('./User');
+const { emptyNutritionTotals, addNutritionFromItem, roundNutritionTotals } = require('../utils/nutritionTotals');
 
 // Individual meal item schema
 const mealItemSchema = new mongoose.Schema({
@@ -55,7 +56,13 @@ const mealItemSchema = new mongoose.Schema({
   prepTime: Number,
   servings: Number,
   ingredients: [String],
-  allergens: [String]
+  allergens: [String],
+  nutritionInfo: {
+    calories: Number,
+    protein: String,
+    carbs: String,
+    fat: String
+  }
 }, { _id: false });
 
 // Day meals schema
@@ -106,6 +113,12 @@ const weekSchema = new mongoose.Schema({
     type: Number,
     default: 0,
     min: [0, 'Week total items cannot be negative']
+  },
+  weekTotalNutrition: {
+    calories: { type: Number, default: 0 },
+    protein: { type: Number, default: 0 },
+    carbs: { type: Number, default: 0 },
+    fat: { type: Number, default: 0 }
   }
 }, { _id: false });
 
@@ -259,6 +272,12 @@ const subscriptionMealPlanSchema = new mongoose.Schema({
     default: 0,
     min: [0, 'Total meals count cannot be negative']
   },
+  totalNutrition: {
+    calories: { type: Number, default: 0 },
+    protein: { type: Number, default: 0 },
+    carbs: { type: Number, default: 0 },
+    fat: { type: Number, default: 0 }
+  },
   
   // Subscription Integration
   billingCycle: {
@@ -329,6 +348,7 @@ subscriptionMealPlanSchema.virtual('planDurationDays').get(function() {
 subscriptionMealPlanSchema.pre('save', function(next) {
   let totalValue = 0;
   let totalItems = 0;
+  const totalNutrition = emptyNutritionTotals();
   
   // Initialize restaurant tracking
   const restaurantStats = new Map();
@@ -337,12 +357,15 @@ subscriptionMealPlanSchema.pre('save', function(next) {
   this.weeks.forEach(week => {
     let weekValue = 0;
     let weekItems = 0;
+    const weekNutrition = emptyNutritionTotals();
     
     Object.values(week.meals).forEach(dayMeals => {
       if (dayMeals.lunch) {
         dayMeals.lunch.forEach(item => {
           weekValue += item.price;
           weekItems++;
+          addNutritionFromItem(weekNutrition, item);
+          addNutritionFromItem(totalNutrition, item);
           
           // Track per restaurant
           const restaurantId = item.restaurantId ? item.restaurantId.toString() : null;
@@ -360,6 +383,8 @@ subscriptionMealPlanSchema.pre('save', function(next) {
         dayMeals.dinner.forEach(item => {
           weekValue += item.price;
           weekItems++;
+          addNutritionFromItem(weekNutrition, item);
+          addNutritionFromItem(totalNutrition, item);
           
           // Track per restaurant
           const restaurantId = item.restaurantId ? item.restaurantId.toString() : null;
@@ -377,6 +402,7 @@ subscriptionMealPlanSchema.pre('save', function(next) {
     
     week.weekTotalValue = Math.round(weekValue * 100) / 100;
     week.weekTotalItems = weekItems;
+    week.weekTotalNutrition = roundNutritionTotals(weekNutrition);
     
     totalValue += weekValue;
     totalItems += weekItems;
@@ -395,6 +421,7 @@ subscriptionMealPlanSchema.pre('save', function(next) {
   
   this.totalPlanValue = Math.round(totalValue * 100) / 100;
   this.totalMealsCount = totalItems;
+  this.totalNutrition = roundNutritionTotals(totalNutrition);
   
   next();
 });
@@ -518,7 +545,8 @@ subscriptionMealPlanSchema.methods.addMeal = function(weekIndex, day, mealType, 
     prepTime: menuItem.prepTime,
     servings: menuItem.servings,
     ingredients: menuItem.ingredients,
-    allergens: menuItem.allergens
+    allergens: menuItem.allergens,
+    nutritionInfo: menuItem.nutritionInfo
   };
   
   this.weeks[weekIndex].meals[day][mealType].push(mealItem);

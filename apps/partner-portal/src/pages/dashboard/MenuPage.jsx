@@ -29,6 +29,15 @@ import {
 import { useToast } from '../../contexts/ToastContext';
 import { validateFormWithSchema, formatBackendErrors } from '../../utils/validationErrorHandler';
 
+const normalizeNutritionInfo = (nutritionInfo = {}) => ({
+  calories: nutritionInfo.calories === '' || nutritionInfo.calories === null || nutritionInfo.calories === undefined
+    ? null
+    : Number(nutritionInfo.calories),
+  protein: nutritionInfo.protein === undefined || nutritionInfo.protein === null ? '' : String(nutritionInfo.protein).trim(),
+  carbs: nutritionInfo.carbs === undefined || nutritionInfo.carbs === null ? '' : String(nutritionInfo.carbs).trim(),
+  fat: nutritionInfo.fat === undefined || nutritionInfo.fat === null ? '' : String(nutritionInfo.fat).trim()
+});
+
 const MenuPage = () => {
   const { t } = useTranslation();
   const { restaurant, loading: restaurantLoading } = useRestaurant();
@@ -67,6 +76,12 @@ const MenuPage = () => {
     ingredients: [],
     ingredientsText: '', // For display purposes to allow comma input
     allergens: [],
+    nutritionInfo: {
+      calories: '',
+      protein: '',
+      carbs: '',
+      fat: ''
+    },
     availability: {
       monday: { lunch: true, dinner: true },
       tuesday: { lunch: true, dinner: true },
@@ -194,6 +209,12 @@ const MenuPage = () => {
       ingredients: [],
       ingredientsText: '', // For display purposes
       allergens: [],
+      nutritionInfo: {
+        calories: '',
+        protein: '',
+        carbs: '',
+        fat: ''
+      },
       availability: ensureAvailabilityStructure(null) // Use helper for consistency
     });
     setImageFile(null);
@@ -275,6 +296,8 @@ const MenuPage = () => {
       if (validationData.spiceLevel) {
         validationData.spiceLevel = parseInt(validationData.spiceLevel);
       }
+
+      validationData.nutritionInfo = normalizeNutritionInfo(validationData.nutritionInfo);
       
       // Parse ingredients from text if provided
       if (validationData.ingredientsText && validationData.ingredientsText.trim()) {
@@ -463,6 +486,12 @@ const MenuPage = () => {
       ingredients: item.ingredients || [],
       ingredientsText: (item.ingredients || []).join(', '), // Initialize display text
       allergens: item.allergens || [],
+      nutritionInfo: {
+        calories: item.nutritionInfo?.calories?.toString() || '',
+        protein: item.nutritionInfo?.protein || '',
+        carbs: item.nutritionInfo?.carbs || '',
+        fat: item.nutritionInfo?.fat || ''
+      },
       availability: ensureAvailabilityStructure(item.availability)
     });
     setImagePreview(item.image || null);
@@ -1374,6 +1403,96 @@ const MenuPage = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm resize-vertical"
                   />
                   <p className="text-xs text-gray-500 mt-1">Separate ingredients with commas</p>
+                </div>
+
+                {/* Nutrition Information */}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">🍽️ Nutrition Information (Optional)</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Calories</label>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="e.g., 450"
+                        value={formData.nutritionInfo.calories}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setFormData(prev => ({
+                            ...prev,
+                            nutritionInfo: {
+                              ...prev.nutritionInfo,
+                              calories: value
+                            }
+                          }));
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Protein (g)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        placeholder="e.g., 25"
+                        value={formData.nutritionInfo.protein}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setFormData(prev => ({
+                            ...prev,
+                            nutritionInfo: {
+                              ...prev.nutritionInfo,
+                              protein: value
+                            }
+                          }));
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Carbs (g)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        placeholder="e.g., 30"
+                        value={formData.nutritionInfo.carbs}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setFormData(prev => ({
+                            ...prev,
+                            nutritionInfo: {
+                              ...prev.nutritionInfo,
+                              carbs: value
+                            }
+                          }));
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Fat (g)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        placeholder="e.g., 15"
+                        value={formData.nutritionInfo.fat}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setFormData(prev => ({
+                            ...prev,
+                            nutritionInfo: {
+                              ...prev.nutritionInfo,
+                              fat: value
+                            }
+                          }));
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-grub-red focus:border-grub-red text-sm"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

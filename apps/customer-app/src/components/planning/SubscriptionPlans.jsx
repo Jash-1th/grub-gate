@@ -299,107 +299,52 @@ const SubscriptionPlans = () => {
         {/* Cost Breakdown - Only show if user has meal plan items */}
         {totalItems > 0 && (
           <div className="mb-6 sm:mb-12">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 sm:p-6 border border-blue-200">
-              <div className="text-center mb-4 sm:mb-6">
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">{t('subscription.yourTotalCostBreakdown')}</h3>
-                <p className="text-sm sm:text-base text-gray-600">{totalItems === 1 ? t('subscription.basedOnMeals', { count: totalItems, duration: getPlanDurationText(selectedPlan) }) : t('subscription.basedOnMealsPlural', { count: totalItems, duration: getPlanDurationText(selectedPlan) })}</p>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="bg-gray-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">{t('subscription.yourTotalCostBreakdown')}</h3>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">{totalItems === 1 ? t('subscription.basedOnMeals', { count: totalItems, duration: getPlanDurationText(selectedPlan) }) : t('subscription.basedOnMealsPlural', { count: totalItems, duration: getPlanDurationText(selectedPlan) })}</p>
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 max-w-7xl mx-auto">
-                {/* Meal Costs */}
-                <div className="text-center p-3 sm:p-4 bg-white rounded-lg border border-gray-200">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 bg-green-500 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                    </svg>
+              <div className="p-4 sm:p-6">
+                <div className="space-y-3 sm:space-y-4">
+                  {/* Subtotal */}
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-sm sm:text-base text-gray-700">{t('subscription.mealCosts')}</span>
+                    <span className="text-sm sm:text-base font-medium text-gray-900">${currentMealCost.toFixed(2)}</span>
                   </div>
-                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{t('subscription.mealCosts')}</h4>
-                  <p className="text-xl sm:text-2xl font-bold text-green-600">${currentMealCost.toFixed(2)}</p>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-1">{t('subscription.restaurantFoodCosts')}</p>
-                </div>
 
-                {/* Service Fee */}
-                <div className="text-center p-3 sm:p-4 bg-white rounded-lg border border-gray-200">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 bg-blue-500 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                  {/* Delivery Fee */}
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-sm sm:text-base text-gray-700">{t('subscription.deliveryFee')}</span>
+                    <span className="text-sm sm:text-base font-medium text-gray-900">${currentDeliveryFee.toFixed(2)}</span>
                   </div>
-                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{t('subscription.serviceFee')}</h4>
-                  <p className="text-xl sm:text-2xl font-bold text-blue-600">${currentServiceFee.toFixed(2)}</p>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-1">{(SERVICE_FEE_PERCENTAGE * 100).toFixed(1)}% {t('subscription.ofMealCost')}</p>
-                </div>
 
-                {/* Tax */}
-                <div className="text-center p-3 sm:p-4 bg-white rounded-lg border border-gray-200">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 bg-purple-500 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14l6-6m-5.5.5h.01m4.99 4.99h.01M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2z" />
-                    </svg>
+                  {/* Service Fee */}
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-sm sm:text-base text-gray-700">{t('subscription.serviceFee')}</span>
+                    <span className="text-sm sm:text-base font-medium text-gray-900">${currentServiceFee.toFixed(2)}</span>
                   </div>
-                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{t('subscription.tax')}</h4>
-                  <p className="text-xl sm:text-2xl font-bold text-purple-600">${currentTax.toFixed(2)}</p>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-1">{(DEFAULT_TAX_RATE * 100).toFixed(0)}% {t('subscription.onMealOnly')}</p>
-                </div>
 
-                {/* Delivery Fee */}
-                <div className="text-center p-3 sm:p-4 bg-white rounded-lg border border-gray-200">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 bg-orange-500 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
+                  {/* Tax */}
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-sm sm:text-base text-gray-700">{t('subscription.tax')}</span>
+                    <span className="text-sm sm:text-base font-medium text-gray-900">${currentTax.toFixed(2)}</span>
                   </div>
-                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{t('subscription.deliveryFee')}</h4>
-                  <p className="text-xl sm:text-2xl font-bold text-orange-600">${currentDeliveryFee.toFixed(2)}</p>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-1">{t('subscription.deliveryForAll')}</p>
-                </div>
 
-                {/* Platform Commission */}
-                <div className="text-center p-3 sm:p-4 bg-white rounded-lg border border-gray-200">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 bg-indigo-500 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
+                  {/* Platform Fee */}
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-sm sm:text-base text-gray-700">{t('subscription.platformCommission')}</span>
+                    <span className="text-sm sm:text-base font-medium text-gray-900">${currentPlatformCommission.toFixed(2)}</span>
                   </div>
-                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{t('subscription.platformCommission')}</h4>
-                  <p className="text-xl sm:text-2xl font-bold text-indigo-600">${currentPlatformCommission.toFixed(2)}</p>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-1">{(PLATFORM_COMMISSION_PERCENTAGE * 100).toFixed(0)}% {t('subscription.platformFee')}</p>
-                </div>
 
-                {/* Total Cost */}
-                <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-lg border border-red-200">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 bg-grub-red rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
+                  {/* Divider */}
+                  <div className="border-t border-gray-200 my-2"></div>
+
+                  {/* Total */}
+                  <div className="flex justify-between items-center py-3">
+                    <span className="text-base sm:text-lg font-semibold text-gray-900">{t('subscription.total', { duration: getPlanDurationText(selectedPlan) })}</span>
+                    <span className="text-xl sm:text-2xl font-bold text-grub-red">${currentTotalCost.toFixed(2)}</span>
                   </div>
-                  <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{t('subscription.total', { duration: getPlanDurationText(selectedPlan) })}</h4>
-                  <p className="text-xl sm:text-2xl font-bold text-red-700">${currentTotalCost.toFixed(2)}</p>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-1">{t('subscription.allFeesIncluded')}</p>
-                </div>
-              </div>
-
-              {/* Additional Info */}
-              <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-white rounded-lg">
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 text-xs sm:text-sm text-gray-600 flex-wrap">
-                  <span className="flex items-center">
-                    <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    {t('subscription.mealCostsVary')}
-                  </span>
-                  <span className="flex items-center">
-                    <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                    </svg>
-                    {(SERVICE_FEE_PERCENTAGE * 100).toFixed(1)}% {t('subscription.serviceFee')} + {(PLATFORM_COMMISSION_PERCENTAGE * 100).toFixed(0)}% {t('subscription.platformFee')}
-                  </span>
-                  <span className="flex items-center">
-                    <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14l6-6m-5.5.5h.01m4.99 4.99h.01M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2z" />
-                    </svg>
-                    {(DEFAULT_TAX_RATE * 100).toFixed(0)}% {t('subscription.taxOnMealCost')}
-                  </span>
                 </div>
               </div>
             </div>

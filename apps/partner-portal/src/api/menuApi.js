@@ -150,6 +150,14 @@ export const getMenuCategories = async (restaurantId) => {
  */
 export const createMenuItemFormData = (itemData, imageFile = null) => {
   const formData = new FormData();
+  const cleanNutritionInfo = (nutritionInfo = {}) => ({
+    calories: nutritionInfo.calories === '' || nutritionInfo.calories === null || nutritionInfo.calories === undefined
+      ? null
+      : Number(nutritionInfo.calories),
+    protein: nutritionInfo.protein === undefined || nutritionInfo.protein === null ? '' : String(nutritionInfo.protein).trim(),
+    carbs: nutritionInfo.carbs === undefined || nutritionInfo.carbs === null ? '' : String(nutritionInfo.carbs).trim(),
+    fat: nutritionInfo.fat === undefined || nutritionInfo.fat === null ? '' : String(nutritionInfo.fat).trim()
+  });
   
   // Add all text fields
   Object.keys(itemData).forEach(key => {
@@ -182,7 +190,7 @@ export const createMenuItemFormData = (itemData, imageFile = null) => {
         formData.append(key, availabilityString);
       } else if (typeof itemData[key] === 'object' && key === 'nutritionInfo') {
         // Handle nutrition info object
-        formData.append(key, JSON.stringify(itemData[key]));
+        formData.append(key, JSON.stringify(cleanNutritionInfo(itemData[key])));
       } else {
         // Handle other fields with proper type conversion
         let value = itemData[key];

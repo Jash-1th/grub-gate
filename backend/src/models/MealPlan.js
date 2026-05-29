@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 
+const { calculateNutritionTotalsFromWeeklyPlans } = require('../utils/nutritionTotals');
+
 // Common meal item schema with restaurant support
 const mealItemSchema = new mongoose.Schema({
   id: String,
@@ -18,7 +20,17 @@ const mealItemSchema = new mongoose.Schema({
   image: String,
   category: String,
   dietaryPreferences: [String],
-  spiceLevel: Number
+  spiceLevel: Number,
+  prepTime: Number,
+  servings: Number,
+  ingredients: [String],
+  allergens: [String],
+  nutritionInfo: {
+    calories: Number,
+    protein: String,
+    carbs: String,
+    fat: String
+  }
 }, { _id: false });
 
 // Day meals schema
@@ -58,6 +70,12 @@ const mealPlanSchema = new mongoose.Schema({
   totalItems: {
     type: Number,
     default: 0
+  },
+  totalNutrition: {
+    calories: { type: Number, default: 0 },
+    protein: { type: Number, default: 0 },
+    carbs: { type: Number, default: 0 },
+    fat: { type: Number, default: 0 }
   },
   // Multi-restaurant selection tracking - maximum 2 restaurants
   selectedRestaurants: [{
@@ -106,6 +124,11 @@ mealPlanSchema.pre('save', function(next) {
 // Update lastUpdated on save
 mealPlanSchema.pre('save', function(next) {
   this.lastUpdated = new Date();
+  next();
+});
+
+mealPlanSchema.pre('save', function(next) {
+  this.totalNutrition = calculateNutritionTotalsFromWeeklyPlans(this.weeklyPlans || {});
   next();
 });
 

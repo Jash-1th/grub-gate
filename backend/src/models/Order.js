@@ -26,6 +26,18 @@ const orderItemSchema = new mongoose.Schema({
     type: String,
     trim: true,
     maxlength: [200, 'Special instructions cannot exceed 200 characters']
+  },
+  description: String,
+  category: String,
+  prepTime: Number,
+  spiceLevel: Number,
+  ingredients: [String],
+  allergens: [String],
+  nutritionInfo: {
+    calories: Number,
+    protein: String,
+    carbs: String,
+    fat: String
   }
 }, { _id: false });
 

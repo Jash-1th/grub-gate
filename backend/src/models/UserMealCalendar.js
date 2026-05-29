@@ -1,5 +1,14 @@
 const mongoose = require('mongoose');
 
+const { calculateNutritionTotalsFromItems } = require('../utils/nutritionTotals');
+
+const nutritionInfoSchema = new mongoose.Schema({
+  calories: { type: Number, default: 0 },
+  protein: { type: Number, default: 0 },
+  carbs: { type: Number, default: 0 },
+  fat: { type: Number, default: 0 }
+}, { _id: false });
+
 const mealEntrySchema = new mongoose.Schema({
   date: {
     type: Date,
@@ -45,7 +54,8 @@ const mealEntrySchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Order',
     index: true
-  }
+  },
+  nutritionInfo: nutritionInfoSchema
 }, {
   _id: true,
   timestamps: true
@@ -114,7 +124,8 @@ const userMealCalendarSchema = new mongoose.Schema({
     timezone: {
       type: String,
       default: 'UTC'
-    }
+    },
+    totalNutrition: nutritionInfoSchema
   }
 }, {
   timestamps: true,
@@ -220,6 +231,8 @@ userMealCalendarSchema.pre('save', function(next) {
   if (this.isModified('calendarEntries')) {
     this.totalMeals = this.calendarEntries.length;
     this.deliveredMeals = this.calendarEntries.filter(entry => entry.status === 'delivered').length;
+    this.metadata = this.metadata || {};
+    this.metadata.totalNutrition = calculateNutritionTotalsFromItems(this.calendarEntries || []);
   }
   next();
 });

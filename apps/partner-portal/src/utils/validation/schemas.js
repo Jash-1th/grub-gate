@@ -1043,6 +1043,13 @@ export const registrationSchemas = {
         'array.unique': 'Please remove duplicate allergens',
         'any.only': 'Please select valid allergens'
       }),
+
+    nutritionInfo: menuItemSchemas.nutritionInfo.default({
+      calories: null,
+      protein: '',
+      carbs: '',
+      fat: ''
+    }),
     
     // Status
     status: Joi.string()

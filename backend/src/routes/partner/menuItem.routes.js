@@ -78,6 +78,16 @@ const menuItemValidation = [
     .optional()
     .isArray()
     .withMessage('Allergens must be an array'),
+  body('nutritionInfo')
+    .optional()
+    .custom((value) => {
+      if (typeof value === 'string') {
+        JSON.parse(value);
+        return true;
+      }
+      return typeof value === 'object' && value !== null;
+    })
+    .withMessage('Nutrition information must be an object'),
   body('spiceLevel')
     .optional()
     .isInt({ min: 0, max: 5 })
@@ -128,10 +138,28 @@ const updateMenuItemValidation = [
     .optional()
     .isIn(['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'spicy', 'keto', 'low-carb', 'halal', 'kosher', 'non-veg'])
     .withMessage('Invalid dietary preference'),
+  body('ingredients')
+    .optional()
+    .isArray()
+    .withMessage('Ingredients must be an array'),
+  body('allergens')
+    .optional()
+    .isArray()
+    .withMessage('Allergens must be an array'),
   body('spiceLevel')
     .optional()
     .isInt({ min: 0, max: 5 })
     .withMessage('Spice level must be between 0 and 5'),
+  body('nutritionInfo')
+    .optional()
+    .custom((value) => {
+      if (typeof value === 'string') {
+        JSON.parse(value);
+        return true;
+      }
+      return typeof value === 'object' && value !== null;
+    })
+    .withMessage('Nutrition information must be an object'),
   body('status')
     .optional()
     .isIn(['available', 'unavailable', 'out-of-stock'])

@@ -1,0 +1,1152 @@
+{
+  
+  "login": {
+    "title": "Welcome Back!",
+    "subtitle": "Log in to access your meal plans and continue your journey with GrubGate.",
+    "emailLabel": "Email",
+    "emailOrPhoneLabel": "Email or Phone Number",
+    "emailPlaceholder": "your.email@example.com",
+    "emailOrPhonePlaceholder": "Enter your email or phone number",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "forgotPassword": "Forgot Password?",
+    "button": "Login",
+    "signingIn": "Signing in...",
+    "googleButton": "Login with Google",
+    "divider": "OR",
+    "signupPrompt": "Don't have an account?",
+    "signupLink": "Sign Up",
+    "errors": {
+      "identifierRequired": "Email or phone number is required",
+      "invalidIdentifier": "Please enter a valid email address or phone number",
+      "passwordRequired": "Password is required",
+      "passwordTooShort": "Password must be at least 6 characters",
+      "invalidCredentials": "Invalid credentials. Please try again.",
+      "invalidEmailOrPassword": "Invalid email or password. Please check your credentials and try again.",
+      "loginFailed": "Login failed. Please try again."
+    },
+    "welcomeBack": "Welcome Back! 🎉",
+    "welcomeMessage": "Great to see you again, {{name}}! Ready to continue your meal planning journey?"
+  },
+  "location": {
+    "locationFound": "Location Found",
+    "currentLocationDetected": "Your current location has been detected and filled in the form.",
+    "addressFound": "Address: {{address}}",
+    "deliveryNotAvailable": "Delivery Not Available",
+    "distanceExceeded": "Distance: {{distance}}km (Max delivery: {{maxDistance}}km)",
+    "restaurantDoesNotDeliver": "This restaurant does not deliver to the selected address."
+  },
+  "logout": {
+    "title": "Logged Out Successfully! 👋",
+    "message": "Thanks for using GrubGate! We hope to see you again soon."
+  },
+  "nav": {
+    "home": "Home",
+    "about": "About Us",
+    "howItWorks": "How It Works",
+    "contact": "Contact Us",
+    "faq": "FAQs",
+    "yourOrders": "Your Orders"
+  },
+  "common": {
+    "subscription": "Subscription Meal Plan",
+    "loadMore": "Load More",
+    "loading" :"Loading...",
+    "restaurant": "Restaurant",
+    "error": "Something went wrong",
+    "retry": "Try Again",
+    "startPlanning": "Start Planning",
+    "menu": "Menu",
+    "close": "Close",
+    "language": "Language",
+    "account": "Account"
+  },
+  "roleCards": {
+    "sectionTitle": "Join the GrubGate Community",
+    "sectionSubtitle": "Whether you're looking to order food, grow your restaurant business, or earn as a delivery partner, we have the perfect solution for you.",
+    "cards": {
+      "customer": {
+        "title": "For Customers",
+        "subtitle": "Order & Plan Meals",
+        "description": "Discover amazing restaurants, plan your weekly meals, and enjoy hassle-free food delivery.",
+        "features": {
+          "0": "Weekly Meal Planning",
+          "1": "Restaurant Discovery",
+          "2": "Easy Ordering",
+          "3": "Subscription Plans"
+        },
+        "button": "Get Started"
+      },
+      "partner": {
+        "title": "For Partners",
+        "subtitle": "Grow Your Restaurant",
+        "description": "Join our platform to reach more customers, manage orders efficiently, and grow your business.",
+        "features": {
+          "0": "Order Management",
+          "1": "Analytics Dashboard",
+          "2": "Menu Management",
+          "3": "Customer Insights"
+        },
+        "button": "Partner Portal"
+      },
+      "runner": {
+        "title": "For Grub Runners",
+        "subtitle": "Deliver & Earn",
+        "description": "Become a delivery partner and earn flexible income by delivering delicious meals to customers.",
+        "features": {
+          "0": "Flexible Schedule",
+          "1": "Competitive Pay",
+          "2": "Easy App Interface",
+          "3": "Weekly Payouts"
+        },
+        "button": "Coming Soon",
+        "badge": "Coming Soon"
+      }
+    }
+  },
+  "deliveredOrders": {
+    "title": "Delivered Orders",
+    "noOrders": "You don't have any delivered orders yet"
+  },
+  "yourOrders": {
+    "title": "Your Orders",
+    "subtitle": "Track your meal deliveries and manage your subscription",
+    "filterBy": "Filter By",
+    "filterOrders": "Filter Orders",
+    "filters": {
+      "all": "All Orders",
+      "scheduled": "Scheduled",
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "preparing": "Preparing",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    },
+    "noOrdersTitle": "No Orders Found",
+    "noOrders": "You haven't placed any orders yet. Start exploring restaurants and subscribe to meal plans to get delicious meals delivered to your door.",
+    "ordersFound": "{{count}} order found",
+    "ordersFound_plural": "{{count}} orders found",
+    "browseRestaurants": "Browse Restaurants",
+    "viewCalendar": "View My Meal Calendar",
+    "checkScheduledMeals": "Check your scheduled meals & delivery status",
+    "scheduledFor": "Scheduled For",
+    "deliveryStatus": "Delivery Status",
+    "subscriptionMeal": "Subscription Meal",
+    "status": {
+      "scheduled": "Scheduled",
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "preparing": "Preparing",
+      "ready": "Ready",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    },
+    "mealTypes": {
+      "dinner": "Dinner"
+    }
+  },
+  "orders": {
+    "orderNumber": "Order Number",
+    "deliveredOn": "Delivered on",
+    "total": "Total",
+    "deliveryAddress": "Delivery Address",
+    "quantity": "Quantity",
+    "items": "Order Items",
+    "orderSummary": "Order Summary",
+    "restaurantNameMissing": "Restaurant Information Unavailable"
+  },
+  "reviews": {
+    "leaveReview": "Leave Review",
+    "reviewed": "Reviewed",
+    "rating": "Rating",
+    "stars": "stars",
+    "title": "Title",
+    "titlePlaceholder": "Give your review a title",
+    "comment": "Comment",
+    "commentPlaceholder": "Share your experience with this meal",
+    "photos": "Photos",
+    "maxImages": "You can upload up to 5 images",
+    "invalidImageFormat": "Please upload valid image files only",
+    "maxImagesExceeded": "You can only upload up to 5 images",
+    "ratingRequired": "Please provide a rating",
+    "missingOrderOrItem": "Order or menu item information is missing",
+    "submit": "Submit Review",
+    "submitting": "Submitting...",
+    "submitSuccess": "Thank you for your review!",
+    "submitError": "Failed to submit review. Please try again.",
+    "reviewAlreadyExists": "A review already exists for this order.",
+    "orderNotDelivered": "This order has not been delivered yet.",
+    "menuItemNotInOrder": "This menu item was not part of this order.",
+    "restaurantMismatch": "Restaurant does not match the order.",
+    "loading": "Checking review status...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "hero": {
+    "title": "Your Daily Bite,",
+    "subtitle": "Delivered Right?",
+    "description": "GrubGate connects you with restaurants offering subscription meals — skip cooking, keep eating.",
+    "getStarted": "Get Started"
+  },
+  "whyGrubGate": {
+    "title": "Why Choose GrubGate?",
+    "subtitle": "We're more than just a food delivery service. We're your gateway to Montreal's finest culinary experiences, delivered with care and convenience.",
+    "specialTitle": "What Makes Us Special",
+    "stats": {
+      "stressFree": "Stress free",
+      "restaurants": "{{count}}+ Restaurants",
+      "available": "24/7 Available",
+      "secure": "100% Secure"
+    }
+  },
+  "benefits": {
+    "1": {
+      "title": "Time-Saving",
+      "description": "Skip the cooking and waiting. Get delicious meals delivered to your door in minutes.",
+      "features": {
+        "0": "Fast delivery",
+        "1": "No cooking required",
+        "2": "Pre-order options",
+        "3": "Real-time tracking"
+      }
+    },
+    "2": {
+      "title": "Healthy",
+      "description": "Fresh, nutritious meals from top local restaurants with dietary options for everyone.",
+      "features": {
+        "0": "Fresh ingredients",
+        "1": "Nutritional info",
+        "2": "Dietary filters",
+        "3": "Balanced portions"
+      }
+    },
+    "3": {
+      "title": "Tasty",
+      "description": "Competitive pricing with subscription discounts and no hidden fees.",
+      "features": {
+        "0": "Transparent pricing",
+        "1": "Subscription discounts",
+        "2": "No delivery fees",
+        "3": "Value meal deals"
+      }
+    },
+    "4": {
+      "title": "Affordable",
+      "description": "Great value for money with competitive prices and regular discounts on your favorite meals.",
+      "features": {
+        "0": "Competitive pricing",
+        "1": "Regular discounts",
+        "2": "Loyalty rewards",
+        "3": "Free delivery options"
+      }
+    }
+  },
+  "additionalFeatures": {
+  "1": {
+    "title": "Effortless Meal Planning",
+    "description": "Set your schedule once and enjoy delicious meals delivered all week."
+  },
+  "2": {
+    "title": "Wide Selection",
+    "description": "Over 500+ restaurants to choose from"
+  },
+  "3": {
+    "title": "24/7 Support", 
+    "description": "Round-the-clock customer support"
+  },
+  "4": {
+    "title": "Secure Payment",
+    "description": "Safe and secure payment processing"
+  }
+},
+  "testimonials": {
+    "title": "What Our Customers Say",
+    "subtitle": "Don't just take our word for it. Here's what our satisfied customers have to say about their GrubGate experience.",
+    "orders": "orders",
+    "pause": "Pause",
+    "resume": "Resume",
+    "autoPlay": "auto-play"
+  },
+  "nearbyRestaurants": {
+  "title": "Nearby Restaurants",
+  "subtitle": "Discover amazing restaurants in your area offering subscription meal plans.",
+  "viewAll": "View All Restaurants",
+  "orderNow": "Order Now",
+  "cuisine": "Cuisine",
+  "deliveryFee": "Delivery Fee", 
+  "minOrder": "Min Order",
+  "additionalInfo": "Discover hundreds more restaurants in your area, each offering unique subscription meal plans tailored to your taste and schedule."
+},
+"getStartedCta": {
+  "title": "Ready to Get Started?",
+  "subtitle": "Join thousands of food lovers who trust GrubGate for their daily meals.",
+  "startPlan": "Start Your Plan",
+  "learnMore": "Learn More",
+  "restaurants": "Partner Restaurants",
+  "customers": "Happy Customers", 
+  "avgDelivery": "Avg Delivery Time",
+  "rating": "Customer Rating"
+},
+  "about": {
+    "heroTitle": "About GrubGate",
+    "heroSubtitle": "Effortless dining, delivered. Discover the freedom of subscription meals.",
+    "storyTitle": "Our Story",
+    "storySubtitle": "Discover the story behind GrubGate and our passion for quality food.",
+    "sections": [
+      {
+        "id": 1,
+        "title": "Our Mission",
+        "description": "At GrubGate, we believe that great food should be accessible, convenient, and sustainable. We're revolutionizing how people think about daily meals by connecting food lovers with Montreal's best restaurants through innovative subscription meal plans.",
+        "image": "/images/grub-gate-default-img.jpg"
+      },
+      {
+        "id": 2,
+        "title": "Our Vision",
+        "description": "We envision a world where everyone has access to restaurant-quality meals without the hassle of daily cooking or the unpredictability of traditional food delivery. By partnering with local restaurants, we're creating a sustainable ecosystem that benefits both diners and culinary businesses.",
+        "image": "/images/grub-gate-default-restaurant-img.jpg"
+      },
+      {
+        "id": 3,
+        "title": "Our Story",
+        "description": "Founded in 2023, GrubGate was born from a simple idea: to make quality meals accessible to everyone while supporting local Montreal restaurants. We started with a passion for connecting communities through food and have grown into Montreal's trusted meal delivery partner.",
+        "image": "/images/HeroHome.png"
+      }
+    ],
+    "teamTitle": "Meet Our Team",
+    "teamSubtitle": "The passionate individuals behind GrubGate's success.",
+    "team": {
+      "ceo": "CEO & Founder",
+      "cto": "Chief Technology Officer",
+      "coo": "Chief Operations Officer",
+      "headMarketing": "Head of Marketing",
+      "headCustomerExperience": "Head of Customer Experience",
+      "headOperations": "Head of Operations"
+    },
+    "valuesTitle": "Our Core Values",
+    "valuesSubtitle": "The principles that guide everything we do",
+    "values": {
+      "partnershipTitle": "Partnership",
+      "partnershipText": "We work closely with local restaurants to bring you the best dining experience.",
+      "qualityTitle": "Quality",
+      "qualityText": "We're committed to using only the freshest ingredients and carefully prepared dishes.",
+      "innovationTitle": "Innovation",
+      "innovationText": "We're constantly pushing the boundaries of food delivery with creative solutions.",
+      "communityTitle": "Community",
+      "communityText": "We believe in building a strong community around good food."
+    },
+    "joinTitle": "Join Our Journey",
+    "joinText": "Whether you're a food lover looking for convenient meal solutions or a restaurant owner interested in expanding your reach, we'd love to have you as part of the GrubGate community.",
+    "getStarted": "Get Started Today"
+  },
+  "howItWorks": {
+    "heroTitle": "Your Daily Meals,",
+    "heroSubtitle": "Delivered from Real Kitchens.",
+    "heroDescription": "GrubGate connects you with restaurants offering subscription meals — skip cooking, keep eating.",
+    "getStarted": "Get Started",
+    "stepsTitle": "How GrubGate Works",
+    "stepsSubtitle": "Our simple 5-step process makes getting delicious meals delivered to your door effortless and convenient.",
+    "step1Title": "Enter Your Location",
+    "step1Description": "Drop your address or pin your location. We instantly show you local restaurants offering subscription-based meals.",
+    "step2Title": "Browse & Choose",
+    "step2Description": "Explore curated meal plans from top-rated restaurants. Filter by cuisine, dietary preferences, and price range.",
+    "step3Title": "Subscribe & Customize",
+    "step3Description": "Select your preferred meal plan and customize delivery frequency. Choose from weekly, bi-weekly, or monthly options.",
+    "step4Title": "Relax & Anticipate",
+    "step4Description": "Sit back while restaurants prepare your fresh meals. Track your order and get notified when it's on the way.",
+    "step5Title": "Enjoy & Repeat",
+    "step5Description": "Savor restaurant-quality meals at home. Rate your experience and let us know your preferences for future orders.",
+    "ctaTitle": "Ready to Get Started?",
+    "ctaSubtitle": "Join thousands of satisfied customers who have simplified their daily meals with GrubGate. Fresh, delicious, and delivered right to your door.",
+    "startPlan": "Start Your Plan",
+    "learnMore": "Learn More",
+    "finalCtaTitle": "Ready to Transform Your Meals?",
+    "finalCtaSubtitle": "Join the GrubGate community today and discover a better way to enjoy restaurant-quality meals at home.",
+    "startEating": "Start Eating Better",
+    "browseRestaurants": "Browse Restaurants"
+  },
+  "contact": {
+    "heroTitle": "Get in Touch",
+    "heroSubtitle": "We'd love to hear from you. Send us a message and we'll respond as soon as possible.",
+    "formTitle": "Send Us a Message",
+    "formSubtitle": "Fill out the form below and we'll get back to you within 24 hours.",
+    "info": {
+      "title": "Contact Information",
+      "address": "Address",
+      "phone": "Phone",
+      "email": "Email",
+      "hours": "Business Hours",
+      "weekdays": "Monday - Friday: {{hours}}",
+      "weekends": "Saturday - Sunday: {{hours}}",
+      "mapTitle": "Find Us",
+      "mapDescription": "Visit our office in the heart of Montreal's food district"
+    },
+    "social": {
+      "title": "Follow Us"
+    },
+    "form": {
+      "nameLabel": "Full Name",
+      "namePlaceholder": "Enter your full name",
+      "emailLabel": "Email Address",
+      "emailPlaceholder": "Enter your email address",
+      "phoneLabel": "Phone Number",
+      "phonePlaceholder": "Enter your phone number (optional)",
+      "reasonLabel": "Reason for Contact",
+      "reasonPlaceholder": "Select a reason",
+      "reasons": {
+        "general": "General Inquiry",
+        "technical": "Technical Support",
+        "partnership": "Partnership Opportunity",
+        "feedback": "Feedback & Suggestions"
+      },
+      "messageLabel": "Message",
+      "messagePlaceholder": "Tell us how we can help you...",
+      "sendButton": "Send Message",
+      "sending": "Sending...",
+      "success": "Thank you! Your message has been sent successfully. We'll get back to you soon.",
+      "validation": {
+        "nameRequired": "Name is required",
+        "emailRequired": "Email is required",
+        "emailInvalid": "Please enter a valid email address",
+        "messageRequired": "Message is required"
+      },
+      "errors": {
+        "loading": "Services are loading, please wait...",
+        "submit": "Failed to send message. Please try again later."
+      }
+    }
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Find answers to common questions about GrubGate's meal delivery service, subscriptions, and more.",
+    "helpTitle": "How Can We Help You?",
+    "helpSubtitle": "Browse through our most frequently asked questions below. If you can't find what you're looking for, don't hesitate to contact our support team.",
+    "contactTitle": "Still Have Questions?",
+    "contactSubtitle": "Our friendly support team is here to help you with any questions or concerns you may have.",
+    "contactSupport": "Contact Support",
+    "callUs": "Call Us",
+    "categories": {
+      "subscription": {
+        "title": "Subscription & Pricing",
+        "questions": {
+          "0": {
+            "question": "How does a GrubGate subscription work?",
+            "answer": "Our subscription service is designed for convenience. You pre-select your meal plan and schedule your deliveries for the week or on specific dates that work for you. Once set up, your delicious meals arrive automatically on the scheduled days."
+          },
+          "1": {
+            "question": "Can I change the restaurant (our partner) for a scheduled meal?",
+            "answer": "This flexibility is an exclusive benefit for our Premium subscription members. To ensure our partners have adequate time to prepare, any changes must be made at least 2 days before the scheduled delivery. Standard plan members cannot change the partner restaurant once a meal is locked in."
+          },
+          "2": {
+            "question": "Do you offer one-time orders without a subscription?",
+            "answer": "Yes! In addition to our subscription plans, you can also order single meals on-demand from our partner restaurants at any time. However, keep in mind that our subscription plans offer better value, with discounts for longer commitments like weekly or monthly plans."
+          }
+        }
+      },
+      "delivery": {
+        "title": "Delivery",
+        "questions": {
+          "0": {
+            "question": "How is my delivery time determined?",
+            "answer": "Your delivery time is based on the schedule you set up with your subscription (e.g., your selected lunch or dinner slot). We deliver within that pre-agreed window, so you always know when to expect your meal."
+          },
+          "1": {
+            "question": "Can I cancel or change a meal for a specific day?",
+            "answer": "While individual meals cannot be fully canceled once your schedule is confirmed, you are able to modify your order. Standard plan members can swap their selected meal for another item of the same price from the same partner restaurant. We require any changes to be made at least 24 hours before the scheduled delivery."
+          }
+        }
+      },
+      "dietary": {
+        "title": "Dietary & Meal Options",
+        "questions": {
+          "0": {
+            "question": "Can I customize my meals for dietary needs like vegan or gluten-free?",
+            "answer": "Absolutely. When selecting your meals or browsing our partner restaurants, you can use filters to find options that match your specific dietary requirements, including vegetarian, non-vegetarian, and more."
+          },
+          "1": {
+            "question": "How often does the menu change?",
+            "answer": "Our restaurant partners update their menus regularly to offer fresh meals. You'll see new and exciting meal options available to add to your plan each week."
+          }
+        }
+      }
+    }
+  },
+  "footer": {
+    "description": "GrubGate connects you with Montreal's best restaurants through convenient subscription meal plans. Fresh, delicious, and delivered right to your door.",
+    "builtWithLove": "Built with ❤️ in Montreal",
+    "quickLinksTitle": "Quick Links",
+    "followUsTitle": "Follow Us",
+    "emailPlaceholder": "Enter your email",
+    "subscribeButton": "Subscribe",
+    "copyright": "© {{year}} {{company}}. All rights reserved.",
+    "legal": {
+      "termsandconditions": "Terms & Conditions",
+      "privacypolicy": "Privacy Policy"
+    },
+    "newsletter": {
+      "title": "Stay Updated",
+      "description": "Subscribe to our newsletter for the latest updates, new restaurant partners, and exclusive offers.",
+      "placeholder": "Enter your email",
+      "subscribe": "Subscribe",
+      "success": "Thank you for subscribing!",
+      "error": "Please enter a valid email address"
+    }
+  },
+  "signup": {
+    "title": "Create Your Account",
+    "subtitle": "Sign up to get delicious, pre-scheduled meals from your favorite local restaurants delivered right to your door.",
+    "nameLabel": "Full Name",
+    "namePlaceholder": "Enter your full name",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "Enter your username",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "Enter your email address",
+    "phoneLabel": "Phone Number",
+    "phonePlaceholder": "Enter your phone number (e.g., +1-234-567-8900)",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Create a password (min. 6 characters)",
+    "confirmPasswordLabel": "Confirm Password",
+    "confirmPasswordPlaceholder": "Confirm your password",
+    "button": "Create Account",
+    "creatingAccount": "Creating account...",
+    "googleButton": "Sign Up with Google",
+    "divider": "OR",
+    "loginPrompt": "Already have an account?",
+    "loginLink": "Log In",
+    "errors": {
+      "registrationFailed": "Registration failed. Please try again."
+    },
+    "accountCreated": "Account Created Successfully! 🎉",
+    "welcomeMessage": "Welcome to GrubGate, {{name}}! Start exploring delicious meals and planning your weekly menu."
+  },
+  "mealPlanning": {
+    "hero": {
+      "title": "Plan Your Perfect Meals with",
+      "subtitle": "GrubGate",
+      "description": "Create personalized meal schedules from Montreal's best restaurants. Fresh, delicious meals delivered to your door.",
+      "postalCodePlaceholder": "Enter your postal code",
+      "postalCodeLabel": "Postal Code",
+      "findMealsButton": "Get nearest restaurants",
+      "searchNearby": "Search nearby"
+    },
+    "restaurantSearch": {
+      "successTitle": "Great!",
+      "successMessage": "Found {{count}} restaurants near {{postalCode}}!",
+      "successMessageSeveral": "Found several restaurants near {{postalCode}}!",
+      "noRestaurantsTitle": "No Restaurants Found",
+      "noRestaurantsMessage": "Sorry, we don't have any restaurants available in {{postalCode}} yet. Please try a different postal code."
+    },
+    "restaurantRemoval": {
+      "title": "Restaurants Removed",
+      "messageSingle": "Removed {{restaurantNames}} and cleared its meals",
+      "messageMultiple": "Removed {{count}} restaurants ({{restaurantNames}}) and cleared their meals"
+    },
+    "howItWorks": {
+      "title": "Deliciously Simple.",
+      "subtitle": "Create your perfect meal plan in three easy steps and enjoy restaurant-quality food delivered to your door.",
+      "steps": {
+        "1": {
+          "title": "Personalize Your Taste",
+          "description": "Choose from a variety of dietary preferences including Vegetarian, Vegan, Gluten-Free, and more to match your lifestyle."
+        },
+        "2": {
+          "title": "Craft Your Schedule",
+          "description": "Plan your lunch and dinner for the entire week. Select from our partner restaurants and customize your meal times."
+        },
+        "3": {
+          "title": "Subscribe & Enjoy",
+          "description": "Choose your subscription plan and sit back while we deliver fresh, delicious meals right to your doorstep."
+        }
+      }
+    },
+    "scheduleDemo": {
+      "title": "Your Weekly Menu, Personalized by You",
+      "description": "Our easy-to-use scheduler lets you fill your week with your favorite foods. Click any slot for Lunch or Dinner, and choose from a dropdown of delicious options. Each selection shows the restaurant name, meal, and price, giving you full control.",
+      "features": {
+        "flexibility": {
+          "title": "Complete Flexibility",
+          "description": "Change your meals anytime before the delivery window"
+        },
+        "variety": {
+          "title": "Endless Variety",
+          "description": "Choose from hundreds of dishes across multiple cuisines"
+        },
+        "convenience": {
+          "title": "Set & Forget",
+          "description": "Schedule once and enjoy automatic weekly deliveries"
+        }
+      }
+    },
+    "preferences": {
+      "title": "Set Your Food Preferences",
+      "subtitle": "Select your dietary preferences to get personalized meal recommendations from our partner restaurants.",
+      "clearAll": "Clear All",
+      "selectedCount": "{{count}} preference(s) selected",
+      "selectPrompt": "Select your dietary preferences",
+      "selectedTitle": "Selected Preferences",
+      "options": {
+        "vegetarian": {
+          "name": "Vegetarian",
+          "label": "Select vegetarian preference"
+        },
+        "vegan": {
+          "name": "Vegan",
+          "label": "Select vegan preference"
+        },
+        "glutenFree": {
+          "name": "Gluten-Free",
+          "label": "Select gluten-free preference"
+        },
+        "dairyFree": {
+          "name": "Dairy-Free",
+          "label": "Select dairy-free preference"
+        },
+        "keto": {
+          "name": "Keto",
+          "label": "Select keto preference"
+        },
+        "halal": {
+          "name": "Halal",
+          "label": "Select halal preference"
+        },
+        "kosher": {
+          "name": "Kosher",
+          "label": "Select kosher preference"
+        },
+        "lowCarb": {
+          "name": "Low-Carb",
+          "label": "Select low-carb preference"
+        },
+        "paleo": {
+          "name": "Paleo",
+          "label": "Select paleo preference"
+        },
+        "spicy": {
+          "name": "Spicy",
+          "label": "Select spicy preference"
+        },
+        "organic": {
+          "name": "Organic",
+          "label": "Select organic preference"
+        },
+        "sugarFree": {
+          "name": "Sugar-Free",
+          "label": "Select sugar-free preference"
+        },
+        "nutFree": {
+          "name": "Nut-Free",
+          "label": "Select nut-free preference"
+        },
+        "soyFree": {
+          "name": "Soy-Free",
+          "label": "Select soy-free preference"
+        },
+        "rawFood": {
+          "name": "Raw Food",
+          "label": "Select raw food preference"
+        },
+        "mediterranean": {
+          "name": "Mediterranean",
+          "label": "Select mediterranean preference"
+        },
+        "lowSodium": {
+          "name": "Low-Sodium",
+          "label": "Select low-sodium preference"
+        },
+        "highProtein": {
+          "name": "High-Protein",
+          "label": "Select high-protein preference"
+        },
+        "whole30": {
+          "name": "Whole30",
+          "label": "Select whole30 preference"
+        },
+        "pescatarian": {
+          "name": "Pescatarian",
+          "label": "Select pescatarian preference"
+        }
+      }
+    },
+    "subscriptionPlans": {
+      "title": "Pick Your Subscription Duration.",
+      "subtitle": "Choose the plan that works best for your lifestyle and budget. All plans include access to our full network of partner restaurants.",
+      "planDescription": "This plan determines how often meals are delivered and the benefits you unlock.",
+      "mostPopular": "Most Popular",
+      "benefits": "Key Benefits",
+      "selectPlan": "Select Plan",
+      "importantInfo": "Important Information",
+      "renewalInfo": "Plans renew automatically. You can change or cancel anytime from your account settings.",
+      "plans": {
+        "bi-weekly": {
+          "name": "Bi-Weekly",
+          "deliveryFrequency": "Every 2 weeks"
+        },
+        "monthly": {
+          "name": "Monthly",
+          "deliveryFrequency": "Every month"
+        },
+        "quarterly": {
+          "name": "3 Months",
+          "deliveryFrequency": "Quarterly planning"
+        },
+        "semi-annual": {
+          "name": "6 Months",
+          "deliveryFrequency": "Semi-annual planning"
+        }
+      },
+      "features": {
+        "cancelAnytime": "Cancel Anytime",
+        "changePlans": "Change Plans",
+        "noHiddenFees": "No Hidden Fees"
+      }
+    }
+  },
+  "restaurantStep": {
+    "noMealsSelected": "No Meals Selected",
+    "noMealsSelectedMessage": "Please select at least one meal item from the restaurants below before proceeding to subscription plans.",
+    "backToLocation": "Back to Location",
+    "location": "Location",
+    "restaurants": "Restaurants",
+    "subscribe": "Subscribe",
+    "processing": "Processing...",
+    "continueToPlans": "Continue to Plans",
+    "currentFilters": "Current filters:",
+    "sortedByRating": "Sorted by rating",
+    "mealsSelected": "meals selected",
+    "changeLocation": "Change Location",
+    "continueToSubscriptionPlans": "Continue to Subscription Plans"
+  },
+  "restaurantGrid": {
+    "findingRestaurants": "Finding Restaurants Near You",
+    "searchingNear": "Searching near",
+    "discoveringOptions": "Discovering delicious options...",
+    "didYouKnow": "Did you know?",
+    "didYouKnowText": "We're finding the best-rated restaurants in your area and checking their availability for meal planning!",
+    "unableToLoad": "Unable to Load Restaurants",
+    "tryAgain": "Try Again",
+    "noRestaurantsInArea": "No restaurants found in {{postalCode}}. Try a different postal code.",
+    "failedToLoad": "Failed to load restaurants. Please try again.",
+    "showingRestaurants": "Showing {{count}} of {{total}} restaurants near {{postalCode}}",
+    "pageInfo": "Page {{current}} of {{total}}",
+    "noRestaurantsFound": "No restaurants found",
+    "noRestaurantsFoundMessage": "We couldn't find any restaurants in your area. Try expanding your search radius.",
+    "restaurantsNearYou": "Restaurants Near You",
+    "showingRestaurantsNear": "Showing restaurants near",
+    "mealPlanCostProjection": "Your Meal Plan Cost Projection",
+    "basedOnSelection": "Based on your current {{count}} selected meal",
+    "basedOnSelection_plural": "Based on your current {{count}} selected meals",
+    "biweekly": "Biweekly",
+    "everyTwoWeeks": "Every 2 weeks",
+    "monthly": "Monthly",
+    "perMonth": "Per month",
+    "threeMonths": "3 Months",
+    "quarterly": "Quarterly",
+    "estimatesBasedOn": "Estimates based on current meal selection",
+    "avgPerMeal": "Avg per meal",
+    "deliciousFood": "Delicious food awaits you",
+    "calculating": "Calculating...",
+    "more": "more",
+    "viewMenu": "View Menu"
+  },
+  "menuSelection": {
+    "findingRestaurantsNear": "Finding restaurants near {{postalCode}}...",
+    "restaurantsNear": "Restaurants near {{postalCode}}",
+    "you": "you",
+    "topMealsFor": "Top meals for",
+    "highlyRatedRestaurants": "Highly-rated restaurants in your area",
+    "bestOptionsAvailable": "Best {{slot}} options available",
+    "thisWeek": "This Week",
+    "nextWeek": "Next Week",
+    "location": "Location",
+    "restaurants": "Restaurants",
+    "menuSelection": "Menu Selection",
+    "subscribe": "Subscribe",
+    "readyToContinue": "Ready to continue your meal planning journey",
+    "changeLocation": "Change Location",
+    "backToWeeklyMenu": "Back to Weekly Menu",
+    "continueToWeeklyMenu": "Continue to Weekly Menu",
+    "backToMenu": "Back to Menu",
+    "continue": "Continue"
+  },
+  "restaurantCard": {
+    "selected": "SELECTED",
+    "popular": "Popular",
+    "topRated": "Top Rated",
+    "more": "more",
+    "viewMenu": "View Menu"
+  },
+  "restaurantDetail": {
+    "backToRestaurants": "Back to Restaurants",
+    "rating": "rating",
+    "dispersedMenu": "Dispersed Menu",
+    "constraintMenu": "Constraint Menu",
+    "dispersedMenuDescription": "Browse all available menu items without time constraints",
+    "proFeaturesUnavailable": "Pro features temporarily unavailable",
+    "constraintFeaturesUnlocked": "Constraint Features Unlocked",
+    "constraintMenuDescription": "View menu items with day-specific availability and time constraints",
+    "foodPreferences": "Food Preferences",
+    "preferencesSelectedAdvanced": "preferences selected - Advanced filtering active",
+    "dietaryPreferencesSelected": "dietary preferences selected",
+    "tapToSelectAdvanced": "Tap to select your dietary preferences and get smart recommendations",
+    "tapToSelectDietary": "Tap to select your dietary preferences and filter menu items",
+    "selectDietaryPreferences": "Select your dietary preferences",
+    "advancedFilteringDescription": "Advanced filtering to show you the best-rated items that match your needs.",
+    "filteringDescription": "We'll show you menu items that match your needs.",
+    "clearAll": "Clear All",
+    "preferencesSelected": "{{count}} preference selected",
+    "preferencesSelected_plural": "{{count}} preferences selected",
+    "noPreferencesSelected": "No preferences selected",
+    "apply": "Apply",
+    "menuItems": "Menu Items",
+    "itemsAvailable": "items available",
+    "noMenuItemsAvailable": "No menu items available",
+    "selectThisRestaurant": "Select This Restaurant",
+    "selectedRestaurant": "Selected Restaurant",
+    "backToWeeklyMenu": "Back to Weekly Menu",
+    "backToWeeklyPlanning": "Back to Weekly Planning",
+    "currentlyPlanning": "Currently planning",
+    "browseDeliciousMenu": "Browse our delicious menu items",
+    "clickAnyItem": "Click any item to add to your plan",
+    "planningFor": "Planning for {{day}}"
+  },
+  "itemDetails": {
+    "reviews": "reviews",
+    "review": "Review",
+    "orders": "orders",
+    "popular": "Popular",
+    "servings": "servings",
+    "ingredients": "Ingredients",
+    "containsAllergens": "Contains Allergens",
+    "nutritionInformation": "Nutrition Information",
+    "calories": "Calories",
+    "protein": "Protein",
+    "carbs": "Carbs",
+    "fat": "Fat",
+    "customerReviews": "Customer Reviews",
+    "loadingReviews": "Loading reviews...",
+    "loading": "Loading...",
+    "loadMoreReviews": "Load More Reviews",
+    "showingReviews": "Showing {{current}} of {{total}} reviews",
+    "alreadyReviewed": "You've already reviewed this item!",
+    "noReviewsYet": "No reviews yet",
+    "thankYouFeedback": "Thank you for your feedback!",
+    "beTheFirst": "Be the first to share your experience!"
+  },
+  "foodItemCard": {
+    "clickToViewDetails": "Click to view details"
+  },
+  "weeklyMenu": {
+    "yourWeeklyMenu": "Your Weekly Menu",
+    "planYourWeek": "Plan your perfect week with delicious meals",
+    "subscriptionWaitMessage": "Please wait until subscription end date to set your new weekly plan",
+    "activeSubscription": "Active Subscription",
+    "planType": "Plan Type",
+    "endDate": "End Date",
+    "remainingDays": "Remaining Days",
+    "viewMyCalendar": "View My Meal Calendar",
+    "checkScheduledMeals": "Check your scheduled meals & delivery status",
+    "totalMeals": "Total Meals",
+    "bothWeeks": "Both Weeks",
+    "estCost": "Est. Cost",
+    "week1": "Week 1",
+    "week2": "Week 2",
+    "meals": "meals",
+    "meal": "meal",
+    "weekOf": "Week of",
+    "loadingRestaurantSelection": "Loading your restaurant selection...",
+    "loadingMealPlan": "Please wait while we load your meal plan",
+    "planningMealsFrom": "Planning meals from",
+    "clickEmptySlot": "Click any empty slot to add meals",
+    "loading": "Loading...",
+    "addRestaurant": "Add Restaurant",
+    "getGrubPass": "More restaurants • Grub Pass",
+    "changeRestaurant": "Change Restaurant",
+    "clearAllFrom": "Clear All from {{week}}",
+    "week1Menu": "Week 1 Menu",
+    "week2Menu": "Week 2 Menu",
+    "lunch": "Lunch",
+    "dinner": "Dinner",
+    "legend": "Legend",
+    "plannedMeals": "Planned Meals",
+    "availableSlots": "Available Slots",
+    "tapToRemove": "Tap to remove items",
+    "hoverToRemove": "Hover to remove items",
+    "biWeeklySummary": "Bi-Weekly Summary",
+    "bothWeeksCombined": "Both weeks combined",
+    "estimatedCost": "Estimated Cost",
+    "avgPerMeal": "Avg per Meal",
+    "costEfficiency": "Cost efficiency",
+    "week1Meals": "Week 1 Meals",
+    "week2Meals": "Week 2 Meals",
+    "quickActions": "Quick Actions",
+    "planMealsToView": "Plan meals to view calendar",
+    "addMealsFirst": "Add meals to your weekly plan first",
+    "checkingStatus": "Checking Status...",
+    "subscriptionActive": "Subscription Active",
+    "pleaseWait": "Please wait",
+    "planningDisabled": "Planning disabled",
+    "addMeal": "Add {{mealType}}",
+    "browseRestaurants": "Browse restaurants",
+    "browseRestaurant": "Browse {{name}}",
+    "browseFromSelected": "Browse from selected restaurants",
+    "more": "more",
+    "viewDetails": "View details",
+    "planned": "Planned",
+    "wantToAddMoreClickMe": "Want to add more? Click me",
+    "planning": "Planning..."
+  },
+  "restaurantModal": {
+    "removeRestaurant": "Remove Restaurant",
+    "addNewRestaurant": "Add New Restaurant",
+    "step1SelectRemove": "Step 1: Select restaurants to remove from your meal plan",
+    "step2ChooseNew": "Step 2: Choose a new restaurant to add to your meal plan",
+    "maxRestaurantsReached": "You have reached the maximum of 2 restaurants.",
+    "checkRestaurantsBelow": "Check the restaurants below",
+    "thatYouWantRemove": "that you want to remove",
+    "notSelected": "Not selected",
+    "selectedForRemoval": "Selected for removal",
+    "currentRestaurants": "Current Restaurants",
+    "toRemove": "TO REMOVE",
+    "meal": "meal",
+    "meals": "meals",
+    "willBeDeleted": "Will be deleted",
+    "restaurantRemovedSuccess": "Perfect! Restaurant removed successfully.",
+    "clickBelow": "Click below",
+    "toBrowseAndAdd": "to browse and add a new restaurant to your meal plan",
+    "browseRestaurants": "Browse Restaurants",
+    "clickToExplore": "Click to explore and add a new restaurant",
+    "yourRemainingRestaurant": "Your Remaining Restaurant:",
+    "yourRemainingRestaurants": "Your Remaining Restaurants:",
+    "activeInPlan": "Active in your plan",
+    "cancel": "Cancel",
+    "removing": "Removing...",
+    "removeCount": "Remove {{count}} Restaurant",
+    "removeCount_plural": "Remove {{count}} Restaurants",
+    "selectToRemove": "Select to Remove",
+    "done": "Done"
+  },
+  "continueModal": {
+    "continueWithCurrent": "Continue with Current Restaurant?",
+    "alreadyHaveRestaurant": "You already have a restaurant selected for your meal plan",
+    "thisWeek": "This Week",
+    "nextWeek": "Next Week",
+    "canContinueAdding": "You can continue adding meals from {{name}} or add a second restaurant for more variety (maximum 2 restaurants).",
+    "continueWith": "Continue with {{name}}",
+    "addSecondRestaurant": "Add Second Restaurant",
+    "cancel": "Cancel"
+  },
+  "selectionModal": {
+    "selectRestaurantFirst": "Select a Restaurant First",
+    "addAnotherRestaurant": "Add Another Restaurant?",
+    "chooseFromNearby": "Choose from nearby restaurants to start planning your meals",
+    "canSelectUpTo2": "You can select up to 2 restaurants for your meal plan",
+    "current": "Current",
+    "canAddSecond": "You can add a second restaurant to your meal plan. This gives you more variety in your weekly menu.",
+    "toAddMeals": "To add meals to your {{week}} plan, you need to first select a restaurant. We'll show you highly-rated restaurants in your area.",
+    "cancel": "Cancel",
+    "browseRestaurants": "Browse Restaurants",
+    "addSecondRestaurant": "Add Second Restaurant"
+  },
+  "choiceModal": {
+    "chooseRestaurant": "Choose Restaurant",
+    "selectWhichRestaurant": "Select which restaurant to add items from",
+    "multipleRestaurantsSelected": "You have multiple restaurants selected. Choose which one to add items from:",
+    "cancel": "Cancel"
+  },
+  "dayMealPlan": {
+    "loadingMealPlan": "Loading meal plan...",
+    "mealPlan": "Meal Plan",
+    "totalItemsPlanned": "total items planned",
+    "totalItemsPlannedForDay": "total items planned for this day",
+    "selectMealType": "Select Meal Type",
+    "lunchCount": "Lunch ({{count}})",
+    "dinnerCount": "Dinner ({{count}})",
+    "lunchSummary": "Lunch Summary",
+    "dinnerSummary": "Dinner Summary",
+    "uniqueItem": "unique item",
+    "uniqueItems": "unique items",
+    "totalItems": "total items",
+    "items": "items",
+    "addMoreLunchItems": "Add More Lunch Items",
+    "addMoreDinnerItems": "Add More Dinner Items",
+    "qty": "Qty",
+    "each": "each",
+    "noDietaryPreferences": "No dietary preferences specified",
+    "viewItemDetails": "View Item Details",
+    "remove1": "Remove 1",
+    "removeAll": "Remove All",
+    "remove": "Remove",
+    "noLunchItemsYet": "No Lunch Items Yet",
+    "noDinnerItemsYet": "No Dinner Items Yet",
+    "startBuildingLunch": "Start building your lunch plan by adding some delicious items.",
+    "startBuildingDinner": "Start building your dinner plan by adding some delicious items.",
+    "addLunchItems": "Add Lunch Items",
+    "addDinnerItems": "Add Dinner Items"
+  },
+  "mealCalendar": {
+    "mealPlanPreview": "Meal Plan Preview",
+    "myMealCalendar": "My Meal Calendar",
+    "previewSchedule": "Preview your planned meals schedule before subscribing",
+    "trackMeals": "Track your scheduled meals and delivery status",
+    "backToMenu": "Back to Menu",
+    "subscribeToPlan": "Subscribe to Plan",
+    "activeSubscription": "Active Subscription",
+    "planType": "Plan Type",
+    "biWeekly": "Bi-Weekly",
+    "totalMeals": "Total Meals",
+    "complete": "Complete",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "daysLeft": "Days Left",
+    "mealPlanning": "Meal Planning",
+    "mealProgress": "Meal Progress",
+    "mealsPlanned": "meals planned",
+    "deliveredOf": "{{delivered}} of {{total}} delivered",
+    "subscriptionMealSchedule": "Subscription Meal Schedule",
+    "weeklyMealSchedule": "Weekly Meal Schedule",
+    "yourSubscriptionPeriod": "Your subscription period: {{start}} to {{end}}",
+    "clickOnDate": "Click on any date within your subscription period",
+    "clickOnDates": "Click on dates from {{start}} to {{end}} (2 weeks)",
+    "jumpToDate": "Jump to date",
+    "dateNotAvailable": "This date is not available for your subscription period.",
+    "mealType": "Meal Type",
+    "dailySchedule": "Daily Schedule",
+    "lunch": "Lunch",
+    "dinner": "Dinner",
+    "middayMeals": "Midday Meals",
+    "eveningMeals": "Evening Meals",
+    "item": "Item",
+    "items": "Items",
+    "viewDetails": "View Details",
+    "noMeals": "No meals",
+    "unavailable": "Unavailable",
+    "mealBreakdown": "Meal Breakdown",
+    "deliveryStatus": "Delivery Status",
+    "delivered": "delivered",
+    "preparing": "preparing",
+    "ready": "ready",
+    "scheduled": "scheduled",
+    "planned": "planned",
+    "cancelled": "cancelled",
+    "quickActions": "Quick Actions",
+    "planNewMeals": "Plan New Meals",
+    "refreshCalendar": "Refresh Calendar",
+    "accountSettings": "Account Settings",
+    "startNow": "START NOW",
+    "subscribeNow": "Subscribe to Plan",
+    "readyToStart": "Ready to start your meal journey? Subscribe now to get fresh, delicious meals delivered to your door!",
+    "dismiss": "Dismiss"
+  },
+  "subscriptionCompletion": {
+    "title": "Subscription Created!",
+    "message": "Your meal plan subscription has been set up successfully."
+  },
+  "subscription": {
+    "backToWeeklyMenu": "Back to Weekly Menu",
+    "chooseYourPlan": "Choose Your Subscription Plan",
+    "selectPerfectPlan": "Select the perfect plan for your meal planning needs",
+    "chooseYourPlanTitle": "Choose Your Plan",
+    "selectPerfectPlanDesc": "Select the perfect plan for your meal planning needs. All plans include access to our restaurant network.",
+    "yourTotalCostBreakdown": "Your Total Cost Breakdown",
+    "basedOnMeals": "Based on your {{count}} selected meal for the {{duration}} plan",
+    "basedOnMealsPlural": "Based on your {{count}} selected meals for the {{duration}} plan",
+    "serviceFee": "Service Fee",
+    "grubGatePlatformAccess": "GrubGate platform access",
+    "mealCosts": "Meal Costs",
+    "restaurantFoodCosts": "Restaurant food costs",
+    "deliveryFeeLabel": "Delivery Fee",
+    "deliveryForAll": "For all scheduled deliveries",
+    "tax": "Tax",
+    "taxOnMealCost": "15% tax on meal cost",
+    "total": "Total {{duration}}",
+    "servicePlusMeals": "Service + meals",
+    "mealCostsVary": "Meal costs vary by restaurant and selections",
+    "serviceFeeFixed": "Service fee is 9.9% of meal cost",
+    "mostPopular": "Most Popular",
+    "biWeeklyPlan": "Bi-Weekly Plan",
+    "quarterlyPlan": "Quarterly Plan",
+    "everyTwoWeeks": "every 2 weeks",
+    "everyMonth": "every month",
+    "everyThreeMonths": "every 3 months",
+    "monthlyPlan": "1 Month Plan",
+    "perfectForRegular": "Perfect for regular meal planning",
+    "bestValueConsistent": "Best value for consistent planning",
+    "maximumSavings": "Maximum savings for committed users",
+    "daysOfPlanning14": "14 days of meal planning",
+    "daysOfPlanning30": "30 days of meal planning",
+    "daysOfPlanning90": "90 days of meal planning",
+    "restaurantRecommendations": "Restaurant recommendations",
+    "dietaryPreferencesSupport": "Dietary preferences support",
+    "mobileAppAccess": "Mobile app access",
+    "emailSupport": "Email support",
+    "flexibleScheduling": "Flexible scheduling",
+    "everythingInBiWeekly": "Everything in Bi-Weekly",
+    "everythingInMonthly": "Everything in Monthly",
+    "advancedNutritionalTracking": "Advanced nutritional tracking",
+    "multipleDietaryProfiles": "Multiple dietary profiles",
+    "prioritySupport": "Priority support",
+    "exclusiveRestaurantDeals": "Exclusive restaurant deals",
+    "savingsVsBiweekly10": "10% savings vs bi-weekly",
+    "savingsVsBiweekly25": "25% savings vs bi-weekly",
+    "personalMealConsultant": "Personal meal consultant",
+    "customMealPlans": "Custom meal plans",
+    "restaurantPartnerships": "Restaurant partnerships",
+    "phoneSupport247": "24/7 phone support",
+    "earlyAccessNewFeatures": "Early access to new features",
+    "getStarted": "Get Started",
+    "processing": "Processing...",
+    "completeYourSubscription": "Complete Your Subscription",
+    "selectedPlan": "Selected Plan:",
+    "completeSetup": "Complete your subscription setup below",
+    "deliveryAddress": "Delivery Address",
+    "whereShouldWeDeliver": "Where should we deliver?",
+    "scheduleAndPayment": "Schedule & Payment",
+    "setDeliverySchedule": "Set delivery schedule and payment",
+    "paymentDetails": "Payment Details",
+    "choosePaymentMethod": "Choose your payment method to complete your subscription",
+    "addressWillBeSelected": "Address will be selected in previous step",
+    "choosePaymentMethodTitle": "Choose Payment Method",
+    "selectHowToPay": "Select how you'd like to pay",
+    "creditDebitCard": "Credit/Debit Card",
+    "securePayment": "Secure payment with your card",
+    "backToAddress": "Back to Address",
+    "completeSubscription": "Complete Subscription",
+    "creatingSubscription": "Creating Subscription...",
+    "creatingYourSubscription": "Creating your subscription...",
+    "period": "period",
+    "selectDeliveryAddress": "Select Delivery Address",
+    "chooseWhereDelivered": "Choose where you'd like your order delivered",
+    "quickOptions": "Quick Options",
+    "addNewAddress": "Add New Address",
+    "yourSavedAddresses": "Your Saved Addresses",
+    "loadingAddresses": "Loading your addresses...",
+    "noSavedAddresses": "No saved addresses found",
+    "addFirstAddress": "Add Your First Address",
+    "selectedAddress": "Selected Address",
+    "currentLocation": "Current Location",
+    "instructions": "Instructions",
+    "checkingDelivery": "Checking delivery...",
+    "deliveryAvailable": "Delivery Available",
+    "kmAway": "km away",
+    "kmEstimated": "km (estimated)",
+    "outsideDeliveryZone": "Outside delivery zone",
+    "maxKm": "Max: {{max}} km",
+    "deliveryFee": "Delivery Fee",
+    "ofMealCost": "of meal cost",
+    "onMealOnly": "on meal only",
+    "platformFee": "platform fee",
+    "allFeesIncluded": "All fees included",
+    "platformCommission": "Platform Commission",
+    "estTime": "Est. Time:",
+    "mins": "mins",
+    "back": "Back",
+    "continueToPayment": "Continue to Payment",
+    "validating": "Validating...",
+    "addressRequired": "Address Required",
+    "pleaseSelectAddress": "Please select a delivery address to continue.",
+    "deliveryNotAvailable": "Delivery Not Available",
+    "selectAddressInZone": "Please select an address within the delivery zone.",
+    "loadFailed": "Load Failed",
+    "unableToLoadAddresses": "Unable to load your addresses. You can still add a new address.",
+    "locationError": "Location Error"
+  }
+}

@@ -78,6 +78,75 @@ const {
 const { asyncHandler } = require('../../middlewares/errorHandler');
 const { menuItemImageUpload, uploadToCloudinary, deleteFromCloudinary } = require('../../config/cloudinary');
 
+const normalizeMenuItemPayload = (body) => {
+  if (body.availability && typeof body.availability === 'string') {
+    try {
+      body.availability = JSON.parse(body.availability);
+    } catch (error) {
+      return { error: 'Invalid availability format' };
+    }
+  }
+
+  if (body.availability && typeof body.availability === 'object') {
+    Object.keys(body.availability).forEach(day => {
+      if (body.availability[day]) {
+        body.availability[day].lunch = Boolean(body.availability[day].lunch);
+        body.availability[day].dinner = Boolean(body.availability[day].dinner);
+      }
+    });
+  }
+
+  if (body.nutritionInfo && typeof body.nutritionInfo === 'string') {
+    try {
+      body.nutritionInfo = JSON.parse(body.nutritionInfo);
+    } catch (error) {
+      return { error: 'Invalid nutrition information format' };
+    }
+  }
+
+  if (body.nutritionInfo && typeof body.nutritionInfo === 'object') {
+    const nutritionInfo = {};
+    if (
+      body.nutritionInfo.calories !== undefined &&
+      body.nutritionInfo.calories !== null &&
+      body.nutritionInfo.calories !== ''
+    ) {
+      const calories = parseInt(body.nutritionInfo.calories, 10);
+      if (!Number.isNaN(calories)) {
+        nutritionInfo.calories = calories;
+      }
+    }
+    ['protein', 'carbs', 'fat'].forEach(field => {
+      if (
+        body.nutritionInfo[field] !== undefined &&
+        body.nutritionInfo[field] !== null &&
+        body.nutritionInfo[field] !== ''
+      ) {
+        const value = String(body.nutritionInfo[field]).trim();
+        if (value) {
+          nutritionInfo[field] = value;
+        }
+      }
+    });
+    body.nutritionInfo = nutritionInfo;
+  }
+
+  if (body.price !== undefined && body.price !== '') {
+    body.price = parseFloat(body.price);
+  }
+  if (body.prepTime !== undefined && body.prepTime !== '') {
+    body.prepTime = parseInt(body.prepTime);
+  }
+  if (body.servings !== undefined && body.servings !== '') {
+    body.servings = parseInt(body.servings);
+  }
+  if (body.spiceLevel !== undefined && body.spiceLevel !== '') {
+    body.spiceLevel = parseInt(body.spiceLevel);
+  }
+
+  return { error: null };
+};
+
 /**
  * @desc    Get menu items for partner's restaurant
  * @route   GET /api/v1/partner/restaurants/:restaurantId/menu-items
@@ -213,6 +282,10 @@ const createPartnerMenuItem = asyncHandler(async (req, res) => {
 
   // Debug: Log received data
   console.log('📥 Backend received menu item data:', req.body);
+  const normalized = normalizeMenuItemPayload(req.body);
+  if (normalized.error) {
+    return errorResponse(res, normalized.error, 400);
+  }
   
   // Handle availability parsing if it's a string (from FormData)
   if (req.body.availability && typeof req.body.availability === 'string') {
@@ -309,6 +382,10 @@ const updatePartnerMenuItem = asyncHandler(async (req, res) => {
 
   // Debug: Log received update data
   console.log('📥 Backend received menu item update data:', req.body);
+  const normalized = normalizeMenuItemPayload(req.body);
+  if (normalized.error) {
+    return errorResponse(res, normalized.error, 400);
+  }
   
   // Handle availability parsing if it's a string (from FormData)
   if (req.body.availability && typeof req.body.availability === 'string') {

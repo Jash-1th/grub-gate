@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMealPlan } from '../../contexts/MealPlanContext_SSR_FIXED';
 
@@ -21,8 +21,54 @@ const FoodItemCard = ({
   const { t } = useTranslation();
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [showNutritionInfo, setShowNutritionInfo] = useState(false);
+  const cardRef = useRef(null);
 
   const mealPlanContext = useMealPlan();
+  const nutritionInfo = item.nutritionInfo || item.nutritionalInfo || {};
+  const detailLists = {
+    ingredients: Array.isArray(item.ingredients) ? item.ingredients.filter(Boolean) : [],
+    allergens: Array.isArray(item.allergens) ? item.allergens.filter(Boolean) : []
+  };
+  const hasValue = (value) => value !== undefined && value !== null && value !== '';
+  const hasNutritionInfo = Boolean(
+    hasValue(nutritionInfo.calories) ||
+    hasValue(nutritionInfo.protein) ||
+    hasValue(nutritionInfo.carbs) ||
+    hasValue(nutritionInfo.fat)
+  );
+  const hasItemDetails = hasNutritionInfo || detailLists.ingredients.length > 0 || detailLists.allergens.length > 0;
+  const formatMacroValue = (value) => {
+    if (value === undefined || value === null || value === '') return '';
+    const stringValue = String(value).trim();
+    return /\d\s*g$/i.test(stringValue) ? stringValue : `${stringValue}g`;
+  };
+
+  useEffect(() => {
+    if (!showNutritionInfo) return undefined;
+
+    const handlePointerDown = (event) => {
+      if (!cardRef.current) return;
+      const clickedInsideDetails = event.target.closest('[data-item-details-interactive="true"]');
+      if (!cardRef.current.contains(event.target) || !clickedInsideDetails) {
+        setShowNutritionInfo(false);
+      }
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setShowNutritionInfo(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showNutritionInfo]);
   
   // Safely extract functions with fallbacks during loading
   const getItemQuantityInPlan = mealPlanContext?.getItemQuantityInPlan;
@@ -105,6 +151,7 @@ const FoodItemCard = ({
 
   return (
     <div 
+      ref={cardRef}
       className={cardClassName}
       onClick={handleCardClick}
     >
@@ -269,23 +316,123 @@ const FoodItemCard = ({
         )}
 
         {/* Calories and Nutrition Info */}
-        {item.nutritionInfo?.calories && (
-          <div className="mb-2 text-xs text-gray-600">
-            <span className="flex items-center">
-              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              {item.nutritionInfo.calories} cal
-              {item.nutritionInfo.protein && (
-                <span className="ml-2">• P: {item.nutritionInfo.protein}</span>
+        <div className={`mb-2 flex items-center ${hasValue(nutritionInfo?.calories) ? 'justify-between' : 'justify-end'}`}>
+          {hasValue(nutritionInfo?.calories) && (
+            <div className="text-xs text-gray-600">
+              <span className="flex items-center">
+                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                {nutritionInfo.calories} cal
+                {hasValue(nutritionInfo.protein) && (
+                  <span className="ml-2">• P: {formatMacroValue(nutritionInfo.protein)}</span>
+                )}
+              </span>
+            </div>
+          )}
+          
+          {/* Nutrition Info Button */}
+          {hasItemDetails && (
+            <div>
+              <button
+                data-item-details-interactive="true"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowNutritionInfo(!showNutritionInfo);
+                }}
+                className="w-6 h-6 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 flex items-center justify-center transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                aria-label="View item nutrition and ingredient details"
+                title="View nutrition and ingredient details"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {showNutritionInfo && (
+          <div
+            data-item-details-interactive="true"
+            className="mb-3 w-full rounded-xl border border-blue-100 bg-white p-3 text-xs shadow-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2">
+              <div className="font-semibold text-gray-900">Item Details</div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowNutritionInfo(false);
+                }}
+                className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                aria-label="Close item details"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-2">
+              {hasNutritionInfo && (
+                <div className="space-y-1.5">
+                  <div className="font-semibold text-gray-800">Nutrition Information</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {hasValue(nutritionInfo?.calories) && (
+                      <div className="rounded-lg bg-blue-50 px-2 py-1.5">
+                        <div className="text-[11px] font-medium text-blue-700">Calories</div>
+                        <div className="font-semibold text-blue-950">{nutritionInfo.calories}</div>
+                      </div>
+                    )}
+                    {hasValue(nutritionInfo?.protein) && (
+                      <div className="rounded-lg bg-green-50 px-2 py-1.5">
+                        <div className="text-[11px] font-medium text-green-700">Protein (g)</div>
+                        <div className="font-semibold text-green-950">{formatMacroValue(nutritionInfo.protein)}</div>
+                      </div>
+                    )}
+                    {hasValue(nutritionInfo?.carbs) && (
+                      <div className="rounded-lg bg-yellow-50 px-2 py-1.5">
+                        <div className="text-[11px] font-medium text-yellow-700">Carbs (g)</div>
+                        <div className="font-semibold text-yellow-950">{formatMacroValue(nutritionInfo.carbs)}</div>
+                      </div>
+                    )}
+                    {hasValue(nutritionInfo?.fat) && (
+                      <div className="rounded-lg bg-purple-50 px-2 py-1.5">
+                        <div className="text-[11px] font-medium text-purple-700">Fat (g)</div>
+                        <div className="font-semibold text-purple-950">{formatMacroValue(nutritionInfo.fat)}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
-              {item.nutritionInfo.carbs && (
-                <span className="ml-1">C: {item.nutritionInfo.carbs}</span>
+              {detailLists.ingredients.length > 0 && (
+                <div className="border-t border-gray-100 pt-2">
+                  <div className="font-semibold text-gray-800 mb-1">Ingredients</div>
+                  <div className="flex flex-wrap gap-1">
+                    {detailLists.ingredients.map((ingredient, index) => (
+                      <span key={`${ingredient}-${index}`} className="rounded-full bg-gray-100 px-2 py-0.5 text-gray-700">
+                        {ingredient}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               )}
-              {item.nutritionInfo.fat && (
-                <span className="ml-1">F: {item.nutritionInfo.fat}</span>
+              {detailLists.allergens.length > 0 && (
+                <div className="border-t border-gray-100 pt-2">
+                  <div className="font-semibold text-gray-800 mb-1">Allergens</div>
+                  <div className="flex flex-wrap gap-1">
+                    {detailLists.allergens.map((allergen, index) => (
+                      <span key={`${allergen}-${index}`} className="rounded-full bg-red-50 px-2 py-0.5 text-red-700">
+                        {allergen.replace('-', ' ')}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               )}
-            </span>
+            </div>
           </div>
         )}
 

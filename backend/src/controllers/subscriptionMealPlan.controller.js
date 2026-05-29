@@ -10,6 +10,7 @@ const Subscription = require('../models/Subscription');
 const MenuItem = require('../models/MenuItem');
 const { validationResult } = require('express-validator');
 const pushNotificationService = require('../services/pushNotificationService');
+const { calculateNutritionTotalsFromItems } = require('../utils/nutritionTotals');
 
 // Get or create meal plan for user (updated for multi-restaurant)
 const getMealPlan = async (req, res) => {
@@ -554,7 +555,9 @@ const createSubscriptionFromMealPlan = async (req, res) => {
                 spiceLevel: plainItem.spiceLevel,
                 prepTime: plainItem.prepTime,
                 servings: plainItem.servings || 1,
-                ingredients: plainItem.ingredients || []
+                ingredients: plainItem.ingredients || [],
+                allergens: plainItem.allergens || [],
+                nutritionInfo: plainItem.nutritionInfo || plainItem.nutritionalInfo || {}
                 };
               });
             }
@@ -602,7 +605,9 @@ const createSubscriptionFromMealPlan = async (req, res) => {
                 spiceLevel: plainItem.spiceLevel,
                 prepTime: plainItem.prepTime,
                 servings: plainItem.servings || 1,
-                ingredients: plainItem.ingredients || []
+                ingredients: plainItem.ingredients || [],
+                allergens: plainItem.allergens || [],
+                nutritionInfo: plainItem.nutritionInfo || plainItem.nutritionalInfo || {}
                 };
               });
             }
@@ -829,7 +834,8 @@ const createSubscriptionFromMealPlan = async (req, res) => {
                 status: order.status,
                 deliveryTime: deliveryTimeObj,
                 orderId: order._id,
-                itemId: item._id || `${order._id}-${itemIndex}`
+                itemId: item._id || `${order._id}-${itemIndex}`,
+                nutritionInfo: item.nutritionInfo || item.nutritionalInfo || {}
               });
             });
           } else {
@@ -839,13 +845,16 @@ const createSubscriptionFromMealPlan = async (req, res) => {
               mealType: order.mealType,
               mealName: 'Meal',
               restaurantId: order.restaurantId,
-              status: order.status,
-              deliveryTime: deliveryTimeObj,
-              orderId: order._id
+          status: order.status,
+          deliveryTime: deliveryTimeObj,
+          orderId: order._id,
+          nutritionInfo: {}
             });
           }
         }
       }
+
+      const calendarNutritionTotals = calculateNutritionTotalsFromItems(calendarEntries);
 
       // Create the meal calendar
       const mealCalendar = new UserMealCalendar({
@@ -862,7 +871,8 @@ const createSubscriptionFromMealPlan = async (req, res) => {
         metadata: {
           totalCost: monthlyPrice || 0,
           currency: 'USD',
-          timezone: 'UTC'
+          timezone: 'UTC',
+          totalNutrition: calendarNutritionTotals
         }
       });
 

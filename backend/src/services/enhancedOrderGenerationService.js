@@ -322,7 +322,7 @@ const createScheduledOrder = async (subscriptionPlan, orderDate, mealType, meals
           orderItem.dietaryTags = menuItemDetails.dietaryTags || [];
           orderItem.ingredients = menuItemDetails.ingredients || [];
           orderItem.allergens = menuItemDetails.allergens || [];
-          orderItem.nutritionalInfo = menuItemDetails.nutritionalInfo;
+          orderItem.nutritionInfo = menuItemDetails.nutritionInfo || {};
           orderItem.isVegetarian = menuItemDetails.isVegetarian;
           orderItem.isVegan = menuItemDetails.isVegan;
           orderItem.isGlutenFree = menuItemDetails.isGlutenFree;
@@ -339,6 +339,7 @@ const createScheduledOrder = async (subscriptionPlan, orderDate, mealType, meals
           orderItem.dietaryTags = meal.dietaryTags || [];
           orderItem.ingredients = meal.ingredients || [];
           orderItem.allergens = meal.allergens || [];
+          orderItem.nutritionInfo = meal.nutritionInfo || {};
         }
         
         orderItems.push(orderItem);
