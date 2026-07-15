@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "GrubGate Customer",
+    "slug": "grubgate-customer-mobile",
+    "scheme": "grubgatecustomer",
+    "version": "0.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "experiments": {
+      "typedRoutes": true
+    },
+    "android": {
+      "package": "com.anonymous.grubgatecustomermobile"
+    },
+    "plugins": [
+      "expo-secure-store"
+    ]
+  }
+}

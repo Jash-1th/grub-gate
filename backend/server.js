@@ -95,44 +95,10 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
-// CORS configuration - Allow Customer App, Partner Portal, and Dasher App
-const allowedOrigins = [
-  'http://localhost:3000', // Customer App (local)
-  'http://localhost:5173', // Partner Portal (Vite dev server)
-  'http://localhost:5174', // Dasher App (Vite dev server)
-  'http://localhost:4173', // Partner Portal (Vite preview)
-  'http://localhost:4174', // Dasher App (Vite preview)
-  'http://127.0.0.1:3000', // Customer App (alternative localhost)
-  'http://127.0.0.1:5173', // Partner Portal (alternative localhost)
-  'http://127.0.0.1:5174', // Dasher App (alternative localhost)
-];
 
-// Add production origins from environment variable
-// Format: CORS_ORIGIN="https://customer-app.netlify.app,https://partner-portal.netlify.app"
-if (process.env.CORS_ORIGIN) {
-  const productionOrigins = process.env.CORS_ORIGIN.split(',').map(origin => origin.trim());
-  allowedOrigins.push(...productionOrigins);
-  console.log('🌐 Added production origins:', productionOrigins);
-}
-
-console.log('🔧 CORS: Allowing origins:', allowedOrigins);
+// CORS configuration - allow local network devices during development.
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl, Postman, or same-origin)
-    if (!origin) {
-      console.log('✅ CORS: Allowing request with no origin (mobile/curl/same-origin)');
-      return callback(null, true);
-    }
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      console.log('✅ CORS: Allowing origin:', origin);
-      callback(null, true);
-    } else {
-      console.log('❌ CORS blocked origin:', origin);
-      console.log('📝 Allowed origins:', allowedOrigins);
-      callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
-    }
-  },
+  origin: true,
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
@@ -239,8 +205,9 @@ module.exports = app;
 // Only start server if not in serverless environment
 if (require.main === module) {
   const PORT = process.env.PORT || 5000;
+  const HOST = '0.0.0.0';
 
-  const server = app.listen(PORT, () => {
+  const server = app.listen(PORT, HOST, () => {
     console.log(`🚀 GrubGate API Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
   });
 

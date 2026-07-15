@@ -1,0 +1,64 @@
+{"_e":"root:init","_t":1781422276642,"format":"v0-jsonl","version":"56.1.15"}
+{"_e":"env:mode","_t":1781422276644,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1781422276651,"mode":"development","files":["../..\\..\\.env"],"env":{}}
+{"_e":"devserver:start","_t":1781422277022,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../..\\..\\src\\app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1781422278525,"serverRoot":"../..\\..\\..\\..","projectRoot":"../..\\..","exporting":false,"flags":{"autolinkingModuleResolution":true,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"metro:instantiate","_t":1781422298241,"atlas":false,"workers":11,"host":"::","port":8081}
+{"_e":"metro:bundling:started","_t":1781422369807,"id":"1","platform":"web","environment":null,"entry":"apps\\customer-app-mobile\\node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1781422369808,"id":"1","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1781422369816,"id":"1","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1781422370647,"id":"1","progress":0.010000000000000002,"total":1,"current":1}
+{"_e":"metro:bundling:progress","_t":1781422370747,"id":"1","progress":0.010000000000000002,"total":2,"current":1}
+{"_e":"metro:bundling:progress","_t":1781422370795,"id":"1","progress":0.04000000000000001,"total":2,"current":2}
+{"_e":"metro:bundling:progress","_t":1781422370905,"id":"1","progress":0.16000000000000003,"total":10,"current":4}
+{"_e":"metro:bundling:progress","_t":1781422371097,"id":"1","progress":0.25,"total":10,"current":5}
+{"_e":"metro:bundling:progress","_t":1781422371201,"id":"1","progress":0.25,"total":12,"current":5}
+{"_e":"metro:bundling:progress","_t":1781422371218,"id":"1","progress":0.25,"total":12,"current":6}
+{"_e":"metro:bundling:progress","_t":1781422371329,"id":"1","progress":0.25,"total":17,"current":8}
+{"_e":"metro:bundling:progress","_t":1781422371634,"id":"1","progress":0.28027681660899656,"total":17,"current":9}
+{"_e":"metro:bundling:progress","_t":1781422371749,"id":"1","progress":0.29340277777777773,"total":24,"current":13}
+{"_e":"metro:bundling:progress","_t":1781422371877,"id":"1","progress":0.4275147928994083,"total":26,"current":17}
+{"_e":"metro:bundling:progress","_t":1781422371977,"id":"1","progress":0.4275147928994083,"total":40,"current":23}
+{"_e":"metro:bundling:progress","_t":1781422372095,"id":"1","progress":0.4275147928994083,"total":43,"current":28}
+{"_e":"metro:bundling:progress","_t":1781422372201,"id":"1","progress":0.4275147928994083,"total":70,"current":35}
+{"_e":"metro:bundling:progress","_t":1781422372313,"id":"1","progress":0.4275147928994083,"total":78,"current":38}
+{"_e":"metro:bundling:progress","_t":1781422372414,"id":"1","progress":0.4275147928994083,"total":94,"current":44}
+{"_e":"metro:bundling:progress","_t":1781422372515,"id":"1","progress":0.4275147928994083,"total":103,"current":48}
+{"_e":"metro:bundling:progress","_t":1781422372624,"id":"1","progress":0.4275147928994083,"total":114,"current":61}
+{"_e":"metro:bundling:progress","_t":1781422372727,"id":"1","progress":0.4275147928994083,"total":147,"current":77}
+{"_e":"metro:bundling:progress","_t":1781422372827,"id":"1","progress":0.4275147928994083,"total":175,"current":101}
+{"_e":"metro:bundling:progress","_t":1781422372929,"id":"1","progress":0.4275147928994083,"total":197,"current":125}
+{"_e":"metro:bundling:progress","_t":1781422373056,"id":"1","progress":0.4275147928994083,"total":228,"current":140}
+{"_e":"metro:bundling:progress","_t":1781422373156,"id":"1","progress":0.4941089966912343,"total":239,"current":168}
+{"_e":"metro:bundling:progress","_t":1781422373259,"id":"1","progress":0.5790543007253853,"total":251,"current":191}
+{"_e":"metro:bundling:progress","_t":1781422373361,"id":"1","progress":0.621108055444231,"total":269,"current":212}
+{"_e":"metro:bundling:progress","_t":1781422373461,"id":"1","progress":0.6761767169687626,"total":287,"current":236}
+{"_e":"metro:bundling:progress","_t":1781422373564,"id":"1","progress":0.6761767169687626,"total":341,"current":266}
+{"_e":"metro:bundling:progress","_t":1781422373725,"id":"1","progress":0.7326199367997702,"total":354,"current":303}
+{"_e":"metro:bundling:progress","_t":1781422373827,"id":"1","progress":0.7692955900252801,"total":358,"current":314}
+{"_e":"metro:bundling:progress","_t":1781422373933,"id":"1","progress":0.826900434730105,"total":364,"current":331}
+{"_e":"metro:bundling:progress","_t":1781422374084,"id":"1","progress":0.8319043593768868,"total":364,"current":332}
+{"_e":"metro:bundling:progress","_t":1781422374266,"id":"1","progress":0.8640433016796292,"total":369,"current":343}
+{"_e":"metro:bundling:progress","_t":1781422374347,"id":"1","progress":0.8690887992890768,"total":369,"current":344}
+{"_e":"metro:bundling:progress","_t":1781422374463,"id":"1","progress":0.9363561729426552,"total":371,"current":359}
+{"_e":"metro:bundling:progress","_t":1781422374564,"id":"1","progress":0.9741278754340277,"total":384,"current":379}
+{"_e":"metro:bundling:progress","_t":1781422374667,"id":"1","progress":0.9741278754340277,"total":385,"current":379}
+{"_e":"metro:bundling:progress","_t":1781422374776,"id":"1","progress":0.9898990546386797,"total":395,"current":393}
+{"_e":"metro:bundling:progress","_t":1781422374882,"id":"1","progress":0.9898990546386797,"total":410,"current":407}
+{"_e":"metro:bundling:failed","_t":1781422374922,"id":"1","message":"Unable to resolve \"react-native-web/dist/index\" from \"apps\\customer-app-mobile\\node_modules\\expo-router\\build\\ExpoRoot.js\"\n> 1 | \"use strict\";\n  2 | 'use client';\n  3 | var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {\n  4 |     if (k2 === undefined) k2 = k;","importStack":"\u001b[1mImport stack:\u001b[22m\n\u001b[90m\u001b[39m\n\u001b[90m\u001b[90m \u001b[39m\u001b[90mapps\\customer-app-mobile\\node_modules\\expo-router\\build\\ExpoRoot.js\u001b[39m\n\u001b[90m\u001b[90m |\u001b[39m\u001b[90m \u001b[36mimport\u001b[39m\u001b[90m \u001b[32m\"react-native-web/dist/index\"\u001b[39m\u001b[90m\u001b[39m\n\u001b[90m\u001b[39m\n\u001b[90m\u001b[90m \u001b[39m\u001b[90mapps\\customer-app-mobile\\node_modules\\expo-router\\build\\qualified-entry.js\u001b[39m\n\u001b[90m\u001b[90m |\u001b[39m\u001b[90m \u001b[36mimport\u001b[39m\u001b[90m \u001b[32m\"./ExpoRoot\"\u001b[39m\u001b[90m\u001b[39m\n\u001b[90m\u001b[39m\n\u001b[90m\u001b[90m \u001b[39m\u001b[90mapps\\customer-app-mobile\\node_modules\\expo-router\\entry-classic.js\u001b[39m\n\u001b[90m\u001b[90m |\u001b[39m\u001b[90m \u001b[36mimport\u001b[39m\u001b[90m \u001b[32m\"expo-router/build/qualified-entry\"\u001b[39m\u001b[90m\u001b[39m\n\u001b[90m\u001b[39m\n\u001b[90m\u001b[90m \u001b[39m\u001b[90mapps\\customer-app-mobile\\node_modules\\expo-router\\entry.js\u001b[39m\n\u001b[90m\u001b[90m |\u001b[39m\u001b[90m \u001b[36mimport\u001b[39m\u001b[90m \u001b[32m\"expo-router/entry-classic\"\u001b[39m\u001b[90m\u001b[39m\n\u001b[90m\u001b[39m\n\u001b[90m\u001b[90m \u001b[39m\u001b[90m\u001b[39m\n\u001b[90m\u001b[90m |\u001b[39m\u001b[90m \u001b[36mimport\u001b[39m\u001b[90m \u001b[32m\"./apps/customer-app-mobile/node_modules/\u001b[1mexpo-router\u001b[22m/entry\"\u001b[39m\u001b[90m\u001b[39m\n","filename":null,"targetModuleName":"react-native-web/dist/index","originModulePath":"apps\\customer-app-mobile\\node_modules\\expo-router\\build\\ExpoRoot.js"}
+{"_e":"metro:bundling:started","_t":1781422381566,"id":"2","platform":"web","environment":null,"entry":"apps\\customer-app-mobile\\node_modules\\expo-router\\entry.js"}
+{"_e":"metro:bundling:progress","_t":1781422381566,"id":"2","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1781422381568,"id":"2","progress":0,"total":1,"current":0}
+{"_e":"metro:bundling:progress","_t":1781422381669,"id":"2","progress":0.24581597344820283,"total":119,"current":59}
+{"_e":"metro:bundling:progress","_t":1781422381769,"id":"2","progress":0.5855037781310954,"total":247,"current":189}
+{"_e":"metro:bundling:progress","_t":1781422381872,"id":"2","progress":0.843276090392584,"total":306,"current":281}
+{"_e":"metro:bundling:failed","_t":1781422381957,"id":"2","message":"Unable to resolve \"react-native-web/dist/index\" from \"apps\\customer-app-mobile\\node_modules\\expo-router\\build\\renderRootComponent.js\"\n> 1 | \"use strict\";\n  2 | var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {\n  3 |     if (k2 === undefined) k2 = k;\n  4 |     var desc = Object.getOwnPropertyDescriptor(m, k);","importStack":"\u001b[1mImport stack:\u001b[22m\n\u001b[90m\u001b[39m\n\u001b[90m\u001b[90m \u001b[39m\u001b[90mapps\\customer-app-mobile\\node_modules\\expo-router\\build\\renderRootComponent.js\u001b[39m\n\u001b[90m\u001b[90m |\u001b[39m\u001b[90m \u001b[36mimport\u001b[39m\u001b[90m \u001b[32m\"react-native-web/dist/index\"\u001b[39m\u001b[90m\u001b[39m\n\u001b[90m\u001b[39m\n\u001b[90m\u001b[90m \u001b[39m\u001b[90mapps\\customer-app-mobile\\node_modules\\expo-router\\entry-classic.js\u001b[39m\n\u001b[90m\u001b[90m |\u001b[39m\u001b[90m \u001b[36mimport\u001b[39m\u001b[90m \u001b[32m\"expo-router/build/renderRootComponent\"\u001b[39m\u001b[90m\u001b[39m\n\u001b[90m\u001b[39m\n\u001b[90m\u001b[90m \u001b[39m\u001b[90mapps\\customer-app-mobile\\node_modules\\expo-router\\entry.js\u001b[39m\n\u001b[90m\u001b[90m |\u001b[39m\u001b[90m \u001b[36mimport\u001b[39m\u001b[90m \u001b[32m\"expo-router/entry-classic\"\u001b[39m\u001b[90m\u001b[39m\n\u001b[90m\u001b[39m\n\u001b[90m\u001b[90m \u001b[39m\u001b[90m\u001b[39m\n\u001b[90m\u001b[90m |\u001b[39m\u001b[90m \u001b[36mimport\u001b[39m\u001b[90m \u001b[32m\"./apps/customer-app-mobile/node_modules/\u001b[1mexpo-router\u001b[22m/entry\"\u001b[39m\u001b[90m\u001b[39m\n","filename":null,"targetModuleName":"react-native-web/dist/index","originModulePath":"apps\\customer-app-mobile\\node_modules\\expo-router\\build\\renderRootComponent.js"}
+{"_e":"root:init","_t":1781423019090,"format":"v0-jsonl","version":"56.1.15"}
+{"_e":"env:mode","_t":1781423019092,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1781423019097,"mode":"development","files":["../..\\..\\.env"],"env":{}}
+{"_e":"devserver:start","_t":1781423019333,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../..\\..\\src\\app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1781423020368,"serverRoot":"../..\\..\\..\\..","projectRoot":"../..\\..","exporting":false,"flags":{"autolinkingModuleResolution":true,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"metro:instantiate","_t":1781423036458,"atlas":false,"workers":11,"host":"::","port":8081}
+{"_e":"metro:client_log","_t":1781423042930,"level":"error","data":["Project is incompatible with this version of Expo Go\n\nThis project requires a newer version of Expo Go.\n\nHow to fix this error:\nDownload the latest version of Expo Go from the Play Store."]}
+{"_e":"metro:client_log","_t":1781423067544,"level":"error","data":["Project is incompatible with this version of Expo Go\n\nThis project requires a newer version of Expo Go.\n\nHow to fix this error:\nDownload the latest version of Expo Go from the Play Store."]}
+{"_e":"metro:client_log","_t":1781423072582,"level":"error","data":["Project is incompatible with this version of Expo Go\n\nThis project requires a newer version of Expo Go.\n\nHow to fix this error:\nDownload the latest version of Expo Go from the Play Store."]}
