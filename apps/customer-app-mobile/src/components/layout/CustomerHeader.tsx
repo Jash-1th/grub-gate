@@ -7,7 +7,17 @@ import { theme } from '../../theme';
 export function CustomerHeader() {
   const pathname = usePathname();
 
-  if (pathname === '/search' || pathname === '/your-orders' || pathname === '/profile' || pathname === '/plan' || pathname === '/plan/restaurants' || pathname.startsWith('/restaurant/') || pathname === '/weekly-menu') {
+  if (
+    pathname === '/search' ||
+    pathname === '/your-orders' ||
+    pathname === '/profile' ||
+    pathname === '/plan' ||
+    pathname === '/plan/restaurants' ||
+    pathname.startsWith('/restaurant/') ||
+    pathname === '/weekly-menu' ||
+    pathname === '/meal-calendar' ||
+    pathname === '/subscription'
+  ) {
     return null;
   }
 

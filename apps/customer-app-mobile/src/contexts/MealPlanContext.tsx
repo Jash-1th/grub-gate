@@ -49,7 +49,7 @@ type MealPlanState = {
   selectedRestaurantData: Restaurant | null;
   selectedRestaurants: SelectedRestaurant[];
   maxRestaurants: number | null;
-  weeklyPlan: WeekPlan;
+  weeklyPlans: { week0: WeekPlan; week1: WeekPlan };
 };
 
 type MealPlanContextValue = MealPlanState & {
@@ -62,15 +62,15 @@ type MealPlanContextValue = MealPlanState & {
   getSelectedRestaurantCount: () => number;
   getSelectedRestaurants: () => SelectedRestaurant[];
   removeSelectedRestaurant: (restaurantId: string) => void;
-  clearItemsByRestaurant: (restaurantId: string) => number;
-  getItemCountForRestaurant: (restaurantId: string) => number;
-  addItemToPlan: (item: MenuItem, day: DayId, mealType: MealType) => void;
-  removeItemFromPlan: (planId: string, day: DayId, mealType: MealType) => void;
-  clearSlot: (day: DayId, mealType: MealType) => void;
-  clearWeek: () => void;
-  getMealItems: (day: DayId, mealType: MealType) => PlannedMealItem[];
-  getTotalItems: () => number;
-  getTotalCost: () => number;
+  clearItemsByRestaurant: (restaurantId: string, weekIndex?: number) => number;
+  getItemCountForRestaurant: (restaurantId: string, weekIndex?: number) => number;
+  addItemToPlan: (item: MenuItem, day: DayId, mealType: MealType, weekIndex?: number) => void;
+  removeItemFromPlan: (planId: string, day: DayId, mealType: MealType, weekIndex?: number) => void;
+  clearSlot: (day: DayId, mealType: MealType, weekIndex?: number) => void;
+  clearWeek: (weekIndex?: number) => void;
+  getMealItems: (day: DayId, mealType: MealType, weekIndex?: number) => PlannedMealItem[];
+  getTotalItems: (weekIndex?: number) => number;
+  getTotalCost: (weekIndex?: number) => number;
 };
 
 const MealPlanContext = createContext<MealPlanContextValue | null>(null);
@@ -81,7 +81,7 @@ const initialState: MealPlanState = {
   selectedRestaurantData: null,
   selectedRestaurants: [],
   maxRestaurants: 2,
-  weeklyPlan: createEmptyWeekPlan(),
+  weeklyPlans: { week0: createEmptyWeekPlan(), week1: createEmptyWeekPlan() },
 };
 
 type SelectedRestaurant = {
@@ -257,15 +257,16 @@ export function MealPlanProvider({ children }: PropsWithChildren) {
     });
   }, []);
 
-  const clearItemsByRestaurant = useCallback((restaurantId: string) => {
+  const clearItemsByRestaurant = useCallback((restaurantId: string, weekIndex: number = 0) => {
     let removedCount = 0;
+    const weekKey = `week${weekIndex}` as keyof typeof initialState.weeklyPlans;
 
     setState((current) => {
       const weeklyPlan = createEmptyWeekPlan();
 
       daysOfWeek.forEach((day) => {
         mealTypes.forEach((mealType) => {
-          const items = current.weeklyPlan[day.id][mealType.id];
+          const items = current.weeklyPlans[weekKey][day.id][mealType.id];
           const remainingItems = items.filter((item) => item.restaurantId !== restaurantId);
           removedCount += items.length - remainingItems.length;
           weeklyPlan[day.id][mealType.id] = remainingItems;
@@ -274,23 +275,28 @@ export function MealPlanProvider({ children }: PropsWithChildren) {
 
       return {
         ...current,
-        weeklyPlan,
+        weeklyPlans: {
+          ...current.weeklyPlans,
+          [weekKey]: weeklyPlan,
+        },
       };
     });
 
     return removedCount;
   }, []);
 
-  const getItemCountForRestaurant = useCallback((restaurantId: string) => {
+  const getItemCountForRestaurant = useCallback((restaurantId: string, weekIndex: number = 0) => {
+    const weekKey = `week${weekIndex}` as keyof typeof state.weeklyPlans;
     return daysOfWeek.reduce((total, day) => (
       total +
       mealTypes.reduce((mealTotal, mealType) => (
-        mealTotal + state.weeklyPlan[day.id][mealType.id].filter((item) => item.restaurantId === restaurantId).length
+        mealTotal + state.weeklyPlans[weekKey][day.id][mealType.id].filter((item) => item.restaurantId === restaurantId).length
       ), 0)
     ), 0);
-  }, [state.weeklyPlan]);
+  }, [state.weeklyPlans]);
 
-  const addItemToPlan = useCallback((item: MenuItem, day: DayId, mealType: MealType) => {
+  const addItemToPlan = useCallback((item: MenuItem, day: DayId, mealType: MealType, weekIndex: number = 0) => {
+    const weekKey = `week${weekIndex}` as keyof typeof initialState.weeklyPlans;
     setState((current) => {
       if (!current.selectedRestaurantId || !current.selectedRestaurantName) return current;
 
@@ -305,69 +311,87 @@ export function MealPlanProvider({ children }: PropsWithChildren) {
 
       return {
         ...current,
-        weeklyPlan: {
-          ...current.weeklyPlan,
-          [day]: {
-            ...current.weeklyPlan[day],
-            [mealType]: [...current.weeklyPlan[day][mealType], plannedItem],
+        weeklyPlans: {
+          ...current.weeklyPlans,
+          [weekKey]: {
+            ...current.weeklyPlans[weekKey],
+            [day]: {
+              ...current.weeklyPlans[weekKey][day],
+              [mealType]: [...current.weeklyPlans[weekKey][day][mealType], plannedItem],
+            },
           },
         },
       };
     });
   }, []);
 
-  const removeItemFromPlan = useCallback((planId: string, day: DayId, mealType: MealType) => {
+  const removeItemFromPlan = useCallback((planId: string, day: DayId, mealType: MealType, weekIndex: number = 0) => {
+    const weekKey = `week${weekIndex}` as keyof typeof initialState.weeklyPlans;
     setState((current) => ({
       ...current,
-      weeklyPlan: {
-        ...current.weeklyPlan,
-        [day]: {
-          ...current.weeklyPlan[day],
-          [mealType]: current.weeklyPlan[day][mealType].filter((item) => item.planId !== planId),
+      weeklyPlans: {
+        ...current.weeklyPlans,
+        [weekKey]: {
+          ...current.weeklyPlans[weekKey],
+          [day]: {
+            ...current.weeklyPlans[weekKey][day],
+            [mealType]: current.weeklyPlans[weekKey][day][mealType].filter((item) => item.planId !== planId),
+          },
         },
       },
     }));
   }, []);
 
-  const clearSlot = useCallback((day: DayId, mealType: MealType) => {
+  const clearSlot = useCallback((day: DayId, mealType: MealType, weekIndex: number = 0) => {
+    const weekKey = `week${weekIndex}` as keyof typeof initialState.weeklyPlans;
     setState((current) => ({
       ...current,
-      weeklyPlan: {
-        ...current.weeklyPlan,
-        [day]: {
-          ...current.weeklyPlan[day],
-          [mealType]: [],
+      weeklyPlans: {
+        ...current.weeklyPlans,
+        [weekKey]: {
+          ...current.weeklyPlans[weekKey],
+          [day]: {
+            ...current.weeklyPlans[weekKey][day],
+            [mealType]: [],
+          },
         },
       },
     }));
   }, []);
 
-  const clearWeek = useCallback(() => {
+  const clearWeek = useCallback((weekIndex: number = 0) => {
+    const weekKey = `week${weekIndex}` as keyof typeof initialState.weeklyPlans;
     setState((current) => ({
       ...current,
-      weeklyPlan: createEmptyWeekPlan(),
+      weeklyPlans: {
+        ...current.weeklyPlans,
+        [weekKey]: createEmptyWeekPlan(),
+      },
     }));
   }, []);
 
-  const getMealItems = useCallback((day: DayId, mealType: MealType) => {
-    return state.weeklyPlan[day][mealType];
-  }, [state.weeklyPlan]);
+  const getMealItems = useCallback((day: DayId, mealType: MealType, weekIndex: number = 0) => {
+    const weekKey = `week${weekIndex}` as keyof typeof state.weeklyPlans;
+    return state.weeklyPlans[weekKey][day][mealType];
+  }, [state.weeklyPlans]);
 
-  const getTotalItems = useCallback(() => {
+  const getTotalItems = useCallback((weekIndex: number = 0) => {
+    const weekKey = `week${weekIndex}` as keyof typeof state.weeklyPlans;
     return daysOfWeek.reduce((total, day) => (
       total +
-      mealTypes.reduce((mealTotal, mealType) => mealTotal + state.weeklyPlan[day.id][mealType.id].length, 0)
+      mealTypes.reduce((mealTotal, mealType) => mealTotal + state.weeklyPlans[weekKey][day.id][mealType.id].length, 0)
     ), 0);
-  }, [state.weeklyPlan]);
+  }, [state.weeklyPlans]);
 
-  const getTotalCost = useCallback(() => {
+  const getTotalCost = useCallback((weekIndex: number = 0) => {
+    const weekKey = `week${weekIndex}` as keyof typeof state.weeklyPlans;
     return daysOfWeek.reduce((total, day) => (
       total +
       mealTypes.reduce((mealTotal, mealType) => (
-        mealTotal + state.weeklyPlan[day.id][mealType.id].reduce((slotTotal, item) => slotTotal + (item.price || 0), 0)
+        mealTotal + state.weeklyPlans[weekKey][day.id][mealType.id].reduce((slotTotal, item) => slotTotal + (item.price || 0), 0)
       ), 0)
     ), 0);
-  }, [state.weeklyPlan]);
+  }, [state.weeklyPlans]);
 
   const value = useMemo<MealPlanContextValue>(() => ({
     ...state,
@@ -451,18 +475,32 @@ function mergeWeekPlan(weekPlan?: Partial<WeekPlan>) {
   return empty;
 }
 
-function normalizeState(saved: Partial<MealPlanState>): MealPlanState {
+function normalizeState(saved: Partial<MealPlanState> & { weeklyPlan?: WeekPlan }): MealPlanState {
+  // Handle backward compatibility with saved states that have weeklyPlan instead of weeklyPlans
+  let weeklyPlans = initialState.weeklyPlans;
+  if (saved.weeklyPlans) {
+    weeklyPlans = {
+      week0: mergeWeekPlan(saved.weeklyPlans.week0),
+      week1: mergeWeekPlan(saved.weeklyPlans.week1),
+    };
+  } else if (saved.weeklyPlan) {
+    weeklyPlans = {
+      week0: mergeWeekPlan(saved.weeklyPlan),
+      week1: createEmptyWeekPlan(),
+    };
+  }
+
   return {
     ...initialState,
     ...saved,
     selectedRestaurants: Array.isArray(saved.selectedRestaurants) ? saved.selectedRestaurants : [],
     maxRestaurants: saved.maxRestaurants === undefined ? initialState.maxRestaurants : saved.maxRestaurants,
-    weeklyPlan: mergeWeekPlan(saved.weeklyPlan),
+    weeklyPlans,
   };
 }
 
 function stateFromDatabase(data: Record<string, unknown>): MealPlanState {
-  const weeklyPlans = data.weeklyPlans as { week0?: Partial<WeekPlan> } | undefined;
+  const weeklyPlansData = data.weeklyPlans as { week0?: Partial<WeekPlan>; week1?: Partial<WeekPlan> } | undefined;
   const selectedRestaurants = Array.isArray(data.selectedRestaurants)
     ? data.selectedRestaurants.map((restaurant) => normalizeSelectedRestaurant(restaurant)).filter(Boolean) as SelectedRestaurant[]
     : [];
@@ -483,7 +521,10 @@ function stateFromDatabase(data: Record<string, unknown>): MealPlanState {
     selectedRestaurantData,
     selectedRestaurants,
     maxRestaurants: typeof data.maxRestaurants === 'number' ? data.maxRestaurants : 2,
-    weeklyPlan: mergeWeekPlan(weeklyPlans?.week0),
+    weeklyPlans: {
+      week0: mergeWeekPlan(weeklyPlansData?.week0),
+      week1: mergeWeekPlan(weeklyPlansData?.week1),
+    },
   };
 }
 
@@ -501,10 +542,10 @@ function buildDatabasePayload(state: MealPlanState, userId: string | null) {
   return {
     userId,
     weeklyPlans: {
-      week0: state.weeklyPlan,
-      week1: createEmptyWeekPlan(),
+      week0: state.weeklyPlans.week0,
+      week1: state.weeklyPlans.week1,
     },
-    totalItems: countWeekItems(state.weeklyPlan),
+    totalItems: countWeekItems(state.weeklyPlans.week0) + countWeekItems(state.weeklyPlans.week1),
     selectedRestaurants,
     selectedRestaurantId: state.selectedRestaurantId,
     selectedRestaurantName: state.selectedRestaurantName,

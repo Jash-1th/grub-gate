@@ -1,4 +1,4 @@
-import { router, Stack } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -48,6 +48,7 @@ const getShortDay = (dayLabel: string) => {
 
 export default function WeeklyMenuScreen() {
   const insets = useSafeAreaInsets();
+  const params = useLocalSearchParams<{ day?: string | string[]; mealType?: string | string[]; week?: string | string[] }>();
   const {
     selectedRestaurantId,
     selectedRestaurantName,
@@ -73,6 +74,7 @@ export default function WeeklyMenuScreen() {
   const [activeDay, setActiveDay] = useState<DayId>('monday');
   const [activeMealType, setActiveMealType] = useState<MealType>('lunch');
   const [isWeek2Enabled, setIsWeek2Enabled] = useState(false);
+  const [selectedWeek, setSelectedWeek] = useState(0);
   const [showRestaurantReplacementModal, setShowRestaurantReplacementModal] = useState(false);
   const [showMealPickerSheet, setShowMealPickerSheet] = useState(false);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
@@ -80,8 +82,34 @@ export default function WeeklyMenuScreen() {
   const [errorMessage, setErrorMessage] = useState('');
 
   const restaurantId = selectedRestaurantId || '';
-  const totalItems = getTotalItems();
-  const totalCost = getTotalCost();
+  const week1TotalItems = getTotalItems(0);
+  const week2TotalItems = getTotalItems(1);
+  const hasWeek2Meals = week2TotalItems > 0;
+  const shouldShowWeek2Toggle = isWeek2Enabled || hasWeek2Meals;
+  const totalItems = getTotalItems(selectedWeek);
+  const totalCost = getTotalCost(selectedWeek);
+
+  useEffect(() => {
+    const dayParam = Array.isArray(params.day) ? params.day[0] : params.day;
+    const mealTypeParam = Array.isArray(params.mealType) ? params.mealType[0] : params.mealType;
+    const weekParam = Array.isArray(params.week) ? params.week[0] : params.week;
+
+    const parsedWeek = Number(weekParam);
+    const nextWeek = parsedWeek === 1 ? 1 : 0;
+
+    if (weekParam !== undefined) {
+      setSelectedWeek(nextWeek);
+      if (nextWeek === 1) setIsWeek2Enabled(true);
+    }
+
+    if (dayParam && isValidDayId(dayParam)) {
+      setActiveDay(dayParam);
+    }
+
+    if (mealTypeParam && isValidMealType(mealTypeParam)) {
+      setActiveMealType(mealTypeParam);
+    }
+  }, [params.day, params.mealType, params.week]);
 
   const getWeekDateRange = (weekIndex: number) => {
     const start = getNextSunday();
@@ -145,7 +173,7 @@ export default function WeeklyMenuScreen() {
   }, [menuItems]);
 
   const handleAddItem = (item: MenuItem) => {
-    addItemToPlan(item, activeDay, activeMealType);
+    addItemToPlan(item, activeDay, activeMealType, selectedWeek);
     showFlash(`${item.name || 'Menu item'} added to ${formatDay(activeDay)} ${activeMealType}.`, 'success');
   };
 
@@ -156,7 +184,7 @@ export default function WeeklyMenuScreen() {
   };
 
   const handleRemoveMeal = (planId: string, day: DayId, mealType: MealType) => {
-    removeItemFromPlan(planId, day, mealType);
+    removeItemFromPlan(planId, day, mealType, selectedWeek);
     showFlash('Meal removed successfully', 'info');
   };
 
@@ -222,7 +250,7 @@ export default function WeeklyMenuScreen() {
           {totalItems > 0 && (
             <Pressable
               onPress={() => {
-                clearWeek();
+                clearWeek(selectedWeek);
                 setShowOptionsMenu(false);
               }}
               style={styles.optionItem}
@@ -250,24 +278,67 @@ export default function WeeklyMenuScreen() {
         
         {/* 2. Compressed Week Toggler Section */}
         <View style={styles.sectionContainer}>
-          <View style={styles.weekCard}>
-            <Ionicons name="calendar-outline" size={20} color={theme.colors.gray[600]} />
-            <View style={styles.weekCardTextContainer}>
-              <Text style={styles.weekCardWeekText}>Week 1</Text>
-              <Text style={styles.weekCardMealText}>{totalItems} meal{totalItems !== 1 ? 's' : ''}</Text>
-            </View>
-          </View>
+          {!shouldShowWeek2Toggle ? (
+            <>
+              <View style={styles.weekCard}>
+                <Ionicons name="calendar-outline" size={20} color={theme.colors.gray[600]} />
+                <View style={styles.weekCardTextContainer}>
+                  <Text style={styles.weekCardWeekText}>Week 1</Text>
+                  <Text style={styles.weekCardMealText}>{week1TotalItems} meal{week1TotalItems !== 1 ? 's' : ''}</Text>
+                </View>
+              </View>
 
-          <TouchableOpacity
-            style={styles.planWeek2Button}
-            onPress={() => setIsWeek2Enabled(!isWeek2Enabled)}
-          >
-            <Text style={styles.planWeek2ButtonText}>Plan Week 2 as well</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.planWeek2Button}
+                onPress={() => {
+                  setIsWeek2Enabled(true);
+                  setSelectedWeek(1);
+                }}
+              >
+                <Text style={styles.planWeek2ButtonText}>Plan Week 2 as well</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <View style={styles.weekTabsRow}>
+                {[0, 1].map((weekIndex) => {
+                  const weekTotalItems = getTotalItems(weekIndex);
+                  const isSelected = selectedWeek === weekIndex;
+                  return (
+                    <Pressable
+                      key={weekIndex}
+                      style={[styles.weekTabCard, isSelected && styles.weekTabCardActive]}
+                      onPress={() => setSelectedWeek(weekIndex)}
+                    >
+                      <Ionicons name="calendar-outline" size={18} color={isSelected ? theme.colors.brand.grubRed : theme.colors.gray[600]} />
+                      <Text style={[styles.weekTabWeekText, isSelected && styles.weekTabWeekTextActive]}>
+                        Week {weekIndex + 1}
+                      </Text>
+                      <Text style={[styles.weekTabMealText, isSelected && styles.weekTabMealTextActive]}>
+                        {weekTotalItems} meal{weekTotalItems !== 1 ? 's' : ''}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              <TouchableOpacity
+                style={styles.removeWeek2Button}
+                onPress={() => {
+                  clearWeek(1);
+                  setIsWeek2Enabled(false);
+                  setSelectedWeek(0);
+                  showFlash('Week 2 removed from your meal plan.', 'info');
+                }}
+              >
+                <Text style={styles.removeWeek2ButtonText}>Remove Week 2</Text>
+              </TouchableOpacity>
+            </>
+          )}
 
           <View style={styles.weekDateRow}>
             <Ionicons name="calendar-outline" size={14} color={theme.colors.gray[500]} />
-            <Text style={styles.weekDateText}>Week 1: {getWeekDateRange(0)}</Text>
+            <Text style={styles.weekDateText}>Week {selectedWeek + 1}: {getWeekDateRange(selectedWeek)}</Text>
           </View>
         </View>
 
@@ -282,7 +353,10 @@ export default function WeeklyMenuScreen() {
 
           <View style={styles.restaurantPillsRow}>
             {(selectedRestaurants.length > 0 ? selectedRestaurants : [{ restaurantName: selectedRestaurantName || 'Selected Restaurant' }]).map((rest, index, arr) => (
-              <View key={rest.restaurantId || index} style={styles.restaurantPillContainer}>
+              <View
+                key={('restaurantId' in rest && rest.restaurantId ? rest.restaurantId : `fallback-${index}`) as string}
+                style={styles.restaurantPillContainer}
+              >
                 <View style={styles.restaurantPill}>
                   <Text style={styles.restaurantPillText}>{rest.restaurantName}</Text>
                 </View>
@@ -316,9 +390,9 @@ export default function WeeklyMenuScreen() {
           >
             {daysOfWeek.map((day) => {
               const isActive = activeDay === day.id;
-              const dayDate = getDayDateNumber(day.id);
+              const dayDate = getDayDateNumber(day.id, selectedWeek);
               // Check if any meals are planned for this specific day
-              const hasMeals = mealTypes.some((mealType) => getMealItems(day.id, mealType.id).length > 0);
+              const hasMeals = mealTypes.some((mealType) => getMealItems(day.id, mealType.id, selectedWeek).length > 0);
 
               return (
                 <TouchableOpacity
@@ -352,7 +426,7 @@ export default function WeeklyMenuScreen() {
         {/* 5. Selected Day Meal Slots */}
         <View style={styles.mealSlotsContainer}>
           {mealTypes.map((mealType) => {
-            const items = getMealItems(activeDay, mealType.id);
+            const items = getMealItems(activeDay, mealType.id, selectedWeek);
             const itemCount = items.length;
 
             return (
@@ -381,10 +455,18 @@ export default function WeeklyMenuScreen() {
                   // Filled/Planned State
                   items.map((item, index) => (
                     <View key={item.planId || index} style={styles.filledMealCard}>
+                      <Pressable
+                        style={StyleSheet.absoluteFill}
+                        onPress={() => handleSlotPress(activeDay, mealType.id)}
+                      />
                       <View style={styles.filledMealTopRow}>
                         <Text style={styles.restaurantNameText}>{item.restaurantName || restaurant?.name || 'Restaurant'}</Text>
                         <TouchableOpacity
-                          onPress={() => handleRemoveMeal(item.planId, activeDay, mealType.id)}
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            handleRemoveMeal(item.planId, activeDay, mealType.id);
+                          }}
                           style={styles.removeMealButton}
                         >
                           <View style={styles.removeMealButtonInner}>
@@ -404,11 +486,6 @@ export default function WeeklyMenuScreen() {
                         </View>
                         <Text style={styles.helperText}>Want to add more? Click me</Text>
                       </View>
-
-                      <Pressable
-                        style={StyleSheet.absoluteFill}
-                        onPress={() => handleSlotPress(activeDay, mealType.id)}
-                      />
                     </View>
                   ))
                 ) : (
@@ -460,6 +537,7 @@ export default function WeeklyMenuScreen() {
           selectedRestaurants={selectedRestaurants}
           menuItems={groupedMenuItems}
           isLoading={isLoading}
+          selectedWeek={selectedWeek}
           onClose={() => setShowMealPickerSheet(false)}
           onDayChange={setActiveDay}
           onRestaurantChange={(nextRestaurantId) => {
@@ -486,6 +564,14 @@ export default function WeeklyMenuScreen() {
   );
 }
 
+function isValidDayId(value: string): value is DayId {
+  return daysOfWeek.some((day) => day.id === value);
+}
+
+function isValidMealType(value: string): value is MealType {
+  return mealTypes.some((mealType) => mealType.id === value);
+}
+
 // --- KEEPING THE SAME BOTTOM SHEET & HELPER COMPONENTS ---
 
 const sheetDayOrder: DayId[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
@@ -498,6 +584,7 @@ function MealPickerSheet({
   selectedRestaurants,
   menuItems,
   isLoading,
+  selectedWeek,
   onClose,
   onDayChange,
   onRestaurantChange,
@@ -510,6 +597,7 @@ function MealPickerSheet({
   selectedRestaurants: Array<{ restaurantId: string; restaurantName: string; restaurantData?: Restaurant | null }>;
   menuItems: MenuItem[];
   isLoading: boolean;
+  selectedWeek: number;
   onClose: () => void;
   onDayChange: (day: DayId) => void;
   onRestaurantChange: (restaurantId: string) => void;
@@ -523,7 +611,7 @@ function MealPickerSheet({
     (item) => item.restaurantId === activeRestaurantId,
   );
   const { getMealItems, removeItemFromPlan } = useMealPlan();
-  const mealItems = getMealItems(activeDay, activeMealType);
+  const mealItems = getMealItems(activeDay, activeMealType, selectedWeek);
 
   const handleRestaurantStep = (direction: number) => {
     if (restaurantTabs.length <= 1) return;
@@ -545,7 +633,7 @@ function MealPickerSheet({
     const matchingItems = mealItems.filter((plannedItem) => getMenuItemId(plannedItem) === itemId);
     if (matchingItems.length > 0) {
       const lastItem = matchingItems[matchingItems.length - 1];
-      removeItemFromPlan(lastItem.planId, activeDay, activeMealType);
+      removeItemFromPlan(lastItem.planId, activeDay, activeMealType, selectedWeek);
     }
   };
 
@@ -580,7 +668,7 @@ function MealPickerSheet({
                 style={({ pressed }) => [styles.dayChip, isActive && styles.dayChipActive, pressed && styles.pressed]}
               >
                 <Text style={[styles.dayChipLabel, isActive && styles.dayChipLabelActive]}>{getShortDay(formatDay(day))}</Text>
-                <Text style={[styles.dayChipDate, isActive && styles.dayChipDateActive]}>{getDayDateLabel(day)}</Text>
+                <Text style={[styles.dayChipDate, isActive && styles.dayChipDateActive]}>{getDayDateLabel(day, selectedWeek)}</Text>
               </Pressable>
             );
           })}
@@ -897,16 +985,25 @@ function WeeklyMenuItemCard({ item, quantity, onIncrement, onDecrement }: { item
         )}
         <View style={styles.floatingStepperContainer}>
           {quantity === 0 ? (
-            <Pressable onPress={onIncrement} style={({ pressed }) => [styles.addButtonPill, pressed && styles.pressed]}>
+            <Pressable onPress={(e) => {
+              e.stopPropagation();
+              onIncrement();
+            }} style={({ pressed }) => [styles.addButtonPill, pressed && styles.pressed]}>
               <Text style={styles.addButtonText}>+ ADD</Text>
             </Pressable>
           ) : (
             <View style={styles.stepperPill}>
-              <Pressable onPress={onDecrement} style={({ pressed }) => [styles.stepperButton, styles.stepperButtonLeft, pressed && styles.pressed]}>
+              <Pressable onPress={(e) => {
+                e.stopPropagation();
+                onDecrement();
+              }} style={({ pressed }) => [styles.stepperButton, styles.stepperButtonLeft, pressed && styles.pressed]}>
                 <Ionicons name="remove" size={18} color="white" />
               </Pressable>
               <Text style={styles.stepperQuantity}>{quantity}</Text>
-              <Pressable onPress={onIncrement} style={({ pressed }) => [styles.stepperButton, styles.stepperButtonRight, pressed && styles.pressed]}>
+              <Pressable onPress={(e) => {
+                e.stopPropagation();
+                onIncrement();
+              }} style={({ pressed }) => [styles.stepperButton, styles.stepperButtonRight, pressed && styles.pressed]}>
                 <Ionicons name="add" size={18} color="white" />
               </Pressable>
             </View>
@@ -969,15 +1066,17 @@ function formatPrice(value: number) {
   return `$${value.toFixed(2)}`;
 }
 
-function getDayDateLabel(day: DayId) {
+function getDayDateLabel(day: DayId, weekIndex: number = 0) {
   const start = getNextSunday();
+  start.setDate(start.getDate() + weekIndex * 7);
   const dayIndex = sheetDayOrder.indexOf(day);
   start.setDate(start.getDate() + Math.max(dayIndex, 0));
   return formatShortDate(start);
 }
 
-function getDayDateNumber(day: DayId) {
+function getDayDateNumber(day: DayId, weekIndex: number = 0) {
   const start = getNextSunday();
+  start.setDate(start.getDate() + weekIndex * 7);
   const dayIndex = sheetDayOrder.indexOf(day);
   start.setDate(start.getDate() + Math.max(dayIndex, 0));
   return start.getDate().toString();
@@ -1157,6 +1256,57 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  weekTabsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  weekTabCard: {
+    flex: 1,
+    backgroundColor: theme.colors.white,
+    borderRadius: 16,
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 4,
+    padding: 12,
+    ...theme.shadow.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+  },
+  weekTabCardActive: {
+    backgroundColor: theme.colors.red[50],
+    borderColor: theme.colors.brand.grubRed,
+  },
+  weekTabWeekText: {
+    color: theme.colors.text.body,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  weekTabWeekTextActive: {
+    color: theme.colors.brand.grubRed,
+  },
+  weekTabMealText: {
+    color: theme.colors.text.muted,
+    fontSize: 12,
+  },
+  weekTabMealTextActive: {
+    color: theme.colors.gray[600],
+  },
+  removeWeek2Button: {
+    width: '100%',
+    height: 40,
+    backgroundColor: theme.colors.white,
+    borderWidth: 1,
+    borderColor: theme.colors.brand.grubRed,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+  },
+  removeWeek2ButtonText: {
+    color: theme.colors.brand.grubRed,
+    fontSize: 14,
+    fontWeight: '600',
+  },
   weekDateRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1312,7 +1462,7 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: theme.colors.green[500],
+    backgroundColor: theme.colors.green[600],
   },
 
   // 5. Meal Slots
@@ -1381,7 +1531,7 @@ const styles = StyleSheet.create({
   },
   filledMealCard: {
     borderWidth: 1.5,
-    borderColor: theme.colors.green[500],
+    borderColor: theme.colors.green[600],
     borderRadius: 20,
     backgroundColor: '#F0FDF4',
     padding: 16,
@@ -1400,6 +1550,7 @@ const styles = StyleSheet.create({
   },
   removeMealButton: {
     padding: 2,
+    zIndex: 10,
   },
   removeMealButtonInner: {
     width: 24,
@@ -1408,6 +1559,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.red[500],
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 10,
   },
   filledMealMiddleRow: {
     gap: 2,
@@ -1439,7 +1591,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   helperText: {
-    color: theme.colors.green[700],
+    color: theme.colors.green[800],
     fontSize: 11,
   },
   pressed: {

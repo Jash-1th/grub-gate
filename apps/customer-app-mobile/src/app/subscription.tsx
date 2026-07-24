@@ -1,6 +1,8 @@
-import { router, useRootNavigationState } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { router, Stack, useRootNavigationState } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useFlash } from '../contexts/FlashContext';
 import {
@@ -65,6 +67,7 @@ export default function SubscriptionScreen() {
   const { isAuthenticated, isHydrating } = useAuth();
   const { showFlash } = useFlash();
   const rootNavigationState = useRootNavigationState();
+  const insets = useSafeAreaInsets();
   const [selectedPlan, setSelectedPlan] = useState<PlanId>('monthly');
   const [showSetupModal, setShowSetupModal] = useState(false);
 
@@ -90,7 +93,7 @@ export default function SubscriptionScreen() {
   const plans = [
     {
       id: 'bi-weekly' as const,
-      name: 'Bi-Weekly Plan',
+      name: 'Bi-Weekly',
       description: 'Perfect for regular meal planning',
       price: pricingByPlan['bi-weekly'].total,
       period: 'every 2 weeks',
@@ -107,7 +110,7 @@ export default function SubscriptionScreen() {
     },
     {
       id: 'monthly' as const,
-      name: '1 Month Plan',
+      name: '1 Month',
       description: 'Best value for consistent planning',
       price: pricingByPlan.monthly.total,
       period: 'every month',
@@ -125,9 +128,7 @@ export default function SubscriptionScreen() {
     },
   ];
 
-  const handleGetStarted = (planId: PlanId) => {
-    setSelectedPlan(planId);
-
+  const handleSubscribeNow = () => {
     if (!isAuthenticated) {
       showFlash('Please login to subscribe to a plan.', 'info');
       router.push('/login?redirect=/subscription');
@@ -139,129 +140,163 @@ export default function SubscriptionScreen() {
 
   if (isHydrating) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator color={theme.colors.brand.grubRed} />
-        <Text style={styles.loadingText}>Loading subscription plans...</Text>
-      </View>
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={styles.centered}>
+          <ActivityIndicator color={theme.colors.brand.grubRed} />
+          <Text style={styles.loadingText}>Loading subscription plans...</Text>
+        </View>
+      </>
     );
   }
 
+  const selectedPlanMeta = plans.find((plan) => plan.id === selectedPlan) || plans[0];
+  const footerTotalLabel = formatPrice(currentPricing.total);
+  const FOOTER_HEIGHT = 86;
+
   return (
-    <View style={styles.page}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.heroBand}>
-          <Pressable onPress={() => router.push('/weekly-menu')} style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
-            <Text style={styles.backButtonText}>{'<'}  Back to Weekly Menu</Text>
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <SafeAreaView style={styles.page}>
+        <View style={styles.header}>
+          <Pressable
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+                return;
+              }
+              router.push('/weekly-menu');
+            }}
+            hitSlop={12}
+            style={({ pressed }) => [styles.headerButton, pressed && styles.pressed]}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Ionicons name="chevron-back" size={22} color={theme.colors.gray[900]} />
           </Pressable>
-          <Text style={styles.heroTitle}>Choose Your Subscription Plan</Text>
-          <Text style={styles.heroCopy}>Select the perfect plan for your meal planning needs</Text>
+
+          <Text style={styles.headerTitle}>Subscription</Text>
+          <View style={styles.headerButton} />
         </View>
 
-        <View style={styles.introBlock}>
-          <Text style={styles.introTitle}>Choose Your Plan</Text>
-          <Text style={styles.introCopy}>
-            Select the perfect plan for your meal planning needs. All plans include access to our restaurant network.
-          </Text>
-        </View>
-
-        <View style={styles.breakdownCard}>
-          <View style={styles.breakdownHeader}>
-            <Text style={styles.breakdownTitle}>Your Total Cost Breakdown</Text>
-            <Text style={styles.breakdownSubtitle}>
-              Based on your {totalItems} selected meal{totalItems === 1 ? '' : 's'} for the {getPlanDurationText(selectedPlan)} plan
-            </Text>
+        <ScrollView
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: insets.bottom + FOOTER_HEIGHT + theme.spacing[4] },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Choose your plan</Text>
+            <Text style={styles.sectionSubtitle}>Select one option to continue.</Text>
           </View>
 
-          <View style={styles.breakdownBody}>
-            <CostRow label="Meal Costs" value={currentPricing.subtotal} />
-            <CostRow label="Delivery Fee" value={currentPricing.deliveryFee} />
-            <CostRow label="Service Fee" value={currentPricing.serviceFee} />
-            <CostRow label="Tax" value={currentPricing.tax} />
-            <CostRow label="Platform Commission" value={currentPricing.platformCommission} />
+          <View style={styles.planList}>
+            {plans.map((plan) => {
+              const selected = selectedPlan === plan.id;
+              const isBrand = plan.color === 'brand';
 
-            <View style={styles.divider} />
-
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Total {getPlanDurationText(selectedPlan)}</Text>
-              <Text style={styles.totalValue}>{formatPrice(currentPricing.total)}</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.planList}>
-          {plans.map((plan) => {
-            const selected = selectedPlan === plan.id;
-            const isBrand = plan.color === 'brand';
-
-            return (
-              <Pressable
-                key={plan.id}
-                onPress={() => setSelectedPlan(plan.id)}
-                style={({ pressed }) => [
-                  styles.planCard,
-                  isBrand ? styles.planCardBrand : styles.planCardBlue,
-                  selected && styles.planCardSelected,
-                  pressed && styles.pressed,
-                ]}
-              >
-                {plan.popular ? (
-                  <View style={styles.popularPill}>
-                    <Text style={styles.popularPillText}>Most Popular</Text>
-                  </View>
-                ) : null}
-
-                {selected ? (
-                  <View style={styles.selectedBadge}>
-                    <Text style={styles.selectedBadgeText}>✓</Text>
-                  </View>
-                ) : null}
-
-                <Text style={styles.planName}>{plan.name}</Text>
-                <Text style={styles.planDescription}>{plan.description}</Text>
-
-                <View style={styles.planPriceRow}>
-                  <Text style={[styles.planPrice, isBrand ? styles.planPriceBrand : styles.planPriceBlue]}>
-                    {formatPrice(plan.price)}
-                  </Text>
-                  <Text style={styles.planPeriod}>{plan.period}</Text>
-                </View>
-
-                <View style={styles.featureList}>
-                  {plan.features.map((feature) => (
-                    <View key={feature} style={styles.featureRow}>
-                      <Text style={[styles.featureCheck, isBrand ? styles.featureCheckBrand : styles.featureCheckBlue]}>
-                        ✓
-                      </Text>
-                      <Text style={styles.featureText}>{feature}</Text>
-                    </View>
-                  ))}
-                </View>
-
+              return (
                 <Pressable
-                  onPress={() => handleGetStarted(plan.id)}
+                  key={plan.id}
+                  onPress={() => setSelectedPlan(plan.id)}
                   style={({ pressed }) => [
-                    styles.getStartedButton,
-                    isBrand ? styles.getStartedBrand : styles.getStartedBlue,
+                    styles.planCard,
+                    selected ? styles.planCardActive : styles.planCardInactive,
                     pressed && styles.pressed,
                   ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Select ${plan.name} plan`}
                 >
-                  <Text style={styles.getStartedText}>Get Started</Text>
-                </Pressable>
-              </Pressable>
-            );
-          })}
-        </View>
-      </ScrollView>
+                  {plan.popular ? (
+                    <View style={styles.popularPill}>
+                      <Text style={styles.popularPillText}>Most Popular</Text>
+                    </View>
+                  ) : null}
 
-      <SubscriptionSetupModal
-        visible={showSetupModal}
-        selectedPlan={plans.find((plan) => plan.id === selectedPlan) || plans[0]}
-        onClose={() => setShowSetupModal(false)}
-        onBack={() => setShowSetupModal(false)}
-        onUseCurrentLocation={() => showFlash('Location permission flow will be connected next.', 'info')}
-        onAddAddress={() => showFlash('Address form will be connected next.', 'info')}
-      />
-    </View>
+                  <View style={styles.planTopRow}>
+                    <View style={styles.planTitleBlock}>
+                      <Text style={[styles.planName, !selected && styles.planNameInactive]}>{plan.name}</Text>
+                      <Text style={[styles.planDescription, !selected && styles.planDescriptionInactive]}>
+                        {plan.description}
+                      </Text>
+                    </View>
+
+                    <View style={styles.radio}>
+                      <View style={[styles.radioOuter, selected && styles.radioOuterActive]}>
+                        {selected ? <View style={styles.radioInner} /> : null}
+                      </View>
+                    </View>
+                  </View>
+
+                  <View style={styles.planPriceRow}>
+                    <Text style={[styles.planPrice, isBrand ? styles.planPriceBrand : styles.planPriceBlue]}>
+                      {formatPrice(plan.price)}
+                    </Text>
+                    <Text style={[styles.planPeriod, !selected && styles.planDescriptionInactive]}>{plan.period}</Text>
+                  </View>
+
+                  <View style={styles.featureList}>
+                    {plan.features.map((feature) => (
+                      <View key={feature} style={styles.featureRow}>
+                        <Text style={[styles.featureCheck, isBrand ? styles.featureCheckBrand : styles.featureCheckBlue]}>
+                          ✓
+                        </Text>
+                        <Text style={[styles.featureText, !selected && styles.featureTextInactive]}>{feature}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <View style={styles.breakdownCard}>
+            <View style={styles.breakdownHeader}>
+              <Text style={styles.breakdownTitle}>Total Cost Breakdown</Text>
+              <Text style={styles.breakdownSubtitle}>
+                Based on {totalItems} meal{totalItems === 1 ? '' : 's'} for {getPlanDurationText(selectedPlan)}
+              </Text>
+            </View>
+
+            <View style={styles.breakdownBody}>
+              <CostRow label="Meal Costs" value={currentPricing.subtotal} />
+              <CostRow label="Delivery Fee" value={currentPricing.deliveryFee} />
+              <CostRow label="Service Fee" value={currentPricing.serviceFee} />
+              <CostRow label="Tax" value={currentPricing.tax} />
+              <CostRow label="Platform Commission" value={currentPricing.platformCommission} />
+
+              <View style={styles.receiptDivider} />
+
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>Total</Text>
+                <Text style={styles.totalValue}>{formatPrice(currentPricing.total)}</Text>
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+
+        <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
+          <Pressable
+            onPress={handleSubscribeNow}
+            style={({ pressed }) => [styles.subscribeButton, pressed && styles.pressed]}
+            accessibilityRole="button"
+            accessibilityLabel={`Subscribe now for ${footerTotalLabel}`}
+          >
+            <Text style={styles.subscribeButtonText}>Subscribe Now • {footerTotalLabel}</Text>
+          </Pressable>
+        </View>
+
+        <SubscriptionSetupModal
+          visible={showSetupModal}
+          selectedPlan={selectedPlanMeta}
+          onClose={() => setShowSetupModal(false)}
+          onBack={() => setShowSetupModal(false)}
+          onUseCurrentLocation={() => showFlash('Location permission flow will be connected next.', 'info')}
+          onAddAddress={() => showFlash('Address form will be connected next.', 'info')}
+        />
+      </SafeAreaView>
+    </>
   );
 }
 
@@ -809,7 +844,45 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.gray[50],
   },
   content: {
-    paddingBottom: theme.layout.bottomNavHeight + theme.spacing[8],
+    paddingTop: theme.spacing[3],
+    paddingHorizontal: theme.spacing[3],
+  },
+  header: {
+    height: 56,
+    paddingHorizontal: theme.spacing[4],
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: theme.colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border.light,
+  },
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: theme.radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    color: theme.colors.gray[900],
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  section: {
+    paddingTop: theme.spacing[3],
+    paddingBottom: theme.spacing[3],
+  },
+  sectionTitle: {
+    color: theme.colors.gray[900],
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  sectionSubtitle: {
+    marginTop: 6,
+    color: theme.colors.gray[600],
+    fontSize: 13,
+    fontWeight: '500',
   },
   centered: {
     flex: 1,
@@ -872,25 +945,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   breakdownCard: {
-    marginHorizontal: theme.spacing[3],
-    borderRadius: theme.radius.xl,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: theme.colors.border.default,
+    marginTop: theme.spacing[5],
+    borderRadius: 16,
     backgroundColor: theme.colors.white,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
     ...theme.shadow.sm,
   },
   breakdownHeader: {
     paddingHorizontal: theme.spacing[4],
-    paddingVertical: theme.spacing[4],
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border.light,
-    backgroundColor: theme.colors.gray[50],
+    paddingTop: theme.spacing[4],
+    paddingBottom: theme.spacing[3],
   },
   breakdownTitle: {
     color: theme.colors.gray[900],
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.semibold,
+    fontSize: 15,
+    fontWeight: '700',
   },
   breakdownSubtitle: {
     color: theme.colors.gray[600],
@@ -899,10 +969,10 @@ const styles = StyleSheet.create({
   },
   breakdownBody: {
     paddingHorizontal: theme.spacing[4],
-    paddingVertical: theme.spacing[4],
+    paddingBottom: theme.spacing[4],
   },
   costRow: {
-    minHeight: 45,
+    minHeight: 40,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -916,10 +986,11 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.semibold,
   },
-  divider: {
-    height: 1,
-    backgroundColor: theme.colors.border.default,
-    marginVertical: theme.spacing[2],
+  receiptDivider: {
+    borderTopWidth: 1,
+    borderStyle: 'dotted',
+    borderColor: '#E5E7EB',
+    marginVertical: theme.spacing[3],
   },
   totalRow: {
     minHeight: 50,
@@ -938,28 +1009,24 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.extrabold,
   },
   planList: {
-    gap: theme.spacing[6],
-    paddingTop: theme.spacing[6],
+    gap: theme.spacing[4],
   },
   planCard: {
-    marginHorizontal: theme.spacing[3],
     position: 'relative',
-    borderRadius: theme.radius.xl,
+    borderRadius: 16,
     borderWidth: 1,
-    backgroundColor: theme.colors.gray[50],
     paddingHorizontal: theme.spacing[4],
-    paddingTop: theme.spacing[6],
+    paddingTop: theme.spacing[4],
     paddingBottom: theme.spacing[4],
   },
-  planCardBlue: {
-    borderColor: '#bfdbfe',
+  planCardInactive: {
+    borderColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
   },
-  planCardBrand: {
-    borderColor: theme.colors.red[200],
-  },
-  planCardSelected: {
+  planCardActive: {
     borderColor: theme.colors.brand.grubRed,
     borderWidth: 2,
+    backgroundColor: '#FEF2F2',
   },
   popularPill: {
     position: 'absolute',
@@ -975,45 +1042,66 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.bold,
   },
-  selectedBadge: {
-    position: 'absolute',
-    top: -16,
-    right: theme.spacing[4],
-    width: 32,
-    height: 32,
-    borderRadius: theme.radius.full,
+  planTopRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: theme.spacing[3],
+  },
+  planTitleBlock: {
+    flex: 1,
+    minWidth: 0,
+  },
+  radio: {
+    width: 28,
+    alignItems: 'flex-end',
+    paddingTop: 2,
+  },
+  radioOuter: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#D1D5DB',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.green[600],
+    backgroundColor: '#FFFFFF',
   },
-  selectedBadgeText: {
-    color: theme.colors.white,
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.extrabold,
+  radioOuterActive: {
+    borderColor: theme.colors.brand.grubRed,
+  },
+  radioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: theme.colors.brand.grubRed,
   },
   planName: {
     color: theme.colors.gray[900],
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.extrabold,
-    textAlign: 'center',
-    marginBottom: theme.spacing[2],
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  planNameInactive: {
+    color: theme.colors.gray[800],
   },
   planDescription: {
+    marginTop: 4,
     color: theme.colors.gray[600],
-    fontSize: theme.typography.fontSize.sm,
-    textAlign: 'center',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  planDescriptionInactive: {
+    color: theme.colors.gray[600],
   },
   planPriceRow: {
-    marginTop: theme.spacing[4],
-    marginBottom: theme.spacing[5],
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'center',
+    alignItems: 'baseline',
     gap: theme.spacing[2],
+    marginTop: theme.spacing[3],
   },
   planPrice: {
-    fontSize: theme.typography.fontSize['3xl'],
-    fontWeight: theme.typography.fontWeight.extrabold,
+    fontSize: 20,
+    fontWeight: '800',
   },
   planPriceBlue: {
     color: theme.colors.blue[700],
@@ -1023,22 +1111,22 @@ const styles = StyleSheet.create({
   },
   planPeriod: {
     color: theme.colors.gray[600],
-    fontSize: theme.typography.fontSize.sm,
-    paddingBottom: theme.spacing[1],
+    fontSize: 12,
+    fontWeight: '500',
   },
   featureList: {
-    gap: theme.spacing[3],
-    marginBottom: theme.spacing[5],
+    gap: 8,
+    marginTop: theme.spacing[3],
   },
   featureRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: theme.spacing[3],
+    gap: 10,
   },
   featureCheck: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.bold,
-    lineHeight: theme.typography.lineHeight.tight,
+    fontSize: 13,
+    fontWeight: '800',
+    lineHeight: 16,
   },
   featureCheckBlue: {
     color: theme.colors.blue[600],
@@ -1049,25 +1137,36 @@ const styles = StyleSheet.create({
   featureText: {
     flex: 1,
     color: theme.colors.gray[700],
-    fontSize: theme.typography.fontSize.sm,
-    lineHeight: theme.typography.lineHeight.tight,
+    fontSize: 13,
+    lineHeight: 16,
+    fontWeight: '500',
   },
-  getStartedButton: {
-    minHeight: 38,
-    borderRadius: theme.radius.md,
+  featureTextInactive: {
+    color: theme.colors.gray[700],
+  },
+  footer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingTop: theme.spacing[3],
+    paddingHorizontal: theme.spacing[3],
+    backgroundColor: theme.colors.white,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border.light,
+    ...theme.shadow.md,
+  },
+  subscribeButton: {
+    height: 54,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  getStartedBlue: {
-    backgroundColor: theme.colors.blue[600],
-  },
-  getStartedBrand: {
     backgroundColor: theme.colors.brand.grubRed,
   },
-  getStartedText: {
+  subscribeButtonText: {
     color: theme.colors.white,
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.bold,
+    fontSize: 16,
+    fontWeight: '800',
   },
   modalOverlay: {
     flex: 1,

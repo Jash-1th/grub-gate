@@ -1,6 +1,9 @@
-import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { router, Stack } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFlash } from '../contexts/FlashContext';
 import {
   mealTypes,
@@ -16,11 +19,20 @@ import {
   type SubscriptionCalendarMeal,
   type SubscriptionStatus,
 } from '../lib/mealCalendarApi';
+import { MealDetailsSheet } from '../components/meal-calendar/MealDetailsSheet';
 import { theme } from '../theme';
 
 const calendarDayOrder: DayId[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
+type MealDetailsSelection = {
+  date: Date;
+  mealType: MealType;
+  items: PlannedMealItem[];
+};
+
 export default function MealCalendarScreen() {
+  const insets = useSafeAreaInsets();
+  const params = useLocalSearchParams<{ includeWeek2?: string | string[] }>();
   const { getMealItems, getTotalItems, getTotalCost } = useMealPlan();
   const { showFlash } = useFlash();
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
@@ -28,11 +40,14 @@ export default function MealCalendarScreen() {
   const [isLoadingSubscriptionCalendar, setIsLoadingSubscriptionCalendar] = useState(true);
 
   const weekStart = useMemo(() => getNextSunday(), []);
-  const totalMeals = getTotalItems();
-  const totalCost = getTotalCost();
-  const lunchCount = getMealTypeCount(getMealItems, 'lunch');
-  const dinnerCount = getMealTypeCount(getMealItems, 'dinner');
+  const includeWeek2Param = Array.isArray(params.includeWeek2) ? params.includeWeek2[0] : params.includeWeek2;
+  const week1TotalMeals = getTotalItems(0);
+  const week2TotalMeals = getTotalItems(1);
+  const shouldIncludeWeek2 = includeWeek2Param === '1' || week2TotalMeals > 0;
+  const checkoutTotalMeals = week1TotalMeals + (shouldIncludeWeek2 ? week2TotalMeals : 0);
+  const checkoutTotalCost = getTotalCost(0) + (shouldIncludeWeek2 ? getTotalCost(1) : 0);
   const hasActiveSubscription = Boolean(subscriptionStatus?.hasActiveSubscription);
+  const [selectedMealDetails, setSelectedMealDetails] = useState<MealDetailsSelection | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -67,7 +82,7 @@ export default function MealCalendarScreen() {
   }, []);
 
   const handleSubscribe = () => {
-    if (totalMeals === 0) {
+    if (checkoutTotalMeals === 0) {
       showFlash('Please select at least one meal before choosing a subscription plan.', 'info');
       router.push('/weekly-menu');
       return;
@@ -76,231 +91,290 @@ export default function MealCalendarScreen() {
     router.push('/subscription');
   };
 
-  const handleViewDetails = (items: PlannedMealItem[]) => {
+  const handleEditSlot = (weekIndex: number, day: DayId, mealType: MealType) => {
+    showFlash(`Edit ${formatDayName(day)} ${formatMealType(mealType)} in the menu.`, 'info');
+    router.push({
+      pathname: '/weekly-menu',
+      params: {
+        day,
+        mealType,
+        week: String(weekIndex),
+      },
+    });
+  };
+
+  const handleOpenMealDetails = (weekIndex: number, day: DayId, mealType: MealType) => {
+    const items = getMealItems(day, mealType, weekIndex);
     if (items.length === 0) return;
-    const firstItem = items[0];
-    showFlash(`${firstItem.name || 'Meal'} is planned for this slot.`, 'info');
+
+    const dayIndex = calendarDayOrder.indexOf(day);
+    if (dayIndex < 0) return;
+
+    setSelectedMealDetails({
+      date: getDateForIndex(weekStart, dayIndex + weekIndex * 7),
+      mealType,
+      items,
+    });
   };
 
   if (isLoadingSubscriptionCalendar) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator color={theme.colors.brand.grubRed} />
-        <Text style={styles.loadingText}>Loading meal calendar...</Text>
-      </View>
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={styles.centered}>
+          <ActivityIndicator color={theme.colors.brand.grubRed} />
+          <Text style={styles.loadingText}>Loading meal calendar...</Text>
+        </View>
+      </>
     );
   }
 
   if (hasActiveSubscription && subscriptionCalendar) {
-    return <SubscribedMealCalendar calendarData={subscriptionCalendar} />;
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <SubscribedMealCalendar calendarData={subscriptionCalendar} />
+      </>
+    );
   }
 
   return (
-    <View style={styles.page}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.heroBand}>
-          <View style={styles.heroTitleRow}>
-            <View style={styles.heroIconBubble}>
-              <Text style={styles.heroIconText}>C</Text>
-            </View>
-            <Text style={styles.heroTitle}>Meal Plan Preview</Text>
-          </View>
-          <Text style={styles.heroCopy}>Preview your planned meals schedule before subscribing</Text>
-
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <SafeAreaView style={styles.page}>
+        <View style={styles.previewHeader}>
           <Pressable
-            onPress={() => router.push('/weekly-menu')}
-            style={({ pressed }) => [styles.heroSecondaryButton, pressed && styles.pressed]}
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+                return;
+              }
+              router.push('/weekly-menu');
+            }}
+            hitSlop={12}
+            style={({ pressed }) => [styles.previewHeaderButton, pressed && styles.pressed]}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
           >
-            <Text style={styles.heroSecondaryButtonText}>{'<'} Back to Menu</Text>
+            <Ionicons name="chevron-back" size={22} color={theme.colors.gray[900]} />
           </Pressable>
 
+          <Text style={styles.previewHeaderTitle}>Plan Preview</Text>
+          <View style={styles.previewHeaderButton} />
+        </View>
+
+        <ScrollView
+          contentContainerStyle={[
+            styles.previewScrollContent,
+            { paddingBottom: insets.bottom + PREVIEW_FOOTER_HEIGHT + theme.spacing[4] },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.orderSummaryRow}>
+            <Text style={styles.orderSummaryPrimary}>
+              {checkoutTotalMeals} Meal{checkoutTotalMeals === 1 ? '' : 's'}
+            </Text>
+            <Text style={styles.orderSummaryPrimary}>{formatPrice(checkoutTotalCost)}</Text>
+          </View>
+
+          <WeekMenuSection
+            title="Week 1 Menu"
+            weekIndex={0}
+            weekStart={weekStart}
+            weekOffsetDays={0}
+            getMealItems={getMealItems}
+            onEdit={handleEditSlot}
+            onViewDetails={handleOpenMealDetails}
+          />
+
+          {shouldIncludeWeek2 ? (
+            <WeekMenuSection
+              title="Week 2 Menu"
+              weekIndex={1}
+              weekStart={weekStart}
+              weekOffsetDays={7}
+              getMealItems={getMealItems}
+              onEdit={handleEditSlot}
+              onViewDetails={handleOpenMealDetails}
+            />
+          ) : null}
+        </ScrollView>
+
+        <View style={[styles.previewFooter, { paddingBottom: insets.bottom + theme.spacing[3] }]}>
           <Pressable
             onPress={handleSubscribe}
-            style={({ pressed }) => [styles.heroPrimaryButton, pressed && styles.pressed]}
+            disabled={checkoutTotalMeals === 0}
+            style={({ pressed }) => [
+              styles.previewSubscribeButton,
+              checkoutTotalMeals === 0 && styles.previewSubscribeButtonDisabled,
+              pressed && checkoutTotalMeals > 0 && styles.pressed,
+            ]}
           >
-            <Text style={styles.heroPrimaryButtonText}>Subscribe to Plan</Text>
+            <Text style={styles.previewSubscribeButtonText}>
+              Subscribe to Plan • {formatPrice(checkoutTotalCost)}
+            </Text>
           </Pressable>
         </View>
 
-        <View style={styles.previewCard}>
-          <View style={styles.cardHeader}>
-            <View style={styles.blueIconBubble}>
-              <Text style={styles.blueIconText}>O</Text>
-            </View>
-            <View style={styles.headerTextBlock}>
-              <Text style={styles.cardTitle}>Meal Plan Preview</Text>
-              <Text style={styles.cardSubtitle}>Plan Type: Bi-Weekly</Text>
-            </View>
-          </View>
+        <MealDetailsSheet
+          visible={Boolean(selectedMealDetails)}
+          mealType={selectedMealDetails?.mealType ?? 'lunch'}
+          date={selectedMealDetails?.date ?? null}
+          items={selectedMealDetails?.items ?? []}
+          onClose={() => setSelectedMealDetails(null)}
+        />
+      </SafeAreaView>
+    </>
+  );
+}
 
-          <View style={styles.totalBlock}>
-            <Text style={styles.totalMealsText}>{totalMeals}</Text>
-            <Text style={styles.totalMealsLabel}>Total Meals</Text>
-          </View>
+const PREVIEW_FOOTER_HEIGHT = 76;
 
-          <View style={styles.progressMetaRow}>
-            <Text style={styles.progressLabel}>Meal Planning</Text>
-            <Text style={styles.progressValue}>
-              {totalMeals} meal{totalMeals === 1 ? '' : 's'} planned
-            </Text>
-          </View>
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: totalMeals > 0 ? '100%' : '8%' }]} />
-          </View>
-        </View>
-
-        <View style={styles.scheduleCard}>
-          <View style={styles.sectionTitleRow}>
-            <Text style={styles.sectionIcon}>[]</Text>
-            <Text style={styles.sectionTitle}>Weekly Meal Schedule</Text>
-          </View>
-          <Text style={styles.sectionSubtitle}>Click on dates from {formatRange(weekStart)} (1 week)</Text>
-
-          <Text style={styles.jumpLabel}>Jump to date:</Text>
-          <View style={styles.dateInput}>
-            <Text style={styles.dateInputText}>{formatInputDate(weekStart)}</Text>
-            <Text style={styles.dateInputIcon}>[]</Text>
-          </View>
-
-          <View style={styles.dayList}>
-            {calendarDayOrder.map((day, index) => {
-              const date = getDateForIndex(weekStart, index);
-              const isFirstDay = index === 0;
-
-              return (
-                <View key={day} style={[styles.dayCard, isFirstDay && styles.activeDayCard]}>
-                  <View style={styles.dayHeader}>
-                    <View style={[styles.dayNumberBubble, isFirstDay && styles.activeDayNumberBubble]}>
-                      <Text style={[styles.dayNumberText, isFirstDay && styles.activeDayNumberText]}>
-                        {date.getDate()}
-                      </Text>
-                    </View>
-                    <View>
-                      <Text style={styles.dayName}>{formatDayName(day)}</Text>
-                      <Text style={styles.dayDate}>{formatMonthDay(date)}</Text>
-                    </View>
-                  </View>
-
-                  <MealPreviewRow
-                    mealType="lunch"
-                    items={getMealItems(day, 'lunch')}
-                    onViewDetails={handleViewDetails}
-                  />
-                  <MealPreviewRow
-                    mealType="dinner"
-                    items={getMealItems(day, 'dinner')}
-                    onViewDetails={handleViewDetails}
-                  />
-                </View>
-              );
-            })}
-          </View>
-        </View>
-
-        <View style={styles.summaryCard}>
-          <View style={styles.sectionTitleRow}>
-            <View style={styles.softBlueIcon}>
-              <Text style={styles.softBlueIconText}>B</Text>
-            </View>
-            <Text style={styles.sectionTitle}>Meal Breakdown</Text>
-          </View>
-
-          <BreakdownRow label="Lunch" value={lunchCount} tone="lunch" />
-          <BreakdownRow label="Dinner" value={dinnerCount} tone="dinner" />
-        </View>
-
-        <View style={styles.summaryCard}>
-          <View style={styles.sectionTitleRow}>
-            <View style={styles.softGreenIcon}>
-              <Text style={styles.softGreenIconText}>OK</Text>
-            </View>
-            <Text style={styles.sectionTitle}>Delivery Status</Text>
-          </View>
-
-          <View style={styles.deliveryRow}>
-            <Text style={styles.deliveryLabel}>Planned</Text>
-            <Text style={styles.deliveryValue}>{totalMeals}</Text>
-          </View>
-        </View>
-
-        <View style={styles.summaryCard}>
-          <View style={styles.sectionTitleRow}>
-            <View style={styles.softPurpleIcon}>
-              <Text style={styles.softPurpleIconText}>Z</Text>
-            </View>
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
-          </View>
-
-          <QuickActionRow label="Plan New Meals" tone="brand" onPress={() => router.push('/weekly-menu')} />
-          <QuickActionRow label="Refresh Calendar" tone="blue" onPress={() => showFlash('Calendar refreshed.', 'success')} />
-          <QuickActionRow label="Account Settings" tone="gray" onPress={() => showFlash('Account settings will be added soon.', 'info')} />
-        </View>
-
-        <Pressable onPress={handleSubscribe} style={({ pressed }) => [styles.subscribeCard, pressed && styles.pressed]}>
-          <View style={styles.subscribeIconBubble}>
-            <Text style={styles.subscribeIconText}>+</Text>
-          </View>
-          <View style={styles.subscribeCopyBlock}>
-            <Text style={styles.subscribeTitle}>Subscribe to Plan</Text>
-            <Text style={styles.subscribeCopy}>
-              Ready to start your meal journey? Subscribe now to get fresh, delicious meals delivered to your door!
-            </Text>
-          </View>
-          <View style={styles.startPill}>
-            <Text style={styles.startPillText}>START NOW</Text>
-          </View>
-        </Pressable>
-      </ScrollView>
+function WeekMenuSection({
+  title,
+  weekIndex,
+  weekStart,
+  weekOffsetDays,
+  getMealItems,
+  onEdit,
+  onViewDetails,
+}: {
+  title: string;
+  weekIndex: number;
+  weekStart: Date;
+  weekOffsetDays: number;
+  getMealItems: (day: DayId, mealType: MealType, weekIndex?: number) => PlannedMealItem[];
+  onEdit: (weekIndex: number, day: DayId, mealType: MealType) => void;
+  onViewDetails: (weekIndex: number, day: DayId, mealType: MealType) => void;
+}) {
+  return (
+    <View style={styles.weekSection}>
+      <Text style={styles.weekSectionTitle}>{title}</Text>
+      <View style={styles.previewDayList}>
+        {calendarDayOrder.map((day, index) => {
+          const date = getDateForIndex(weekStart, index + weekOffsetDays);
+          return (
+            <PreviewDayCard
+              key={`${weekIndex}-${day}`}
+              date={date}
+              day={day}
+              weekIndex={weekIndex}
+              getMealItems={getMealItems}
+              onEdit={onEdit}
+              onViewDetails={onViewDetails}
+            />
+          );
+        })}
+      </View>
     </View>
   );
 }
 
-function MealPreviewRow({
-  mealType,
-  items,
+function PreviewDayCard({
+  date,
+  day,
+  weekIndex,
+  getMealItems,
+  onEdit,
   onViewDetails,
 }: {
+  date: Date;
+  day: DayId;
+  weekIndex: number;
+  getMealItems: (day: DayId, mealType: MealType, weekIndex?: number) => PlannedMealItem[];
+  onEdit: (weekIndex: number, day: DayId, mealType: MealType) => void;
+  onViewDetails: (weekIndex: number, day: DayId, mealType: MealType) => void;
+}) {
+  const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+  const lunchItems = getMealItems(day, 'lunch', weekIndex);
+  const dinnerItems = getMealItems(day, 'dinner', weekIndex);
+
+  return (
+    <View style={styles.previewDayCard}>
+      <View style={styles.previewDateBlock}>
+        <Text style={styles.previewDateNumber}>{date.getDate()}</Text>
+        <Text style={styles.previewDateWeekday}>{weekday}</Text>
+      </View>
+
+      <View style={styles.previewSlotsColumn}>
+        <PreviewMealSlotRow
+          label="Lunch"
+          mealType="lunch"
+          items={lunchItems}
+          onEdit={() => onEdit(weekIndex, day, 'lunch')}
+          onViewDetails={() => onViewDetails(weekIndex, day, 'lunch')}
+        />
+        <PreviewMealSlotRow
+          label="Dinner"
+          mealType="dinner"
+          items={dinnerItems}
+          onEdit={() => onEdit(weekIndex, day, 'dinner')}
+          onViewDetails={() => onViewDetails(weekIndex, day, 'dinner')}
+        />
+      </View>
+    </View>
+  );
+}
+
+function PreviewMealSlotRow({
+  label,
+  mealType,
+  items,
+  onEdit,
+  onViewDetails,
+}: {
+  label: string;
   mealType: MealType;
   items: PlannedMealItem[];
-  onViewDetails: (items: PlannedMealItem[]) => void;
+  onEdit: () => void;
+  onViewDetails: () => void;
 }) {
   const count = items.length;
   const total = items.reduce((sum, item) => sum + getItemPrice(item), 0);
-  const isLunch = mealType === 'lunch';
+  const mealName =
+    count === 0 ? `No ${label.toLowerCase()} meal` : count === 1 ? items[0]?.name || label : `${count} meals`;
 
-  return (
-    <View style={[styles.mealRow, isLunch ? styles.lunchRow : styles.dinnerRow]}>
-      <View style={[styles.mealIconBubble, isLunch ? styles.lunchIconBubble : styles.dinnerIconBubble]}>
-        <Text style={styles.mealIconText}>{isLunch ? 'L' : 'D'}</Text>
+  const content = (
+    <>
+      <View style={styles.previewSlotLeft}>
+        <Text style={styles.previewSlotLabel}>{label}</Text>
+        <Text style={styles.previewMealName} numberOfLines={1}>
+          {mealName}
+        </Text>
       </View>
 
-      <View style={styles.mealRowTextBlock}>
-        <Text style={styles.mealRowTitle}>{formatMealType(mealType)}</Text>
-        <View style={styles.mealMetaRow}>
-          <Text style={styles.mealRowSubtitle}>{count === 0 ? 'No meals' : `${count} Item${count === 1 ? '' : 's'}`}</Text>
-          {count > 0 ? (
-            <Pressable onPress={() => onViewDetails(items)} style={({ pressed }) => [styles.viewDetailsButton, pressed && styles.pressed]}>
-              <Text style={styles.viewDetailsText}>View Details</Text>
-            </Pressable>
-          ) : null}
-        </View>
+      <View style={styles.previewSlotRight}>
+        {count > 0 ? <Text style={styles.previewSlotPrice}>{formatPrice(total)}</Text> : null}
+        {count > 0 ? (
+          <Pressable
+            onPress={(event) => {
+              event.stopPropagation();
+              onEdit();
+            }}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel={`Edit ${label}`}
+          >
+            <Text style={styles.previewEditText}>Edit</Text>
+          </Pressable>
+        ) : null}
       </View>
-
-      {count > 0 ? (
-        <View style={styles.pricePill}>
-          <Text style={styles.pricePillText}>{formatPrice(total)}</Text>
-        </View>
-      ) : null}
-    </View>
+    </>
   );
-}
 
-function BreakdownRow({ label, value, tone }: { label: string; value: number; tone: 'lunch' | 'dinner' }) {
+  if (count === 0) {
+    return <View style={[styles.previewSlotRow, styles.previewSlotRowEmpty]}>{content}</View>;
+  }
+
   return (
-    <View style={styles.breakdownRow}>
-      <Text style={styles.breakdownLabel}>{tone === 'lunch' ? 'L' : 'D'}  {label}</Text>
-      <Text style={styles.breakdownValue}>{value}</Text>
-    </View>
+    <Pressable
+      onPress={onViewDetails}
+      style={({ pressed }) => [styles.previewSlotRow, pressed && styles.pressed]}
+      accessibilityRole="button"
+      accessibilityLabel={`View ${label.toLowerCase()} details`}
+    >
+      {content}
+    </Pressable>
   );
 }
 
@@ -484,10 +558,6 @@ function SubscriptionMealRow({ meal }: { meal: SubscriptionCalendarMeal }) {
   );
 }
 
-function getMealTypeCount(getMealItems: (day: DayId, mealType: MealType) => PlannedMealItem[], mealType: MealType) {
-  return calendarDayOrder.reduce((total, day) => total + getMealItems(day, mealType).length, 0);
-}
-
 function groupSubscriptionMealsByDate(meals: SubscriptionCalendarMeal[]) {
   const groups = new Map<string, SubscriptionCalendarMeal[]>();
 
@@ -598,6 +668,167 @@ const styles = StyleSheet.create({
   page: {
     flex: 1,
     backgroundColor: theme.colors.gray[50],
+  },
+  previewHeader: {
+    height: 56,
+    paddingHorizontal: theme.spacing[4],
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: theme.colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border.light,
+  },
+  previewHeaderButton: {
+    width: 40,
+    height: 40,
+    borderRadius: theme.radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  previewHeaderTitle: {
+    color: theme.colors.gray[900],
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  previewScrollContent: {
+    paddingTop: theme.spacing[4],
+    paddingHorizontal: theme.spacing[4],
+  },
+  orderSummaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: theme.spacing[3],
+    paddingHorizontal: theme.spacing[4],
+    borderRadius: 16,
+    backgroundColor: theme.colors.white,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+    ...theme.shadow.sm,
+  },
+  orderSummaryPrimary: {
+    color: theme.colors.gray[900],
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  weekSection: {
+    marginTop: theme.spacing[5],
+  },
+  weekSectionTitle: {
+    color: theme.colors.gray[900],
+    fontSize: 16,
+    fontWeight: '800',
+    marginBottom: theme.spacing[3],
+  },
+  previewDayList: {
+    gap: theme.spacing[3],
+  },
+  previewDayCard: {
+    flexDirection: 'row',
+    gap: theme.spacing[3],
+    padding: theme.spacing[3],
+    borderRadius: 18,
+    backgroundColor: theme.colors.white,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+    ...theme.shadow.sm,
+  },
+  previewDateBlock: {
+    width: 56,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    backgroundColor: theme.colors.red[700],
+  },
+  previewDateNumber: {
+    color: theme.colors.white,
+    fontSize: 18,
+    fontWeight: '800',
+    lineHeight: 22,
+  },
+  previewDateWeekday: {
+    marginTop: 2,
+    color: 'rgba(255,255,255,0.92)',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  previewSlotsColumn: {
+    flex: 1,
+    gap: theme.spacing[2],
+  },
+  previewSlotRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: theme.spacing[3],
+    borderRadius: 14,
+    backgroundColor: theme.colors.gray[50],
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+  },
+  previewSlotRowEmpty: {
+    opacity: 0.5,
+  },
+  previewSlotLeft: {
+    flex: 1,
+    paddingRight: theme.spacing[2],
+  },
+  previewSlotLabel: {
+    color: theme.colors.gray[600],
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  previewMealName: {
+    marginTop: 2,
+    color: theme.colors.gray[900],
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  previewSlotRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing[2],
+  },
+  previewSlotPrice: {
+    color: theme.colors.gray[900],
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  previewEditText: {
+    color: theme.colors.gray[600],
+    fontSize: 13,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
+  previewFooter: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingTop: theme.spacing[3],
+    paddingHorizontal: theme.spacing[4],
+    backgroundColor: theme.colors.white,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border.light,
+    ...theme.shadow.md,
+  },
+  previewSubscribeButton: {
+    minHeight: 54,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.brand.grubRed,
+  },
+  previewSubscribeButtonDisabled: {
+    opacity: 0.55,
+  },
+  previewSubscribeButtonText: {
+    color: theme.colors.white,
+    fontSize: 16,
+    fontWeight: '800',
   },
   centered: {
     flex: 1,
