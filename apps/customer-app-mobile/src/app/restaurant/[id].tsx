@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../contexts/AuthContext';
 import { useFlash } from '../../contexts/FlashContext';
 import { useMealPlan } from '../../contexts/MealPlanContext';
 import {
@@ -44,6 +45,7 @@ type NutritionInfo = {
 export default function RestaurantDetailScreen() {
   const params = useLocalSearchParams<{ id?: string; source?: string }>();
   const id = typeof params.id === 'string' ? params.id : '';
+  const { isSubscribed } = useAuth();
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,6 +65,13 @@ export default function RestaurantDetailScreen() {
     setSelectedRestaurant,
   } = useMealPlan();
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    if (!isSubscribed) return;
+
+    showFlash('Your subscription is already active. Opening your meal calendar instead.', 'info');
+    router.replace('/meal-calendar?source=subscription');
+  }, [isSubscribed, showFlash]);
 
   useEffect(() => {
     let mounted = true;
@@ -194,6 +203,15 @@ export default function RestaurantDetailScreen() {
       <View style={styles.centered}>
         <ActivityIndicator color={theme.colors.brand.grubRed} />
         <Text style={styles.loadingText}>Loading restaurant...</Text>
+      </View>
+    );
+  }
+
+  if (isSubscribed) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator color={theme.colors.brand.grubRed} />
+        <Text style={styles.loadingText}>Opening your active meal calendar...</Text>
       </View>
     );
   }

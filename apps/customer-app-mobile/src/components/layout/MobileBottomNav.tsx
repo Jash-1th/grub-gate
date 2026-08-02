@@ -23,7 +23,7 @@ const tabs: TabItem[] = [
   },
   {
     label: 'Search',
-    href: '/search',
+    href: '/plan',
     match: '/search',
     inactiveIcon: 'search-outline',
     activeIcon: 'search',

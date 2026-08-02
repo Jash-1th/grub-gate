@@ -4,6 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '../contexts/AuthContext';
 import { useFlash } from '../contexts/FlashContext';
 import {
   mealTypes,
@@ -15,6 +16,7 @@ import {
 import {
   getMealCalendar,
   getSubscriptionStatus,
+  hasSubscriptionCoverageForNextTwoWeeks,
   type SubscriptionCalendarData,
   type SubscriptionCalendarMeal,
   type SubscriptionStatus,
@@ -32,43 +34,72 @@ type MealDetailsSelection = {
 
 export default function MealCalendarScreen() {
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ includeWeek2?: string | string[] }>();
-  const { getMealItems, getTotalItems, getTotalCost } = useMealPlan();
+  const params = useLocalSearchParams<{ includeWeek2?: string | string[]; source?: string | string[] }>();
+  const { getMealItems, getTotalItems, getTotalCost, hasHydrated } = useMealPlan();
+  const { isAuthenticated, isCheckingSubscription, isHydrating, isSubscribed } = useAuth();
   const { showFlash } = useFlash();
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   const [subscriptionCalendar, setSubscriptionCalendar] = useState<SubscriptionCalendarData | null>(null);
   const [isLoadingSubscriptionCalendar, setIsLoadingSubscriptionCalendar] = useState(true);
+  const [subscriptionCalendarError, setSubscriptionCalendarError] = useState<string | null>(null);
+  const [isSubmittingUpdates, setIsSubmittingUpdates] = useState(false);
 
   const weekStart = useMemo(() => getNextSunday(), []);
   const includeWeek2Param = Array.isArray(params.includeWeek2) ? params.includeWeek2[0] : params.includeWeek2;
+  const sourceParam = Array.isArray(params.source) ? params.source[0] : params.source;
   const week1TotalMeals = getTotalItems(0);
   const week2TotalMeals = getTotalItems(1);
   const shouldIncludeWeek2 = includeWeek2Param === '1' || week2TotalMeals > 0;
   const checkoutTotalMeals = week1TotalMeals + (shouldIncludeWeek2 ? week2TotalMeals : 0);
   const checkoutTotalCost = getTotalCost(0) + (shouldIncludeWeek2 ? getTotalCost(1) : 0);
-  const hasActiveSubscription = Boolean(subscriptionStatus?.hasActiveSubscription);
   const [selectedMealDetails, setSelectedMealDetails] = useState<MealDetailsSelection | null>(null);
+  const shouldShowSubscribedOverview =
+    sourceParam === 'subscription' && Boolean(subscriptionCalendar?.meals?.length || subscriptionCalendar?.calendar);
+  const isScreenBootstrapping =
+    !hasHydrated || isHydrating || (sourceParam === 'subscription' && isAuthenticated && isCheckingSubscription);
 
   useEffect(() => {
     let mounted = true;
 
     async function loadSubscriptionCalendar() {
+      if (isScreenBootstrapping) {
+        return;
+      }
+
+      if (!isAuthenticated) {
+        if (!mounted) return;
+        setSubscriptionStatus(null);
+        setSubscriptionCalendar(null);
+        setSubscriptionCalendarError(null);
+        setIsLoadingSubscriptionCalendar(false);
+        return;
+      }
+
       setIsLoadingSubscriptionCalendar(true);
+      setSubscriptionCalendar(null);
+      setSubscriptionCalendarError(null);
+
       const statusResult = await getSubscriptionStatus();
 
       if (!mounted) return;
 
-      if (statusResult.success && statusResult.data) {
+      if (statusResult.success && statusResult?.data) {
         setSubscriptionStatus(statusResult.data);
+        const hasBlockingCoverage = hasSubscriptionCoverageForNextTwoWeeks(statusResult.data);
 
-        if (statusResult.data.hasActiveSubscription) {
+        if (hasBlockingCoverage) {
           const calendarResult = await getMealCalendar();
           if (!mounted) return;
 
-          if (calendarResult.success && calendarResult.data) {
+          if (calendarResult.success && (calendarResult?.data?.meals?.length || calendarResult?.data?.calendar)) {
             setSubscriptionCalendar(calendarResult.data);
+          } else {
+            setSubscriptionCalendarError(calendarResult.error || 'We could not load your active subscription yet.');
           }
         }
+      } else {
+        setSubscriptionStatus(null);
+        setSubscriptionCalendarError(statusResult.error || 'Unable to check subscription status right now.');
       }
 
       setIsLoadingSubscriptionCalendar(false);
@@ -79,7 +110,7 @@ export default function MealCalendarScreen() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [hasHydrated, isAuthenticated, isScreenBootstrapping, isSubscribed, sourceParam]);
 
   const handleSubscribe = () => {
     if (checkoutTotalMeals === 0) {
@@ -89,6 +120,22 @@ export default function MealCalendarScreen() {
     }
 
     router.push('/subscription');
+  };
+
+  const updateSubscriptionMeals = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  };
+
+  const handleConfirmMealUpdates = async () => {
+    setIsSubmittingUpdates(true);
+
+    try {
+      await updateSubscriptionMeals();
+      showFlash('Your meals for this week have been updated!', 'success');
+      router.replace('/');
+    } finally {
+      setIsSubmittingUpdates(false);
+    }
   };
 
   const handleEditSlot = (weekIndex: number, day: DayId, mealType: MealType) => {
@@ -117,23 +164,43 @@ export default function MealCalendarScreen() {
     });
   };
 
-  if (isLoadingSubscriptionCalendar) {
+  if (isScreenBootstrapping || isLoadingSubscriptionCalendar) {
     return (
       <>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.centered}>
-          <ActivityIndicator color={theme.colors.brand.grubRed} />
-          <Text style={styles.loadingText}>Loading meal calendar...</Text>
+          <ActivityIndicator color={theme.colors.brand.grubRed} size="large" />
+          <Text style={styles.loadingText}>Loading...</Text>
         </View>
       </>
     );
   }
 
-  if (hasActiveSubscription && subscriptionCalendar) {
+  if (shouldShowSubscribedOverview && subscriptionCalendar) {
     return (
       <>
         <Stack.Screen options={{ headerShown: false }} />
         <SubscribedMealCalendar calendarData={subscriptionCalendar} />
+      </>
+    );
+  }
+
+  if (sourceParam === 'subscription' && isSubscribed && !isLoadingSubscriptionCalendar && subscriptionCalendarError) {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={styles.centered}>
+          <Text style={styles.emptyCalendarTitle}>We couldn't load your active subscription yet.</Text>
+          <Text style={styles.emptyCalendarCopy}>
+            {subscriptionCalendarError || 'Please try again in a moment or return home and reopen your meal calendar.'}
+          </Text>
+          <Pressable
+            onPress={() => router.replace('/')}
+            style={({ pressed }) => [styles.previewSubscribeButton, styles.retryButton, pressed && styles.pressed]}
+          >
+            <Text style={styles.previewSubscribeButtonText}>Back to Home</Text>
+          </Pressable>
+        </View>
       </>
     );
   }
@@ -202,17 +269,26 @@ export default function MealCalendarScreen() {
 
         <View style={[styles.previewFooter, { paddingBottom: insets.bottom + theme.spacing[3] }]}>
           <Pressable
-            onPress={handleSubscribe}
-            disabled={checkoutTotalMeals === 0}
+            onPress={isSubscribed ? handleConfirmMealUpdates : handleSubscribe}
+            disabled={!isSubscribed && checkoutTotalMeals === 0}
             style={({ pressed }) => [
               styles.previewSubscribeButton,
-              checkoutTotalMeals === 0 && styles.previewSubscribeButtonDisabled,
-              pressed && checkoutTotalMeals > 0 && styles.pressed,
+              !isSubscribed && checkoutTotalMeals === 0 && styles.previewSubscribeButtonDisabled,
+              pressed && (isSubscribed || checkoutTotalMeals > 0) && styles.pressed,
             ]}
           >
-            <Text style={styles.previewSubscribeButtonText}>
-              Subscribe to Plan • {formatPrice(checkoutTotalCost)}
-            </Text>
+            <View style={styles.previewSubscribeContent}>
+              <Ionicons
+                name={isSubscribed ? 'checkmark-circle-outline' : 'card-outline'}
+                size={20}
+                color={theme.colors.white}
+              />
+              <Text style={styles.previewSubscribeButtonText}>
+                {isSubscribed
+                  ? (isSubmittingUpdates ? 'Confirming Meal Updates...' : 'Confirm Meal Updates')
+                  : `Subscribe to Plan • ${formatPrice(checkoutTotalCost)}`}
+              </Text>
+            </View>
           </Pressable>
         </View>
 
@@ -822,6 +898,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: theme.colors.brand.grubRed,
   },
+  previewSubscribeContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing[2],
+  },
+  retryButton: {
+    marginTop: theme.spacing[5],
+    minWidth: 180,
+  },
   previewSubscribeButtonDisabled: {
     opacity: 0.55,
   },
@@ -934,7 +1019,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#dbeafe',
+    backgroundColor: theme.colors.blue[100],
   },
   blueIconText: {
     color: theme.colors.blue[600],
@@ -991,7 +1076,7 @@ const styles = StyleSheet.create({
   progressFill: {
     height: '100%',
     borderRadius: theme.radius.full,
-    backgroundColor: '#3b82f6',
+    backgroundColor: theme.colors.blue[600],
   },
   scheduleCard: {
     marginHorizontal: theme.spacing[3],
@@ -1108,12 +1193,12 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing[2],
   },
   lunchRow: {
-    backgroundColor: '#fff7ed',
-    borderColor: '#ffedd5',
+    backgroundColor: theme.colors.orange[100],
+    borderColor: theme.colors.orange[200],
   },
   dinnerRow: {
-    backgroundColor: '#f5f3ff',
-    borderColor: '#ede9fe',
+    backgroundColor: theme.colors.blue[50],
+    borderColor: theme.colors.blue[100],
   },
   mealIconBubble: {
     width: 30,
@@ -1123,10 +1208,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   lunchIconBubble: {
-    backgroundColor: '#f97316',
+    backgroundColor: theme.colors.orange[600],
   },
   dinnerIconBubble: {
-    backgroundColor: '#7c3aed',
+    backgroundColor: theme.colors.blue[700],
   },
   mealIconText: {
     color: theme.colors.white,
@@ -1156,7 +1241,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     paddingHorizontal: theme.spacing[3],
     paddingVertical: theme.spacing[1],
-    backgroundColor: '#3b82f6',
+    backgroundColor: theme.colors.blue[600],
   },
   viewDetailsText: {
     color: theme.colors.white,
@@ -1167,7 +1252,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.full,
     paddingHorizontal: theme.spacing[3],
     paddingVertical: theme.spacing[1],
-    backgroundColor: '#ecfdf5',
+    backgroundColor: theme.colors.green[100],
   },
   pricePillText: {
     color: theme.colors.green[800],
@@ -1190,7 +1275,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#dbeafe',
+    backgroundColor: theme.colors.blue[100],
   },
   softBlueIconText: {
     color: theme.colors.blue[600],
@@ -1216,10 +1301,10 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f3e8ff',
+    backgroundColor: theme.colors.blue[100],
   },
   softPurpleIconText: {
-    color: '#7c3aed',
+    color: theme.colors.blue[700],
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.bold,
   },
@@ -1246,7 +1331,7 @@ const styles = StyleSheet.create({
   deliveryRow: {
     minHeight: 50,
     borderRadius: theme.radius.md,
-    backgroundColor: '#eff6ff',
+    backgroundColor: theme.colors.blue[50],
     paddingHorizontal: theme.spacing[4],
     flexDirection: 'row',
     alignItems: 'center',
@@ -1281,7 +1366,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.full,
     paddingHorizontal: theme.spacing[3],
     paddingVertical: theme.spacing[1],
-    backgroundColor: '#ecfdf5',
+    backgroundColor: theme.colors.green[100],
   },
   statusPillText: {
     color: theme.colors.green[800],
@@ -1327,10 +1412,10 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing[3],
   },
   quickActionBrand: {
-    backgroundColor: '#fff1f2',
+    backgroundColor: theme.colors.red[50],
   },
   quickActionBlue: {
-    backgroundColor: '#dbeafe',
+    backgroundColor: theme.colors.blue[100],
   },
   quickActionGray: {
     backgroundColor: theme.colors.gray[50],

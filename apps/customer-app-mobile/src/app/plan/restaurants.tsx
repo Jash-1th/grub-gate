@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '../../contexts/AuthContext';
 import { useFlash } from '../../contexts/FlashContext';
 import { useMealPlan } from '../../contexts/MealPlanContext';
 import { usePlanning } from '../../contexts/PlanningContext';
@@ -23,6 +24,7 @@ const fallbackImage = require('../../assets/grub-gate-default-restaurant-img.jpg
 export default function PlanRestaurantsScreen() {
   const params = useLocalSearchParams<{ source?: string }>();
   const { postalCode, hasHydrated, setSource } = usePlanning();
+  const { isAuthenticated, isSubscribed, isCheckingSubscription } = useAuth();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -48,6 +50,13 @@ export default function PlanRestaurantsScreen() {
       setSelectedRestaurantId(savedSelectedRestaurantId);
     }
   }, [savedSelectedRestaurantId]);
+
+  useEffect(() => {
+    if (!isAuthenticated || isCheckingSubscription || !isSubscribed) return;
+
+    showFlash('Your subscription is already active. Opening your meal calendar instead.', 'info');
+    router.replace('/meal-calendar?source=subscription');
+  }, [isAuthenticated, isCheckingSubscription, isSubscribed, showFlash]);
 
   const loadRestaurants = useCallback(async () => {
     if (!hasHydrated || !postalCode) {
@@ -119,6 +128,24 @@ export default function PlanRestaurantsScreen() {
       <View style={styles.centered}>
         <ActivityIndicator color={theme.colors.brand.grubRed} />
         <Text style={styles.loadingText}>Loading restaurants...</Text>
+      </View>
+    );
+  }
+
+  if (isAuthenticated && isCheckingSubscription) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator color={theme.colors.brand.grubRed} />
+        <Text style={styles.loadingText}>Checking your subscription...</Text>
+      </View>
+    );
+  }
+
+  if (isAuthenticated && isSubscribed) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator color={theme.colors.brand.grubRed} />
+        <Text style={styles.loadingText}>Opening your active meal calendar...</Text>
       </View>
     );
   }

@@ -42,6 +42,42 @@ export async function saveCurrentMealPlan(payload: Record<string, unknown>) {
   }
 }
 
+export async function removeSelectedRestaurantFromMealPlan(restaurantId: string) {
+  try {
+    const response = await api.delete(`/meal-plans/selected-restaurants/${restaurantId}`);
+
+    return {
+      success: true,
+      data: response.data?.data || response.data,
+      message: response.data?.message,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      data: null,
+      error: getApiError(error, 'Unable to remove selected restaurant.'),
+    };
+  }
+}
+
+export async function clearRestaurantItemsFromMealPlan(userId: string, restaurantId: string) {
+  try {
+    const response = await api.delete(`/meal-plans/${userId}/clear-restaurant/${restaurantId}`);
+
+    return {
+      success: true,
+      data: response.data?.data || response.data,
+      message: response.data?.message,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      data: null,
+      error: getApiError(error, 'Unable to clear meals from this restaurant.'),
+    };
+  }
+}
+
 function getApiError(error: unknown, fallback: string) {
   if (typeof error === 'object' && error && 'response' in error) {
     const response = (error as { response?: { data?: { message?: string; errors?: { message?: string }[] } } }).response;

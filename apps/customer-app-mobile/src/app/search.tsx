@@ -1,16 +1,50 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useMealPlan } from '../contexts/MealPlanContext';
 import { theme } from '../theme';
 
 export default function SearchScreen() {
   const [query, setQuery] = useState('');
+  const { getTotalItems, hasHydrated, selectedRestaurants } = useMealPlan();
+  const totalItems = getTotalItems();
+  const hasStartedPlan = selectedRestaurants.length > 0 || totalItems > 0;
+  const trimmedQuery = query.trim();
+  const canSearch = trimmedQuery.length > 0;
 
   const handleSearch = () => {
-    router.push('/plan');
+    if (!canSearch) return;
+    router.push(hasStartedPlan ? '/weekly-menu' : '/plan');
   };
+
+  if (!hasHydrated) {
+    return (
+      <View style={styles.page}>
+        <SafeAreaView edges={['top']} style={styles.header}>
+          <View style={styles.headerInner}>
+            <View style={styles.searchBar}>
+              <Ionicons name="search" size={20} color={theme.colors.gray[500]} />
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Search by postal code or restaurant"
+                placeholderTextColor={theme.colors.gray[400]}
+                style={styles.searchInput}
+                returnKeyType="search"
+                editable={false}
+              />
+            </View>
+          </View>
+        </SafeAreaView>
+        <View style={styles.loadingState}>
+          <ActivityIndicator color={theme.colors.brand.grubRed} />
+          <Text style={styles.loadingText}>Loading your plan...</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.page}>
@@ -38,15 +72,18 @@ export default function SearchScreen() {
           </View>
           <Text style={styles.title}>Find food near you</Text>
           <Text style={styles.copy}>
-            Enter your postal code, choose nearby restaurants, and start building your weekly meal plan.
+            {hasStartedPlan
+              ? 'Your plan is already in progress. Open your weekly menu and keep building your meals.'
+              : 'Enter your postal code, choose nearby restaurants, and start building your weekly meal plan.'}
           </Text>
           <Pressable
             onPress={handleSearch}
-            style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}
+            disabled={!canSearch}
+            style={({ pressed }) => [styles.primaryButton, !canSearch && styles.primaryButtonDisabled, pressed && styles.pressed]}
             accessibilityRole="button"
             accessibilityLabel="Open postal code search"
           >
-            <Text style={styles.primaryButtonText}>Go to Postal Code Search</Text>
+            <Text style={styles.primaryButtonText}>{hasStartedPlan ? 'Open Weekly Menu' : 'Go to Postal Code Search'}</Text>
             <Ionicons name="arrow-forward" size={18} color={theme.colors.white} />
           </Pressable>
         </View>
@@ -92,6 +129,18 @@ const styles = StyleSheet.create({
     padding: theme.spacing[4],
     paddingBottom: theme.spacing[8],
   },
+  loadingState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing[3],
+    paddingHorizontal: theme.spacing[6],
+  },
+  loadingText: {
+    color: theme.colors.gray[600],
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.medium,
+  },
   heroCard: {
     borderRadius: theme.radius['3xl'],
     backgroundColor: theme.colors.white,
@@ -131,6 +180,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: theme.spacing[2],
+  },
+  primaryButtonDisabled: {
+    opacity: 0.5,
   },
   primaryButtonText: {
     color: theme.colors.white,

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -42,15 +42,12 @@ const foodTiles = [
 ];
 
 export default function PlanScreen() {
-  const [postalCode, setPostalCode] = useState('');
-  const [isPostalFocused, setIsPostalFocused] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isSubscribed, isCheckingSubscription } = useAuth();
   const { showFlash } = useFlash();
   const { setPostalCode: setPlanningPostalCode, setSource } = usePlanning();
+  const hasRedirectedSubscribedUser = useRef(false);
 
-  const formattedPostalCode = useMemo(() => postalCode.trim().toUpperCase(), [postalCode]);
   const masonryColumns = useMemo(
     () => [
       foodTiles.filter((_, index) => index % 2 === 0),
@@ -59,32 +56,65 @@ export default function PlanScreen() {
     [],
   );
 
-  const handleFindMeals = async () => {
-    if (!formattedPostalCode) {
-      setErrorMessage('Please enter your postal code.');
-      return;
-    }
+  useEffect(() => {
+    if (!isAuthenticated || isCheckingSubscription || !isSubscribed || hasRedirectedSubscribedUser.current) return;
 
+    hasRedirectedSubscribedUser.current = true;
+    showFlash('Your subscription is already active. Opening your meal calendar instead.', 'info');
+    router.replace('/meal-calendar?source=subscription');
+  }, [isAuthenticated, isCheckingSubscription, isSubscribed, showFlash]);
+
+  useEffect(() => {
+    if (isAuthenticated && isSubscribed) return;
+    hasRedirectedSubscribedUser.current = false;
+  }, [isAuthenticated, isSubscribed]);
+
+  if (isAuthenticated && isCheckingSubscription) {
+    return (
+      <SafeAreaView style={styles.page}>
+        <View style={styles.redirectState}>
+          <ActivityIndicator color={theme.colors.brand.grubRed} />
+          <Text style={styles.redirectText}>Checking your subscription...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (isAuthenticated && isSubscribed) {
+    return (
+      <SafeAreaView style={styles.page}>
+        <View style={styles.redirectState}>
+          <ActivityIndicator color={theme.colors.brand.grubRed} />
+          <Text style={styles.redirectText}>Opening your active meal calendar...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const handleFindMeals = useCallback(async (formattedPostalCode: string) => {
     if (!isAuthenticated) {
       showFlash('Please sign in to start your meal plan.', 'info');
       router.push('/login');
-      return;
+      return null;
+    }
+
+    if (isCheckingSubscription) {
+      showFlash('Checking your subscription status. Please wait a moment.', 'info');
+      return null;
     }
 
     setIsSearching(true);
-    setErrorMessage('');
 
     try {
       const result = await getRestaurantsByPostalCode(formattedPostalCode, { limit: 4 });
 
       if (!result.success) {
-        setErrorMessage(result.error || 'Unable to search for restaurants. Please try again.');
-        return;
+        return result.error || 'Unable to search for restaurants. Please try again.';
       }
 
       if (result.data.length === 0) {
         showFlash(`No restaurants available in ${formattedPostalCode} yet. Try a different postal code.`, 'info');
-        return;
+        return null;
       }
 
       const count = result.totalItems || result.data.length;
@@ -95,12 +125,13 @@ export default function PlanScreen() {
         pathname: '/plan/restaurants',
         params: { source: 'plan' },
       });
+      return null;
     } catch {
-      setErrorMessage('Unable to connect to our servers. Please check your connection and try again.');
+      return 'Unable to connect to our servers. Please check your connection and try again.';
     } finally {
       setIsSearching(false);
     }
-  };
+  }, [isAuthenticated, isCheckingSubscription, setPlanningPostalCode, setSource, showFlash]);
 
   const handleUseCurrentLocation = () => {
     if (!isAuthenticated) {
@@ -140,43 +171,7 @@ export default function PlanScreen() {
         </View>
 
         <View style={styles.searchPanel}>
-          <View style={[styles.inputShell, isPostalFocused && styles.inputShellFocused]}>
-            <Ionicons name="location-outline" size={20} color={theme.colors.gray[500]} />
-            <TextInput
-              value={postalCode}
-              onChangeText={(value) => {
-                setPostalCode(value);
-                setErrorMessage('');
-              }}
-              onSubmitEditing={handleFindMeals}
-              placeholder="Enter your postal code"
-              placeholderTextColor={theme.colors.gray[500]}
-              autoCapitalize="characters"
-              autoCorrect={false}
-              onFocus={() => setIsPostalFocused(true)}
-              onBlur={() => setIsPostalFocused(false)}
-              returnKeyType="search"
-              style={styles.postalInput}
-            />
-          </View>
-
-          <Pressable
-            disabled={isSearching || !formattedPostalCode}
-            onPress={handleFindMeals}
-            style={({ pressed }) => [
-              styles.findButton,
-              (!formattedPostalCode || isSearching) && styles.buttonDisabled,
-              pressed && styles.pressed,
-            ]}
-          >
-            {isSearching ? (
-              <ActivityIndicator color={theme.colors.white} />
-            ) : (
-              <Text style={styles.findButtonText}>Get nearest restaurants</Text>
-            )}
-          </Pressable>
-
-          {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+          <PostalCodeSearchForm isSearching={isSearching} onSubmit={handleFindMeals} />
         </View>
 
         <View style={styles.dividerRow}>
@@ -215,6 +210,76 @@ export default function PlanScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function PostalCodeSearchForm({
+  isSearching,
+  onSubmit,
+}: {
+  isSearching: boolean;
+  onSubmit: (formattedPostalCode: string) => Promise<string | null>;
+}) {
+  const [postalCode, setPostalCode] = useState('');
+  const [isPostalFocused, setIsPostalFocused] = useState(false);
+  const [addressError, setAddressError] = useState('');
+  const formattedPostalCode = useMemo(() => postalCode.trim().toUpperCase(), [postalCode]);
+
+  const handleSubmit = useCallback(async () => {
+    if (!formattedPostalCode) {
+      setAddressError('Please enter your postal code.');
+      return;
+    }
+
+    setAddressError('');
+    const nextError = await onSubmit(formattedPostalCode);
+    if (nextError) {
+      setAddressError(nextError);
+    }
+  }, [formattedPostalCode, onSubmit]);
+
+  return (
+    <>
+      <View style={[styles.inputShell, isPostalFocused && styles.inputShellFocused]}>
+        <Ionicons name="location-outline" size={20} color={theme.colors.gray[500]} />
+        <TextInput
+          value={postalCode}
+          onChangeText={(value) => {
+            setPostalCode(value);
+            if (addressError) {
+              setAddressError('');
+            }
+          }}
+          onSubmitEditing={handleSubmit}
+          placeholder="Enter your postal code"
+          placeholderTextColor={theme.colors.gray[500]}
+          autoCapitalize="characters"
+          autoCorrect={false}
+          onFocus={() => setIsPostalFocused(true)}
+          onBlur={() => setIsPostalFocused(false)}
+          returnKeyType="search"
+          style={styles.postalInput}
+        />
+      </View>
+
+      <Pressable
+        disabled={isSearching || !formattedPostalCode}
+        onPress={handleSubmit}
+        style={({ pressed }) => [
+          styles.findButton,
+          (!formattedPostalCode || isSearching) && styles.buttonDisabled,
+          pressed && styles.pressed,
+        ]}
+      >
+        {isSearching ? (
+          <ActivityIndicator color={theme.colors.white} />
+        ) : (
+          <Text style={styles.findButtonText}>Get nearest restaurants</Text>
+        )}
+      </Pressable>
+
+      {addressError ? <Text style={styles.errorText}>{addressError}</Text> : null}
+    </>
   );
 }
 
@@ -290,6 +355,10 @@ const styles = StyleSheet.create({
     color: theme.colors.gray[900],
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.semibold,
+    outlineStyle: 'solid',
+    outlineWidth: 0,
+    outlineColor: 'transparent',
+    boxShadow: 'none',
   },
   findButton: {
     minHeight: 54,
@@ -397,5 +466,17 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.76,
     transform: [{ scale: 0.98 }],
+  },
+  redirectState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing[3],
+    paddingHorizontal: theme.spacing[6],
+  },
+  redirectText: {
+    color: theme.colors.gray[600],
+    fontSize: theme.typography.fontSize.base,
+    textAlign: 'center',
   },
 });

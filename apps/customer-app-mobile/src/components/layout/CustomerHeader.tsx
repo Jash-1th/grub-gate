@@ -1,11 +1,47 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router, usePathname } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '../../contexts/AuthContext';
+import { getUserAddresses, type SavedAddress } from '../../lib/userAddressApi';
 import { theme } from '../../theme';
 
 export function CustomerHeader() {
   const pathname = usePathname();
+  const { isAuthenticated, isHydrating } = useAuth();
+  const [locationTitle, setLocationTitle] = useState('');
+
+  useEffect(() => {
+    if (isHydrating) return;
+
+    if (!isAuthenticated) {
+      setLocationTitle('');
+      return;
+    }
+
+    let mounted = true;
+
+    async function loadAddress() {
+      const result = await getUserAddresses();
+
+      if (!mounted) return;
+
+      if (!result.success || result.addresses.length === 0) {
+        setLocationTitle('Set address');
+        return;
+      }
+
+      const defaultAddress = result.addresses.find((address) => address.isDefault) || result.addresses[0];
+      setLocationTitle(formatHeaderAddress(defaultAddress));
+    }
+
+    loadAddress();
+
+    return () => {
+      mounted = false;
+    };
+  }, [isAuthenticated, isHydrating]);
 
   if (
     pathname === '/search' ||
@@ -39,7 +75,7 @@ export function CustomerHeader() {
               <Text style={styles.locationEyebrow}>Delivering to</Text>
               <View style={styles.locationTitleRow}>
                 <Text numberOfLines={1} style={styles.locationTitle}>
-                  Home - Nellore
+                  {locationTitle}
                 </Text>
                 <Ionicons name="chevron-down" size={16} color={theme.colors.gray[700]} />
               </View>
@@ -47,10 +83,10 @@ export function CustomerHeader() {
           </Pressable>
 
           <Pressable
-            onPress={() => router.push('/weekly-menu')}
+            onPress={() => router.push('/your-orders')}
             style={({ pressed }) => [styles.cartButton, pressed && styles.pressed]}
             accessibilityRole="button"
-            accessibilityLabel="Open cart"
+            accessibilityLabel="Open orders"
           >
             <Ionicons name="cart-outline" size={26} color={theme.colors.gray[900]} />
             <View style={styles.cartBadge}>
@@ -83,6 +119,33 @@ export function CustomerHeader() {
       </View>
     </SafeAreaView>
   );
+}
+
+function formatHeaderAddress(address?: SavedAddress | null) {
+  if (!address) return 'Set address';
+
+  const typeLabel = formatAddressType(address.type, address.label);
+  const cityOrArea = firstNonEmpty(address.city, address.street, address.postalCode);
+
+  if (typeLabel && cityOrArea) return `${typeLabel} - ${cityOrArea}`;
+  if (cityOrArea) return cityOrArea;
+  if (typeLabel) return typeLabel;
+  return 'Set address';
+}
+
+function formatAddressType(type?: SavedAddress['type'], label?: string) {
+  const normalizedLabel = label?.trim();
+  if (normalizedLabel) {
+    return normalizedLabel.charAt(0).toUpperCase() + normalizedLabel.slice(1);
+  }
+
+  if (type === 'work') return 'Work';
+  if (type === 'other') return 'Other';
+  return 'Home';
+}
+
+function firstNonEmpty(...values: Array<string | undefined>) {
+  return values.find((value) => typeof value === 'string' && value.trim().length > 0)?.trim() || '';
 }
 
 const styles = StyleSheet.create({

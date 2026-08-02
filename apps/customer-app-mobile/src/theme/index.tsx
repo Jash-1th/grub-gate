@@ -55,6 +55,8 @@ export const theme = {
       700: '#660019',
     },
     orange: {
+      100: '#ffedd5',
+      200: '#fed7aa',
       600: '#ea580c',
       700: '#c2410c',
       800: '#9a3412',
@@ -65,6 +67,10 @@ export const theme = {
       800: '#166534',
     },
     blue: {
+      50: '#eff6ff',
+      100: '#dbeafe',
+      200: '#bfdbfe',
+      400: '#60a5fa',
       600: '#2563eb',
       700: '#1d4ed8',
     },

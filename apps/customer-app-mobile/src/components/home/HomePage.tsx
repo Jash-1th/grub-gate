@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import {
   Animated,
   Image,
@@ -14,7 +14,6 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { useFlash } from '../../contexts/FlashContext';
 import { useMealPlan } from '../../contexts/MealPlanContext';
-import { getSubscriptionStatus } from '../../lib/mealCalendarApi';
 import { theme } from '../../theme';
 
 const heroImage = require('../../assets/HeroHome.jpg');
@@ -42,11 +41,9 @@ const popularRestaurants = [
 ] as const;
 
 export function HomePage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isSubscribed } = useAuth();
   const { showFlash } = useFlash();
   const { getTotalItems, selectedRestaurants, hasHydrated } = useMealPlan();
-  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
-  const [isCheckingSubscription, setIsCheckingSubscription] = useState(false);
   const entrance = useRef(new Animated.Value(0)).current;
   const float = useRef(new Animated.Value(0)).current;
   const restaurantRailRef = useRef<ScrollView | null>(null);
@@ -88,52 +85,28 @@ export function HomePage() {
   const floatY = float.interpolate({ inputRange: [0, 1], outputRange: [0, -8] });
   const heroScale = entrance.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] });
 
-  useEffect(() => {
-    let mounted = true;
-
-    async function checkSubscription() {
-      if (!isAuthenticated) {
-        setHasActiveSubscription(false);
-        return;
-      }
-
-      setIsCheckingSubscription(true);
-      const result = await getSubscriptionStatus();
-
-      if (!mounted) return;
-
-      if (result.success && result.data) {
-        setHasActiveSubscription(Boolean(result.data.hasActiveSubscription));
-      }
-
-      setIsCheckingSubscription(false);
-    }
-
-    checkSubscription();
-
-    return () => {
-      mounted = false;
-    };
-  }, [isAuthenticated]);
-
   const quickActions = useMemo<QuickAction[]>(() => {
     const actions: QuickAction[] = [
       {
-        title: hasActiveSubscription ? 'Current Plan' : hasSelectedRestaurants ? 'Continue Plan' : 'Start Plan',
-        caption: hasActiveSubscription ? 'View subscription' : hasSelectedRestaurants ? 'Finish setup' : 'Build your week',
+        title: isSubscribed
+          ? "Select This Week's Meals"
+          : hasSelectedRestaurants
+            ? 'Continue Plan'
+            : 'Start Plan',
+        caption: isSubscribed ? 'Update your weekly meals' : hasSelectedRestaurants ? 'Finish setup' : 'Build your week',
         tone: 'brand',
         action: 'start-plan',
       },
     ];
 
-    if (hasHydrated && hasSelectedRestaurants) {
+    if (!isSubscribed && hasHydrated && hasSelectedRestaurants) {
       actions.push({ title: 'Weekly Menu', caption: 'Edit meals', tone: 'blue', action: 'weekly-menu' });
     }
 
-    if (hasActiveSubscription || totalItems > 0) {
+    if (isSubscribed || totalItems > 0) {
       actions.push({
         title: 'Calendar',
-        caption: hasActiveSubscription ? 'Subscribed meals' : 'Preview days',
+        caption: isSubscribed ? 'Subscribed meals' : 'Preview days',
         tone: 'green',
         action: 'calendar',
       });
@@ -141,7 +114,7 @@ export function HomePage() {
 
     actions.push({ title: 'Orders', caption: 'Track meals', tone: 'yellow', action: 'orders' });
     return actions;
-  }, [hasActiveSubscription, hasHydrated, hasSelectedRestaurants, totalItems]);
+  }, [hasHydrated, hasSelectedRestaurants, isSubscribed, totalItems]);
 
   const requireAuth = () => {
     if (isAuthenticated) return true;
@@ -159,6 +132,11 @@ export function HomePage() {
     }
 
     if (action === 'weekly-menu') {
+      if (isSubscribed) {
+        router.push('/meal-calendar?source=subscription');
+        return;
+      }
+
       if (!hasSelectedRestaurants) {
         showFlash('Select a restaurant before editing your weekly menu.', 'info');
         router.push('/plan/restaurants?source=plan');
@@ -170,7 +148,7 @@ export function HomePage() {
     }
 
     if (action === 'calendar') {
-      if (hasActiveSubscription) {
+      if (isSubscribed) {
         router.push('/meal-calendar?source=subscription');
         return;
       }
@@ -185,8 +163,8 @@ export function HomePage() {
       return;
     }
 
-    if (hasActiveSubscription) {
-      router.push('/meal-calendar?source=subscription');
+    if (isSubscribed) {
+      router.push('/weekly-menu');
       return;
     }
 
@@ -218,7 +196,7 @@ export function HomePage() {
                 onPress={() => handleQuickAction('start-plan')}
                 style={({ pressed }) => [styles.heroButton, pressed && styles.pressedScale]}
               >
-                <Text style={styles.heroButtonText}>Get Started</Text>
+                <Text style={styles.heroButtonText}>{isSubscribed ? "Select This Week's Meals" : 'Get Started'}</Text>
                 <Ionicons name="arrow-forward" size={18} color={theme.colors.white} />
               </Pressable>
             </View>
@@ -241,9 +219,6 @@ export function HomePage() {
             </View>
             <Text style={styles.quickTitle}>{action.title}</Text>
             <Text style={styles.quickCaption}>{action.caption}</Text>
-            {action.action === 'start-plan' && isCheckingSubscription ? (
-              <Text style={styles.syncHint}>Checking...</Text>
-            ) : null}
           </Pressable>
         ))}
       </View>

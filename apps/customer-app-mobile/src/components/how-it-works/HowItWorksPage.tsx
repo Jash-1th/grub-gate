@@ -89,7 +89,7 @@ function GetStartedCta() {
 }
 
 function useProtectedPlanNavigation() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isSubscribed } = useAuth();
   const { showFlash } = useFlash();
 
   return () => {
@@ -99,7 +99,7 @@ function useProtectedPlanNavigation() {
       return;
     }
 
-    router.push('/plan');
+    router.push(isSubscribed ? '/meal-calendar?source=subscription' : '/plan');
   };
 }
 

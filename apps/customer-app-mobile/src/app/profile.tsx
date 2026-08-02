@@ -71,7 +71,7 @@ const emptyAddressForm: AddressFormState = {
 
 export default function ProfileScreen() {
   const params = useLocalSearchParams<{ tab?: string }>();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
   const { showFlash } = useFlash();
   const profileUser = (user || {}) as ProfileUser;
   const [activeSection, setActiveSection] = useState<ProfileSection>(params.tab === 'addresses' ? 'Addresses' : 'Profile');
@@ -187,6 +187,11 @@ export default function ProfileScreen() {
     setIsSavingAddress(false);
   };
 
+  const handleLogout = async () => {
+    await logout();
+    showFlash('Logged out successfully.', 'success');
+  };
+
   if (!isAuthenticated) {
     return (
       <View style={styles.page}>
@@ -272,6 +277,15 @@ export default function ProfileScreen() {
             <Text style={styles.sectionCopy}>{activeSection} details will be connected next.</Text>
           </View>
         )}
+
+        <Pressable
+          onPress={handleLogout}
+          disabled={isLoading}
+          style={({ pressed }) => [styles.logoutButton, isLoading && styles.disabledButton, pressed && styles.pressed]}
+        >
+          <Ionicons name="log-out-outline" size={18} color="#E23744" />
+          <Text style={styles.logoutButtonText}>{isLoading ? 'Logging out...' : 'Logout'}</Text>
+        </Pressable>
       </ScrollView>
     </View>
   );
@@ -883,6 +897,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing[6],
   },
   outlineButtonText: {
+    color: '#E23744',
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.bold,
+  },
+  logoutButton: {
+    minHeight: 52,
+    borderRadius: theme.radius['2xl'],
+    borderWidth: 1,
+    borderColor: '#FFD1D6',
+    backgroundColor: '#FFF7F8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: theme.spacing[2],
+  },
+  logoutButtonText: {
     color: '#E23744',
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.bold,

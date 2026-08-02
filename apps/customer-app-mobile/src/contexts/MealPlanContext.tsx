@@ -285,12 +285,18 @@ export function MealPlanProvider({ children }: PropsWithChildren) {
     return removedCount;
   }, []);
 
-  const getItemCountForRestaurant = useCallback((restaurantId: string, weekIndex: number = 0) => {
-    const weekKey = `week${weekIndex}` as keyof typeof state.weeklyPlans;
-    return daysOfWeek.reduce((total, day) => (
-      total +
-      mealTypes.reduce((mealTotal, mealType) => (
-        mealTotal + state.weeklyPlans[weekKey][day.id][mealType.id].filter((item) => item.restaurantId === restaurantId).length
+  const getItemCountForRestaurant = useCallback((restaurantId: string, weekIndex?: number) => {
+    const weekKeys = typeof weekIndex === 'number'
+      ? [`week${weekIndex}` as keyof typeof state.weeklyPlans]
+      : (['week0', 'week1'] as Array<keyof typeof state.weeklyPlans>);
+
+    return weekKeys.reduce((weekTotal, weekKey) => (
+      weekTotal +
+      daysOfWeek.reduce((dayTotal, day) => (
+        dayTotal +
+        mealTypes.reduce((mealTotal, mealType) => (
+          mealTotal + state.weeklyPlans[weekKey][day.id][mealType.id].filter((item) => item.restaurantId === restaurantId).length
+        ), 0)
       ), 0)
     ), 0);
   }, [state.weeklyPlans]);

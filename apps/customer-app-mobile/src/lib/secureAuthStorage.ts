@@ -16,7 +16,17 @@ export type StoredUser = {
   role?: string;
   userType?: string;
   isGrubPass?: boolean;
+  isSubscribed?: boolean;
 };
+
+export function normalizeStoredUser(user: StoredUser | null) {
+  if (!user) return null;
+
+  return {
+    ...user,
+    isSubscribed: user.isSubscribed ?? false,
+  };
+}
 
 export type AuthSession = {
   token: string | null;
@@ -109,7 +119,7 @@ function parseStoredUser(value: string | null): StoredUser | null {
   if (!value) return null;
 
   try {
-    return JSON.parse(value) as StoredUser;
+    return normalizeStoredUser(JSON.parse(value) as StoredUser);
   } catch {
     return null;
   }

@@ -1,4 +1,5 @@
 import api from './api';
+import { getAuthToken } from './secureAuthStorage';
 
 export type SubscriptionStatus = {
   hasActiveSubscription: boolean;
@@ -51,7 +52,11 @@ export type SubscriptionCalendarData = {
 
 export async function getSubscriptionStatus(params: Record<string, unknown> = {}) {
   try {
-    const response = await api.get('/meal-calendar/subscription-status', { params });
+    const token = await getAuthToken();
+    const response = await api.get('/meal-calendar/subscription-status', {
+      params,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
     return {
       success: true,
       data: (response.data?.data || response.data) as SubscriptionStatus,
@@ -67,7 +72,11 @@ export async function getSubscriptionStatus(params: Record<string, unknown> = {}
 
 export async function getMealCalendar(params: Record<string, unknown> = {}) {
   try {
-    const response = await api.get('/meal-calendar', { params });
+    const token = await getAuthToken();
+    const response = await api.get('/meal-calendar', {
+      params,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
     return {
       success: true,
       data: (response.data?.data || response.data) as SubscriptionCalendarData,
@@ -81,6 +90,25 @@ export async function getMealCalendar(params: Record<string, unknown> = {}) {
   }
 }
 
+export function hasSubscriptionCoverageForNextTwoWeeks(status?: SubscriptionStatus | null) {
+  if (!status?.hasActiveSubscription) return false;
+
+  const remainingDays = status.activeSubscription?.remainingDays;
+  if (typeof remainingDays === 'number') {
+    return remainingDays >= 14;
+  }
+
+  const endDate = status.activeSubscription?.subscriptionPeriod?.endDate;
+  const normalizedEndDate = parseValidDate(endDate);
+  if (!normalizedEndDate) return false;
+
+  const coverageThreshold = new Date();
+  coverageThreshold.setHours(0, 0, 0, 0);
+  coverageThreshold.setDate(coverageThreshold.getDate() + 13);
+
+  return normalizedEndDate >= coverageThreshold;
+}
+
 function getApiError(error: unknown, fallback: string) {
   if (typeof error === 'object' && error && 'response' in error) {
     const response = (error as { response?: { data?: { message?: string; errors?: { message?: string }[] } } }).response;
@@ -89,4 +117,10 @@ function getApiError(error: unknown, fallback: string) {
 
   if (error instanceof Error) return error.message;
   return fallback;
+}
+
+function parseValidDate(value?: string) {
+  if (!value) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }

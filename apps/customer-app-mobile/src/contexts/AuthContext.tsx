@@ -1,9 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import api from '../lib/api';
 import { loginCustomer, signupCustomer } from '../lib/authApi';
+import { getSubscriptionStatus, hasSubscriptionCoverageForNextTwoWeeks } from '../lib/mealCalendarApi';
 import {
   clearAuthSession,
   getAuthSession,
+  normalizeStoredUser,
   saveAuthSession,
   type StoredUser,
 } from '../lib/secureAuthStorage';
@@ -25,6 +27,8 @@ type RegisterPayload = {
 type AuthContextValue = {
   user: StoredUser | null;
   token: string | null;
+  isSubscribed: boolean;
+  isCheckingSubscription: boolean;
   isAuthenticated: boolean;
   isHydrating: boolean;
   isLoading: boolean;
@@ -41,6 +45,7 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+type SubscriptionSyncState = 'idle' | 'checking' | 'active' | 'inactive' | 'error';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<StoredUser | null>(null);
@@ -48,6 +53,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isHydrating, setIsHydrating] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [subscriptionSyncState, setSubscriptionSyncState] = useState<SubscriptionSyncState>('idle');
+  const userSubscriptionFlag = Boolean(user?.isSubscribed);
+  const isSubscribed = token ? subscriptionSyncState === 'active' : userSubscriptionFlag;
+  const isCheckingSubscription = Boolean(token) && (subscriptionSyncState === 'idle' || subscriptionSyncState === 'checking');
+
+  const syncSubscriptionState = useCallback(async (nextUser?: StoredUser | null) => {
+    const fallbackSubscribed = Boolean(nextUser?.isSubscribed);
+
+    setSubscriptionSyncState('checking');
+
+    try {
+      const result = await getSubscriptionStatus();
+
+      if (result.success && result.data) {
+        setSubscriptionSyncState(hasSubscriptionCoverageForNextTwoWeeks(result.data) ? 'active' : 'inactive');
+        return;
+      }
+
+      setSubscriptionSyncState(fallbackSubscribed ? 'error' : 'inactive');
+    } catch {
+      setSubscriptionSyncState(fallbackSubscribed ? 'error' : 'inactive');
+    }
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -59,15 +87,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         setToken(session.token);
         setUser(session.user);
+        setSubscriptionSyncState(session.token ? 'checking' : 'idle');
 
         if (session.token) {
-          await refreshCurrentUser(session.user);
+          const latestUser = await refreshCurrentUser(session.user);
+          if (!mounted) return;
+          await syncSubscriptionState(latestUser || session.user);
         }
       } catch {
         await clearAuthSession();
         if (mounted) {
           setToken(null);
           setUser(null);
+          setSubscriptionSyncState('idle');
         }
       } finally {
         if (mounted) setIsHydrating(false);
@@ -79,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [syncSubscriptionState]);
 
   const refreshCurrentUser = useCallback(async (fallbackUser?: StoredUser | null) => {
     try {
@@ -119,8 +151,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: latestUser,
       });
       setUser(latestUser);
+      await syncSubscriptionState(latestUser);
+      return;
     }
-  }, [refreshCurrentUser]);
+
+    await syncSubscriptionState(responseUser);
+  }, [refreshCurrentUser, syncSubscriptionState]);
 
   const login = useCallback(
     async (payload: LoginPayload) => {
@@ -193,9 +229,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           user: latestUser,
         });
         setUser(latestUser);
+        await syncSubscriptionState(latestUser);
+        return;
       }
+
+      await syncSubscriptionState(nextUser);
     },
-    [refreshCurrentUser],
+    [refreshCurrentUser, syncSubscriptionState],
   );
 
   const logout = useCallback(async () => {
@@ -206,6 +246,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await clearAuthSession();
       setToken(null);
       setUser(null);
+      setSubscriptionSyncState('idle');
     } finally {
       setIsLoading(false);
     }
@@ -215,6 +256,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user,
       token,
+      isSubscribed,
+      isCheckingSubscription,
       isAuthenticated: Boolean(token),
       isHydrating,
       isLoading,
@@ -225,7 +268,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       clearError: () => setError(null),
     }),
-    [applyAuthenticatedSession, error, isHydrating, isLoading, login, logout, register, token, user],
+    [applyAuthenticatedSession, error, isCheckingSubscription, isHydrating, isLoading, isSubscribed, login, logout, register, token, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -248,7 +291,7 @@ function extractResponseData(responseData: unknown) {
 function extractUser(responseData: unknown): StoredUser | null {
   const data = extractResponseData(responseData);
   const user = data?.user;
-  return user && typeof user === 'object' ? (user as StoredUser) : null;
+  return user && typeof user === 'object' ? normalizeStoredUser(user as StoredUser) : null;
 }
 
 function firstString(...values: unknown[]) {

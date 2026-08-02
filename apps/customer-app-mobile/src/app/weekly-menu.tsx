@@ -23,6 +23,10 @@ import {
   useMealPlan,
 } from '../contexts/MealPlanContext';
 import {
+  clearRestaurantItemsFromMealPlan,
+  removeSelectedRestaurantFromMealPlan,
+} from '../lib/mealPlanApi';
+import {
   getRestaurant,
   getRestaurantMenu,
   type MenuItem,
@@ -67,7 +71,7 @@ export default function WeeklyMenuScreen() {
     getTotalCost,
   } = useMealPlan();
   const { showFlash } = useFlash();
-  const { user } = useAuth();
+  const { isSubscribed, user } = useAuth();
   
   const [restaurant, setRestaurant] = useState<Restaurant | null>(selectedRestaurantData);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -79,6 +83,7 @@ export default function WeeklyMenuScreen() {
   const [showMealPickerSheet, setShowMealPickerSheet] = useState(false);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSavingSelections, setIsSavingSelections] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   const restaurantId = selectedRestaurantId || '';
@@ -88,6 +93,7 @@ export default function WeeklyMenuScreen() {
   const shouldShowWeek2Toggle = isWeek2Enabled || hasWeek2Meals;
   const totalItems = getTotalItems(selectedWeek);
   const totalCost = getTotalCost(selectedWeek);
+  const currentUserId = user?._id || user?.id || null;
 
   useEffect(() => {
     const dayParam = Array.isArray(params.day) ? params.day[0] : params.day;
@@ -188,11 +194,28 @@ export default function WeeklyMenuScreen() {
     showFlash('Meal removed successfully', 'info');
   };
 
-  const handleConfirmRestaurantReplacement = (restaurantsToRemove: typeof selectedRestaurants) => {
-    restaurantsToRemove.forEach((restaurantToRemove) => {
-      clearItemsByRestaurant(restaurantToRemove.restaurantId);
+  const handleConfirmRestaurantReplacement = async (restaurantsToRemove: typeof selectedRestaurants) => {
+    if (restaurantsToRemove.length === 0) return;
+
+    for (const restaurantToRemove of restaurantsToRemove) {
+      if (currentUserId) {
+        const clearResult = await clearRestaurantItemsFromMealPlan(currentUserId, restaurantToRemove.restaurantId);
+        if (!clearResult.success) {
+          throw new Error(clearResult.error || 'Unable to clear meals from this restaurant.');
+        }
+
+        const removeResult = await removeSelectedRestaurantFromMealPlan(restaurantToRemove.restaurantId);
+        if (!removeResult.success) {
+          throw new Error(removeResult.error || 'Unable to remove this restaurant from your meal plan.');
+        }
+      }
+
+      clearItemsByRestaurant(restaurantToRemove.restaurantId, 0);
+      clearItemsByRestaurant(restaurantToRemove.restaurantId, 1);
       removeSelectedRestaurant(restaurantToRemove.restaurantId);
-    });
+    }
+
+    setShowRestaurantReplacementModal(false);
 
     const restaurantNames = restaurantsToRemove.map((item) => item.restaurantName).join(', ');
     showFlash(
@@ -203,24 +226,57 @@ export default function WeeklyMenuScreen() {
     );
   };
 
+  const updateSubscriptionMeals = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  };
+
+  const handleFooterAction = async () => {
+    if (isSubscribed) {
+      setIsSavingSelections(true);
+
+      try {
+        await updateSubscriptionMeals();
+        showFlash('Your meals for this week have been updated!', 'success');
+        router.replace('/');
+      } finally {
+        setIsSavingSelections(false);
+      }
+
+      return;
+    }
+
+    if (totalItems > 0) {
+      router.push('/meal-calendar?includeWeek2=0');
+      return;
+    }
+
+    showFlash('Generating a meal plan...', 'info');
+  };
+
   if (!hasHydrated) {
     return (
-      <SafeAreaView style={styles.centered}>
-        <ActivityIndicator color={theme.colors.brand.grubRed} />
-        <Text style={styles.loadingText}>Loading weekly menu...</Text>
-      </SafeAreaView>
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <SafeAreaView style={styles.centered}>
+          <ActivityIndicator color={theme.colors.brand.grubRed} />
+          <Text style={styles.loadingText}>Loading weekly menu...</Text>
+        </SafeAreaView>
+      </>
     );
   }
 
   if (!restaurantId) {
     return (
-      <SafeAreaView style={styles.centered}>
-        <Text style={styles.emptyTitle}>Select a Restaurant First</Text>
-        <Text style={styles.emptyCopy}>Choose a restaurant before building your weekly menu.</Text>
-        <Pressable onPress={() => router.replace('/plan')} style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}>
-          <Text style={styles.primaryButtonText}>Find Restaurants</Text>
-        </Pressable>
-      </SafeAreaView>
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <SafeAreaView style={styles.centered}>
+          <Text style={styles.emptyTitle}>Select a Restaurant First</Text>
+          <Text style={styles.emptyCopy}>Choose a restaurant before building your weekly menu.</Text>
+          <Pressable onPress={() => router.replace('/plan')} style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}>
+            <Text style={styles.primaryButtonText}>Find Restaurants</Text>
+          </Pressable>
+        </SafeAreaView>
+      </>
     );
   }
 
@@ -346,7 +402,7 @@ export default function WeeklyMenuScreen() {
         <View style={styles.restaurantSection}>
           <View style={styles.restaurantHeaderRow}>
             <View style={styles.forkIconContainer}>
-              <Ionicons name="restaurant-outline" size={14} color="white" />
+              <Ionicons name="restaurant-outline" size={14} color={theme.colors.white} />
             </View>
             <Text style={styles.restaurantHeaderText}>Planning meals from</Text>
           </View>
@@ -370,11 +426,14 @@ export default function WeeklyMenuScreen() {
           {/* Compressed side-by-side buttons */}
           <View style={styles.actionButtonsContainer}>
             <TouchableOpacity style={styles.grubPassButton}>
-              <Ionicons name="lock-closed-outline" size={16} color="white" />
+              <Ionicons name="lock-closed-outline" size={16} color={theme.colors.white} />
               <Text style={styles.grubPassButtonText}>Grub Pass</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.changeRestaurantButton}>
+            <TouchableOpacity
+              style={styles.changeRestaurantButton}
+              onPress={() => setShowRestaurantReplacementModal(true)}
+            >
               <Ionicons name="swap-horizontal-outline" size={16} color={theme.colors.gray[800]} />
               <Text style={styles.changeRestaurantButtonText}>Change Restaurant</Text>
             </TouchableOpacity>
@@ -508,21 +567,22 @@ export default function WeeklyMenuScreen() {
       <View style={[styles.dockedFooter, { paddingBottom: Math.max(insets.bottom + 12, 16) }]}>
         <TouchableOpacity
           style={styles.reviewButton}
-          onPress={() => {
-            if (totalItems > 0) {
-              router.push('/meal-calendar?includeWeek2=0');
-            } else {
-              showFlash('Generating a meal plan...', 'info');
-            }
-          }}
+          onPress={handleFooterAction}
+          disabled={isSavingSelections}
         >
           <Ionicons
-            name={totalItems > 0 ? 'checkmark-circle-outline' : 'sparkles-outline'}
+            name={
+              isSubscribed
+                ? 'checkmark-circle-outline'
+                : totalItems > 0
+                  ? 'checkmark-circle-outline'
+                  : 'sparkles-outline'
+            }
             size={22}
-            color="white"
+            color={theme.colors.white}
           />
           <Text style={styles.reviewButtonText}>
-            {totalItems > 0 ? 'Review Plan' : 'Generate Plan'}
+            {isSubscribed ? (isSavingSelections ? 'Saving...' : 'Save Meal Selections') : totalItems > 0 ? 'Review Plan' : 'Generate Plan'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -788,25 +848,35 @@ function RestaurantReplacementModal({
   selectedRestaurants: Array<{ restaurantId: string; restaurantName: string; restaurantData?: Restaurant | null }>;
   getItemCountForRestaurant: (restaurantId: string) => number;
   onClose: () => void;
-  onConfirmRemove: (restaurantsToRemove: typeof selectedRestaurants) => void;
+  onConfirmRemove: (restaurantsToRemove: typeof selectedRestaurants) => Promise<void>;
 }) {
-  const [modalStep, setModalStep] = useState<'remove' | 'add'>('remove');
+  const insets = useSafeAreaInsets();
+  const { showFlash } = useFlash();
   const [selectedToRemove, setSelectedToRemove] = useState<typeof selectedRestaurants>([]);
   const [isRemoving, setIsRemoving] = useState(false);
 
-  const handleRemoveRestaurants = async () => {
-    setIsRemoving(true);
-    setTimeout(() => {
-      onConfirmRemove(selectedToRemove);
+  useEffect(() => {
+    if (isVisible) {
       setSelectedToRemove([]);
-      setModalStep('add');
       setIsRemoving(false);
-    }, 500);
-  };
+    }
+  }, [isVisible]);
 
-  const remainingRestaurants = selectedRestaurants.filter(
-    (item) => !selectedToRemove.some((remove) => remove.restaurantId === item.restaurantId),
-  );
+  const handleRemoveRestaurants = async () => {
+    if (selectedToRemove.length === 0 || isRemoving) return;
+
+    setIsRemoving(true);
+    try {
+      await onConfirmRemove(selectedToRemove);
+      setSelectedToRemove([]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to update restaurant selection.';
+      console.error('Failed to remove restaurants:', error);
+      showFlash(message, 'error');
+    } finally {
+      setIsRemoving(false);
+    }
+  };
 
   const toggleRestaurantSelection = (rest: (typeof selectedRestaurants)[0]) => {
     if (selectedToRemove.some((item) => item.restaurantId === rest.restaurantId)) {
@@ -819,151 +889,78 @@ function RestaurantReplacementModal({
   if (!isVisible) return null;
 
   return (
-    <Modal visible={isVisible} transparent animationType="slide">
+    <Modal visible={isVisible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.replacementModalOverlay}>
-        <View style={styles.replacementModalSheet}>
+        <Pressable style={styles.replacementModalBackdrop} onPress={onClose} />
+        <View style={[styles.replacementModalSheet, { paddingBottom: insets.bottom + 16 }]}>
           <View style={styles.replacementModalHandle} />
 
           <View style={styles.replacementModalHeader}>
-            <Text style={styles.replacementModalTitle}>
-              {modalStep === 'remove' ? 'Remove Restaurants' : 'Restaurant Removed'}
-            </Text>
+            <Text style={styles.replacementModalTitle}>Remove Restaurant</Text>
+            <Text style={styles.replacementModalSubtitle}>Step 1: Select restaurants to remove from your meal plan</Text>
+
             <Pressable onPress={onClose} style={styles.replacementModalClose}>
-              <Ionicons name="close" size={24} color={theme.colors.gray[600]} />
+              <Ionicons name="close" size={22} color={theme.colors.gray[700]} />
             </Pressable>
           </View>
 
-          <View style={styles.replacementModalBody}>
-            {modalStep === 'remove' ? (
-              <>
-                <Text style={styles.replacementInstruction}>
-                  Select restaurants to remove from your meal plan
-                </Text>
+          <ScrollView
+            style={styles.replacementModalScroll}
+            contentContainerStyle={styles.replacementModalBody}
+            showsVerticalScrollIndicator={false}
+          >
+            {selectedRestaurants.map((rest) => {
+              const isSelected = selectedToRemove.some((item) => item.restaurantId === rest.restaurantId);
+              const itemCount = getItemCountForRestaurant(rest.restaurantId);
 
-                <View style={styles.legendRow}>
-                  <View style={styles.legendItem}>
-                    <View style={styles.legendBox} />
-                    <Text style={styles.legendText}>Not selected</Text>
-                  </View>
-                  <View style={styles.legendItem}>
-                    <View style={styles.legendBoxSelected} />
-                    <Text style={styles.legendText}>Selected for removal</Text>
-                  </View>
-                </View>
-
-                <View style={styles.restaurantList}>
-                  {selectedRestaurants.map((rest) => {
-                    const isSelected = selectedToRemove.some((item) => item.restaurantId === rest.restaurantId);
-                    const itemCount = getItemCountForRestaurant(rest.restaurantId);
-                    const cuisine = rest.restaurantData?.cuisine || '';
-
-                    return (
-                      <Pressable
-                        key={rest.restaurantId}
-                        onPress={() => toggleRestaurantSelection(rest)}
-                        style={({ pressed }) => [
-                          styles.removalRestaurantCard,
-                          isSelected && styles.removalRestaurantCardSelected,
-                          pressed && styles.pressed,
-                        ]}
-                      >
-                        <View style={styles.removalRestaurantRow}>
-                          <View style={[styles.removalCheckbox, isSelected && styles.removalCheckboxSelected]}>
-                            {isSelected && <Ionicons name="checkmark" size={16} color={theme.colors.white} />}
-                          </View>
-                          <View style={styles.removalRestaurantTextBlock}>
-                            <Text style={styles.removalRestaurantName}>{rest.restaurantName}</Text>
-                            {cuisine ? (
-                              <Text numberOfLines={1} style={styles.removalRestaurantCuisine}>{cuisine}</Text>
-                            ) : null}
-                            <View style={[styles.mealCountBadge, isSelected && itemCount > 0 && styles.mealCountBadgeSelected]}>
-                              <Text style={[styles.mealCountBadgeText, isSelected && itemCount > 0 && styles.mealCountBadgeSelectedText]}>
-                                {itemCount} meal{itemCount === 1 ? '' : 's'}
-                              </Text>
-                            </View>
-                            {isSelected && itemCount > 0 ? (
-                              <Text style={styles.willDeleteText}>Will be deleted</Text>
-                            ) : null}
-                          </View>
-                        </View>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </>
-            ) : (
-              <>
-                <Text style={styles.addStepTitle}>Restaurant removed successfully!</Text>
-                <Text style={styles.addStepCopy}>Click below to browse and add a new restaurant:</Text>
-
+              return (
                 <Pressable
-                  onPress={() => {
-                    onClose();
-                    router.push('/plan/restaurants?source=plan');
-                  }}
-                  style={({ pressed }) => [styles.browseRestaurantsButton, pressed && styles.pressed]}
+                  key={rest.restaurantId}
+                  onPress={() => toggleRestaurantSelection(rest)}
+                  style={({ pressed }) => [
+                    styles.removalRestaurantCard,
+                    isSelected && styles.removalRestaurantCardSelected,
+                    pressed && styles.pressed,
+                  ]}
                 >
-                  <View style={styles.browseIcon}>
-                    <Ionicons name="add" size={24} color="white" />
+                  <View style={styles.removalRestaurantRow}>
+                    <View style={[styles.removalCheckbox, isSelected && styles.removalCheckboxSelected]}>
+                      {isSelected ? <Ionicons name="checkmark" size={16} color={theme.colors.white} /> : null}
+                    </View>
+                    <View style={styles.removalRestaurantTextBlock}>
+                      <Text style={styles.removalRestaurantName}>{rest.restaurantName}</Text>
+                      <Text style={styles.removalRestaurantMeals}>
+                        {itemCount} meal{itemCount === 1 ? '' : 's'}
+                      </Text>
+                    </View>
                   </View>
-                  <View style={styles.browseTextBlock}>
-                    <Text style={styles.browseTitle}>Browse Restaurants</Text>
-                    <Text style={styles.browseCopy}>Click to explore restaurants near you</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color="white" />
                 </Pressable>
+              );
+            })}
+          </ScrollView>
 
-                {remainingRestaurants.length > 0 ? (
-                  <View style={styles.remainingSection}>
-                    <Text style={styles.currentRestaurantsLabel}>
-                      {remainingRestaurants.length === 1 ? 'Your Remaining Restaurant' : 'Your Remaining Restaurants'}
-                    </Text>
-                    {remainingRestaurants.map((rest) => (
-                      <View key={rest.restaurantId} style={styles.remainingRestaurantCard}>
-                        <View style={styles.remainingCheck}>
-                          <Ionicons name="checkmark" size={16} color={theme.colors.green[600]} />
-                        </View>
-                        <View style={styles.remainingTextBlock}>
-                          <Text style={styles.remainingRestaurantName}>{rest.restaurantName}</Text>
-                          <Text style={styles.remainingStatus}>Active in plan</Text>
-                        </View>
-                      </View>
-                    ))}
-                  </View>
-                ) : null}
-              </>
-            )}
-          </View>
-
-          <View style={styles.replacementActions}>
+          <View style={styles.replacementFooter}>
             <Pressable onPress={onClose} style={({ pressed }) => [styles.replacementCancelButton, pressed && styles.pressed]}>
-              <Text style={styles.replacementCancelText}>{modalStep === 'remove' ? 'Cancel' : 'Done'}</Text>
+              <Text style={styles.replacementCancelText}>Cancel</Text>
             </Pressable>
 
-            {modalStep === 'remove' && (
-              <Pressable
-                disabled={selectedToRemove.length === 0 || isRemoving}
-                onPress={handleRemoveRestaurants}
-                style={({ pressed }) => [
-                  styles.replacementRemoveButton,
-                  selectedToRemove.length === 0 || isRemoving ? styles.replacementRemoveButtonDisabled : styles.replacementRemoveButtonActive,
-                  pressed && selectedToRemove.length > 0 && !isRemoving && styles.pressed,
-                ]}
-              >
-                {isRemoving ? (
-                  <ActivityIndicator color={theme.colors.white} />
-                ) : (
-                  <Text
-                    style={[
-                      styles.replacementRemoveText,
-                      selectedToRemove.length === 0 && styles.replacementRemoveTextDisabled,
-                    ]}
-                  >
-                    {selectedToRemove.length > 0 ? `Remove ${selectedToRemove.length}` : 'Select to Remove'}
-                  </Text>
-                )}
-              </Pressable>
-            )}
+            <Pressable
+              disabled={selectedToRemove.length === 0 || isRemoving}
+              onPress={handleRemoveRestaurants}
+              style={({ pressed }) => [
+                styles.replacementRemoveButton,
+                selectedToRemove.length === 0 || isRemoving ? styles.replacementRemoveButtonDisabled : styles.replacementRemoveButtonActive,
+                pressed && selectedToRemove.length > 0 && !isRemoving && styles.pressed,
+              ]}
+            >
+              {isRemoving ? (
+                <ActivityIndicator color={theme.colors.white} />
+              ) : (
+                <Text style={styles.replacementRemoveText}>
+                  {selectedToRemove.length > 0 ? 'Remove Selected' : 'Select to Remove'}
+                </Text>
+              )}
+            </Pressable>
           </View>
         </View>
       </View>
@@ -997,14 +994,14 @@ function WeeklyMenuItemCard({ item, quantity, onIncrement, onDecrement }: { item
                 e.stopPropagation();
                 onDecrement();
               }} style={({ pressed }) => [styles.stepperButton, styles.stepperButtonLeft, pressed && styles.pressed]}>
-                <Ionicons name="remove" size={18} color="white" />
+                <Ionicons name="remove" size={18} color={theme.colors.white} />
               </Pressable>
               <Text style={styles.stepperQuantity}>{quantity}</Text>
               <Pressable onPress={(e) => {
                 e.stopPropagation();
                 onIncrement();
               }} style={({ pressed }) => [styles.stepperButton, styles.stepperButtonRight, pressed && styles.pressed]}>
-                <Ionicons name="add" size={18} color="white" />
+                <Ionicons name="add" size={18} color={theme.colors.white} />
               </Pressable>
             </View>
           )}
@@ -1097,7 +1094,7 @@ function formatShortDate(date: Date) {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.background.page,
   },
   scrollContent: {
     // Extra padding at the bottom so the scrollable content isn't hidden by the footer
@@ -1108,7 +1105,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: theme.spacing[6],
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.background.page,
   },
   loadingText: {
     marginTop: theme.spacing[3],
@@ -1151,7 +1148,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.background.page,
     zIndex: 10,
   },
   backButton: {
@@ -1365,7 +1362,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   restaurantPillText: {
-    color: 'white',
+    color: theme.colors.white,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -1386,7 +1383,7 @@ const styles = StyleSheet.create({
   grubPassButton: {
     flex: 1,
     height: 40,
-    backgroundColor: '#8B5CF6',
+    backgroundColor: theme.colors.blue[600],
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -1394,7 +1391,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   grubPassButtonText: {
-    color: 'white',
+    color: theme.colors.white,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -1446,7 +1443,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   dayTabDayTextActive: {
-    color: 'white',
+    color: theme.colors.white,
   },
   dayTabDateText: {
     color: theme.colors.text.heading,
@@ -1454,7 +1451,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   dayTabDateTextActive: {
-    color: 'white',
+    color: theme.colors.white,
   },
   dayTabIndicatorDot: {
     position: 'absolute',
@@ -1533,7 +1530,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: theme.colors.green[600],
     borderRadius: 20,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: theme.colors.green[100],
     padding: 16,
     gap: 12,
     ...theme.shadow.sm,
@@ -1586,7 +1583,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.green[600],
   },
   plannedBadgeText: {
-    color: 'white',
+    color: theme.colors.white,
     fontSize: 11,
     fontWeight: '700',
   },
@@ -1604,11 +1601,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.background.page,
     paddingHorizontal: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: theme.colors.border.default,
     zIndex: 50,
   },
   reviewButton: {
@@ -1622,7 +1619,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   reviewButtonText: {
-    color: 'white',
+    color: theme.colors.white,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -1636,7 +1633,7 @@ const styles = StyleSheet.create({
   mealPickerBackdrop: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 0,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: theme.colors.background.overlay,
   },
   mealPickerSheet: {
     zIndex: 1,
@@ -1898,7 +1895,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 6,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.white,
     ...theme.shadow.sm,
   },
   addButtonText: {
@@ -1910,7 +1907,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.white,
     ...theme.shadow.sm,
     padding: 4,
     gap: 12,
@@ -1996,10 +1993,14 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 70,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: theme.colors.background.overlay,
+  },
+  replacementModalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
   },
   replacementModalSheet: {
     maxHeight: '80%',
+    width: '100%',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     backgroundColor: theme.colors.white,
@@ -2011,23 +2012,31 @@ const styles = StyleSheet.create({
     width: 48,
     height: 4,
     borderRadius: 2,
-    backgroundColor: theme.colors.gray[300],
-    marginTop: 8,
-    marginBottom: 8,
+    backgroundColor: '#D1D5DB',
+    marginTop: 12,
+    marginBottom: 12,
   },
   replacementModalHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
-    paddingBottom: 8,
+    paddingBottom: 0,
   },
   replacementModalTitle: {
     color: theme.colors.gray[900],
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 12,
+  },
+  replacementModalSubtitle: {
+    color: theme.colors.gray[500],
+    textAlign: 'center',
+    marginBottom: 16,
   },
   replacementModalClose: {
+    position: 'absolute',
+    top: 12,
+    right: 16,
     width: 32,
     height: 32,
     borderRadius: 16,
@@ -2035,10 +2044,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: theme.colors.gray[100],
   },
+  replacementModalScroll: {
+    flex: 1,
+  },
   replacementModalBody: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 0,
+    paddingBottom: 16,
   },
   replacementInstruction: {
     color: theme.colors.gray[700],
@@ -2078,10 +2091,11 @@ const styles = StyleSheet.create({
   },
   removalRestaurantCard: {
     borderRadius: 16,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: theme.colors.border.default,
-    backgroundColor: theme.colors.white,
-    padding: 12,
+    backgroundColor: theme.colors.gray[50],
+    padding: 16,
+    marginBottom: 12,
   },
   removalRestaurantCardSelected: {
     borderColor: theme.colors.brand.grubRed,
@@ -2089,19 +2103,18 @@ const styles = StyleSheet.create({
   },
   removalRestaurantRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: 12,
   },
   removalCheckbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     borderWidth: 2,
-    borderColor: theme.colors.border.default,
-    backgroundColor: theme.colors.white,
+    borderColor: theme.colors.border.strong,
+    backgroundColor: theme.colors.gray[50],
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 2,
   },
   removalCheckboxSelected: {
     borderColor: theme.colors.brand.grubRed,
@@ -2112,8 +2125,13 @@ const styles = StyleSheet.create({
   },
   removalRestaurantName: {
     color: theme.colors.gray[900],
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
+  },
+  removalRestaurantMeals: {
+    marginTop: 4,
+    color: theme.colors.gray[500],
+    fontSize: 13,
   },
   removalRestaurantCuisine: {
     color: theme.colors.gray[600],
@@ -2215,31 +2233,29 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 2,
   },
-  replacementActions: {
+  replacementFooter: {
     flexDirection: 'row',
     gap: 12,
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingTop: 12,
   },
   replacementCancelButton: {
     flex: 1,
-    minHeight: 44,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: theme.colors.border.default,
+    minHeight: 48,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.gray[100],
   },
   replacementCancelText: {
-    color: theme.colors.gray[700],
+    color: theme.colors.gray[900],
     fontSize: 14,
     fontWeight: '700',
   },
   replacementRemoveButton: {
     flex: 1,
-    minHeight: 44,
-    borderRadius: 12,
+    minHeight: 48,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -2248,13 +2264,12 @@ const styles = StyleSheet.create({
     ...theme.shadow.sm,
   },
   replacementRemoveButtonDisabled: {
-    backgroundColor: theme.colors.gray[200],
+    backgroundColor: theme.colors.brand.grubRed,
+    opacity: 0.5,
   },
   replacementRemoveText: {
     fontSize: 14,
     fontWeight: '700',
-  },
-  replacementRemoveTextDisabled: {
-    color: theme.colors.gray[400],
+    color: theme.colors.white,
   },
 });

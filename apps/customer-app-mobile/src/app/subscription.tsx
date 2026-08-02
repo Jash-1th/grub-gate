@@ -64,7 +64,7 @@ const emptyAddressForm: AddressFormState = {
 
 export default function SubscriptionScreen() {
   const { getMealItems, getTotalItems, getTotalCost, hasHydrated } = useMealPlan();
-  const { isAuthenticated, isHydrating } = useAuth();
+  const { isAuthenticated, isHydrating, isSubscribed } = useAuth();
   const { showFlash } = useFlash();
   const rootNavigationState = useRootNavigationState();
   const insets = useSafeAreaInsets();
@@ -76,12 +76,21 @@ export default function SubscriptionScreen() {
   const deliveryCount = getActualDeliveryCount(getMealItems);
 
   useEffect(() => {
+    if (!rootNavigationState?.key || isHydrating) return;
+    if (!isSubscribed) return;
+
+    showFlash('Your subscription is already active. Opening your meal calendar instead.', 'info');
+    router.replace('/meal-calendar?source=subscription');
+  }, [isHydrating, isSubscribed, rootNavigationState?.key, showFlash]);
+
+  useEffect(() => {
     if (!rootNavigationState?.key || !hasHydrated) return;
+    if (isSubscribed) return;
     if (totalItems > 0) return;
 
     showFlash('Please select at least one meal item before choosing a subscription plan.', 'info');
     router.replace('/weekly-menu');
-  }, [hasHydrated, rootNavigationState?.key, showFlash, totalItems]);
+  }, [hasHydrated, isSubscribed, rootNavigationState?.key, showFlash, totalItems]);
 
   const pricingByPlan = useMemo(() => ({
     'bi-weekly': getMealCostForPlan('bi-weekly', biweeklyMealCost, deliveryCount),
@@ -145,6 +154,18 @@ export default function SubscriptionScreen() {
         <View style={styles.centered}>
           <ActivityIndicator color={theme.colors.brand.grubRed} />
           <Text style={styles.loadingText}>Loading subscription plans...</Text>
+        </View>
+      </>
+    );
+  }
+
+  if (isSubscribed) {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={styles.centered}>
+          <ActivityIndicator color={theme.colors.brand.grubRed} />
+          <Text style={styles.loadingText}>Opening your active meal calendar...</Text>
         </View>
       </>
     );
@@ -989,7 +1010,7 @@ const styles = StyleSheet.create({
   receiptDivider: {
     borderTopWidth: 1,
     borderStyle: 'dotted',
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.border.default,
     marginVertical: theme.spacing[3],
   },
   totalRow: {
@@ -1020,13 +1041,13 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing[4],
   },
   planCardInactive: {
-    borderColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
+    borderColor: theme.colors.border.default,
+    backgroundColor: theme.colors.white,
   },
   planCardActive: {
     borderColor: theme.colors.brand.grubRed,
     borderWidth: 2,
-    backgroundColor: '#FEF2F2',
+    backgroundColor: theme.colors.red[50],
   },
   popularPill: {
     position: 'absolute',
@@ -1062,10 +1083,10 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#D1D5DB',
+    borderColor: theme.colors.border.strong,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.white,
   },
   radioOuterActive: {
     borderColor: theme.colors.brand.grubRed,
@@ -1170,7 +1191,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.52)',
+    backgroundColor: theme.colors.background.overlay,
     justifyContent: 'flex-end',
   },
   modalSheet: {
@@ -1212,11 +1233,11 @@ const styles = StyleSheet.create({
   },
   selectedPlanPanel: {
     borderWidth: 1,
-    borderColor: '#bfdbfe',
+    borderColor: theme.colors.blue[200],
     borderRadius: theme.radius.xl,
     padding: theme.spacing[4],
     alignItems: 'center',
-    backgroundColor: '#f4f7ff',
+    backgroundColor: theme.colors.blue[50],
     marginBottom: theme.spacing[6],
   },
   selectedPlanLabel: {
@@ -1239,7 +1260,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing[2],
   },
   selectedPlanPrice: {
-    color: '#4f46e5',
+    color: theme.colors.blue[700],
     fontSize: theme.typography.fontSize['3xl'],
     fontWeight: theme.typography.fontWeight.extrabold,
   },
@@ -1278,7 +1299,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#2563eb',
+    backgroundColor: theme.colors.blue[600],
     ...theme.shadow.md,
   },
   stepCircleActiveText: {
@@ -1347,14 +1368,14 @@ const styles = StyleSheet.create({
   },
   quickOptionsBox: {
     borderWidth: 1,
-    borderColor: '#bfdbfe',
+    borderColor: theme.colors.blue[200],
     borderRadius: theme.radius.xl,
-    backgroundColor: '#eff6ff',
+    backgroundColor: theme.colors.blue[50],
     padding: theme.spacing[4],
     marginBottom: theme.spacing[6],
   },
   quickOptionsTitle: {
-    color: '#1e3a8a',
+    color: theme.colors.blue[700],
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.bold,
     marginBottom: theme.spacing[4],
@@ -1368,7 +1389,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: theme.spacing[4],
-    backgroundColor: '#2563eb',
+    backgroundColor: theme.colors.blue[600],
     ...theme.shadow.md,
   },
   locationButtonText: {
@@ -1384,11 +1405,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: theme.spacing[4],
     borderWidth: 1,
-    borderColor: '#60a5fa',
+    borderColor: theme.colors.blue[400],
     backgroundColor: theme.colors.white,
   },
   addAddressButtonText: {
-    color: '#1d4ed8',
+    color: theme.colors.blue[700],
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.extrabold,
     textAlign: 'center',
@@ -1433,7 +1454,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: theme.spacing[5],
-    backgroundColor: '#2563eb',
+    backgroundColor: theme.colors.blue[600],
   },
   firstAddressButtonText: {
     color: theme.colors.white,
@@ -1452,8 +1473,8 @@ const styles = StyleSheet.create({
     padding: theme.spacing[4],
   },
   savedAddressCardSelected: {
-    borderColor: '#2563eb',
-    backgroundColor: '#eff6ff',
+    borderColor: theme.colors.blue[600],
+    backgroundColor: theme.colors.blue[50],
   },
   savedAddressTopRow: {
     flexDirection: 'row',
@@ -1518,8 +1539,8 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.white,
   },
   addressTypeButtonActive: {
-    borderColor: '#2563eb',
-    backgroundColor: '#eff6ff',
+    borderColor: theme.colors.blue[600],
+    backgroundColor: theme.colors.blue[50],
     ...theme.shadow.sm,
   },
   addressTypeText: {
@@ -1528,7 +1549,7 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
   },
   addressTypeTextActive: {
-    color: '#1d4ed8',
+    color: theme.colors.blue[700],
   },
   inputWrap: {
     marginBottom: theme.spacing[5],
@@ -1610,8 +1631,8 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.white,
   },
   checkboxBoxChecked: {
-    backgroundColor: '#2563eb',
-    borderColor: '#2563eb',
+    backgroundColor: theme.colors.blue[600],
+    borderColor: theme.colors.blue[600],
   },
   checkboxCheck: {
     color: theme.colors.white,
@@ -1698,7 +1719,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: theme.spacing[5],
-    backgroundColor: '#2563eb',
+    backgroundColor: theme.colors.blue[600],
   },
   enabledPaymentText: {
     color: theme.colors.white,
