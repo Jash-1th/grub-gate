@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxHeight: '88%',
     minHeight: 420,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.background.page,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     overflow: 'hidden',

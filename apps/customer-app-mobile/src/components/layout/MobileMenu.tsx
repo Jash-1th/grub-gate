@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     width: '78%',
     maxWidth: 340,
     height: '100%',
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.background.page,
     ...theme.shadow.lg,
   },
   panelHeader: {

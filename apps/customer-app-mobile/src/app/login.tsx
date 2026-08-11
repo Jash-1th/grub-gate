@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
   },
   page: {
     flex: 1,
-    backgroundColor: theme.colors.gray[50],
+    backgroundColor: theme.colors.background.page,
   },
   content: {
     paddingBottom: theme.spacing[8],

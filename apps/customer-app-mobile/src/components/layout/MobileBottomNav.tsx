@@ -4,6 +4,7 @@ import type { Href } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../../theme';
+import { AnimatedPressable } from '../AnimatedPressable';
 
 type TabItem = {
   label: string;
@@ -45,7 +46,7 @@ const tabs: TabItem[] = [
 ];
 
 const tabRoutes = new Set(tabs.map((tab) => tab.match));
-const activeColor = '#E23744';
+const activeColor = theme.colors.brand.grubRed;
 const inactiveColor = '#999999';
 
 export function MobileBottomNav() {
@@ -64,20 +65,20 @@ export function MobileBottomNav() {
           const iconName = active ? tab.activeIcon : tab.inactiveIcon;
 
           return (
-            <Pressable
+            <AnimatedPressable
               key={tab.label}
               onPress={() => router.push(tab.href)}
-              style={({ pressed }) => [styles.tabButton, active && styles.tabButtonActive, pressed && styles.pressed]}
+              style={[styles.tabButton, active && styles.tabButtonActive]}
               accessibilityRole="button"
               accessibilityLabel={tab.label}
             >
               <View style={[styles.iconWrap, active && styles.iconWrapActive]}>
-                <Ionicons name={iconName} size={active ? 23 : 22} color={active ? activeColor : inactiveColor} />
+                <Ionicons name={iconName} size={active ? 23 : 22} color={active ? theme.colors.brand.grubRed : inactiveColor} />
               </View>
               <Text style={[styles.tabLabel, active ? styles.tabLabelActive : styles.tabLabelInactive]}>
                 {tab.label}
               </Text>
-            </Pressable>
+            </AnimatedPressable>
           );
         })}
       </View>
@@ -87,17 +88,21 @@ export function MobileBottomNav() {
 
 const styles = StyleSheet.create({
   safeArea: {
-    width: '100%',
-    backgroundColor: 'transparent',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     paddingHorizontal: theme.spacing[4],
+    paddingBottom: Math.max(theme.spacing[2], 16),
     paddingTop: theme.spacing[2],
+    backgroundColor: 'transparent',
   },
   tabBar: {
     height: 76,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderRadius: theme.radius['3xl'],
+    borderRadius: 30,
     backgroundColor: '#FFFFFF',
     paddingHorizontal: theme.spacing[2],
     ...theme.shadow.lg,
@@ -108,15 +113,12 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius['2xl'],
     alignItems: 'center',
     justifyContent: 'center',
-    gap: theme.spacing[0.5],
+    gap: 4,
   },
   tabButtonActive: {
-    backgroundColor: '#FFF1F2',
+    backgroundColor: theme.colors.red[50],
   },
   iconWrap: {
-    width: 32,
-    height: 30,
-    borderRadius: theme.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -130,12 +132,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   tabLabelActive: {
-    color: activeColor,
+    color: theme.colors.brand.grubRed,
   },
   tabLabelInactive: {
     color: inactiveColor,
-  },
-  pressed: {
-    opacity: 0.7,
   },
 });

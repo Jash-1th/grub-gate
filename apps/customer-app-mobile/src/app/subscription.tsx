@@ -862,7 +862,7 @@ function formatPrice(value: number) {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: theme.colors.gray[50],
+    backgroundColor: theme.colors.background.page,
   },
   content: {
     paddingTop: theme.spacing[3],
@@ -1198,7 +1198,7 @@ const styles = StyleSheet.create({
     maxHeight: '94%',
     borderTopLeftRadius: theme.radius['2xl'],
     borderTopRightRadius: theme.radius['2xl'],
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.background.page,
     overflow: 'hidden',
   },
   modalContent: {

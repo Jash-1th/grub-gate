@@ -286,11 +286,11 @@ function PostalCodeSearchForm({
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: theme.colors.background.page,
   },
   content: {
     paddingHorizontal: theme.spacing[4],
-    paddingBottom: theme.spacing[10],
+    paddingBottom: 120,
   },
   backButton: {
     width: 44,

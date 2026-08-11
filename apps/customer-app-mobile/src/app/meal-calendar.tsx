@@ -23,6 +23,7 @@ import {
 } from '../lib/mealCalendarApi';
 import { MealDetailsSheet } from '../components/meal-calendar/MealDetailsSheet';
 import { theme } from '../theme';
+import { AnimatedPressable } from '../components/AnimatedPressable';
 
 const calendarDayOrder: DayId[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
@@ -194,12 +195,12 @@ export default function MealCalendarScreen() {
           <Text style={styles.emptyCalendarCopy}>
             {subscriptionCalendarError || 'Please try again in a moment or return home and reopen your meal calendar.'}
           </Text>
-          <Pressable
+          <AnimatedPressable
             onPress={() => router.replace('/')}
-            style={({ pressed }) => [styles.previewSubscribeButton, styles.retryButton, pressed && styles.pressed]}
+            style={[styles.previewSubscribeButton, styles.retryButton]}
           >
             <Text style={styles.previewSubscribeButtonText}>Back to Home</Text>
-          </Pressable>
+          </AnimatedPressable>
         </View>
       </>
     );
@@ -210,7 +211,7 @@ export default function MealCalendarScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView style={styles.page}>
         <View style={styles.previewHeader}>
-          <Pressable
+          <AnimatedPressable
             onPress={() => {
               if (router.canGoBack()) {
                 router.back();
@@ -219,12 +220,12 @@ export default function MealCalendarScreen() {
               router.push('/weekly-menu');
             }}
             hitSlop={12}
-            style={({ pressed }) => [styles.previewHeaderButton, pressed && styles.pressed]}
+            style={styles.previewHeaderButton}
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
             <Ionicons name="chevron-back" size={22} color={theme.colors.gray[900]} />
-          </Pressable>
+          </AnimatedPressable>
 
           <Text style={styles.previewHeaderTitle}>Plan Preview</Text>
           <View style={styles.previewHeaderButton} />
@@ -268,13 +269,12 @@ export default function MealCalendarScreen() {
         </ScrollView>
 
         <View style={[styles.previewFooter, { paddingBottom: insets.bottom + theme.spacing[3] }]}>
-          <Pressable
+          <AnimatedPressable
             onPress={isSubscribed ? handleConfirmMealUpdates : handleSubscribe}
             disabled={!isSubscribed && checkoutTotalMeals === 0}
-            style={({ pressed }) => [
+            style={[
               styles.previewSubscribeButton,
               !isSubscribed && checkoutTotalMeals === 0 && styles.previewSubscribeButtonDisabled,
-              pressed && (isSubscribed || checkoutTotalMeals > 0) && styles.pressed,
             ]}
           >
             <View style={styles.previewSubscribeContent}>
@@ -289,7 +289,7 @@ export default function MealCalendarScreen() {
                   : `Subscribe to Plan • ${formatPrice(checkoutTotalCost)}`}
               </Text>
             </View>
-          </Pressable>
+          </AnimatedPressable>
         </View>
 
         <MealDetailsSheet
@@ -422,8 +422,8 @@ function PreviewMealSlotRow({
       <View style={styles.previewSlotRight}>
         {count > 0 ? <Text style={styles.previewSlotPrice}>{formatPrice(total)}</Text> : null}
         {count > 0 ? (
-          <Pressable
-            onPress={(event) => {
+          <AnimatedPressable
+            onPress={(event: any) => {
               event.stopPropagation();
               onEdit();
             }}
@@ -432,7 +432,7 @@ function PreviewMealSlotRow({
             accessibilityLabel={`Edit ${label}`}
           >
             <Text style={styles.previewEditText}>Edit</Text>
-          </Pressable>
+          </AnimatedPressable>
         ) : null}
       </View>
     </>
@@ -443,14 +443,14 @@ function PreviewMealSlotRow({
   }
 
   return (
-    <Pressable
+    <AnimatedPressable
       onPress={onViewDetails}
-      style={({ pressed }) => [styles.previewSlotRow, pressed && styles.pressed]}
+      style={styles.previewSlotRow}
       accessibilityRole="button"
       accessibilityLabel={`View ${label.toLowerCase()} details`}
     >
       {content}
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -464,21 +464,20 @@ function QuickActionRow({
   onPress: () => void;
 }) {
   return (
-    <Pressable
+    <AnimatedPressable
       onPress={onPress}
-      style={({ pressed }) => [
+      style={[
         styles.quickActionRow,
         tone === 'brand' && styles.quickActionBrand,
         tone === 'blue' && styles.quickActionBlue,
         tone === 'gray' && styles.quickActionGray,
-        pressed && styles.pressed,
       ]}
     >
       <Text style={[styles.quickActionText, tone === 'brand' && styles.quickActionTextBrand]}>
         {tone === 'brand' ? '+  ' : tone === 'blue' ? 'R  ' : 'A  '}
         {label}
       </Text>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -503,12 +502,12 @@ function SubscribedMealCalendar({ calendarData }: { calendarData: SubscriptionCa
           </View>
           <Text style={styles.heroCopy}>Track subscribed meals, delivery progress, and upcoming schedule.</Text>
 
-          <Pressable
+          <AnimatedPressable
             onPress={() => router.push('/your-orders')}
-            style={({ pressed }) => [styles.heroPrimaryButton, pressed && styles.pressed]}
+            style={styles.heroPrimaryButton}
           >
             <Text style={styles.heroPrimaryButtonText}>View Orders</Text>
-          </Pressable>
+          </AnimatedPressable>
         </View>
 
         <View style={styles.previewCard}>
@@ -743,7 +742,7 @@ function formatPrice(value: number) {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: theme.colors.gray[50],
+    backgroundColor: theme.colors.background.page,
   },
   previewHeader: {
     height: 56,
@@ -816,7 +815,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    backgroundColor: theme.colors.red[700],
+    backgroundColor: theme.colors.brand.grubRed,
   },
   previewDateNumber: {
     color: theme.colors.white,

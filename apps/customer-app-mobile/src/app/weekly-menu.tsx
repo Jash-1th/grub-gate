@@ -34,6 +34,8 @@ import {
 } from '../lib/restaurantApi';
 import { useAuth } from '../contexts/AuthContext';
 import { theme } from '../theme';
+import { MealCardSkeleton } from '../components/ui/MealCardSkeleton';
+import { AnimatedPressable } from '../components/AnimatedPressable';
 
 const fallbackFoodImage = require('../assets/grub-gate-default-img.jpg');
 
@@ -258,8 +260,11 @@ export default function WeeklyMenuScreen() {
       <>
         <Stack.Screen options={{ headerShown: false }} />
         <SafeAreaView style={styles.centered}>
-          <ActivityIndicator color={theme.colors.brand.grubRed} />
-          <Text style={styles.loadingText}>Loading weekly menu...</Text>
+          <View style={styles.skeletonContainer}>
+            <MealCardSkeleton />
+            <MealCardSkeleton />
+            <MealCardSkeleton />
+          </View>
         </SafeAreaView>
       </>
     );
@@ -272,9 +277,9 @@ export default function WeeklyMenuScreen() {
         <SafeAreaView style={styles.centered}>
           <Text style={styles.emptyTitle}>Select a Restaurant First</Text>
           <Text style={styles.emptyCopy}>Choose a restaurant before building your weekly menu.</Text>
-          <Pressable onPress={() => router.replace('/plan')} style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}>
+          <AnimatedPressable onPress={() => router.replace('/plan')} style={styles.primaryButton}>
             <Text style={styles.primaryButtonText}>Find Restaurants</Text>
-          </Pressable>
+          </AnimatedPressable>
         </SafeAreaView>
       </>
     );
@@ -513,11 +518,11 @@ export default function WeeklyMenuScreen() {
                 {itemCount > 0 ? (
                   // Filled/Planned State
                   items.map((item, index) => (
-                    <View key={item.planId || index} style={styles.filledMealCard}>
-                      <Pressable
-                        style={StyleSheet.absoluteFill}
-                        onPress={() => handleSlotPress(activeDay, mealType.id)}
-                      />
+                    <AnimatedPressable
+                      key={item.planId || index}
+                      onPress={() => handleSlotPress(activeDay, mealType.id)}
+                      style={styles.filledMealCard}
+                    >
                       <View style={styles.filledMealTopRow}>
                         <Text style={styles.restaurantNameText}>{item.restaurantName || restaurant?.name || 'Restaurant'}</Text>
                         <TouchableOpacity
@@ -545,17 +550,17 @@ export default function WeeklyMenuScreen() {
                         </View>
                         <Text style={styles.helperText}>Want to add more? Click me</Text>
                       </View>
-                    </View>
+                    </AnimatedPressable>
                   ))
                 ) : (
                   // Empty State
-                  <Pressable
+                  <AnimatedPressable
                     onPress={() => handleSlotPress(activeDay, mealType.id)}
-                    style={({ pressed }) => [styles.emptyMealCard, pressed && styles.pressed]}
+                    style={styles.emptyMealCard}
                   >
                     <Ionicons name="add" size={32} color="#94A3B8" />
                     <Text style={styles.emptyMealText}>Add {mealType.label.toLowerCase()}</Text>
-                  </Pressable>
+                  </AnimatedPressable>
                 )}
               </View>
             );
@@ -817,8 +822,9 @@ function MealPickerSheet({
 
           {isLoading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator color={theme.colors.brand.grubRed} />
-              <Text style={styles.loadingMenuText}>Loading menu...</Text>
+              <MealCardSkeleton />
+              <MealCardSkeleton />
+              <MealCardSkeleton />
             </View>
           ) : (
             menuItems.map((item) => (
@@ -1553,7 +1559,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: theme.colors.red[500],
+    backgroundColor: theme.colors.brand.grubRed,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
@@ -1640,7 +1646,7 @@ const styles = StyleSheet.create({
     height: '78%',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.background.page,
     overflow: 'hidden',
     ...theme.shadow.lg,
   },
@@ -1864,6 +1870,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 24,
   },
+  skeletonContainer: {
+    gap: theme.spacing[2],
+    width: '100%',
+    paddingHorizontal: theme.spacing[4],
+  },
   loadingMenuText: {
     marginTop: 8,
     color: theme.colors.gray[600],
@@ -2003,7 +2014,7 @@ const styles = StyleSheet.create({
     width: '100%',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.background.page,
     overflow: 'hidden',
     ...theme.shadow.lg,
   },

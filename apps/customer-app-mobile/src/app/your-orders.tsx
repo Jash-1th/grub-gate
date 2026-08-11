@@ -524,7 +524,7 @@ function getStatusBadgeStyles(status: Exclude<OrderFilter, 'All Orders'>) {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: theme.colors.gray[50],
+    backgroundColor: theme.colors.background.page,
   },
   topChrome: {
     backgroundColor: theme.colors.white,
@@ -581,7 +581,7 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 16,
     paddingTop: theme.spacing[5],
-    paddingBottom: 100,
+    paddingBottom: 120,
   },
   sectionHeader: {
     flexDirection: 'row',

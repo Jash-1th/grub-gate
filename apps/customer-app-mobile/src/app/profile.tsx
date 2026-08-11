@@ -199,7 +199,7 @@ export default function ProfileScreen() {
         <View style={styles.authWrap}>
           <View style={styles.card}>
             <View style={styles.authIcon}>
-              <Ionicons name="person-outline" size={34} color="#E23744" />
+              <Ionicons name="person-outline" size={34} color={theme.colors.brand.grubRed} />
             </View>
             <Text style={styles.authTitle}>Your GrubGate Profile</Text>
             <Text style={styles.authCopy}>Sign in to manage your meal plans, orders, addresses, and subscription details.</Text>
@@ -240,7 +240,7 @@ export default function ProfileScreen() {
                 style={({ pressed }) => [styles.actionRow, active && styles.actionRowActive, pressed && styles.pressed]}
               >
                 <View style={[styles.actionIcon, active && styles.actionIconActive]}>
-                  <Ionicons name={row.icon} size={20} color={active ? '#E23744' : theme.colors.gray[600]} />
+                  <Ionicons name={row.icon} size={20} color={active ? theme.colors.brand.grubRed : theme.colors.gray[600]} />
                 </View>
                 <Text style={styles.actionText}>{row.label}</Text>
                 <Ionicons name="chevron-forward" size={20} color={theme.colors.gray[400]} />
@@ -283,7 +283,7 @@ export default function ProfileScreen() {
           disabled={isLoading}
           style={({ pressed }) => [styles.logoutButton, isLoading && styles.disabledButton, pressed && styles.pressed]}
         >
-          <Ionicons name="log-out-outline" size={18} color="#E23744" />
+          <Ionicons name="log-out-outline" size={18} color={theme.colors.brand.grubRed} />
           <Text style={styles.logoutButtonText}>{isLoading ? 'Logging out...' : 'Logout'}</Text>
         </Pressable>
       </ScrollView>
@@ -517,7 +517,7 @@ function formatDate(value?: string) {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: theme.colors.background.page,
   },
   header: {
     backgroundColor: '#FFFFFF',
@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: theme.spacing[4],
-    paddingBottom: theme.spacing[8],
+    paddingBottom: 120,
     gap: theme.spacing[4],
   },
   userCard: {
@@ -565,10 +565,10 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFF1F2',
+    backgroundColor: theme.colors.red[50],
   },
   avatarText: {
-    color: '#E23744',
+    color: theme.colors.brand.grubRed,
     fontSize: theme.typography.fontSize.xl,
     fontWeight: theme.typography.fontWeight.bold,
   },
@@ -614,7 +614,7 @@ const styles = StyleSheet.create({
     marginRight: theme.spacing[3],
   },
   actionIconActive: {
-    backgroundColor: '#FFF1F2',
+    backgroundColor: theme.colors.red[50],
   },
   actionText: {
     flex: 1,
@@ -708,13 +708,13 @@ const styles = StyleSheet.create({
   editAddressButton: {
     minHeight: 38,
     borderRadius: theme.radius.lg,
-    backgroundColor: '#FFF1F2',
+    backgroundColor: theme.colors.red[50],
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: theme.spacing[3],
   },
   editAddressButtonText: {
-    color: '#E23744',
+    color: theme.colors.brand.grubRed,
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.bold,
   },
@@ -726,7 +726,7 @@ const styles = StyleSheet.create({
     ...theme.shadow.sm,
   },
   formError: {
-    color: '#E23744',
+    color: theme.colors.brand.grubRed,
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.semibold,
   },
@@ -745,8 +745,8 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.white,
   },
   addressTypeButtonActive: {
-    borderColor: '#E23744',
-    backgroundColor: '#FFF1F2',
+    borderColor: theme.colors.brand.grubRed,
+    backgroundColor: theme.colors.red[50],
   },
   addressTypeText: {
     color: theme.colors.gray[600],
@@ -754,7 +754,7 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
   },
   addressTypeTextActive: {
-    color: '#E23744',
+    color: theme.colors.brand.grubRed,
   },
   inputWrap: {
     gap: theme.spacing[2],
@@ -852,7 +852,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFF1F2',
+    backgroundColor: theme.colors.red[50],
     marginBottom: theme.spacing[4],
     alignSelf: 'center',
   },
@@ -874,7 +874,7 @@ const styles = StyleSheet.create({
     minHeight: 52,
     marginTop: theme.spacing[6],
     borderRadius: theme.radius['2xl'],
-    backgroundColor: '#E23744',
+    backgroundColor: theme.colors.brand.grubRed,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: theme.spacing[6],
@@ -890,14 +890,14 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing[3],
     borderRadius: theme.radius['2xl'],
     borderWidth: 1,
-    borderColor: '#FFD1D6',
-    backgroundColor: '#FFF7F8',
+    borderColor: theme.colors.red[200],
+    backgroundColor: theme.colors.red[50],
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: theme.spacing[6],
   },
   outlineButtonText: {
-    color: '#E23744',
+    color: theme.colors.brand.grubRed,
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.bold,
   },
@@ -905,15 +905,15 @@ const styles = StyleSheet.create({
     minHeight: 52,
     borderRadius: theme.radius['2xl'],
     borderWidth: 1,
-    borderColor: '#FFD1D6',
-    backgroundColor: '#FFF7F8',
+    borderColor: theme.colors.red[200],
+    backgroundColor: theme.colors.red[50],
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
     gap: theme.spacing[2],
   },
   logoutButtonText: {
-    color: '#E23744',
+    color: theme.colors.brand.grubRed,
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.bold,
   },

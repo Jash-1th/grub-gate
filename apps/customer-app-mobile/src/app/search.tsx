@@ -68,7 +68,7 @@ export default function SearchScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View style={styles.heroCard}>
           <View style={styles.iconBubble}>
-            <Ionicons name="location-sharp" size={28} color="#E23744" />
+            <Ionicons name="location-sharp" size={28} color={theme.colors.brand.grubRed} />
           </View>
           <Text style={styles.title}>Find food near you</Text>
           <Text style={styles.copy}>
@@ -95,7 +95,7 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: theme.colors.background.page,
   },
   header: {
     backgroundColor: '#FFFFFF',
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFF1F2',
+    backgroundColor: theme.colors.red[50],
     marginBottom: theme.spacing[4],
   },
   title: {
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     minHeight: 52,
     marginTop: theme.spacing[6],
     borderRadius: theme.radius['2xl'],
-    backgroundColor: '#E23744',
+    backgroundColor: theme.colors.brand.grubRed,
     paddingHorizontal: theme.spacing[6],
     flexDirection: 'row',
     alignItems: 'center',

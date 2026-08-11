@@ -22,6 +22,8 @@ import {
   type Restaurant,
 } from '../../lib/restaurantApi';
 import { theme } from '../../theme';
+import { RestaurantCardSkeleton } from '../../components/ui/RestaurantCardSkeleton';
+import { AnimatedPressable } from '../../components/AnimatedPressable';
 
 const fallbackFoodImage = require('../../assets/grub-gate-default-img.jpg');
 
@@ -201,8 +203,10 @@ export default function RestaurantDetailScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={theme.colors.brand.grubRed} />
-        <Text style={styles.loadingText}>Loading restaurant...</Text>
+        <View style={styles.skeletonContainer}>
+          <RestaurantCardSkeleton />
+          <RestaurantCardSkeleton />
+        </View>
       </View>
     );
   }
@@ -221,9 +225,9 @@ export default function RestaurantDetailScreen() {
       <View style={styles.centered}>
         <Text style={styles.errorTitle}>Restaurant Not Found</Text>
         <Text style={styles.errorCopy}>{errorMessage || 'Unable to load restaurant details.'}</Text>
-        <Pressable onPress={() => router.back()} style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}>
+        <AnimatedPressable onPress={() => router.back()} style={styles.primaryButton}>
           <Text style={styles.primaryButtonText}>Back to Restaurants</Text>
-        </Pressable>
+        </AnimatedPressable>
       </View>
     );
   }
@@ -394,12 +398,12 @@ function RestaurantLimitModal({
 
           {/* Footer Actions */}
           <View style={styles.limitActions}>
-            <Pressable onPress={onClose} style={({ pressed }) => [styles.limitSecondaryButton, pressed && styles.pressed]}>
+            <AnimatedPressable onPress={onClose} style={styles.limitSecondaryButton}>
               <Text style={styles.limitSecondaryButtonText}>Got It</Text>
-            </Pressable>
-            <Pressable onPress={onGoToWeeklyMenu} style={({ pressed }) => [styles.limitPrimaryButton, pressed && styles.pressed]}>
+            </AnimatedPressable>
+            <AnimatedPressable onPress={onGoToWeeklyMenu} style={styles.limitPrimaryButton}>
               <Text style={styles.limitPrimaryButtonText}>Go to Weekly Menu</Text>
-            </Pressable>
+            </AnimatedPressable>
           </View>
         </View>
       </View>
@@ -423,7 +427,7 @@ function FoodItemCard({
   const isVegetarian = tags.some(tag => normalizeTag(tag) === 'vegetarian');
 
   return (
-    <Pressable onPress={onPress} style={styles.foodCard}>
+    <AnimatedPressable onPress={onPress} style={styles.foodCard}>
       <View style={styles.foodCardLeft}>
         <View style={styles.foodTitleRow}>
           <View style={[
@@ -464,7 +468,7 @@ function FoodItemCard({
           )}
         </View>
       </View>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -648,7 +652,7 @@ function formatMacroValue(value?: string | number) {
 const styles = StyleSheet.create({
   shell: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.background.page,
   },
   page: {
     flex: 1,
@@ -668,6 +672,11 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing[3],
     color: theme.colors.gray[600],
     fontSize: theme.typography.fontSize.sm,
+  },
+  skeletonContainer: {
+    gap: theme.spacing[4],
+    width: '100%',
+    paddingHorizontal: theme.spacing[4],
   },
   errorTitle: {
     color: theme.colors.gray[900],

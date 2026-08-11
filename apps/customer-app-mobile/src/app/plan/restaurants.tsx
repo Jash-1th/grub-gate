@@ -474,7 +474,7 @@ function renderStars(rating: number) {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.background.page,
   },
   centered: {
     flex: 1,

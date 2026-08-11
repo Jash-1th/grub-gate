@@ -68,7 +68,7 @@ export function CustomerHeader() {
             accessibilityLabel="Select delivery location"
           >
             <View style={styles.locationIconFrame}>
-              <Ionicons name="location-sharp" size={22} color="#E23744" />
+              <Ionicons name="location-sharp" size={22} color={theme.colors.brand.grubRed} />
             </View>
 
             <View style={styles.locationCopy}>
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFF1F2',
+    backgroundColor: theme.colors.red[50],
     marginRight: theme.spacing[3],
   },
   locationCopy: {
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E23744',
+    backgroundColor: theme.colors.brand.grubRed,
     borderWidth: 2,
     borderColor: theme.colors.white,
   },

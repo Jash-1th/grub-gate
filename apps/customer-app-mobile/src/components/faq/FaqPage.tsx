@@ -103,7 +103,7 @@ function ContactCta() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: theme.colors.gray[50] },
+  page: { flex: 1, backgroundColor: theme.colors.background.page },
   content: { paddingBottom: theme.spacing[6] },
   hero: {
     minHeight: 330,
