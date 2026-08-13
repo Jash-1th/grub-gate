@@ -1,6 +1,8 @@
 import React, { useRef } from 'react';
-import { Pressable, StyleSheet, Animated, AccessibilityRole, GestureResponderEvent } from 'react-native';
+import { Pressable, Animated, AccessibilityRole, GestureResponderEvent } from 'react-native';
 import * as Haptics from 'expo-haptics';
+
+const AnimatedPressableCore = Animated.createAnimatedComponent(Pressable);
 
 interface AnimatedPressableProps {
   children: React.ReactNode;
@@ -26,7 +28,7 @@ export function AnimatedPressable({
   const handlePressIn = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Animated.spring(scale, {
-      toValue: 0.97,
+      toValue: 0.95,
       useNativeDriver: true,
       speed: 50,
       bounciness: 4,
@@ -43,7 +45,7 @@ export function AnimatedPressable({
   };
 
   return (
-    <Pressable
+    <AnimatedPressableCore
       onPress={onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
@@ -53,16 +55,10 @@ export function AnimatedPressable({
       accessibilityRole={accessibilityRole}
       accessibilityLabel={accessibilityLabel}
     >
-      <Animated.View style={[styles.animated, { transform: [{ scale }] }]}>
+      {/* Removed the destructive 100% width/height styling here */}
+      <Animated.View style={{ transform: [{ scale }] }}>
         {children}
       </Animated.View>
-    </Pressable>
+    </AnimatedPressableCore>
   );
 }
-
-const styles = StyleSheet.create({
-  animated: {
-    width: '100%',
-    height: '100%',
-  },
-});

@@ -1,6 +1,7 @@
 // FILE: server.js
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
@@ -97,8 +98,9 @@ app.use('/api', limiter);
 
 
 // CORS configuration - allow local network devices during development.
+// CORS configuration - allow local network devices during development.
 app.use(cors({
-  origin: true,
+  origin: '*', // Changed from true to '*' to guarantee USB connections work
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
@@ -124,7 +126,9 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Serve uploaded files
-app.use('/uploads', express.static('uploads'));
+// Make the uploads path absolute so Express never loses it
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 // Logging middleware
 if (process.env.NODE_ENV === 'development') {

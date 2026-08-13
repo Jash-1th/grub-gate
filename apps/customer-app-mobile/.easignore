@@ -1,0 +1,13 @@
+../../backend
+../../dasher-app
+../../partner-portal
+../../packages
+../../.uploads
+../../.agents
+../../.windsurf
+../../.git
+**/node_modules
+**/.expo
+**/android
+**/ios
+**/dist

@@ -2,7 +2,8 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 import { clearAuthSession, getAuthToken } from './secureAuthStorage';
 
-const nativeBaseURL = process.env.EXPO_PUBLIC_API_URL || 'http://10.248.115.234:5000/api/v1';
+// Changed the native URL to point to localhost (via USB) instead of a Wi-Fi IP
+const nativeBaseURL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
 const webBaseURL = process.env.EXPO_PUBLIC_WEB_API_URL || 'http://localhost:5000/api/v1';
 const baseURL = Platform.OS === 'web' ? webBaseURL : nativeBaseURL;
 

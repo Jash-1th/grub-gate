@@ -5,12 +5,14 @@ import {
   ActivityIndicator,
   Animated,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFlash } from '../../contexts/FlashContext';
@@ -18,6 +20,7 @@ import { useMealPlan } from '../../contexts/MealPlanContext';
 import { usePlanning } from '../../contexts/PlanningContext';
 import { getRestaurantsByPostalCode, type Restaurant } from '../../lib/restaurantApi';
 import { theme } from '../../theme';
+import { AnimatedPressable } from '../../components/AnimatedPressable';
 
 const fallbackImage = require('../../assets/grub-gate-default-restaurant-img.jpg');
 
@@ -163,10 +166,11 @@ export default function PlanRestaurantsScreen() {
   }
 
   return (
-    <View style={styles.page}>
-      <RestaurantSelectionHeader postalCode={postalCode} />
-
+    <SafeAreaView edges={['top']} style={styles.page}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        
+        <RestaurantSelectionHeader postalCode={postalCode} />
+
         {isLoading ? (
           <LoadingRestaurants postalCode={postalCode} />
         ) : errorMessage ? (
@@ -194,26 +198,32 @@ export default function PlanRestaurantsScreen() {
       </ScrollView>
 
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + theme.spacing[4] }]}>
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.4)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.bottomFade}
+        />
         <View style={styles.bottomActions}>
-          <Pressable onPress={() => router.replace('/plan')} style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}>
+          <AnimatedPressable onPress={() => router.replace('/plan')} style={styles.secondaryButton}>
             <Text style={styles.secondaryButtonText}>Change Location</Text>
-          </Pressable>
-          <Pressable
+          </AnimatedPressable>
+          <AnimatedPressable
             disabled={isProcessing}
             onPress={handleContinue}
-            style={({ pressed }) => [styles.continueButton, isProcessing && styles.buttonDisabled, pressed && styles.pressed]}
+            style={[styles.continueButton, isProcessing && styles.buttonDisabled]}
           >
             <Text style={styles.continueButtonText}>{isProcessing ? 'Processing...' : 'Continue to Plans'}</Text>
-          </Pressable>
+          </AnimatedPressable>
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 function RestaurantSelectionHeader({ postalCode }: { postalCode: string }) {
   return (
-    <SafeAreaView edges={['top']} style={styles.selectionHeader}>
+    <View style={styles.selectionHeader}>
       <View style={styles.selectionHeaderRow}>
         <Pressable
           onPress={() => {
@@ -221,7 +231,6 @@ function RestaurantSelectionHeader({ postalCode }: { postalCode: string }) {
               router.back();
               return;
             }
-
             router.replace('/plan');
           }}
           hitSlop={12}
@@ -244,9 +253,8 @@ function RestaurantSelectionHeader({ postalCode }: { postalCode: string }) {
 
         <View style={styles.selectionHeaderSpacer} />
       </View>
-
       <ProgressIndicator />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -291,7 +299,6 @@ function LoadingRestaurants({ postalCode }: { postalCode: string }) {
             <View style={styles.skeletonBody}>
               <View style={styles.skeletonLineLarge} />
               <View style={styles.skeletonLineMedium} />
-              <View style={styles.skeletonStars} />
               <View style={styles.skeletonButton} />
             </View>
           </View>
@@ -355,7 +362,9 @@ function RestaurantCard({
   const glowScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.025] });
   const rating = typeof restaurant.rating === 'number' ? restaurant.rating : 4.5;
   const reviewCount = typeof restaurant.reviewCount === 'number' ? restaurant.reviewCount : 0;
-  const image = restaurant.image || restaurant.imageUrl || restaurant.logo || restaurant.images?.[0];
+  
+  const rawImage = restaurant.image || restaurant.imageUrl || restaurant.logo || restaurant.images?.[0];
+  const image = getFullImageUrl(rawImage);
   const preferences = getRestaurantPreferences(restaurant);
 
   return (
@@ -365,36 +374,42 @@ function RestaurantCard({
       <View style={[styles.restaurantCard, isSelected && styles.restaurantCardSelected]}>
         <View style={styles.imageWrap}>
           {image ? (
-            <Image source={{ uri: image }} defaultSource={fallbackImage} style={styles.restaurantImage} />
+            <Image source={{ uri: image }} style={styles.restaurantImage} />
           ) : (
             <Image source={fallbackImage} style={styles.restaurantImage} />
           )}
           <View style={styles.imageShade} />
 
+          <View style={styles.imageHeader}>
+            {!isSelected ? (
+              <View style={styles.badgeRow}>
+                {restaurant.isPopular ? (
+                  <View style={styles.popularBadge}>
+                    <Text style={styles.popularBadgeText}>Popular</Text>
+                  </View>
+                ) : null}
+                {restaurant.isTopRated ? (
+                  <View style={styles.topRatedBadge}>
+                    <Text style={styles.topRatedBadgeText}>Top Rated</Text>
+                  </View>
+                ) : null}
+              </View>
+            ) : (
+              <View style={styles.imageHeaderSpacer} />
+            )}
+
+            <View style={styles.ratingBadge}>
+              <Ionicons name="star" size={13} color="#F59E0B" />
+              <Text style={styles.ratingBadgeText}>{rating.toFixed(1)}</Text>
+              <Text style={styles.ratingBadgeReviews}>({reviewCount})</Text>
+            </View>
+          </View>
+
           {isSelected ? (
             <Animated.View style={[styles.selectedBadge, { opacity: glowOpacity }]}>
               <Text style={styles.selectedBadgeText}>✓ Selected</Text>
             </Animated.View>
-          ) : (
-            <View style={styles.badgeRow}>
-              {restaurant.isPopular ? (
-                <View style={styles.popularBadge}>
-                  <Text style={styles.popularBadgeText}>Popular</Text>
-                </View>
-              ) : null}
-              {restaurant.isTopRated ? (
-                <View style={styles.topRatedBadge}>
-                  <Text style={styles.topRatedBadgeText}>Top Rated</Text>
-                </View>
-              ) : null}
-            </View>
-          )}
-
-          <View style={styles.ratingBadge}>
-            <Text style={styles.ratingStar}>*</Text>
-            <Text style={styles.ratingBadgeText}>{rating.toFixed(1)}</Text>
-            <Text style={styles.ratingBadgeReviews}>({reviewCount})</Text>
-          </View>
+          ) : null}
         </View>
 
         <View style={styles.restaurantBody}>
@@ -407,12 +422,6 @@ function RestaurantCard({
             <Text numberOfLines={2} style={styles.restaurantDescription}>
               {restaurant.description || formatCuisine(restaurant.cuisine) || 'Delicious food from a GrubGate partner restaurant.'}
             </Text>
-          </View>
-
-          <View style={styles.cardRatingRow}>
-            <Text style={styles.starText}>{renderStars(rating)}</Text>
-            <Text style={styles.cardRatingText}>{rating.toFixed(1)}</Text>
-            <Text style={styles.cardReviewText}>({reviewCount})</Text>
           </View>
 
           <View style={styles.preferenceWrap}>
@@ -445,6 +454,27 @@ function RestaurantCard({
   );
 }
 
+function getFullImageUrl(url?: string) {
+  if (!url) return null;
+  if (url.startsWith('/images/') || url.startsWith('images/')) return null;
+  
+  const normalizedUrl = url.replace(/\\/g, '/');
+  if (normalizedUrl.startsWith('http')) {
+    return Platform.OS === 'android' ? normalizedUrl.replace('localhost', '127.0.0.1') : normalizedUrl;
+  }
+  
+  let baseUrl = process.env.EXPO_PUBLIC_API_URL 
+    ? process.env.EXPO_PUBLIC_API_URL.split('/api')[0] 
+    : 'http://127.0.0.1:5000';
+    
+  if (Platform.OS === 'android') {
+    baseUrl = baseUrl.replace('localhost', '127.0.0.1');
+  }
+    
+  const cleanUrl = normalizedUrl.startsWith('/') ? normalizedUrl : `/${normalizedUrl}`;
+  return `${baseUrl}${cleanUrl}`;
+}
+
 function getRestaurantId(restaurant: Restaurant) {
   return restaurant.id || restaurant._id || restaurant.name || String(Math.random());
 }
@@ -466,11 +496,6 @@ function formatTag(tag: string) {
   return tag.replace(/-/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function renderStars(rating: number) {
-  const fullStars = Math.max(0, Math.min(5, Math.round(rating)));
-  return Array.from({ length: 5 }, (_, index) => (index < fullStars ? '*' : '*')).join(' ');
-}
-
 const styles = StyleSheet.create({
   page: {
     flex: 1,
@@ -484,10 +509,10 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.gray[50],
   },
   selectionHeader: {
-    zIndex: 20,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
+    paddingTop: theme.spacing[2],
     ...theme.shadow.sm,
   },
   selectionHeaderRow: {
@@ -592,7 +617,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.gray[300],
   },
   content: {
-    paddingBottom: 130,
+    paddingBottom: 140,
   },
   copyStrong: {
     color: theme.colors.brand.grubRed,
@@ -600,6 +625,7 @@ const styles = StyleSheet.create({
   },
   restaurantGrid: {
     paddingHorizontal: theme.spacing[4],
+    paddingTop: theme.spacing[6],
     gap: theme.spacing[6],
   },
   cardWrap: {
@@ -624,8 +650,12 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  restaurantCardSelected: {},
+  restaurantCardSelected: {
+    borderWidth: 2,
+    borderColor: theme.colors.brand.grubRed,
+  },
   imageWrap: {
+    position: 'relative',
     height: 168,
     overflow: 'hidden',
     backgroundColor: theme.colors.gray[200],
@@ -644,10 +674,22 @@ const styles = StyleSheet.create({
   },
   selectedBadge: {
     position: 'absolute',
-    top: theme.spacing[3],
+    top: theme.spacing[8],
     left: theme.spacing[3],
     right: theme.spacing[3],
     alignItems: 'center',
+  },
+  imageHeader: {
+    position: 'absolute',
+    top: theme.spacing[3],
+    left: theme.spacing[3],
+    right: theme.spacing[3],
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  imageHeaderSpacer: {
+    flex: 1,
   },
   selectedBadgeText: {
     overflow: 'hidden',
@@ -663,11 +705,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   badgeRow: {
-    position: 'absolute',
-    top: theme.spacing[3],
-    left: theme.spacing[3],
     flexDirection: 'row',
     gap: theme.spacing[2],
+    flex: 1,
+    paddingRight: theme.spacing[2],
+    alignItems: 'center',
+    flexWrap: 'wrap',
   },
   popularBadge: {
     borderRadius: theme.radius.full,
@@ -692,28 +735,30 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
   },
   ratingBadge: {
-    position: 'absolute',
-    top: theme.spacing[3],
-    right: theme.spacing[3],
-    borderRadius: theme.radius.lg,
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    paddingHorizontal: theme.spacing[2],
-    paddingVertical: theme.spacing[1],
+    borderRadius: 999,
+    backgroundColor: 'rgba(255, 255, 255, 0.78)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.55)',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  ratingStar: {
-    color: theme.colors.yellow[400],
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.bold,
+    gap: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
   },
   ratingBadgeText: {
-    color: theme.colors.gray[800],
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.bold,
+    color: '#111827',
+    fontSize: 13,
+    fontWeight: '800',
   },
   ratingBadgeReviews: {
-    color: theme.colors.gray[500],
-    fontSize: 10,
+    color: '#4B5563',
+    fontSize: 11.5,
+    fontWeight: '600',
   },
   restaurantBody: {
     padding: theme.spacing[4],
@@ -740,26 +785,6 @@ const styles = StyleSheet.create({
     color: theme.colors.gray[600],
     fontSize: theme.typography.fontSize.sm,
     lineHeight: 21,
-  },
-  cardRatingRow: {
-    marginTop: theme.spacing[2],
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing[2],
-  },
-  starText: {
-    color: theme.colors.yellow[400],
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.bold,
-  },
-  cardRatingText: {
-    color: theme.colors.gray[700],
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.bold,
-  },
-  cardReviewText: {
-    color: theme.colors.gray[500],
-    fontSize: theme.typography.fontSize.sm,
   },
   preferenceWrap: {
     minHeight: 28,
@@ -824,16 +849,6 @@ const styles = StyleSheet.create({
     color: theme.colors.brand.grubRed,
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.bold,
-  },
-  paginationInfo: {
-    paddingHorizontal: theme.spacing[4],
-    paddingVertical: theme.spacing[8],
-    alignItems: 'center',
-  },
-  paginationText: {
-    color: theme.colors.gray[600],
-    fontSize: theme.typography.fontSize.sm,
-    textAlign: 'center',
   },
   loadingSection: {
     alignItems: 'center',
@@ -902,13 +917,6 @@ const styles = StyleSheet.create({
     width: '72%',
     height: 16,
     marginTop: theme.spacing[3],
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.gray[200],
-  },
-  skeletonStars: {
-    width: '52%',
-    height: 16,
-    marginTop: theme.spacing[4],
     borderRadius: theme.radius.md,
     backgroundColor: theme.colors.gray[200],
   },
@@ -1012,6 +1020,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 10,
+  },
+  bottomFade: {
+    position: 'absolute',
+    top: -60,
+    left: 0,
+    right: 0,
+    height: 60,
+    pointerEvents: 'none',
   },
   bottomActions: {
     flexDirection: 'row',

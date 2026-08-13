@@ -1,8 +1,10 @@
 import axios from 'axios';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -12,11 +14,13 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../contexts/AuthContext';
 import { useFlash } from '../contexts/FlashContext';
 import api from '../lib/api';
 import { type StoredUser } from '../lib/secureAuthStorage';
 import { theme } from '../theme';
+import { AnimatedPressable } from '../components/AnimatedPressable';
 
 type LoginResponseData = {
   status?: string;
@@ -40,8 +44,27 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [focusedField, setFocusedField] = useState<'email' | 'password' | null>(null);
   const { applyAuthenticatedSession } = useAuth();
   const { showFlash } = useFlash();
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const handleLogin = async () => {
     const trimmedEmail = email.trim();
@@ -97,87 +120,108 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.keyboardRoot} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView style={styles.page} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.hero}>
-          <View style={styles.heroShade} />
-          <Text style={styles.heroTitle}>Welcome Back!</Text>
-          <Text style={styles.heroSubtitle}>Log in to access your meal plans and continue your journey with GrubGate.</Text>
-        </View>
+      <LinearGradient
+        colors={['#FFF1F2', '#FFFFFF', '#F3F4F6']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.page}
+      >
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+            <View style={styles.card}>
+              <View style={styles.headerSection}>
+                <Text style={styles.heroTitle}>Welcome Back!</Text>
+                <Text style={styles.heroSubtitle}>Log in to access your meal plans and continue your journey with GrubGate.</Text>
+              </View>
 
-        <View style={styles.card}>
-          {errorMessage ? (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorText}>{errorMessage}</Text>
+              {errorMessage ? (
+                <View style={styles.errorBox}>
+                  <Text style={styles.errorText}>{errorMessage}</Text>
+                </View>
+              ) : null}
+
+              <View style={styles.fieldBlock}>
+                <Text style={styles.label}>Email or Phone Number</Text>
+                <View style={[styles.inputContainer, focusedField === 'email' && styles.inputContainerFocused]}>
+                  <Ionicons name="mail-outline" size={20} color={focusedField === 'email' ? theme.colors.brand.grubRed : theme.colors.gray[400]} style={styles.inputIcon} />
+                  <TextInput
+                    value={email}
+                    onChangeText={(value) => {
+                      setEmail(value);
+                      setErrorMessage('');
+                    }}
+                    placeholder="Enter your email or phone number"
+                    placeholderTextColor={theme.colors.gray[400]}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    onFocus={() => setFocusedField('email')}
+                    onBlur={() => setFocusedField(null)}
+                    style={styles.input}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.fieldBlock}>
+                <Text style={styles.label}>Password</Text>
+                <View style={[styles.inputContainer, focusedField === 'password' && styles.inputContainerFocused]}>
+                  <Ionicons name="lock-closed-outline" size={20} color={focusedField === 'password' ? theme.colors.brand.grubRed : theme.colors.gray[400]} style={styles.inputIcon} />
+                  <TextInput
+                    value={password}
+                    onChangeText={(value) => {
+                      setPassword(value);
+                      setErrorMessage('');
+                    }}
+                    placeholder="Enter your password"
+                    placeholderTextColor={theme.colors.gray[400]}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    onFocus={() => setFocusedField('password')}
+                    onBlur={() => setFocusedField(null)}
+                    style={styles.input}
+                  />
+                </View>
+              </View>
+
+              <Pressable style={styles.forgotButton}>
+                <Text style={styles.forgotText}>Forgot Password?</Text>
+              </Pressable>
+
+              <AnimatedPressable
+                disabled={isLoading}
+                onPress={handleLogin}
+                style={[styles.primaryButton, isLoading && styles.primaryButtonDisabled]}
+              >
+                {isLoading ? <ActivityIndicator color={theme.colors.white} /> : <Text style={styles.primaryButtonText}>Login</Text>}
+              </AnimatedPressable>
+
+              <View style={styles.dividerRow}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>OR</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+           <AnimatedPressable style={styles.googleButton}>
+                
+                <View style={styles.googleButtonInner}>
+                  <View style={styles.googleMark}>
+                    <Text style={styles.googleMarkText}>G</Text>
+                  </View>
+                  <Text style={styles.googleButtonText}>Login with Google</Text>
+                </View>
+              </AnimatedPressable>
+
+              <View style={styles.switchRow}>
+                <Text style={styles.switchPrompt}>Don't have an account? </Text>
+                <Pressable onPress={() => router.push('/signup')}>
+                  <Text style={styles.switchLink}>Sign Up</Text>
+                </Pressable>
+              </View>
             </View>
-          ) : null}
-
-          <View style={styles.fieldBlock}>
-            <Text style={styles.label}>Email or Phone Number</Text>
-            <TextInput
-              value={email}
-              onChangeText={(value) => {
-                setEmail(value);
-                setErrorMessage('');
-              }}
-              placeholder="Enter your email or phone number"
-              placeholderTextColor={theme.colors.gray[400]}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              style={styles.input}
-            />
-          </View>
-
-          <View style={styles.fieldBlock}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              value={password}
-              onChangeText={(value) => {
-                setPassword(value);
-                setErrorMessage('');
-              }}
-              placeholder="Enter your password"
-              placeholderTextColor={theme.colors.gray[400]}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-              style={styles.input}
-            />
-          </View>
-
-          <Pressable style={styles.forgotButton}>
-            <Text style={styles.forgotText}>Forgot Password?</Text>
-          </Pressable>
-
-          <Pressable
-            disabled={isLoading}
-            onPress={handleLogin}
-            style={({ pressed }) => [styles.primaryButton, (pressed || isLoading) && styles.pressed]}
-          >
-            {isLoading ? <ActivityIndicator color={theme.colors.white} /> : <Text style={styles.primaryButtonText}>Login</Text>}
-          </Pressable>
-
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <Pressable style={({ pressed }) => [styles.googleButton, pressed && styles.pressed]}>
-            <View style={styles.googleMark}>
-              <Text style={styles.googleMarkText}>G</Text>
-            </View>
-            <Text style={styles.googleButtonText}>Login with Google</Text>
-          </Pressable>
-
-          <View style={styles.switchRow}>
-            <Text style={styles.switchPrompt}>Don't have an account? </Text>
-            <Pressable onPress={() => router.push('/signup')}>
-              <Text style={styles.switchLink}>Sign Up</Text>
-            </Pressable>
-          </View>
-        </View>
-      </ScrollView>
+          </Animated.View>
+        </ScrollView>
+      </LinearGradient>
     </KeyboardAvoidingView>
   );
 }
@@ -230,24 +274,22 @@ const styles = StyleSheet.create({
   },
   page: {
     flex: 1,
-    backgroundColor: theme.colors.background.page,
   },
   content: {
+    padding: theme.spacing[4],
     paddingBottom: theme.spacing[8],
   },
-  hero: {
-    minHeight: 220,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing[5],
-    backgroundColor: theme.colors.brand.grubRed,
+  card: {
+    borderRadius: 24,
+    backgroundColor: theme.colors.white,
+    padding: theme.spacing[6],
+    ...theme.shadow.lg,
   },
-  heroShade: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.18)',
+  headerSection: {
+    marginBottom: theme.spacing[6],
   },
   heroTitle: {
-    color: theme.colors.white,
+    color: theme.colors.gray[900],
     fontSize: theme.typography.fontSize['3xl'],
     lineHeight: 38,
     fontWeight: theme.typography.fontWeight.bold,
@@ -255,18 +297,10 @@ const styles = StyleSheet.create({
   },
   heroSubtitle: {
     marginTop: theme.spacing[3],
-    color: theme.colors.red[100],
+    color: theme.colors.gray[600],
     fontSize: theme.typography.fontSize.base,
     lineHeight: 24,
     textAlign: 'center',
-  },
-  card: {
-    margin: theme.spacing[4],
-    marginTop: -theme.spacing[8],
-    borderRadius: theme.radius['2xl'],
-    backgroundColor: theme.colors.white,
-    padding: theme.spacing[6],
-    ...theme.shadow.md,
   },
   errorBox: {
     borderRadius: theme.radius.lg,
@@ -290,15 +324,28 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.semibold,
     marginBottom: theme.spacing[2],
   },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 52,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: theme.spacing[3],
+  },
+  inputContainerFocused: {
+    borderWidth: 2,
+    borderColor: theme.colors.brand.grubRed,
+    backgroundColor: '#FFFFFF',
+  },
+  inputIcon: {
+    marginRight: theme.spacing[3],
+  },
   input: {
-    minHeight: 48,
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.gray[300],
+    flex: 1,
     color: theme.colors.gray[900],
     fontSize: theme.typography.fontSize.base,
-    paddingHorizontal: theme.spacing[3],
-    backgroundColor: theme.colors.white,
+    paddingVertical: theme.spacing[2],
+    backgroundColor: 'transparent',
   },
   forgotButton: {
     alignSelf: 'flex-end',
@@ -310,12 +357,15 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.medium,
   },
   primaryButton: {
-    minHeight: 50,
+    minHeight: 52,
     borderRadius: theme.radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: theme.colors.brand.grubRed,
     ...theme.shadow.md,
+  },
+  primaryButtonDisabled: {
+    opacity: 0.6,
   },
   primaryButtonText: {
     color: theme.colors.white,
@@ -338,25 +388,8 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.medium,
   },
-  googleButton: {
-    minHeight: 50,
-    borderRadius: theme.radius.lg,
-    borderWidth: 2,
-    borderColor: theme.colors.gray[300],
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.white,
-  },
-  googleMark: {
-    width: 24,
-    height: 24,
-    borderRadius: theme.radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: theme.spacing[3],
-    backgroundColor: theme.colors.blue[600],
-  },
+  
+  
   googleMarkText: {
     color: theme.colors.white,
     fontSize: theme.typography.fontSize.sm,
@@ -386,5 +419,28 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.76,
     transform: [{ scale: 0.98 }],
+  },
+  googleButton: {
+    height: 52,
+    borderRadius: theme.radius.lg,
+    borderWidth: 2,
+    borderColor: theme.colors.gray[300],
+    backgroundColor: theme.colors.white,
+  },
+  googleButtonInner: {
+    width: '100%',
+    height: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  googleMark: {
+    width: 24,
+    height: 24,
+    borderRadius: theme.radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    backgroundColor: theme.colors.blue[600],
   },
 });

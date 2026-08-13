@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   Image,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -119,19 +120,14 @@ export default function RestaurantDetailScreen() {
 
   const toggleFilter = (filter: string) => {
     if (filter === 'All') {
-      // If All is clicked, select only All
       setSelectedFilters(['All']);
     } else {
-      // Check if filter is already selected
       if (selectedFilters.includes(filter)) {
-        // If selected, unselect it
         setSelectedFilters(prev => {
           const newFilters = prev.filter(f => f !== filter);
-          // If no filters left, select All
           return newFilters.length === 0 ? ['All'] : newFilters;
         });
       } else {
-        // If not selected, add it and remove All if present
         setSelectedFilters(prev => {
           const withoutAll = prev.filter(f => f !== 'All');
           return [...withoutAll, filter];
@@ -146,7 +142,6 @@ export default function RestaurantDetailScreen() {
     return menuItems.filter((item) => {
       const tags = getDietaryTags(item).map((tag) => normalizeTag(tag));
       
-      // Check if item matches any of the selected filters
       return selectedFilters.some(filter => {
         const filterTag = normalizeTag(filter);
         
@@ -190,7 +185,6 @@ export default function RestaurantDetailScreen() {
       return;
     }
 
-    // FIXED: Correctly closed the backtick here to stop the syntax errors!
     showFlash(`${restaurantName} selected.`, 'success');
     router.push('/weekly-menu');
   };
@@ -244,7 +238,6 @@ export default function RestaurantDetailScreen() {
               if (params.source === 'plan') {
                 router.back();
               } else {
-                // Fallback to restaurants list if no valid source
                 router.push('/plan/restaurants');
               }
             }}
@@ -356,7 +349,6 @@ function RestaurantLimitModal({
     <Modal visible={isVisible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.modalBackdrop}>
         <View style={styles.limitModal}>
-          {/* Header Section (Clean, No Hard Colored Bar) */}
           <View style={styles.limitModalHeader}>
             <View style={styles.limitHeaderRow}>
               <View style={styles.limitInfoIcon}>
@@ -369,9 +361,7 @@ function RestaurantLimitModal({
             </View>
           </View>
 
-          {/* Body */}
           <View style={styles.limitModalBody}>
-            {/* Feature Info Box (Soft) */}
             <View style={styles.limitFeatureBox}>
               <View style={styles.limitFeatureIcon}>
                 <Ionicons name="restaurant-outline" size={20} color={theme.colors.brand.grubRed} />
@@ -382,7 +372,6 @@ function RestaurantLimitModal({
               </View>
             </View>
 
-            {/* Help Text */}
             <View style={styles.limitHelpText}>
               <Text style={styles.limitHelpTitle}>To add this restaurant:</Text>
               <View style={styles.limitHelpBulletRow}>
@@ -396,7 +385,6 @@ function RestaurantLimitModal({
             </View>
           </View>
 
-          {/* Footer Actions */}
           <View style={styles.limitActions}>
             <AnimatedPressable onPress={onClose} style={styles.limitSecondaryButton}>
               <Text style={styles.limitSecondaryButtonText}>Got It</Text>
@@ -418,58 +406,74 @@ function FoodItemCard({
   item: MenuItem;
   onPress: () => void;
 }) {
-  const image = item.image || item.imageUrl;
+  const itemAny = item as any;
+  const rawImage = item.image || item.imageUrl || itemAny.img || itemAny.photo || itemAny.images?.[0];
+  const imageUrl = getFullImageUrl(rawImage);
   const tags = getDietaryTags(item);
-  const rating = typeof item.rating === 'number' ? item.rating : 0;
-  const reviewCount = typeof item.reviewCount === 'number' ? item.reviewCount : 0;
+  const [hasImageError, setHasImageError] = useState(false);
   
   const isVegan = tags.some(tag => normalizeTag(tag) === 'vegan');
   const isVegetarian = tags.some(tag => normalizeTag(tag) === 'vegetarian');
+  const imageSource = !hasImageError && imageUrl ? { uri: imageUrl } : fallbackFoodImage;
 
   return (
     <AnimatedPressable onPress={onPress} style={styles.foodCard}>
-      <View style={styles.foodCardLeft}>
-        <View style={styles.foodTitleRow}>
-          <View style={[
-            styles.vegIndicator,
-            isVegan || isVegetarian ? styles.vegIndicatorVeg : styles.vegIndicatorNonVeg
-          ]}>
+      <View style={styles.foodCardContent}>
+        <View style={styles.foodCardLeft}>
+          <View style={styles.foodTitleRow}>
             <View style={[
-              styles.vegIndicatorDot,
-              isVegan || isVegetarian ? styles.vegIndicatorDotVeg : styles.vegIndicatorDotNonVeg
-            ]} />
+              styles.vegIndicator,
+              isVegan || isVegetarian ? styles.vegIndicatorVeg : styles.vegIndicatorNonVeg
+            ]}>
+              <View style={[
+                styles.vegIndicatorDot,
+                isVegan || isVegetarian ? styles.vegIndicatorDotVeg : styles.vegIndicatorDotNonVeg
+              ]} />
+            </View>
+            <Text numberOfLines={2} style={styles.foodTitle}>
+              {item.name || 'Menu Item'}
+            </Text>
           </View>
-          <Text numberOfLines={2} style={styles.foodTitle}>
-            {item.name || 'Menu Item'}
+
+          <Text style={styles.foodPrice}>{formatPrice(item.price)}</Text>
+
+          <Text numberOfLines={2} style={styles.foodDescription}>
+            {item.description || 'Delicious menu item'}
           </Text>
         </View>
 
-        {rating > 0 ? (
-          <Text style={styles.ratingText}>
-            {"⭐ "}
-            {formatRating(rating)}
-            {reviewCount > 0 ? ` (${reviewCount})` : ""}
-          </Text>
-        ) : null}
-
-        <Text style={styles.foodPrice}>{formatPrice(item.price)}</Text>
-
-        <Text numberOfLines={2} style={styles.foodDescription}>
-          {item.description || 'Delicious menu item'}
-        </Text>
-      </View>
-
-      <View style={styles.foodCardRight}>
-        <View style={styles.foodImageContainer}>
-          {image ? (
-            <Image source={{ uri: image }} defaultSource={fallbackFoodImage} style={styles.foodImage} />
-          ) : (
-            <Image source={fallbackFoodImage} style={styles.foodImage} />
-          )}
+        <View style={styles.foodCardRight}>
+          <Image
+            source={imageSource}
+            defaultSource={fallbackFoodImage}
+            onError={() => setHasImageError(true)}
+            style={styles.foodImage}
+          />
         </View>
       </View>
     </AnimatedPressable>
   );
+}
+
+function getFullImageUrl(url?: string) {
+  if (!url) return null;
+  if (url.startsWith('/images/') || url.startsWith('images/')) return null;
+  
+  const normalizedUrl = url.replace(/\\/g, '/');
+  if (normalizedUrl.startsWith('http')) {
+    return Platform.OS === 'android' ? normalizedUrl.replace('localhost', '127.0.0.1') : normalizedUrl;
+  }
+  
+  let baseUrl = process.env.EXPO_PUBLIC_API_URL 
+    ? process.env.EXPO_PUBLIC_API_URL.split('/api')[0] 
+    : 'http://127.0.0.1:5000';
+    
+  if (Platform.OS === 'android') {
+    baseUrl = baseUrl.replace('localhost', '127.0.0.1');
+  }
+    
+  const cleanUrl = normalizedUrl.startsWith('/') ? normalizedUrl : `/${normalizedUrl}`;
+  return `${baseUrl}${cleanUrl}`;
 }
 
 function ItemDetailModal({
@@ -481,12 +485,12 @@ function ItemDetailModal({
 }) {
   if (!item) return null;
   
-  const image = item.image || item.imageUrl;
+  const itemAny = item as any;
+  const rawImage = item.image || item.imageUrl || itemAny.img || itemAny.photo || itemAny.images?.[0];
+  const imageUrl = getFullImageUrl(rawImage);
   const tags = getDietaryTags(item);
   const nutritionInfo = (item.nutritionInfo || item.nutritionalInfo || {}) as NutritionInfo;
   
-  // Safely casting to any to prevent strict TS errors if properties are missing from MenuItem type
-  const itemAny = item as any;
   const hasAllergens = Array.isArray(itemAny.allergens) && itemAny.allergens.length > 0;
   const hasIngredients = Array.isArray(itemAny.ingredients) && itemAny.ingredients.length > 0;
   const isVegan = tags.some(tag => normalizeTag(tag) === 'vegan');
@@ -499,8 +503,8 @@ function ItemDetailModal({
       <View style={styles.modalShell}>
         <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
           <View style={styles.heroImageContainer}>
-            {image ? (
-              <Image source={{ uri: image }} defaultSource={fallbackFoodImage} style={styles.heroImage} />
+            {imageUrl ? (
+              <Image source={{ uri: imageUrl }} defaultSource={fallbackFoodImage} style={styles.heroImage} />
             ) : (
               <Image source={fallbackFoodImage} style={styles.heroImage} />
             )}
@@ -572,7 +576,7 @@ function ItemDetailModal({
                 <View style={styles.pill}>
                   <Text style={styles.pillText}>
                   {`Spicy ${'!'.repeat(Math.min(spiceLevel, 3))}`}
-                </Text>
+                  </Text>
                 </View>
               )}
               <View style={styles.pill}>
@@ -612,7 +616,6 @@ function getMenuItemId(item: MenuItem) {
 }
 
 function getRestaurantId(restaurant: Restaurant) {
-  // Added any cast just in case the type doesn't explicitly expose _id
   const r = restaurant as any;
   return r.id || r._id || r.name || '';
 }
@@ -625,17 +628,6 @@ function getDietaryTags(item: MenuItem) {
 
 function normalizeTag(tag: string) {
   return tag.toLowerCase().replace(/\s+/g, '-');
-}
-
-function formatTag(tag: string) {
-  return tag
-    .replace(/-/g, ' ')
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
-function formatRating(rating: number) {
-  if (!rating) return '0';
-  return rating.toFixed(1).replace('.0', '');
 }
 
 function formatPrice(price?: number) {
@@ -652,13 +644,13 @@ function formatMacroValue(value?: string | number) {
 const styles = StyleSheet.create({
   shell: {
     flex: 1,
-    backgroundColor: theme.colors.background.page,
+    backgroundColor: '#F9FAFB',
   },
   page: {
     flex: 1,
   },
   content: {
-    paddingVertical: 8,
+    paddingVertical: 12,
     paddingBottom: 120,
   },
   centered: {
@@ -777,32 +769,38 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   menuList: {
-    gap: 8,
+    gap: 4,
     paddingVertical: 8,
   },
   foodCard: {
-    flexDirection: 'row',
     backgroundColor: '#FFFFFF',
     marginHorizontal: 16,
     marginVertical: 8,
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: '#E5E7EB',
     padding: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
     elevation: 2,
+  },
+  foodCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
   },
   foodCardLeft: {
     flex: 1,
-    marginRight: theme.spacing[4],
+    marginRight: 16,
+    justifyContent: 'center',
+    minWidth: 0,
   },
   foodTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: theme.spacing[1],
+    marginBottom: 6,
   },
   vegIndicator: {
     width: 16,
@@ -811,7 +809,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: theme.spacing[2],
+    marginRight: 8,
   },
   vegIndicatorVeg: {
     borderColor: '#22C55E',
@@ -832,38 +830,30 @@ const styles = StyleSheet.create({
   },
   foodTitle: {
     flex: 1,
-    color: '#1A1A1A',
-    fontSize: 18,
+    flexShrink: 1,
+    color: '#111827',
+    fontSize: 17,
     fontWeight: '700',
-    lineHeight: 24,
-  },
-  ratingText: {
-    color: '#4B5563',
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: theme.spacing[1],
+    lineHeight: 22,
   },
   foodPrice: {
-    color: theme.colors.brand.grubRed,
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: theme.spacing[2],
+    color: '#881337',
+    fontSize: 17,
+    fontWeight: '800',
+    marginBottom: 6,
   },
   foodDescription: {
     color: '#6B7280',
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13.5,
+    lineHeight: 19,
   },
   foodCardRight: {
-    width: 100,
-    alignItems: 'center',
-  },
-  foodImageContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 14,
+    width: 104,
+    height: 104,
+    borderRadius: 16,
     overflow: 'hidden',
     backgroundColor: '#F3F4F6',
+    flexShrink: 0,
   },
   foodImage: {
     width: '100%',
@@ -1058,7 +1048,6 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.78,
   },
-  // Item Detail Modal Styles
   modalShell: {
     flex: 1,
     backgroundColor: '#FFFFFF',

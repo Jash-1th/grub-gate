@@ -216,7 +216,10 @@ export function HomePage() {
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: true }
         )}
-        onLayout={(e) => setScrollInfo(prev => ({ ...prev, layoutHeight: e.nativeEvent.layout.height }))}
+        onLayout={(e) => {
+          const { height } = e.nativeEvent.layout;
+          setScrollInfo(prev => ({ ...prev, layoutHeight: height }));
+        }}
         onContentSizeChange={(_, height) => setScrollInfo(prev => ({ ...prev, contentHeight: height }))}
       >
         <Animated.View style={[styles.heroCardWrap, { transform: [{ translateY: floatY }, { scale: heroScale }] }]}>

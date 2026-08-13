@@ -50,3 +50,11 @@ memory-bank/
 # Cache
 .cache/
 *.tsbuildinfo
+
+# Heavy Root Folders & Expo Caches
+.uploads/
+.agents/
+.windsurf/
+.expo/
+android/
+ios/

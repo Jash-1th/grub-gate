@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,6 +11,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useFlash } from '../contexts/FlashContext';
@@ -22,6 +24,7 @@ import {
   type SavedAddress,
 } from '../lib/userAddressApi';
 import { theme } from '../theme';
+import { AnimatedPressable } from '../components/AnimatedPressable';
 
 type ProfileSection = 'Profile' | 'Addresses' | 'Orders' | 'Social';
 
@@ -82,6 +85,11 @@ export default function ProfileScreen() {
   const [addressForm, setAddressForm] = useState<AddressFormState>(emptyAddressForm);
   const [formError, setFormError] = useState('');
 
+  // Unauthenticated UI Animation Refs (Safely moved to the top!)
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+  const iconPulse = useRef(new Animated.Value(1)).current;
+
   const fullName =
     profileUser.fullName ||
     [profileUser.firstName, profileUser.lastName].filter(Boolean).join(' ') ||
@@ -126,6 +134,39 @@ export default function ProfileScreen() {
       mounted = false;
     };
   }, [activeSection, isAuthenticated, showFlash]);
+
+  // Unauthenticated UI Animation Effect (Safely moved to the top!)
+  useEffect(() => {
+    if (isAuthenticated) return; // Only run animations if logged out
+    
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(iconPulse, {
+          toValue: 1.05,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(iconPulse, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [isAuthenticated, fadeAnim, slideAnim, iconPulse]);
 
   const openAddressEditor = (address: SavedAddress) => {
     setEditingAddressId(getAddressId(address));
@@ -192,29 +233,42 @@ export default function ProfileScreen() {
     showFlash('Logged out successfully.', 'success');
   };
 
+  // EARLY RETURNS DOWN HERE (Safe!)
   if (!isAuthenticated) {
     return (
       <View style={styles.page}>
         <ProfileHeader />
-        <View style={styles.authWrap}>
-          <View style={styles.card}>
-            <View style={styles.authIcon}>
-              <Ionicons name="person-outline" size={34} color={theme.colors.brand.grubRed} />
-            </View>
-            <Text style={styles.authTitle}>Your GrubGate Profile</Text>
-            <Text style={styles.authCopy}>Sign in to manage your meal plans, orders, addresses, and subscription details.</Text>
-            <Pressable onPress={() => router.push('/login')} style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}>
-              <Text style={styles.primaryButtonText}>Login</Text>
-            </Pressable>
-            <Pressable onPress={() => router.push('/signup')} style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}>
-              <Text style={styles.outlineButtonText}>Sign Up</Text>
-            </Pressable>
+        <LinearGradient
+          colors={['#FFF1F2', '#FFFFFF', '#F3F4F6']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.authGradient}
+        >
+          <View style={styles.authWrap}>
+            <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+              <View style={styles.authCard}>
+                <Animated.View style={{ transform: [{ scale: iconPulse }] }}>
+                  <View style={styles.authIcon}>
+                    <Ionicons name="person-outline" size={34} color={theme.colors.brand.grubRed} />
+                  </View>
+                </Animated.View>
+                <Text style={styles.authTitle}>Your GrubGate Profile</Text>
+                <Text style={styles.authCopy}>Sign in to manage your meal plans, orders, addresses, and subscription details.</Text>
+                <AnimatedPressable onPress={() => router.push('/login')} style={styles.primaryButton}>
+                  <Text style={styles.primaryButtonText}>Login</Text>
+                </AnimatedPressable>
+                <AnimatedPressable onPress={() => router.push('/signup')} style={styles.outlineButton}>
+                  <Text style={styles.outlineButtonText}>Sign Up</Text>
+                </AnimatedPressable>
+              </View>
+            </Animated.View>
           </View>
-        </View>
+        </LinearGradient>
       </View>
     );
   }
 
+  // AUTHENTICATED RENDER
   return (
     <View style={styles.page}>
       <ProfileHeader />
@@ -296,9 +350,9 @@ function ProfileHeader() {
     <SafeAreaView edges={['top']} style={styles.header}>
       <View style={styles.headerInner}>
         <Text style={styles.headerTitle}>Profile</Text>
-        <Pressable style={({ pressed }) => [styles.settingsButton, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel="Settings">
+        <AnimatedPressable style={styles.settingsButton} accessibilityRole="button" accessibilityLabel="Settings">
           <Ionicons name="settings-outline" size={22} color={theme.colors.gray[700]} />
-        </Pressable>
+        </AnimatedPressable>
       </View>
     </SafeAreaView>
   );
@@ -846,6 +900,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: theme.spacing[4],
   },
+  authGradient: {
+    flex: 1,
+  },
+  authCard: {
+    borderRadius: 24,
+    backgroundColor: theme.colors.white,
+    padding: 32,
+    ...theme.shadow.lg,
+  },
   authIcon: {
     width: 72,
     height: 72,
@@ -855,6 +918,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.red[50],
     marginBottom: theme.spacing[4],
     alignSelf: 'center',
+    ...theme.shadow.sm,
   },
   authTitle: {
     color: theme.colors.gray[900],

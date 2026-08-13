@@ -54,26 +54,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [subscriptionSyncState, setSubscriptionSyncState] = useState<SubscriptionSyncState>('idle');
+  
   const userSubscriptionFlag = Boolean(user?.isSubscribed);
   const isSubscribed = token ? subscriptionSyncState === 'active' : userSubscriptionFlag;
   const isCheckingSubscription = Boolean(token) && (subscriptionSyncState === 'idle' || subscriptionSyncState === 'checking');
 
-  const syncSubscriptionState = useCallback(async (nextUser?: StoredUser | null) => {
-    const fallbackSubscribed = Boolean(nextUser?.isSubscribed);
-
+  const syncSubscriptionState = useCallback(async () => {
     setSubscriptionSyncState('checking');
-
     try {
       const result = await getSubscriptionStatus();
-
       if (result.success && result.data) {
         setSubscriptionSyncState(hasSubscriptionCoverageForNextTwoWeeks(result.data) ? 'active' : 'inactive');
         return;
       }
-
-      setSubscriptionSyncState(fallbackSubscribed ? 'error' : 'inactive');
+      setSubscriptionSyncState('inactive');
     } catch {
-      setSubscriptionSyncState(fallbackSubscribed ? 'error' : 'inactive');
+      setSubscriptionSyncState('inactive');
     }
   }, []);
 
@@ -85,14 +81,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const session = await getAuthSession();
         if (!mounted) return;
 
-        setToken(session.token);
-        setUser(session.user);
-        setSubscriptionSyncState(session.token ? 'checking' : 'idle');
-
         if (session.token) {
-          const latestUser = await refreshCurrentUser(session.user);
-          if (!mounted) return;
-          await syncSubscriptionState(latestUser || session.user);
+          setToken(session.token);
+          setUser(session.user);
+          setSubscriptionSyncState('checking');
+          
+          // Background sync after initial state batch
+          api.get('/auth/me').then(res => {
+            if (!mounted) return;
+            const nextUser = extractUser(res.data) || session.user;
+            if (nextUser) setUser(nextUser);
+          }).catch(() => {});
+
+          syncSubscriptionState();
         }
       } catch {
         await clearAuthSession();
@@ -113,16 +114,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [syncSubscriptionState]);
 
-  const refreshCurrentUser = useCallback(async (fallbackUser?: StoredUser | null) => {
-    try {
-      const response = await api.get('/auth/me');
-      const nextUser = extractUser(response.data) || fallbackUser || null;
-      setUser(nextUser);
-      return nextUser;
-    } catch {
-      return fallbackUser || null;
-    }
-  }, []);
+  const applyAuthenticatedSession = useCallback(
+    async ({
+      token: nextToken,
+      refreshToken,
+      user: nextUser,
+    }: {
+      token: string;
+      refreshToken?: string | null;
+      user?: StoredUser | null;
+    }) => {
+      // 1. Persist storage first safely
+      await saveAuthSession({
+        token: nextToken,
+        refreshToken,
+        user: nextUser,
+      });
+
+      // 2. Batch state updates cleanly together
+      setToken(nextToken);
+      setUser(nextUser || null);
+      setSubscriptionSyncState('checking');
+
+      // 3. Trigger secondary background checks without blocking main render tree
+      syncSubscriptionState();
+      
+      api.get('/auth/me').then(async res => {
+        const latestUser = extractUser(res.data);
+        if (latestUser) {
+          setUser(latestUser);
+          await saveAuthSession({
+            token: nextToken,
+            refreshToken,
+            user: latestUser,
+          });
+        }
+      }).catch(() => {});
+    },
+    [syncSubscriptionState],
+  );
 
   const persistResponseSession = useCallback(async (responseData: unknown) => {
     const data = extractResponseData(responseData);
@@ -134,29 +164,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error('Authentication succeeded but no access token was returned.');
     }
 
-    await saveAuthSession({
+    await applyAuthenticatedSession({
       token: accessToken,
       refreshToken,
       user: responseUser,
     });
-
-    setToken(accessToken);
-    setUser(responseUser);
-
-    const latestUser = await refreshCurrentUser(responseUser);
-    if (latestUser) {
-      await saveAuthSession({
-        token: accessToken,
-        refreshToken,
-        user: latestUser,
-      });
-      setUser(latestUser);
-      await syncSubscriptionState(latestUser);
-      return;
-    }
-
-    await syncSubscriptionState(responseUser);
-  }, [refreshCurrentUser, syncSubscriptionState]);
+  }, [applyAuthenticatedSession]);
 
   const login = useCallback(
     async (payload: LoginPayload) => {
@@ -200,42 +213,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     },
     [isLoading, persistResponseSession],
-  );
-
-  const applyAuthenticatedSession = useCallback(
-    async ({
-      token: nextToken,
-      refreshToken,
-      user: nextUser,
-    }: {
-      token: string;
-      refreshToken?: string | null;
-      user?: StoredUser | null;
-    }) => {
-      await saveAuthSession({
-        token: nextToken,
-        refreshToken,
-        user: nextUser,
-      });
-
-      setToken(nextToken);
-      setUser(nextUser || null);
-
-      const latestUser = await refreshCurrentUser(nextUser);
-      if (latestUser) {
-        await saveAuthSession({
-          token: nextToken,
-          refreshToken,
-          user: latestUser,
-        });
-        setUser(latestUser);
-        await syncSubscriptionState(latestUser);
-        return;
-      }
-
-      await syncSubscriptionState(nextUser);
-    },
-    [refreshCurrentUser, syncSubscriptionState],
   );
 
   const logout = useCallback(async () => {

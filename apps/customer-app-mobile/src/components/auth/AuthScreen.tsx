@@ -1,6 +1,8 @@
-import { useMemo, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -10,11 +12,13 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFlash } from '../../contexts/FlashContext';
 import { authValidation, loginCopy, signupCopy } from '../../data/auth';
 import { theme } from '../../theme';
+import { AnimatedPressable } from '../AnimatedPressable';
 
 type AuthMode = 'login' | 'signup';
 type FieldName = 'identifier' | 'name' | 'email' | 'phoneNumber' | 'password' | 'confirmPassword';
@@ -33,9 +37,28 @@ const initialForm: FormState = {
 export function AuthScreen({ mode }: { mode: AuthMode }) {
   const [form, setForm] = useState<FormState>(initialForm);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [focusedField, setFocusedField] = useState<FieldName | null>(null);
   const { clearError, error: authError, isLoading, login, register } = useAuth();
   const { showFlash } = useFlash();
   const copy = mode === 'login' ? loginCopy : signupCopy;
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const isLogin = mode === 'login';
   const fields = useMemo(
@@ -116,66 +139,79 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
 
   return (
     <KeyboardAvoidingView style={styles.keyboardRoot} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView style={styles.page} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.hero}>
-          <View style={styles.heroShade} />
-          <Text style={styles.heroTitle}>{copy.title}</Text>
-          <Text style={styles.heroSubtitle}>{copy.subtitle}</Text>
-        </View>
+      <LinearGradient
+        colors={['#FFF1F2', '#FFFFFF', '#F3F4F6']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.page}
+      >
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+            <View style={styles.card}>
+              <View style={styles.headerSection}>
+                <Text style={styles.heroTitle}>{copy.title}</Text>
+                <Text style={styles.heroSubtitle}>{copy.subtitle}</Text>
+              </View>
 
-        <View style={styles.card}>
-          {errors.general || authError ? (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorText}>{errors.general || authError}</Text>
+              {errors.general || authError ? (
+                <View style={styles.errorBox}>
+                  <Text style={styles.errorText}>{errors.general || authError}</Text>
+                </View>
+              ) : null}
+
+              {fields.map((field) => (
+                <AuthField
+                  key={field}
+                  field={field}
+                  value={form[field]}
+                  error={errors[field]}
+                  mode={mode}
+                  isFocused={focusedField === field}
+                  onFocus={() => setFocusedField(field)}
+                  onBlur={() => setFocusedField(null)}
+                  onChange={(value) => updateField(field, value)}
+                />
+              ))}
+
+              {isLogin ? (
+                <Pressable style={styles.forgotButton}>
+                  <Text style={styles.forgotText}>{loginCopy.forgotPassword}</Text>
+                </Pressable>
+              ) : null}
+
+              <AnimatedPressable
+                disabled={isLoading}
+                onPress={submit}
+                style={[styles.primaryButton, isLoading && styles.primaryButtonDisabled]}
+              >
+                {isLoading ? <ActivityIndicator color={theme.colors.white} /> : <Text style={styles.primaryButtonText}>{copy.button}</Text>}
+              </AnimatedPressable>
+
+              <View style={styles.dividerRow}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>{copy.divider}</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <AnimatedPressable style={styles.googleButton}>
+                <View style={styles.googleButtonContent}>
+                  <View style={styles.googleMark}>
+                    <Text style={styles.googleMarkText}>G</Text>
+                  </View>
+                  <Text style={styles.googleButtonText}>{copy.googleButton}</Text>
+                </View>
+              </AnimatedPressable>
+
+              <View style={styles.switchRow}>
+                <Text style={styles.switchPrompt}>{isLogin ? loginCopy.signupPrompt : signupCopy.loginPrompt} </Text>
+                <Pressable onPress={() => router.push(isLogin ? '/signup' : '/login')}>
+                  <Text style={styles.switchLink}>{isLogin ? loginCopy.signupLink : signupCopy.loginLink}</Text>
+                </Pressable>
+              </View>
             </View>
-          ) : null}
-
-          {fields.map((field) => (
-            <AuthField
-              key={field}
-              field={field}
-              value={form[field]}
-              error={errors[field]}
-              mode={mode}
-              onChange={(value) => updateField(field, value)}
-            />
-          ))}
-
-          {isLogin ? (
-            <Pressable style={styles.forgotButton}>
-              <Text style={styles.forgotText}>{loginCopy.forgotPassword}</Text>
-            </Pressable>
-          ) : null}
-
-          <Pressable
-            disabled={isLoading}
-            onPress={submit}
-            style={({ pressed }) => [styles.primaryButton, (pressed || isLoading) && styles.pressed]}
-          >
-            {isLoading ? <ActivityIndicator color={theme.colors.white} /> : <Text style={styles.primaryButtonText}>{copy.button}</Text>}
-          </Pressable>
-
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>{copy.divider}</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <Pressable style={({ pressed }) => [styles.googleButton, pressed && styles.pressed]}>
-            <View style={styles.googleMark}>
-              <Text style={styles.googleMarkText}>G</Text>
-            </View>
-            <Text style={styles.googleButtonText}>{copy.googleButton}</Text>
-          </Pressable>
-
-          <View style={styles.switchRow}>
-            <Text style={styles.switchPrompt}>{isLogin ? loginCopy.signupPrompt : signupCopy.loginPrompt} </Text>
-            <Pressable onPress={() => router.push(isLogin ? '/signup' : '/login')}>
-              <Text style={styles.switchLink}>{isLogin ? loginCopy.signupLink : signupCopy.loginLink}</Text>
-            </Pressable>
-          </View>
-        </View>
-      </ScrollView>
+          </Animated.View>
+        </ScrollView>
+      </LinearGradient>
     </KeyboardAvoidingView>
   );
 }
@@ -185,28 +221,40 @@ function AuthField({
   value,
   error,
   mode,
+  isFocused,
+  onFocus,
+  onBlur,
   onChange,
 }: {
   field: FieldName;
   value: string;
   error?: string;
   mode: AuthMode;
+  isFocused?: boolean;
+  onFocus?: () => void;
+  onBlur?: () => void;
   onChange: (value: string) => void;
 }) {
   const props = getFieldProps(field, mode);
+  const icon = getFieldIcon(field);
   return (
     <View style={styles.fieldBlock}>
       <Text style={styles.label}>{props.label}</Text>
-      <TextInput
-        value={value}
-        onChangeText={onChange}
-        placeholder={props.placeholder}
-        placeholderTextColor={theme.colors.gray[400]}
-        keyboardType={props.keyboardType}
-        secureTextEntry={props.secureTextEntry}
-        autoCapitalize={props.autoCapitalize}
-        style={[styles.input, error && styles.inputError]}
-      />
+      <View style={[styles.inputContainer, isFocused && styles.inputContainerFocused]}>
+        <Ionicons name={icon} size={20} color={isFocused ? theme.colors.brand.grubRed : theme.colors.gray[400]} style={styles.inputIcon} />
+        <TextInput
+          value={value}
+          onChangeText={onChange}
+          placeholder={props.placeholder}
+          placeholderTextColor={theme.colors.gray[400]}
+          keyboardType={props.keyboardType}
+          secureTextEntry={props.secureTextEntry}
+          autoCapitalize={props.autoCapitalize}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          style={[styles.input, error && styles.inputError]}
+        />
+      </View>
       {error ? <Text style={styles.fieldError}>{error}</Text> : null}
     </View>
   );
@@ -262,6 +310,24 @@ function getFieldProps(field: FieldName, mode: AuthMode) {
   }
 }
 
+function getFieldIcon(field: FieldName): keyof typeof Ionicons.glyphMap {
+  switch (field) {
+    case 'identifier':
+      return 'mail-outline';
+    case 'name':
+      return 'person-outline';
+    case 'email':
+      return 'mail-outline';
+    case 'phoneNumber':
+      return 'call-outline';
+    case 'password':
+    case 'confirmPassword':
+      return 'lock-closed-outline';
+    default:
+      return 'person-outline';
+  }
+}
+
 function isEmail(value: string) {
   return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(value.trim());
 }
@@ -292,24 +358,22 @@ const styles = StyleSheet.create({
   },
   page: {
     flex: 1,
-    backgroundColor: theme.colors.background.page,
   },
   content: {
+    padding: theme.spacing[4],
     paddingBottom: theme.spacing[8],
   },
-  hero: {
-    minHeight: 220,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing[5],
-    backgroundColor: theme.colors.brand.grubRed,
+  card: {
+    borderRadius: 24,
+    backgroundColor: theme.colors.white,
+    padding: theme.spacing[6],
+    ...theme.shadow.lg,
   },
-  heroShade: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.18)',
+  headerSection: {
+    marginBottom: theme.spacing[6],
   },
   heroTitle: {
-    color: theme.colors.white,
+    color: theme.colors.gray[900],
     fontSize: theme.typography.fontSize['3xl'],
     lineHeight: 38,
     fontWeight: theme.typography.fontWeight.bold,
@@ -317,18 +381,10 @@ const styles = StyleSheet.create({
   },
   heroSubtitle: {
     marginTop: theme.spacing[3],
-    color: theme.colors.red[100],
+    color: theme.colors.gray[600],
     fontSize: theme.typography.fontSize.base,
     lineHeight: 24,
     textAlign: 'center',
-  },
-  card: {
-    margin: theme.spacing[4],
-    marginTop: -theme.spacing[8],
-    borderRadius: theme.radius['2xl'],
-    backgroundColor: theme.colors.white,
-    padding: theme.spacing[6],
-    ...theme.shadow.md,
   },
   errorBox: {
     borderRadius: theme.radius.lg,
@@ -352,19 +408,31 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.semibold,
     marginBottom: theme.spacing[2],
   },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 52,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: theme.spacing[3],
+  },
+  inputContainerFocused: {
+    borderWidth: 2,
+    borderColor: theme.colors.brand.grubRed,
+    backgroundColor: '#FFFFFF',
+  },
+  inputIcon: {
+    marginRight: theme.spacing[3],
+  },
   input: {
-    minHeight: 48,
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.gray[300],
+    flex: 1,
     color: theme.colors.gray[900],
     fontSize: theme.typography.fontSize.base,
-    paddingHorizontal: theme.spacing[3],
-    backgroundColor: theme.colors.white,
+    paddingVertical: theme.spacing[2],
+    backgroundColor: 'transparent',
   },
   inputError: {
     borderColor: theme.colors.red[300],
-    backgroundColor: theme.colors.red[50],
   },
   fieldError: {
     marginTop: theme.spacing[1],
@@ -381,12 +449,15 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.medium,
   },
   primaryButton: {
-    minHeight: 50,
+    minHeight: 52,
     borderRadius: theme.radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: theme.colors.brand.grubRed,
     ...theme.shadow.md,
+  },
+  primaryButtonDisabled: {
+    opacity: 0.6,
   },
   primaryButtonText: {
     color: theme.colors.white,
@@ -410,14 +481,18 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.medium,
   },
   googleButton: {
-    minHeight: 50,
+    height: 52,
     borderRadius: theme.radius.lg,
     borderWidth: 2,
     borderColor: theme.colors.gray[300],
+    backgroundColor: theme.colors.white,
+  },
+  googleButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.white,
+    width: '100%',
+    height: '100%',
   },
   googleMark: {
     width: 24,
