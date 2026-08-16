@@ -1,5 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
   ActivityIndicator,
   Image,
@@ -300,7 +302,11 @@ export default function RestaurantDetailScreen() {
         )}
       </ScrollView>
 
-      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + theme.spacing[3] }]}>
+      <BlurView
+        intensity={55}
+        tint="light"
+        style={[styles.bottomBar, { paddingBottom: insets.bottom + theme.spacing[3] }]}
+      >
         <Pressable
           onPress={handleSelectRestaurant}
           style={({ pressed }) => [
@@ -314,7 +320,7 @@ export default function RestaurantDetailScreen() {
           </Text>
           {!isCurrentRestaurantSelected ? <Ionicons name="chevron-forward" size={20} color="#fff" /> : null}
         </Pressable>
-      </View>
+      </BlurView>
 
       <RestaurantLimitModal
         isVisible={showRestaurantLimitModal}
@@ -508,13 +514,21 @@ function ItemDetailModal({
             ) : (
               <Image source={fallbackFoodImage} style={styles.heroImage} />
             )}
+            <LinearGradient
+              colors={['rgba(0,0,0,0.42)', 'rgba(0,0,0,0.14)', 'transparent']}
+              locations={[0, 0.34, 0.7]}
+              style={styles.heroImageOverlay}
+              pointerEvents="none"
+            />
             <SafeAreaView edges={['top']} style={styles.closeButtonContainer}>
               <Pressable
                 onPress={onClose}
                 style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
                 hitSlop={12}
               >
-                <Ionicons name="close" size={24} color="#1A1A1A" />
+                <BlurView intensity={40} tint="light" style={styles.closeButtonBlur}>
+                  <Ionicons name="close" size={22} color="#111111" />
+                </BlurView>
               </Pressable>
             </SafeAreaView>
           </View>
@@ -563,13 +577,13 @@ function ItemDetailModal({
 
             <View style={styles.pillsRow}>
               {isVegan && (
-                <View style={styles.pill}>
-                  <Text style={styles.pillText}>Vegan</Text>
+                <View style={[styles.pill, styles.pillVegan]}>
+                  <Text style={[styles.pillText, styles.pillTextVegan]}>Vegan</Text>
                 </View>
               )}
               {isVegetarian && !isVegan && (
-                <View style={styles.pill}>
-                  <Text style={styles.pillText}>Vegetarian</Text>
+                <View style={[styles.pill, styles.pillVegetarian]}>
+                  <Text style={[styles.pillText, styles.pillTextVegetarian]}>Vegetarian</Text>
                 </View>
               )}
               {spiceLevel > 0 && (
@@ -644,14 +658,14 @@ function formatMacroValue(value?: string | number) {
 const styles = StyleSheet.create({
   shell: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F8F9FA',
   },
   page: {
     flex: 1,
   },
   content: {
-    paddingVertical: 12,
-    paddingBottom: 120,
+    paddingTop: 18,
+    paddingBottom: 144,
   },
   centered: {
     flex: 1,
@@ -698,9 +712,9 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.semibold,
   },
   headerContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8F9FA',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: 'rgba(17, 24, 39, 0.06)',
   },
   headerRow: {
     minHeight: 58,
@@ -718,43 +732,47 @@ const styles = StyleSheet.create({
   headerTitle: {
     flex: 1,
     color: '#1A1A1A',
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '800',
     marginLeft: theme.spacing[2],
   },
   headerSpacer: {
     width: 44,
   },
   filterStripContainer: {
-    backgroundColor: '#FFFFFF',
-    paddingVertical: theme.spacing[3],
+    backgroundColor: '#F8F9FA',
+    paddingTop: theme.spacing[2],
+    paddingBottom: theme.spacing[3],
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOpacity: 0.02,
+    shadowRadius: 3,
+    elevation: 1,
   },
   filterStripContent: {
     paddingHorizontal: theme.spacing[4],
     gap: theme.spacing[2],
   },
   filterPill: {
-    paddingHorizontal: theme.spacing[4],
-    paddingVertical: theme.spacing[2],
-    borderRadius: theme.radius.full,
-    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 99,
+    backgroundColor: 'rgba(255,255,255,0.72)',
+    borderWidth: 1,
+    borderColor: 'rgba(17, 24, 39, 0.08)',
   },
   filterPillActive: {
-    backgroundColor: theme.colors.brand.grubRed,
+    backgroundColor: '#7F1D1D',
+    borderColor: '#7F1D1D',
   },
   filterPillText: {
     color: '#6B7280',
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   filterPillTextActive: {
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   emptyState: {
     marginTop: theme.spacing[8],
@@ -769,31 +787,30 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   menuList: {
-    gap: 4,
-    paddingVertical: 8,
+    gap: 14,
+    paddingTop: 6,
+    paddingBottom: 12,
   },
   foodCard: {
     backgroundColor: '#FFFFFF',
     marginHorizontal: 16,
-    marginVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    padding: 16,
+    borderRadius: 24,
+    padding: 18,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
   },
   foodCardContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     width: '100%',
   },
   foodCardLeft: {
     flex: 1,
-    marginRight: 16,
+    marginRight: 18,
     justifyContent: 'center',
     minWidth: 0,
   },
@@ -831,28 +848,28 @@ const styles = StyleSheet.create({
   foodTitle: {
     flex: 1,
     flexShrink: 1,
-    color: '#111827',
+    color: '#1A1A1A',
     fontSize: 17,
     fontWeight: '700',
-    lineHeight: 22,
+    lineHeight: 23,
   },
   foodPrice: {
     color: '#881337',
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '800',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   foodDescription: {
-    color: '#6B7280',
+    color: '#666666',
     fontSize: 13.5,
-    lineHeight: 19,
+    lineHeight: 20,
   },
   foodCardRight: {
-    width: 104,
-    height: 104,
-    borderRadius: 16,
+    width: 112,
+    height: 112,
+    borderRadius: 18,
     overflow: 'hidden',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#EEF2F7',
     flexShrink: 0,
   },
   foodImage: {
@@ -864,29 +881,33 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: '#FFFFFF',
-    paddingTop: theme.spacing[3],
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.72)',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.75)',
+    paddingTop: theme.spacing[2],
     paddingBottom: 0,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.08,
-    shadowRadius: 12,
+    shadowRadius: 16,
     elevation: 10,
   },
   bottomActionButton: {
-    minHeight: 50,
-    borderRadius: 12,
+    minHeight: 58,
+    borderRadius: 99,
     marginHorizontal: 16,
+    paddingHorizontal: 22,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: theme.spacing[2],
-    backgroundColor: theme.colors.brand.grubRed,
-    shadowColor: theme.colors.brand.grubRed,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+    backgroundColor: '#7F1D1D',
+    shadowColor: '#7F1D1D',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.22,
+    shadowRadius: 16,
+    elevation: 6,
   },
   bottomActionButtonSelected: {
     backgroundColor: theme.colors.green[600],
@@ -895,7 +916,7 @@ const styles = StyleSheet.create({
   bottomActionButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   modalBackdrop: {
     flex: 1,
@@ -1050,7 +1071,7 @@ const styles = StyleSheet.create({
   },
   modalShell: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FCFCFD',
   },
   modalContent: {
     flex: 1,
@@ -1060,31 +1081,51 @@ const styles = StyleSheet.create({
   },
   heroImage: {
     width: '100%',
-    height: 250,
+    height: 268,
+  },
+  heroImageOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 132,
   },
   closeButtonContainer: {
     position: 'absolute',
     top: 0,
     right: theme.spacing[4],
-    paddingTop: theme.spacing[2],
+    paddingTop: theme.spacing[2] + 2,
   },
   closeButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 6,
+  },
+  closeButtonBlur: {
+    flex: 1,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.55)',
+    backgroundColor: 'rgba(255,255,255,0.34)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   modalBody: {
     paddingHorizontal: theme.spacing[4],
-    paddingTop: theme.spacing[4],
-    paddingBottom: 40,
+    paddingTop: theme.spacing[5],
+    paddingBottom: 44,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing[2],
+    minHeight: 30,
   },
   vegIndicatorLarge: {
     width: 22,
@@ -1093,42 +1134,53 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 1,
   },
   itemName: {
     flex: 1,
-    color: '#1A1A1A',
-    fontSize: 22,
-    fontWeight: '700',
+    color: '#111111',
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: '800',
   },
   itemPrice: {
-    color: '#1A1A1A',
-    fontSize: 20,
-    fontWeight: '700',
-    marginTop: theme.spacing[2],
+    color: '#881337',
+    fontSize: 22,
+    fontWeight: '800',
+    marginTop: 10,
   },
   macrosRow: {
     flexDirection: 'row',
     gap: theme.spacing[3],
-    marginTop: theme.spacing[4],
+    marginTop: theme.spacing[5],
   },
   macroCard: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
-    paddingVertical: theme.spacing[3],
+    backgroundColor: '#F4F5F7',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
+    paddingVertical: 16,
     paddingHorizontal: theme.spacing[2],
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
   macroValue: {
-    color: '#1A1A1A',
-    fontSize: 18,
-    fontWeight: '700',
+    color: '#111111',
+    fontSize: 19,
+    fontWeight: '800',
   },
   macroLabel: {
-    color: '#6B7280',
-    fontSize: 12,
-    fontWeight: '500',
-    marginTop: theme.spacing[1],
+    color: '#888888',
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.9,
+    marginTop: 6,
   },
   pillsRow: {
     flexDirection: 'row',
@@ -1137,49 +1189,64 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing[4],
   },
   pill: {
-    paddingHorizontal: theme.spacing[3],
-    paddingVertical: theme.spacing[1.5],
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     backgroundColor: '#F3F4F6',
-    borderRadius: theme.radius.full,
+    borderRadius: 999,
   },
   pillText: {
     color: '#374151',
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
+  },
+  pillVegan: {
+    backgroundColor: '#ECFDF3',
+  },
+  pillTextVegan: {
+    color: '#166534',
+  },
+  pillVegetarian: {
+    backgroundColor: '#F0FDF4',
+  },
+  pillTextVegetarian: {
+    color: '#166534',
   },
   section: {
-    marginTop: theme.spacing[4],
+    marginTop: theme.spacing[5],
   },
   sectionTitle: {
-    color: '#111827',
+    color: '#111111',
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: theme.spacing[2],
+    marginBottom: 10,
   },
   sectionText: {
-    color: '#4B5563',
+    color: '#6B7280',
     fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   allergenSection: {
-    marginTop: theme.spacing[4],
+    marginTop: theme.spacing[5],
     backgroundColor: '#FEF2F2',
-    borderRadius: 12,
-    padding: theme.spacing[3],
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    padding: 16,
   },
   allergenRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing[2],
-    marginBottom: theme.spacing[1],
+    marginBottom: 8,
   },
   allergenTitle: {
     color: '#991B1B',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   allergenText: {
     color: '#7F1D1D',
     fontSize: 14,
+    lineHeight: 21,
   },
 });
