@@ -860,6 +860,25 @@ function RestaurantReplacementModal({
   const { showFlash } = useFlash();
   const [selectedToRemove, setSelectedToRemove] = useState<typeof selectedRestaurants>([]);
   const [isRemoving, setIsRemoving] = useState(false);
+  const removalCandidates = useMemo(
+    () =>
+      selectedRestaurants
+        .map((rest, index) => {
+          const restaurantData = rest.restaurantData || null;
+          const restaurantAny = restaurantData as { id?: string; _id?: string; name?: string } | null;
+          const fallbackId = restaurantAny?.id || restaurantAny?._id || (rest as { id?: string }).id;
+          const fallbackName = restaurantAny?.name || (rest as { name?: string }).name;
+
+          return {
+            ...rest,
+            restaurantId: rest.restaurantId || fallbackId || `restaurant-${index}`,
+            restaurantName: rest.restaurantName || fallbackName || 'Selected Restaurant',
+            restaurantData,
+          };
+        })
+        .filter((rest) => Boolean(rest.restaurantId)),
+    [selectedRestaurants],
+  );
 
   useEffect(() => {
     if (isVisible) {
@@ -915,34 +934,47 @@ function RestaurantReplacementModal({
             contentContainerStyle={styles.replacementModalBody}
             showsVerticalScrollIndicator={false}
           >
-            {selectedRestaurants.map((rest) => {
-              const isSelected = selectedToRemove.some((item) => item.restaurantId === rest.restaurantId);
-              const itemCount = getItemCountForRestaurant(rest.restaurantId);
+            <View style={styles.removalListContainer}>
+              {removalCandidates.length > 0 ? removalCandidates.map((rest) => {
+                const isSelected = selectedToRemove.some((item) => item.restaurantId === rest.restaurantId);
+                const itemCount = getItemCountForRestaurant(rest.restaurantId);
 
-              return (
-                <Pressable
-                  key={rest.restaurantId}
-                  onPress={() => toggleRestaurantSelection(rest)}
-                  style={({ pressed }) => [
-                    styles.removalRestaurantCard,
-                    isSelected && styles.removalRestaurantCardSelected,
-                    pressed && styles.pressed,
-                  ]}
-                >
-                  <View style={styles.removalRestaurantRow}>
-                    <View style={[styles.removalCheckbox, isSelected && styles.removalCheckboxSelected]}>
-                      {isSelected ? <Ionicons name="checkmark" size={16} color={theme.colors.white} /> : null}
+                return (
+                  <Pressable
+                    key={rest.restaurantId}
+                    onPress={() => toggleRestaurantSelection(rest)}
+                    style={({ pressed }) => [
+                      styles.removalRestaurantCard,
+                      isSelected && styles.removalRestaurantCardSelected,
+                      pressed && styles.pressed,
+                    ]}
+                  >
+                    <View style={styles.removalRestaurantRow}>
+                      <View style={[styles.removalCheckbox, isSelected && styles.removalCheckboxSelected]}>
+                        {isSelected ? <Ionicons name="checkmark" size={16} color={theme.colors.white} /> : null}
+                      </View>
+                      <View style={styles.removalRestaurantTextBlock}>
+                        <Text style={styles.removalRestaurantName}>{rest.restaurantName}</Text>
+                        <Text style={styles.removalRestaurantMeals}>
+                          {itemCount} meal{itemCount === 1 ? '' : 's'}
+                        </Text>
+                      </View>
+                      <View style={[styles.removalSelectionPill, isSelected && styles.removalSelectionPillSelected]}>
+                        <Text style={[styles.removalSelectionPillText, isSelected && styles.removalSelectionPillTextSelected]}>
+                          {isSelected ? 'Selected' : 'Tap to select'}
+                        </Text>
+                      </View>
                     </View>
-                    <View style={styles.removalRestaurantTextBlock}>
-                      <Text style={styles.removalRestaurantName}>{rest.restaurantName}</Text>
-                      <Text style={styles.removalRestaurantMeals}>
-                        {itemCount} meal{itemCount === 1 ? '' : 's'}
-                      </Text>
-                    </View>
-                  </View>
-                </Pressable>
-              );
-            })}
+                  </Pressable>
+                );
+              }) : (
+                <View style={styles.removalEmptyState}>
+                  <Ionicons name="restaurant-outline" size={28} color={theme.colors.gray[400]} />
+                  <Text style={styles.removalEmptyTitle}>No restaurants found</Text>
+                  <Text style={styles.removalEmptyText}>Your selected restaurants will appear here when available.</Text>
+                </View>
+              )}
+            </View>
           </ScrollView>
 
           <View style={styles.replacementFooter}>
@@ -2011,6 +2043,7 @@ const styles = StyleSheet.create({
   },
   replacementModalSheet: {
     maxHeight: '80%',
+    minHeight: 360,
     width: '100%',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -2059,10 +2092,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   replacementModalBody: {
-    flex: 1,
+    flexGrow: 1,
     paddingHorizontal: 16,
     paddingTop: 0,
     paddingBottom: 16,
+  },
+  removalListContainer: {
+    flex: 1,
+    minHeight: 160,
+    paddingTop: 4,
   },
   replacementInstruction: {
     color: theme.colors.gray[700],
@@ -2133,6 +2171,7 @@ const styles = StyleSheet.create({
   },
   removalRestaurantTextBlock: {
     flex: 1,
+    minWidth: 0,
   },
   removalRestaurantName: {
     color: theme.colors.gray[900],
@@ -2144,10 +2183,58 @@ const styles = StyleSheet.create({
     color: theme.colors.gray[500],
     fontSize: 13,
   },
+  removalSelectionPill: {
+    minWidth: 96,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: theme.colors.border.default,
+    backgroundColor: theme.colors.white,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  removalSelectionPillSelected: {
+    borderColor: theme.colors.brand.grubRed,
+    backgroundColor: theme.colors.red[100],
+  },
+  removalSelectionPillText: {
+    color: theme.colors.gray[700],
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  removalSelectionPillTextSelected: {
+    color: theme.colors.brand.grubRed,
+  },
   removalRestaurantCuisine: {
     color: theme.colors.gray[600],
     fontSize: 12,
     marginTop: 2,
+  },
+  removalEmptyState: {
+    flex: 1,
+    minHeight: 160,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.border.default,
+    borderStyle: 'dashed',
+    backgroundColor: theme.colors.gray[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  removalEmptyTitle: {
+    marginTop: 10,
+    color: theme.colors.gray[900],
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  removalEmptyText: {
+    marginTop: 4,
+    color: theme.colors.gray[600],
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 18,
   },
   mealCountBadgeSelected: {
     backgroundColor: theme.colors.white,
