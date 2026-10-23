@@ -1,0 +1,52 @@
+// SSR stub for Leaflet - prevents "window is not defined" errors during server-side rendering
+// This file is used as an alias for 'leaflet' during SSR build
+
+export default {
+  // Stub common Leaflet methods and properties
+  version: '1.9.4',
+  DivIcon: class DivIcon {},
+  Icon: class Icon {},
+  marker: () => ({}),
+  tileLayer: () => ({}),
+  map: () => ({}),
+  LatLng: class LatLng {},
+  LatLngBounds: class LatLngBounds {},
+  Point: class Point {},
+  Bounds: class Bounds {},
+  Control: class Control {},
+  Layer: class Layer {},
+  FeatureGroup: class FeatureGroup {},
+  Path: class Path {},
+  Polyline: class Polyline {},
+  Polygon: class Polygon {},
+  Rectangle: class Rectangle {},
+  Circle: class Circle {},
+  CircleMarker: class CircleMarker {},
+  GeoJSON: class GeoJSON {},
+  ImageOverlay: class ImageOverlay {},
+  VideoOverlay: class VideoOverlay {},
+  SVGOverlay: class SVGOverlay {},
+  Tooltip: class Tooltip {},
+  Popup: class Popup {},
+  layerGroup: () => ({}),
+  featureGroup: () => ({}),
+  geoJSON: () => ({}),
+  gridLayer: () => ({}),
+  tileLayer: () => ({}),
+  imageOverlay: () => ({}),
+  videoOverlay: () => ({}),
+  svgOverlay: () => ({}),
+  popup: () => ({}),
+  tooltip: () => ({}),
+  control: () => ({}),
+  scale: () => ({}),
+  zoom: () => ({}),
+  attribution: () => ({}),
+  layers: () => ({}),
+  CRS: {
+    EPSG3857: {},
+    EPSG4326: {},
+    EPSG3395: {},
+    Simple: {}
+  }
+};

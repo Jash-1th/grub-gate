@@ -3,11 +3,15 @@ import { Suspense, useEffect } from 'react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import './index.css'
-import 'leaflet/dist/leaflet.css'
 import './i18n'
 import App from './App.jsx'
 import ScrollToTop from './components/common/ScrollToTop'
 import { registerPWA } from './pwa.js'
+
+// Load Leaflet CSS only on client-side
+if (typeof window !== 'undefined') {
+  import('leaflet/dist/leaflet.css');
+}
 
 // Enhanced Loading fallback component that integrates with App Shell
 const LoadingFallback = () => {

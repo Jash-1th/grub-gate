@@ -12,5 +12,16 @@ export default defineConfig({
         format: 'es'
       }
     }
+  },
+  // Optimize deps to exclude Leaflet from SSR
+  optimizeDeps: {
+    exclude: ['leaflet', 'react-leaflet']
+  },
+  // Resolve alias to provide SSR-safe stubs for Leaflet
+  resolve: {
+    alias: {
+      'leaflet': './src/utils/leaflet-stub.js',
+      'react-leaflet': './src/utils/react-leaflet-stub.js'
+    }
   }
 })
