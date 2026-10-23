@@ -223,7 +223,7 @@ const EnhancedAddressForm = ({
         </label>
         <input
           type="text"
-          id={`${prefix}street`}
+          id="street"
           value={formData.street || ''}
           onChange={(e) => handleInputChange('street', e.target.value)}
           onBlur={(e) => onFieldBlur && onFieldBlur('street', e.target.value)}
@@ -246,7 +246,7 @@ const EnhancedAddressForm = ({
           </label>
           <input
             type="text"
-            id={`${prefix}city`}
+            id="city"
             value={formData.city || ''}
             onChange={(e) => handleInputChange('city', e.target.value)}
             onBlur={(e) => onFieldBlur && onFieldBlur('city', e.target.value)}
@@ -267,7 +267,7 @@ const EnhancedAddressForm = ({
           </label>
           <input
             type="text"
-            id={`${prefix}province`}
+            id="province"
             value={formData.province || ''}
             onChange={(e) => handleInputChange('province', e.target.value)}
             onBlur={(e) => onFieldBlur && onFieldBlur('province', e.target.value)}
@@ -292,7 +292,7 @@ const EnhancedAddressForm = ({
               Country *
             </label>
             <select
-              id={`${prefix}country`}
+              id="country"
               value={formData.country || ''}
               onChange={(e) => handleInputChange('country', e.target.value)}
               onBlur={(e) => onFieldBlur && onFieldBlur('country', e.target.value)}
@@ -322,7 +322,7 @@ const EnhancedAddressForm = ({
           <div className="relative">
             <input
               type="text"
-              id={`${prefix}postalCode`}
+              id="postalCode"
               value={formData.postalCode || ''}
               onChange={(e) => handleInputChange('postalCode', e.target.value)}
               onBlur={(e) => {
