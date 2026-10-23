@@ -1,14 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMapLocationDot } from '@fortawesome/free-solid-svg-icons';
-import RestaurantMapModal from '../modals/RestaurantMapModal';
+
+// Lazy load the map modal to prevent SSR crash from Leaflet
+const RestaurantMapModal = React.lazy(() => import('../modals/RestaurantMapModal'));
 
 const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore, isSelected = false }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  // SSR Safety: Only set isClient to true on client-side
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   // Extract coordinates from restaurant data
   const getRestaurantCoordinates = () => {
@@ -297,15 +305,17 @@ const RestaurantCard = ({ restaurant, selectedPreferences = [], onExplore, isSel
       </div>
     </div>
       
-      {/* Map Modal */}
-      {hasValidCoordinates && (
-        <RestaurantMapModal
-          isOpen={isMapModalOpen}
-          onClose={handleCloseMap}
-          restaurantName={restaurant.name}
-          lat={coordinates.lat}
-          lng={coordinates.lng}
-        />
+      {/* Map Modal - Only render on client-side to prevent SSR crash */}
+      {isClient && hasValidCoordinates && (
+        <Suspense fallback={null}>
+          <RestaurantMapModal
+            isOpen={isMapModalOpen}
+            onClose={handleCloseMap}
+            restaurantName={restaurant.name}
+            lat={coordinates.lat}
+            lng={coordinates.lng}
+          />
+        </Suspense>
       )}
     </>
   );
