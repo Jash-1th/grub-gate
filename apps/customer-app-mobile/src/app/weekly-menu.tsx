@@ -1,5 +1,6 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
+import { BlurView } from 'expo-blur';
 import {
   ActivityIndicator,
   Image,
@@ -558,7 +559,7 @@ export default function WeeklyMenuScreen() {
                     onPress={() => handleSlotPress(activeDay, mealType.id)}
                     style={styles.emptyMealCard}
                   >
-                    <Ionicons name="add" size={32} color="#94A3B8" />
+                    <Ionicons name="add" size={32} color="#7B8794" />
                     <Text style={styles.emptyMealText}>Add {mealType.label.toLowerCase()}</Text>
                   </AnimatedPressable>
                 )}
@@ -569,7 +570,11 @@ export default function WeeklyMenuScreen() {
       </ScrollView>
 
       {/* 6. Properly Docked Absolute Footer */}
-      <View style={[styles.dockedFooter, { paddingBottom: Math.max(insets.bottom + 12, 16) }]}>
+      <BlurView
+        intensity={55}
+        tint="light"
+        style={[styles.dockedFooter, { paddingBottom: Math.max(insets.bottom + 12, 16) }]}
+      >
         <TouchableOpacity
           style={styles.reviewButton}
           onPress={handleFooterAction}
@@ -590,7 +595,7 @@ export default function WeeklyMenuScreen() {
             {isSubscribed ? (isSavingSelections ? 'Saving...' : 'Save Meal Selections') : totalItems > 0 ? 'Review Plan' : 'Generate Plan'}
           </Text>
         </TouchableOpacity>
-      </View>
+      </BlurView>
 
       {/* Modals & Bottom Sheets */}
       {showMealPickerSheet && (
@@ -714,7 +719,7 @@ function MealPickerSheet({
             <Text style={styles.mealPickerSubtitle}>{restaurantName}</Text>
           </View>
           <Pressable onPress={onClose} style={styles.mealPickerClose}>
-            <Ionicons name="close" size={24} color={theme.colors.gray[600]} />
+            <Ionicons name="close" size={24} color={theme.colors.gray[800]} />
           </Pressable>
         </View>
 
@@ -790,7 +795,7 @@ function MealPickerSheet({
             style={({ pressed }) => [styles.foodPreferenceCard, pressed && styles.pressed]}
           >
             <View style={styles.foodPreferenceIcon}>
-              <Ionicons name="filter-outline" size={20} color={theme.colors.gray[700]} />
+              <Ionicons name="filter-outline" size={20} color={theme.colors.gray[800]} />
             </View>
             <View style={styles.foodPreferenceTextBlock}>
               <Text style={styles.foodPreferenceTitle}>Food Preferences</Text>
@@ -799,7 +804,7 @@ function MealPickerSheet({
             <Ionicons
               name={showPreferenceOptions ? "chevron-up" : "chevron-down"}
               size={20}
-              color={theme.colors.gray[500]}
+              color={theme.colors.gray[700]}
             />
           </Pressable>
 
@@ -1132,18 +1137,18 @@ function formatShortDate(date: Date) {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: theme.colors.background.page,
+    backgroundColor: '#F8F9FA',
   },
   scrollContent: {
-    // Extra padding at the bottom so the scrollable content isn't hidden by the footer
-    paddingBottom: 150, 
+    paddingTop: 8,
+    paddingBottom: 156,
   },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: theme.spacing[6],
-    backgroundColor: theme.colors.background.page,
+    backgroundColor: '#F8F9FA',
   },
   loadingText: {
     marginTop: theme.spacing[3],
@@ -1184,9 +1189,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 12,
-    backgroundColor: theme.colors.background.page,
+    backgroundColor: '#F8F9FA',
     zIndex: 10,
   },
   backButton: {
@@ -1215,7 +1220,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   optionsMenu: {
-    marginHorizontal: 16,
+    marginHorizontal: 20,
     borderRadius: 16,
     backgroundColor: theme.colors.white,
     ...theme.shadow.md,
@@ -1246,22 +1251,24 @@ const styles = StyleSheet.create({
 
   // Section Containers
   sectionContainer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     marginBottom: 24,
     marginTop: 8,
   },
 
   // 2. Week Toggler Section
   weekCard: {
-    backgroundColor: theme.colors.white,
-    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    padding: 12,
-    ...theme.shadow.sm,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
+    padding: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    elevation: 3,
   },
   weekCardTextContainer: {
     gap: 2,
@@ -1277,11 +1284,9 @@ const styles = StyleSheet.create({
   },
   planWeek2Button: {
     width: '100%',
-    height: 40,
-    backgroundColor: theme.colors.white,
-    borderWidth: 1,
-    borderColor: theme.colors.brand.grubRed,
-    borderRadius: 12,
+    height: 44,
+    backgroundColor: 'rgba(136, 19, 55, 0.06)',
+    borderRadius: 99,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 12,
@@ -1289,7 +1294,7 @@ const styles = StyleSheet.create({
   planWeek2ButtonText: {
     color: theme.colors.brand.grubRed,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   weekTabsRow: {
     flexDirection: 'row',
@@ -1298,18 +1303,27 @@ const styles = StyleSheet.create({
   weekTabCard: {
     flex: 1,
     backgroundColor: theme.colors.white,
-    borderRadius: 16,
+    borderRadius: 20,
     flexDirection: 'column',
     alignItems: 'center',
     gap: 4,
-    padding: 12,
-    ...theme.shadow.sm,
+    padding: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 10,
+    elevation: 2,
     borderWidth: 1,
-    borderColor: theme.colors.border.light,
+    borderColor: 'rgba(17, 24, 39, 0.06)',
   },
   weekTabCardActive: {
-    backgroundColor: theme.colors.red[50],
-    borderColor: theme.colors.brand.grubRed,
+    backgroundColor: '#FFFFFF',
+    borderColor: 'transparent',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    elevation: 3,
   },
   weekTabWeekText: {
     color: theme.colors.text.body,
@@ -1328,11 +1342,9 @@ const styles = StyleSheet.create({
   },
   removeWeek2Button: {
     width: '100%',
-    height: 40,
-    backgroundColor: theme.colors.white,
-    borderWidth: 1,
-    borderColor: theme.colors.brand.grubRed,
-    borderRadius: 12,
+    height: 44,
+    backgroundColor: 'rgba(136, 19, 55, 0.06)',
+    borderRadius: 99,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 12,
@@ -1357,9 +1369,9 @@ const styles = StyleSheet.create({
   // 3. Restaurant & Action Buttons
   restaurantSection: {
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
+    borderTopColor: 'rgba(17, 24, 39, 0.06)',
     paddingTop: 24,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     marginBottom: 24,
   },
   restaurantHeaderRow: {
@@ -1420,24 +1432,29 @@ const styles = StyleSheet.create({
   },
   grubPassButton: {
     flex: 1,
-    height: 40,
-    backgroundColor: theme.colors.blue[600],
-    borderRadius: 12,
+    height: 44,
+    backgroundColor: '#3B5BDB',
+    borderRadius: 99,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
+    shadowColor: '#3B5BDB',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.16,
+    shadowRadius: 14,
+    elevation: 4,
   },
   grubPassButtonText: {
     color: theme.colors.white,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   changeRestaurantButton: {
     flex: 1,
-    height: 40,
-    backgroundColor: theme.colors.gray[100],
-    borderRadius: 12,
+    height: 44,
+    backgroundColor: '#F0F2F5',
+    borderRadius: 99,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1456,23 +1473,27 @@ const styles = StyleSheet.create({
   daySliderContainer: {
     flexDirection: 'row',
     gap: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
   },
   dayTab: {
     width: 52,
     height: 70,
     borderRadius: 16,
-    backgroundColor: theme.colors.gray[50],
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'transparent',
+    borderColor: '#EAEAEA',
     position: 'relative',
   },
   dayTabActive: {
     backgroundColor: theme.colors.brand.grubRed,
     borderColor: theme.colors.brand.grubRed,
-    ...theme.shadow.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   dayTabDayText: {
     color: theme.colors.text.muted,
@@ -1502,7 +1523,7 @@ const styles = StyleSheet.create({
 
   // 5. Meal Slots
   mealSlotsContainer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     gap: 24,
   },
   mealSlotContainer: {
@@ -1551,18 +1572,18 @@ const styles = StyleSheet.create({
   emptyMealCard: {
     height: 120,
     borderRadius: 20,
-    borderWidth: 2,
-    borderColor: theme.colors.border.default,
+    borderWidth: 1.5,
+    borderColor: '#D1D5DB',
     borderStyle: 'dashed',
-    backgroundColor: theme.colors.gray[50],
+    backgroundColor: '#FAFAFA',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
   emptyMealText: {
-    color: theme.colors.text.muted,
+    color: '#7B8794',
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   filledMealCard: {
     borderWidth: 1.5,
@@ -1639,27 +1660,38 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: theme.colors.background.page,
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.72)',
+    paddingHorizontal: 20,
+    paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border.default,
+    borderTopColor: 'rgba(255,255,255,0.78)',
     zIndex: 50,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 10,
   },
   reviewButton: {
     width: '100%',
-    height: 52,
+    height: 56,
     backgroundColor: theme.colors.brand.grubRed,
-    borderRadius: 16,
+    borderRadius: 99,
     flexDirection: 'row',
     gap: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: theme.colors.brand.grubRed,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 6,
   },
   reviewButtonText: {
     color: theme.colors.white,
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
   },
 
   // Meal Picker Sheet
@@ -1678,7 +1710,7 @@ const styles = StyleSheet.create({
     height: '78%',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    backgroundColor: theme.colors.background.page,
+    backgroundColor: '#F8F9FA',
     overflow: 'hidden',
     ...theme.shadow.lg,
   },
@@ -1697,28 +1729,33 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingBottom: 8,
+    paddingBottom: 10,
   },
   mealPickerTitleBlock: {
     flex: 1,
   },
   mealPickerTitle: {
-    color: theme.colors.gray[900],
-    fontSize: 16,
-    fontWeight: '700',
+    color: '#1A1A1A',
+    fontSize: 18,
+    fontWeight: '800',
   },
   mealPickerSubtitle: {
-    marginTop: 2,
-    color: theme.colors.gray[500],
+    marginTop: 4,
+    color: '#6B7280',
     fontSize: 12,
   },
   mealPickerClose: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.gray[100],
+    backgroundColor: theme.colors.white,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
   dayChipScrollView: {
     flexGrow: 0,
@@ -1733,22 +1770,32 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   dayChip: {
-    minWidth: 64,
-    height: 52,
-    borderRadius: 26,
+    minWidth: 72,
+    height: 56,
+    borderRadius: 28,
     borderWidth: 1,
-    borderColor: theme.colors.border.default,
+    borderColor: '#E5E7EB',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: theme.colors.white,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
   dayChipActive: {
     borderColor: theme.colors.brand.grubRed,
     backgroundColor: theme.colors.brand.grubRed,
+    shadowColor: theme.colors.brand.grubRed,
+    shadowOpacity: 0.26,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 5,
   },
   dayChipLabel: {
-    color: theme.colors.gray[800],
+    color: '#1F2937',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -1757,9 +1804,10 @@ const styles = StyleSheet.create({
   },
   dayChipDate: {
     marginTop: 2,
-    color: theme.colors.gray[500],
+    color: '#6B7280',
     fontSize: 10,
     lineHeight: 12,
+    fontWeight: '600',
   },
   dayChipDateActive: {
     color: theme.colors.white,
@@ -1768,7 +1816,7 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     width: '100%',
     height: 1,
-    backgroundColor: theme.colors.border.default,
+    backgroundColor: '#ECEFF3',
   },
   restaurantTabsLabel: {
     flexShrink: 0,
@@ -1840,16 +1888,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: theme.colors.gray[50],
-    marginBottom: 12,
-  },
-  foodPreferenceIcon: {
-    width: 32,
-    height: 32,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
     borderRadius: 16,
     backgroundColor: theme.colors.white,
+    marginBottom: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
+  foodPreferenceIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1857,31 +1911,36 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   foodPreferenceTitle: {
-    color: theme.colors.gray[900],
+    color: '#1A1A1A',
     fontSize: 14,
     fontWeight: '700',
   },
   foodPreferenceCopy: {
-    color: theme.colors.gray[500],
+    color: '#6B7280',
     fontSize: 11,
-    marginTop: 2,
+    marginTop: 3,
   },
   foodPreferenceOptions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginBottom: 12,
+    marginBottom: 14,
   },
   foodPreferenceChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: theme.colors.gray[100],
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
   },
   foodPreferenceChipText: {
-    color: theme.colors.gray[800],
+    color: '#374151',
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   sheetMenuHeader: {
     marginBottom: 12,
@@ -1889,14 +1948,14 @@ const styles = StyleSheet.create({
   sheetMenuTitleBlock: {
   },
   sheetMenuTitle: {
-    color: theme.colors.gray[900],
-    fontSize: 16,
-    fontWeight: '700',
+    color: '#1A1A1A',
+    fontSize: 17,
+    fontWeight: '800',
   },
   sheetMenuSubtitle: {
-    color: theme.colors.gray[600],
+    color: '#6B7280',
     fontSize: 12,
-    marginTop: 2,
+    marginTop: 3,
   },
   loadingContainer: {
     alignItems: 'center',
@@ -1916,17 +1975,21 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderRadius: 16,
     backgroundColor: theme.colors.white,
-    ...theme.shadow.sm,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
   imageContainer: {
     position: 'relative',
+    overflow: 'hidden',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
   },
   menuImage: {
     width: '100%',
-    height: 140,
+    height: 148,
   },
   floatingStepperContainer: {
     position: 'absolute',
@@ -1935,16 +1998,20 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   addButtonPill: {
-    borderRadius: 16,
+    borderRadius: 999,
     paddingHorizontal: 16,
-    paddingVertical: 6,
+    paddingVertical: 8,
     backgroundColor: theme.colors.white,
-    ...theme.shadow.sm,
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 5,
   },
   addButtonText: {
-    color: theme.colors.green[600],
+    color: theme.colors.brand.grubRed,
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   stepperPill: {
     borderRadius: 20,
@@ -1974,7 +2041,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   menuBody: {
-    padding: 12,
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 16,
   },
   menuTitleRow: {
     flexDirection: 'row',
@@ -1986,26 +2055,28 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   menuItemName: {
-    color: theme.colors.gray[900],
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  menuItemMeta: {
-    marginTop: 2,
-    color: theme.colors.gray[500],
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  menuItemPrice: {
-    color: theme.colors.brand.grubRed,
+    color: '#1A1A1A',
     fontSize: 16,
     fontWeight: '700',
   },
+  menuItemMeta: {
+    marginTop: 4,
+    color: '#9CA3AF',
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  menuItemPrice: {
+    color: theme.colors.brand.grubRed,
+    fontSize: 17,
+    fontWeight: '800',
+  },
   menuItemDescription: {
     marginTop: 8,
-    color: theme.colors.gray[600],
-    fontSize: 12,
-    lineHeight: 18,
+    color: '#6B7280',
+    fontSize: 13,
+    lineHeight: 20,
   },
   tagRow: {
     marginTop: 12,
@@ -2014,15 +2085,15 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   tagPill: {
-    borderRadius: 12,
-    backgroundColor: theme.colors.green[100],
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
   },
   tagPillText: {
-    color: theme.colors.green[800],
-    fontSize: 10,
-    fontWeight: '500',
+    color: '#065F46',
+    fontSize: 11,
+    fontWeight: '700',
   },
   addButton: {
     minHeight: 40,

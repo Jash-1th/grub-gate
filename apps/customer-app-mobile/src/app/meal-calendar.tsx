@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import { router, Stack } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
@@ -242,7 +243,7 @@ export default function MealCalendarScreen() {
             <Text style={styles.orderSummaryPrimary}>
               {checkoutTotalMeals} Meal{checkoutTotalMeals === 1 ? '' : 's'}
             </Text>
-            <Text style={styles.orderSummaryPrimary}>{formatPrice(checkoutTotalCost)}</Text>
+            <Text style={styles.orderSummaryPrimaryPrice}>{formatPrice(checkoutTotalCost)}</Text>
           </View>
 
           <WeekMenuSection
@@ -268,7 +269,11 @@ export default function MealCalendarScreen() {
           ) : null}
         </ScrollView>
 
-        <View style={[styles.previewFooter, { paddingBottom: insets.bottom + theme.spacing[3] }]}>
+        <BlurView
+          intensity={55}
+          tint="light"
+          style={[styles.previewFooter, { paddingBottom: insets.bottom + theme.spacing[3] }]}
+        >
           <AnimatedPressable
             onPress={isSubscribed ? handleConfirmMealUpdates : handleSubscribe}
             disabled={!isSubscribed && checkoutTotalMeals === 0}
@@ -290,7 +295,7 @@ export default function MealCalendarScreen() {
               </Text>
             </View>
           </AnimatedPressable>
-        </View>
+        </BlurView>
 
         <MealDetailsSheet
           visible={Boolean(selectedMealDetails)}
@@ -414,7 +419,10 @@ function PreviewMealSlotRow({
     <>
       <View style={styles.previewSlotLeft}>
         <Text style={styles.previewSlotLabel}>{label}</Text>
-        <Text style={styles.previewMealName} numberOfLines={1}>
+        <Text
+          style={[styles.previewMealName, count === 0 && styles.previewMealNameEmpty]}
+          numberOfLines={1}
+        >
           {mealName}
         </Text>
       </View>
@@ -428,9 +436,11 @@ function PreviewMealSlotRow({
               onEdit();
             }}
             hitSlop={10}
+            style={styles.previewEditButton}
             accessibilityRole="button"
             accessibilityLabel={`Edit ${label}`}
           >
+            <Ionicons name="pencil" size={12} color={theme.colors.brand.grubRed} />
             <Text style={styles.previewEditText}>Edit</Text>
           </AnimatedPressable>
         ) : null}
@@ -742,7 +752,7 @@ function formatPrice(value: number) {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: theme.colors.background.page,
+    backgroundColor: '#F4F6F8',
   },
   previewHeader: {
     height: 56,
@@ -750,9 +760,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: theme.colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border.light,
+    backgroundColor: '#F4F6F8',
   },
   previewHeaderButton: {
     width: 40,
@@ -762,9 +770,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   previewHeaderTitle: {
-    color: theme.colors.gray[900],
-    fontSize: 16,
-    fontWeight: '700',
+    color: '#111111',
+    fontSize: 17,
+    fontWeight: '800',
   },
   previewScrollContent: {
     paddingTop: theme.spacing[4],
@@ -777,15 +785,22 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing[3],
     paddingHorizontal: theme.spacing[4],
     borderRadius: 16,
-    backgroundColor: theme.colors.white,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    ...theme.shadow.sm,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
   orderSummaryPrimary: {
-    color: theme.colors.gray[900],
-    fontSize: 20,
+    color: '#111111',
+    fontSize: 19,
     fontWeight: '800',
+  },
+  orderSummaryPrimaryPrice: {
+    color: theme.colors.brand.grubRed,
+    fontSize: 22,
+    fontWeight: '900',
   },
   weekSection: {
     marginTop: theme.spacing[5],
@@ -802,65 +817,81 @@ const styles = StyleSheet.create({
   previewDayCard: {
     flexDirection: 'row',
     gap: theme.spacing[3],
-    padding: theme.spacing[3],
-    borderRadius: 18,
-    backgroundColor: theme.colors.white,
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
-    ...theme.shadow.sm,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
   previewDateBlock: {
-    width: 56,
-    borderRadius: 14,
+    width: 60,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
+    paddingVertical: 12,
     backgroundColor: theme.colors.brand.grubRed,
+    shadowColor: theme.colors.brand.grubRed,
+    shadowOpacity: 0.22,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
   },
   previewDateNumber: {
     color: theme.colors.white,
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '800',
-    lineHeight: 22,
+    lineHeight: 24,
   },
   previewDateWeekday: {
     marginTop: 2,
     color: 'rgba(255,255,255,0.92)',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
   },
   previewSlotsColumn: {
     flex: 1,
-    gap: theme.spacing[2],
+    gap: 10,
   },
   previewSlotRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 10,
-    paddingHorizontal: theme.spacing[3],
+    paddingVertical: 8,
+    paddingHorizontal: 2,
     borderRadius: 14,
-    backgroundColor: theme.colors.gray[50],
-    borderWidth: 1,
-    borderColor: theme.colors.border.light,
+    backgroundColor: 'transparent',
   },
   previewSlotRowEmpty: {
-    opacity: 0.5,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    backgroundColor: '#FAFAFA',
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    borderStyle: 'dashed',
   },
   previewSlotLeft: {
     flex: 1,
     paddingRight: theme.spacing[2],
   },
   previewSlotLabel: {
-    color: theme.colors.gray[600],
+    color: '#6B7280',
     fontSize: 12,
     fontWeight: '700',
+    letterSpacing: 0.4,
   },
   previewMealName: {
-    marginTop: 2,
-    color: theme.colors.gray[900],
+    marginTop: 4,
+    color: '#111111',
     fontSize: 14,
     fontWeight: '700',
+  },
+  previewMealNameEmpty: {
+    color: '#9CA3AF',
+    fontStyle: 'italic',
+    fontWeight: '500',
   },
   previewSlotRight: {
     flexDirection: 'row',
@@ -868,34 +899,52 @@ const styles = StyleSheet.create({
     gap: theme.spacing[2],
   },
   previewSlotPrice: {
-    color: theme.colors.gray[900],
-    fontSize: 13,
-    fontWeight: '700',
+    color: theme.colors.brand.grubRed,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  previewEditButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: 'rgba(136, 19, 55, 0.08)',
   },
   previewEditText: {
-    color: theme.colors.gray[600],
-    fontSize: 13,
+    color: theme.colors.brand.grubRed,
+    fontSize: 12,
     fontWeight: '700',
-    textDecorationLine: 'underline',
   },
   previewFooter: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
+    overflow: 'hidden',
     paddingTop: theme.spacing[3],
     paddingHorizontal: theme.spacing[4],
-    backgroundColor: theme.colors.white,
+    backgroundColor: 'rgba(255,255,255,0.72)',
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
-    ...theme.shadow.md,
+    borderTopColor: 'rgba(255,255,255,0.78)',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: -4 },
+    elevation: 10,
   },
   previewSubscribeButton: {
     minHeight: 54,
-    borderRadius: 16,
+    borderRadius: 99,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: theme.colors.brand.grubRed,
+    shadowColor: theme.colors.brand.grubRed,
+    shadowOpacity: 0.22,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
   },
   previewSubscribeContent: {
     flexDirection: 'row',

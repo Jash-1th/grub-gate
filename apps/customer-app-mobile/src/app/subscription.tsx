@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import { router, Stack, useRootNavigationState } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -215,7 +216,6 @@ export default function SubscriptionScreen() {
           <View style={styles.planList}>
             {plans.map((plan) => {
               const selected = selectedPlan === plan.id;
-              const isBrand = plan.color === 'brand';
 
               return (
                 <Pressable
@@ -251,7 +251,7 @@ export default function SubscriptionScreen() {
                   </View>
 
                   <View style={styles.planPriceRow}>
-                    <Text style={[styles.planPrice, isBrand ? styles.planPriceBrand : styles.planPriceBlue]}>
+                    <Text style={[styles.planPrice, selected ? styles.planPriceBrand : styles.planPriceInactive]}>
                       {formatPrice(plan.price)}
                     </Text>
                     <Text style={[styles.planPeriod, !selected && styles.planDescriptionInactive]}>{plan.period}</Text>
@@ -260,7 +260,7 @@ export default function SubscriptionScreen() {
                   <View style={styles.featureList}>
                     {plan.features.map((feature) => (
                       <View key={feature} style={styles.featureRow}>
-                        <Text style={[styles.featureCheck, isBrand ? styles.featureCheckBrand : styles.featureCheckBlue]}>
+                        <Text style={[styles.featureCheck, selected ? styles.featureCheckBrand : styles.featureCheckInactive]}>
                           ✓
                         </Text>
                         <Text style={[styles.featureText, !selected && styles.featureTextInactive]}>{feature}</Text>
@@ -297,7 +297,11 @@ export default function SubscriptionScreen() {
           </View>
         </ScrollView>
 
-        <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
+        <BlurView
+          intensity={55}
+          tint="light"
+          style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}
+        >
           <Pressable
             onPress={handleSubscribeNow}
             style={({ pressed }) => [styles.subscribeButton, pressed && styles.pressed]}
@@ -306,7 +310,7 @@ export default function SubscriptionScreen() {
           >
             <Text style={styles.subscribeButtonText}>Subscribe Now • {footerTotalLabel}</Text>
           </Pressable>
-        </View>
+        </BlurView>
 
         <SubscriptionSetupModal
           visible={showSetupModal}
@@ -862,7 +866,7 @@ function formatPrice(value: number) {
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    backgroundColor: theme.colors.background.page,
+    backgroundColor: '#F8F9FA',
   },
   content: {
     paddingTop: theme.spacing[3],
@@ -874,9 +878,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: theme.colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border.light,
+    backgroundColor: '#F8F9FA',
   },
   headerButton: {
     width: 40,
@@ -886,22 +888,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    color: theme.colors.gray[900],
+    color: '#111111',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   section: {
     paddingTop: theme.spacing[3],
     paddingBottom: theme.spacing[3],
   },
   sectionTitle: {
-    color: theme.colors.gray[900],
-    fontSize: 18,
+    color: '#111111',
+    fontSize: 20,
     fontWeight: '800',
   },
   sectionSubtitle: {
     marginTop: 6,
-    color: theme.colors.gray[600],
+    color: '#6B7280',
     fontSize: 13,
     fontWeight: '500',
   },
@@ -1037,31 +1039,48 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     paddingHorizontal: theme.spacing[4],
-    paddingTop: theme.spacing[4],
+    paddingTop: theme.spacing[5],
     paddingBottom: theme.spacing[4],
   },
   planCardInactive: {
-    borderColor: theme.colors.border.default,
-    backgroundColor: theme.colors.white,
+    borderColor: '#F3F4F6',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
   planCardActive: {
     borderColor: theme.colors.brand.grubRed,
     borderWidth: 2,
-    backgroundColor: theme.colors.red[50],
+    backgroundColor: '#FFF7F8',
+    shadowColor: theme.colors.brand.grubRed,
+    shadowOpacity: 0.14,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 5,
   },
   popularPill: {
     position: 'absolute',
-    top: -13,
+    top: -14,
     alignSelf: 'center',
-    borderRadius: theme.radius.full,
-    paddingHorizontal: theme.spacing[4],
-    paddingVertical: theme.spacing[1],
+    borderRadius: 99,
+    paddingHorizontal: 16,
+    paddingVertical: 7,
     backgroundColor: theme.colors.brand.grubRed,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
   },
   popularPillText: {
     color: theme.colors.white,
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.bold,
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   planTopRow: {
     flexDirection: 'row',
@@ -1079,23 +1098,24 @@ const styles = StyleSheet.create({
     paddingTop: 2,
   },
   radioOuter: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     borderWidth: 2,
-    borderColor: theme.colors.border.strong,
+    borderColor: '#D1D5DB',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: theme.colors.white,
   },
   radioOuterActive: {
     borderColor: theme.colors.brand.grubRed,
+    backgroundColor: theme.colors.brand.grubRed,
   },
   radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: theme.colors.brand.grubRed,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: theme.colors.white,
   },
   planName: {
     color: theme.colors.gray[900],
@@ -1107,12 +1127,12 @@ const styles = StyleSheet.create({
   },
   planDescription: {
     marginTop: 4,
-    color: theme.colors.gray[600],
+    color: '#6B7280',
     fontSize: 12,
     fontWeight: '500',
   },
   planDescriptionInactive: {
-    color: theme.colors.gray[600],
+    color: '#6B7280',
   },
   planPriceRow: {
     flexDirection: 'row',
@@ -1121,11 +1141,11 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing[3],
   },
   planPrice: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 30,
+    fontWeight: '900',
   },
-  planPriceBlue: {
-    color: theme.colors.blue[700],
+  planPriceInactive: {
+    color: '#1A1A1A',
   },
   planPriceBrand: {
     color: theme.colors.brand.grubRed,
@@ -1143,46 +1163,57 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,
+    marginBottom: 4,
   },
   featureCheck: {
     fontSize: 13,
     fontWeight: '800',
-    lineHeight: 16,
+    lineHeight: 20,
   },
-  featureCheckBlue: {
-    color: theme.colors.blue[600],
+  featureCheckInactive: {
+    color: '#9CA3AF',
   },
   featureCheckBrand: {
     color: theme.colors.brand.grubRed,
   },
   featureText: {
     flex: 1,
-    color: theme.colors.gray[700],
+    color: '#4B5563',
     fontSize: 13,
-    lineHeight: 16,
+    lineHeight: 20,
     fontWeight: '500',
   },
   featureTextInactive: {
-    color: theme.colors.gray[700],
+    color: '#4B5563',
   },
   footer: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
+    overflow: 'hidden',
     paddingTop: theme.spacing[3],
     paddingHorizontal: theme.spacing[3],
-    backgroundColor: theme.colors.white,
+    backgroundColor: 'rgba(255,255,255,0.72)',
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border.light,
-    ...theme.shadow.md,
+    borderTopColor: 'rgba(255,255,255,0.78)',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: -4 },
+    elevation: 10,
   },
   subscribeButton: {
     height: 54,
-    borderRadius: 16,
+    borderRadius: 99,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: theme.colors.brand.grubRed,
+    shadowColor: theme.colors.brand.grubRed,
+    shadowOpacity: 0.22,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
   },
   subscribeButtonText: {
     color: theme.colors.white,
