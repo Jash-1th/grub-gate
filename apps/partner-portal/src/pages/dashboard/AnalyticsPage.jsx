@@ -449,519 +449,512 @@ const AnalyticsPage = () => {
     ]; // Fallback to mock data
 
   const renderTabContent = () => {
-    switch (activeTab) {
-      case 'overview':
-        return (
-          <div className="space-y-6">
-            {/* Metrics Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-              {metrics.map((metric, index) => {
-                const Icon = metric.icon;
-                const isPositive = metric.change > 0;
-                return (
-                  <Card key={index} className={`hover:shadow-lg transition-all duration-200 border-l-4 ${metric.borderColor}`}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${metric.bgColor} mb-3`}>
-                            <FontAwesomeIcon icon={Icon} className={`h-5 w-5 ${metric.color}`} />
-                          </div>
-                          <p className="text-sm font-medium text-gray-600 mb-1 truncate">
-                            {metric.title}
-                          </p>
-                          <p className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                            {metric.value}
-                          </p>
-                          <div className={`flex items-center text-sm ${
-                            isPositive ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {isPositive ? (
-                              <FontAwesomeIcon icon={faArrowUp} className="h-4 w-4 mr-1" />
-                            ) : (
-                              <FontAwesomeIcon icon={faArrowDown} className="h-4 w-4 mr-1" />
-                            )}
-                            <span className="font-medium">{Math.abs(metric.change)}%</span>
-                            <span className="text-gray-500 ml-1 text-xs">{t('analytics.vsLastPeriod')}</span>
-                          </div>
+    // Return all tabs but only show the active one using CSS
+    // This prevents re-mounting and keeps data cached
+    return (
+      <>
+        {/* Overview Tab */}
+        <div className={`space-y-6 ${activeTab === 'overview' ? 'block' : 'hidden'}`}>
+          {/* Metrics Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            {metrics.map((metric, index) => {
+              const Icon = metric.icon;
+              const isPositive = metric.change > 0;
+              return (
+                <Card key={index} className={`hover:shadow-lg transition-all duration-200 border-l-4 ${metric.borderColor}`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${metric.bgColor} mb-3`}>
+                          <FontAwesomeIcon icon={Icon} className={`h-5 w-5 ${metric.color}`} />
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-
-            {/* Revenue Breakdown Chart */}
-            <Card>
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-semibold flex items-center">
-                  <FontAwesomeIcon icon={faChartPie} className="h-5 w-5 mr-2 text-grub-red" />
-                  {t('analytics.revenueBreakdown.title')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Revenue Pie Chart */}
-                  <div className="h-64">
-                    <ChartComponent 
-                      data={[
-                        { 
-                          name: t('analytics.revenueBreakdown.subscriptionRevenue'), 
-                          orders: revenueBreakdownData.subscriptionRevenue,
-                          color: '#10B981'
-                        },
-                        { 
-                          name: t('analytics.revenueBreakdown.oneTimeOrders'), 
-                          orders: revenueBreakdownData.oneTimeRevenue,
-                          color: '#3B82F6'
-                        }
-                      ]} 
-                      type="pie" 
-                    />
-                  </div>
-                  
-                  {/* Revenue Stats */}
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center p-4 bg-green-50 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600">
-                          ${revenueBreakdownData.subscriptionRevenue?.toLocaleString() || 0}
-                        </div>
-                        <div className="text-sm text-gray-600">{t('analytics.revenueBreakdown.subscriptionRevenue')}</div>
-                        <div className="text-xs text-green-600 font-medium">
-                          {revenueBreakdownData.subscriptionPercentage?.toFixed(1) || 0}% {t('analytics.ofTotal')}
-                        </div>
-                      </div>
-                      <div className="text-center p-4 bg-blue-50 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">
-                          ${revenueBreakdownData.oneTimeRevenue?.toLocaleString() || 0}
-                        </div>
-                        <div className="text-sm text-gray-600">{t('analytics.revenueBreakdown.oneTimeOrders')}</div>
-                        <div className="text-xs text-blue-600 font-medium">
-                          {revenueBreakdownData.oneTimePercentage?.toFixed(1) || 0}% {t('analytics.ofTotal')}
+                        <p className="text-sm font-medium text-gray-600 mb-1 truncate">
+                          {metric.title}
+                        </p>
+                        <p className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+                          {metric.value}
+                        </p>
+                        <div className={`flex items-center text-sm ${
+                          isPositive ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {isPositive ? (
+                            <FontAwesomeIcon icon={faArrowUp} className="h-4 w-4 mr-1" />
+                          ) : (
+                            <FontAwesomeIcon icon={faArrowDown} className="h-4 w-4 mr-1" />
+                          )}
+                          <span className="font-medium">{Math.abs(metric.change)}%</span>
+                          <span className="text-gray-500 ml-1 text-xs">{t('analytics.vsLastPeriod')}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="text-center p-4 bg-gray-50 rounded-lg">
-                      <div className="text-3xl font-bold text-gray-900">
-                        ${revenueBreakdownData.totalRevenue?.toLocaleString() || 0}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Revenue Breakdown Chart */}
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-semibold flex items-center">
+                <FontAwesomeIcon icon={faChartPie} className="h-5 w-5 mr-2 text-grub-red" />
+                {t('analytics.revenueBreakdown.title')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Revenue Pie Chart */}
+                <div className="h-64">
+                  <ChartComponent 
+                    data={[
+                      { 
+                        name: t('analytics.revenueBreakdown.subscriptionRevenue'), 
+                        orders: revenueBreakdownData.subscriptionRevenue,
+                        color: '#10B981'
+                      },
+                      { 
+                        name: t('analytics.revenueBreakdown.oneTimeOrders'), 
+                        orders: revenueBreakdownData.oneTimeRevenue,
+                        color: '#3B82F6'
+                      }
+                    ]} 
+                    type="pie" 
+                  />
+                </div>
+                
+                {/* Revenue Stats */}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-4 bg-green-50 rounded-lg">
+                      <div className="text-2xl font-bold text-green-600">
+                        ${revenueBreakdownData.subscriptionRevenue?.toLocaleString() || 0}
                       </div>
-                      <div className="text-sm text-gray-600">{t('analytics.revenueBreakdown.totalRevenue')}</div>
+                      <div className="text-sm text-gray-600">{t('analytics.revenueBreakdown.subscriptionRevenue')}</div>
+                      <div className="text-xs text-green-600 font-medium">
+                        {revenueBreakdownData.subscriptionPercentage?.toFixed(1) || 0}% {t('analytics.ofTotal')}
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-blue-50 rounded-lg">
+                      <div className="text-2xl font-bold text-blue-600">
+                        ${revenueBreakdownData.oneTimeRevenue?.toLocaleString() || 0}
+                      </div>
+                      <div className="text-sm text-gray-600">{t('analytics.revenueBreakdown.oneTimeOrders')}</div>
+                      <div className="text-xs text-blue-600 font-medium">
+                        {revenueBreakdownData.oneTimePercentage?.toFixed(1) || 0}% {t('analytics.ofTotal')}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-center p-4 bg-gray-50 rounded-lg">
+                    <div className="text-3xl font-bold text-gray-900">
+                      ${revenueBreakdownData.totalRevenue?.toLocaleString() || 0}
+                    </div>
+                    <div className="text-sm text-gray-600">{t('analytics.revenueBreakdown.totalRevenue')}</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Revenue Tab */}
+        <div className={`space-y-6 ${activeTab === 'revenue' ? 'block' : 'hidden'}`}>
+          {/* Revenue Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {metrics.filter(m => m.title.includes('Revenue') || m.title.includes('Order')).map((metric, index) => {
+              const Icon = metric.icon;
+              const isPositive = metric.change > 0;
+              return (
+                <Card key={`revenue-${index}`} className={`hover:shadow-lg transition-all duration-200 border-l-4 ${metric.borderColor}`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${metric.bgColor} mb-3`}>
+                          <FontAwesomeIcon icon={Icon} className={`h-5 w-5 ${metric.color}`} />
+                        </div>
+                        <p className="text-sm font-medium text-gray-600 mb-1 truncate">
+                          {metric.title}
+                        </p>
+                        <p className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+                          {metric.value}
+                        </p>
+                        <div className={`flex items-center text-sm ${
+                          isPositive ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {isPositive ? (
+                            <FontAwesomeIcon icon={faArrowUp} className="h-4 w-4 mr-1" />
+                          ) : (
+                            <FontAwesomeIcon icon={faArrowDown} className="h-4 w-4 mr-1" />
+                          )}
+                          <span className="font-medium">{Math.abs(metric.change)}%</span>
+                          <span className="text-gray-500 ml-1 text-xs">{t('analytics.vsLastPeriod')}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+          
+          {/* Revenue Chart */}
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-semibold">{t('analytics.charts.revenueTrendAnalysis')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartComponent 
+                data={revenueTrendData} 
+                type="line" 
+              />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Customers Tab */}
+        <div className={`space-y-6 ${activeTab === 'customers' ? 'block' : 'hidden'}`}>
+          {/* Customer Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {metrics.filter(m => m.title.includes('Customers') || m.title.includes('Conversion')).map((metric, index) => {
+              const Icon = metric.icon;
+              const isPositive = metric.change > 0;
+              return (
+                <Card key={`customers-${index}`} className={`hover:shadow-lg transition-all duration-200 border-l-4 ${metric.borderColor}`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${metric.bgColor} mb-3`}>
+                          <FontAwesomeIcon icon={Icon} className={`h-5 w-5 ${metric.color}`} />
+                        </div>
+                        <p className="text-sm font-medium text-gray-600 mb-1 truncate">
+                          {metric.title}
+                        </p>
+                        <p className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+                          {metric.value}
+                        </p>
+                        <div className={`flex items-center text-sm ${
+                          isPositive ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {isPositive ? (
+                            <FontAwesomeIcon icon={faArrowUp} className="h-4 w-4 mr-1" />
+                          ) : (
+                            <FontAwesomeIcon icon={faArrowDown} className="h-4 w-4 mr-1" />
+                          )}
+                          <span className="font-medium">{Math.abs(metric.change)}%</span>
+                          <span className="text-gray-500 ml-1 text-xs">{t('analytics.vsLastPeriod')}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Customer Insights */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold">{t('analytics.sections.customerSegments')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-4 bg-blue-50 rounded-lg">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {customerSegmentsData.active}
+                      </div>
+                      <div className="text-sm text-gray-600">{t('analytics.metrics.activeCustomers')}</div>
+                    </div>
+                    <div className="text-center p-4 bg-green-50 rounded-lg">
+                      <div className="text-2xl font-bold text-green-600">
+                        {customerSegmentsData.loyal}
+                      </div>
+                      <div className="text-sm text-gray-600">{t('analytics.sections.loyalCustomers')}</div>
                     </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
-          </div>
-        );
 
-      case 'revenue':
-        return (
-          <div className="space-y-6">
-            {/* Revenue Metrics */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {metrics.filter(m => m.title.includes('Revenue') || m.title.includes('Order')).map((metric, index) => {
-                const Icon = metric.icon;
-                const isPositive = metric.change > 0;
-                return (
-                  <Card key={index} className={`hover:shadow-lg transition-all duration-200 border-l-4 ${metric.borderColor}`}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${metric.bgColor} mb-3`}>
-                            <FontAwesomeIcon icon={Icon} className={`h-5 w-5 ${metric.color}`} />
-                          </div>
-                          <p className="text-sm font-medium text-gray-600 mb-1 truncate">
-                            {metric.title}
-                          </p>
-                          <p className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                            {metric.value}
-                          </p>
-                          <div className={`flex items-center text-sm ${
-                            isPositive ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {isPositive ? (
-                              <FontAwesomeIcon icon={faArrowUp} className="h-4 w-4 mr-1" />
-                            ) : (
-                              <FontAwesomeIcon icon={faArrowDown} className="h-4 w-4 mr-1" />
-                            )}
-                            <span className="font-medium">{Math.abs(metric.change)}%</span>
-                            <span className="text-gray-500 ml-1 text-xs">{t('analytics.vsLastPeriod')}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-            
-            {/* Revenue Chart */}
             <Card>
               <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-semibold">{t('analytics.charts.revenueTrendAnalysis')}</CardTitle>
+                <CardTitle className="text-lg font-semibold">{t('analytics.sections.topCustomers')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <ChartComponent 
-                  data={revenueTrendData} 
-                  type="line" 
-                />
+                <div className="space-y-3">
+                  {loadingCustomers ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <div key={i} className="animate-pulse flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                            <div className="space-y-2">
+                              <div className="h-4 bg-gray-200 rounded w-24"></div>
+                              <div className="h-3 bg-gray-100 rounded w-16"></div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="h-4 bg-gray-200 rounded w-16 mb-1"></div>
+                            <div className="h-3 bg-gray-100 rounded w-12"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : customersError ? (
+                    <div className="text-center py-6 text-red-500">
+                      <p>{customersError}</p>
+                      <button 
+                        onClick={() => window.location.reload()}
+                        className="mt-2 text-sm text-grub-red hover:underline"
+                      >
+                        Try again
+                      </button>
+                    </div>
+                  ) : topCustomersData.length > 0 ? (
+                    topCustomersData.map((customer, index) => (
+                      <div key={customer._id || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-grub-red text-white rounded-full flex items-center justify-center text-sm font-bold">
+                            {customer.name ? customer.name.charAt(0).toUpperCase() : 'C'}
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-900">
+                              {customer.name || 'Customer'}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {customer.totalOrders} {customer.totalOrders === 1 ? 'order' : 'orders'}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-grub-red">
+                            ${(customer.totalSpent || 0).toFixed(2)}
+                          </div>
+                          <div className="text-xs text-gray-500">total spent</div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-6 text-gray-500">
+                      No customer data available
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </div>
-        );
+        </div>
 
-      case 'customers':
-        return (
-          <div className="space-y-6">
-            {/* Customer Metrics */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {metrics.filter(m => m.title.includes('Customers') || m.title.includes('Conversion')).map((metric, index) => {
-                const Icon = metric.icon;
-                const isPositive = metric.change > 0;
-                return (
-                  <Card key={index} className={`hover:shadow-lg transition-all duration-200 border-l-4 ${metric.borderColor}`}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${metric.bgColor} mb-3`}>
-                            <FontAwesomeIcon icon={Icon} className={`h-5 w-5 ${metric.color}`} />
-                          </div>
-                          <p className="text-sm font-medium text-gray-600 mb-1 truncate">
-                            {metric.title}
-                          </p>
-                          <p className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                            {metric.value}
-                          </p>
-                          <div className={`flex items-center text-sm ${
-                            isPositive ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {isPositive ? (
-                              <FontAwesomeIcon icon={faArrowUp} className="h-4 w-4 mr-1" />
-                            ) : (
-                              <FontAwesomeIcon icon={faArrowDown} className="h-4 w-4 mr-1" />
-                            )}
-                            <span className="font-medium">{Math.abs(metric.change)}%</span>
-                            <span className="text-gray-500 ml-1 text-xs">{t('analytics.vsLastPeriod')}</span>
-                          </div>
+        {/* Performance Tab */}
+        <div className={`space-y-6 ${activeTab === 'performance' ? 'block' : 'hidden'}`}>
+          {/* Performance Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {metrics.filter(m => m.title.includes('Prep Time') || m.title.includes('Avg Order') || m.title.includes('Conversion')).map((metric, index) => {
+              const Icon = metric.icon;
+              const isPositive = metric.change > 0;
+              return (
+                <Card key={`performance-${index}`} className={`hover:shadow-lg transition-all duration-200 border-l-4 ${metric.borderColor}`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${metric.bgColor} mb-3`}>
+                          <FontAwesomeIcon icon={Icon} className={`h-5 w-5 ${metric.color}`} />
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-
-            {/* Customer Insights */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-lg font-semibold">{t('analytics.sections.customerSegments')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center p-4 bg-blue-50 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">
-                          {customerSegmentsData.active}
+                        <p className="text-sm font-medium text-gray-600 mb-1 truncate">
+                          {metric.title}
+                        </p>
+                        <p className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+                          {metric.value}
+                        </p>
+                        <div className={`flex items-center text-sm ${
+                          isPositive ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {isPositive ? (
+                            <FontAwesomeIcon icon={faArrowUp} className="h-4 w-4 mr-1" />
+                          ) : (
+                            <FontAwesomeIcon icon={faArrowDown} className="h-4 w-4 mr-1" />
+                          )}
+                          <span className="font-medium">{Math.abs(metric.change)}%</span>
+                          <span className="text-gray-500 ml-1 text-xs">{t('analytics.vsLastPeriod')}</span>
                         </div>
-                        <div className="text-sm text-gray-600">{t('analytics.metrics.activeCustomers')}</div>
-                      </div>
-                      <div className="text-center p-4 bg-green-50 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600">
-                          {customerSegmentsData.loyal}
-                        </div>
-                        <div className="text-sm text-gray-600">{t('analytics.sections.loyalCustomers')}</div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
 
-              <Card>
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-lg font-semibold">{t('analytics.sections.topCustomers')}</CardTitle>
-                </CardHeader>
-                <CardContent>
+          {/* Delivery Performance Trend Chart */}
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-semibold">{t('analytics.charts.deliveryPerformanceTrend')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartComponent 
+                data={deliveryPerformanceTrendData.map(item => ({
+                  date: item.date,
+                  value: item.onTimeRate || 0
+                }))} 
+                type="line" 
+              />
+            </CardContent>
+          </Card>
+
+          {/* Performance Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold">{t('analytics.sections.orderStatusDistribution')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4 sm:space-y-6">
+                  {/* Status Summary Boxes - Top */}
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                    {orderStatusData.map((status, index) => (
+                      <div 
+                        key={`status-${index}`} 
+                        className="p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all hover:shadow-md"
+                        style={{ 
+                          backgroundColor: `${status.color}15`,
+                          borderColor: status.color
+                        }}
+                      >
+                        <div className="flex items-center justify-between mb-1 sm:mb-2">
+                          <div 
+                            className="w-3 h-3 sm:w-4 sm:h-4 rounded-full flex-shrink-0" 
+                            style={{ backgroundColor: status.color }}
+                          ></div>
+                          <span className="text-lg sm:text-2xl font-bold" style={{ color: status.color }}>
+                            {status.value}
+                          </span>
+                        </div>
+                        <div className="text-xs sm:text-sm font-semibold text-gray-700 truncate">
+                          {status.name}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          {((status.value / totalOrders) * 100).toFixed(0)}%
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Pie Chart Visualization */}
+                  <div className="h-64 sm:h-72">
+                    <ChartComponent 
+                      data={orderStatusData.map(status => ({
+                        name: status.name,
+                        orders: status.value,
+                        color: status.color
+                      }))} 
+                      type="pie" 
+                    />
+                  </div>
+                  
+                  {/* Status List with Performance Insights */}
                   <div className="space-y-3">
-                    {loadingCustomers ? (
-                      <div className="space-y-3">
-                        {[1, 2, 3, 4, 5].map((i) => (
-                          <div key={i} className="animate-pulse flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    {orderStatusData.map((status, index) => (
+                      <div key={`status-list-${index}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <div 
+                            className="w-4 h-4 rounded-full" 
+                            style={{ backgroundColor: status.color }}
+                          ></div>
+                          <div>
+                            <span className="text-sm font-medium text-gray-700">{status.name}</span>
+                            <div className="text-xs text-gray-500">
+                              {status.name === 'Scheduled' && t('analytics.statusDescriptions.scheduled')}
+                              {status.name === 'Pending' && t('analytics.statusDescriptions.pending')}
+                              {status.name === 'Preparing' && t('analytics.statusDescriptions.preparing')}
+                              {status.name === 'Ready' && t('analytics.statusDescriptions.ready')}
+                              {status.name === 'Delivered' && t('analytics.statusDescriptions.delivered')}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-sm font-bold text-gray-900">{status.value}</span>
+                          <div className="text-xs text-gray-500">
+                            {((status.value / totalOrders) * 100).toFixed(1)}%
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold">Top Performing Items</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Performance Summary */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="text-center p-3 bg-blue-50 rounded-lg">
+                      <div className="text-lg font-bold text-blue-600">
+                        {topItemsData.length}
+                      </div>
+                      <div className="text-xs text-gray-600">Active Items</div>
+                    </div>
+                    <div className="text-center p-3 bg-green-50 rounded-lg">
+                      <div className="text-lg font-bold text-green-600">
+                        ${topItemsData.reduce((sum, item) => sum + (item.revenue || 0), 0).toLocaleString()}
+                      </div>
+                      <div className="text-xs text-gray-600">Total Revenue</div>
+                    </div>
+                  </div>
+
+                  {/* Enhanced Item List */}
+                  <div className="space-y-3">
+                    {topItemsData.slice(0, 5).map((item, index) => {
+                      const avgOrderValue = item.orders > 0 ? item.revenue / item.orders : 0;
+                      const revenueShare = topItemsData.length > 0 ? 
+                        (item.revenue / topItemsData.reduce((sum, i) => sum + (i.revenue || 0), 0)) * 100 : 0;
+                      
+                      return (
+                        <div key={`item-${index}`} className="p-4 bg-gray-50 rounded-lg border-l-4 border-grub-red">
+                          <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center space-x-3">
-                              <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
-                              <div className="space-y-2">
-                                <div className="h-4 bg-gray-200 rounded w-24"></div>
-                                <div className="h-3 bg-gray-100 rounded w-16"></div>
+                              <div className="flex items-center justify-center w-8 h-8 bg-grub-red text-white rounded-full text-sm font-bold">
+                                {index + 1}
+                              </div>
+                              <div>
+                                <div className="font-medium text-gray-900">{item.name}</div>
+                                <div className="text-xs text-gray-500">
+                                  {revenueShare.toFixed(1)}% of total revenue
+                                </div>
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className="h-4 bg-gray-200 rounded w-16 mb-1"></div>
-                              <div className="h-3 bg-gray-100 rounded w-12"></div>
+                              <div className="font-bold text-grub-red">${item.revenue.toFixed(0)}</div>
+                              <div className="text-xs text-gray-500">total revenue</div>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    ) : customersError ? (
-                      <div className="text-center py-6 text-red-500">
-                        <p>{customersError}</p>
-                        <button 
-                          onClick={() => window.location.reload()}
-                          className="mt-2 text-sm text-grub-red hover:underline"
-                        >
-                          Try again
-                        </button>
-                      </div>
-                    ) : topCustomersData.length > 0 ? (
-                      topCustomersData.map((customer, index) => (
-                        <div key={customer._id || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-grub-red text-white rounded-full flex items-center justify-center text-sm font-bold">
-                              {customer.name ? customer.name.charAt(0).toUpperCase() : 'C'}
+                          
+                          {/* Performance Metrics */}
+                          <div className="grid grid-cols-2 gap-4 mt-3">
+                            <div className="text-center p-2 bg-white rounded">
+                              <div className="text-sm font-semibold text-gray-700">{item.orders}</div>
+                              <div className="text-xs text-gray-500">Orders</div>
                             </div>
-                            <div>
-                              <div className="font-medium text-gray-900">
-                                {customer.name || 'Customer'}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {customer.totalOrders} {customer.totalOrders === 1 ? 'order' : 'orders'}
-                              </div>
+                            <div className="text-center p-2 bg-white rounded">
+                              <div className="text-sm font-semibold text-gray-700">${avgOrderValue.toFixed(2)}</div>
+                              <div className="text-xs text-gray-500">Avg Value</div>
                             </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-bold text-grub-red">
-                              ${(customer.totalSpent || 0).toFixed(2)}
-                            </div>
-                            <div className="text-xs text-gray-500">total spent</div>
                           </div>
                         </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-6 text-gray-500">
-                        No customer data available
-                      </div>
-                    )}
+                      );
+                    })}
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        );
-
-      case 'performance':
-        return (
-          <div className="space-y-6">
-            {/* Performance Metrics */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {metrics.filter(m => m.title.includes('Prep Time') || m.title.includes('Avg Order') || m.title.includes('Conversion')).map((metric, index) => {
-                const Icon = metric.icon;
-                const isPositive = metric.change > 0;
-                return (
-                  <Card key={index} className={`hover:shadow-lg transition-all duration-200 border-l-4 ${metric.borderColor}`}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${metric.bgColor} mb-3`}>
-                            <FontAwesomeIcon icon={Icon} className={`h-5 w-5 ${metric.color}`} />
-                          </div>
-                          <p className="text-sm font-medium text-gray-600 mb-1 truncate">
-                            {metric.title}
-                          </p>
-                          <p className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                            {metric.value}
-                          </p>
-                          <div className={`flex items-center text-sm ${
-                            isPositive ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {isPositive ? (
-                              <FontAwesomeIcon icon={faArrowUp} className="h-4 w-4 mr-1" />
-                            ) : (
-                              <FontAwesomeIcon icon={faArrowDown} className="h-4 w-4 mr-1" />
-                            )}
-                            <span className="font-medium">{Math.abs(metric.change)}%</span>
-                            <span className="text-gray-500 ml-1 text-xs">{t('analytics.vsLastPeriod')}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-
-            {/* Delivery Performance Trend Chart */}
-            <Card>
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-semibold">{t('analytics.charts.deliveryPerformanceTrend')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ChartComponent 
-                  data={deliveryPerformanceTrendData.map(item => ({
-                    date: item.date,
-                    value: item.onTimeRate || 0
-                  }))} 
-                  type="line" 
-                />
+                </div>
               </CardContent>
             </Card>
-
-            {/* Performance Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-lg font-semibold">{t('analytics.sections.orderStatusDistribution')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4 sm:space-y-6">
-                    {/* Status Summary Boxes - Top */}
-                    <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                      {orderStatusData.map((status, index) => (
-                        <div 
-                          key={index} 
-                          className="p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all hover:shadow-md"
-                          style={{ 
-                            backgroundColor: `${status.color}15`,
-                            borderColor: status.color
-                          }}
-                        >
-                          <div className="flex items-center justify-between mb-1 sm:mb-2">
-                            <div 
-                              className="w-3 h-3 sm:w-4 sm:h-4 rounded-full flex-shrink-0" 
-                              style={{ backgroundColor: status.color }}
-                            ></div>
-                            <span className="text-lg sm:text-2xl font-bold" style={{ color: status.color }}>
-                              {status.value}
-                            </span>
-                          </div>
-                          <div className="text-xs sm:text-sm font-semibold text-gray-700 truncate">
-                            {status.name}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-0.5">
-                            {((status.value / totalOrders) * 100).toFixed(0)}%
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    {/* Pie Chart Visualization */}
-                    <div className="h-64 sm:h-72">
-                      <ChartComponent 
-                        data={orderStatusData.map(status => ({
-                          name: status.name,
-                          orders: status.value,
-                          color: status.color
-                        }))} 
-                        type="pie" 
-                      />
-                    </div>
-                    
-                    {/* Status List with Performance Insights */}
-                    <div className="space-y-3">
-                      {orderStatusData.map((status, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div className="flex items-center space-x-3">
-                            <div 
-                              className="w-4 h-4 rounded-full" 
-                              style={{ backgroundColor: status.color }}
-                            ></div>
-                            <div>
-                              <span className="text-sm font-medium text-gray-700">{status.name}</span>
-                              <div className="text-xs text-gray-500">
-                                {status.name === 'Scheduled' && t('analytics.statusDescriptions.scheduled')}
-                                {status.name === 'Pending' && t('analytics.statusDescriptions.pending')}
-                                {status.name === 'Preparing' && t('analytics.statusDescriptions.preparing')}
-                                {status.name === 'Ready' && t('analytics.statusDescriptions.ready')}
-                                {status.name === 'Delivered' && t('analytics.statusDescriptions.delivered')}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-sm font-bold text-gray-900">{status.value}</span>
-                            <div className="text-xs text-gray-500">
-                              {((status.value / totalOrders) * 100).toFixed(1)}%
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-lg font-semibold">Top Performing Items</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {/* Performance Summary */}
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div className="text-center p-3 bg-blue-50 rounded-lg">
-                        <div className="text-lg font-bold text-blue-600">
-                          {topItemsData.length}
-                        </div>
-                        <div className="text-xs text-gray-600">Active Items</div>
-                      </div>
-                      <div className="text-center p-3 bg-green-50 rounded-lg">
-                        <div className="text-lg font-bold text-green-600">
-                          ${topItemsData.reduce((sum, item) => sum + (item.revenue || 0), 0).toLocaleString()}
-                        </div>
-                        <div className="text-xs text-gray-600">Total Revenue</div>
-                      </div>
-                    </div>
-
-                    {/* Enhanced Item List */}
-                    <div className="space-y-3">
-                      {topItemsData.slice(0, 5).map((item, index) => {
-                        const avgOrderValue = item.orders > 0 ? item.revenue / item.orders : 0;
-                        const revenueShare = topItemsData.length > 0 ? 
-                          (item.revenue / topItemsData.reduce((sum, i) => sum + (i.revenue || 0), 0)) * 100 : 0;
-                        
-                        return (
-                          <div key={index} className="p-4 bg-gray-50 rounded-lg border-l-4 border-grub-red">
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center space-x-3">
-                                <div className="flex items-center justify-center w-8 h-8 bg-grub-red text-white rounded-full text-sm font-bold">
-                                  {index + 1}
-                                </div>
-                                <div>
-                                  <div className="font-medium text-gray-900">{item.name}</div>
-                                  <div className="text-xs text-gray-500">
-                                    {revenueShare.toFixed(1)}% of total revenue
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <div className="font-bold text-grub-red">${item.revenue.toFixed(0)}</div>
-                                <div className="text-xs text-gray-500">total revenue</div>
-                              </div>
-                            </div>
-                            
-                            {/* Performance Metrics */}
-                            <div className="grid grid-cols-2 gap-4 mt-3">
-                              <div className="text-center p-2 bg-white rounded">
-                                <div className="text-sm font-semibold text-gray-700">{item.orders}</div>
-                                <div className="text-xs text-gray-500">Orders</div>
-                              </div>
-                              <div className="text-center p-2 bg-white rounded">
-                                <div className="text-sm font-semibold text-gray-700">${avgOrderValue.toFixed(2)}</div>
-                                <div className="text-xs text-gray-500">Avg Value</div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </div>
-        );
-
-      default:
-        return null;
-    }
+        </div>
+      </>
+    );
   };
 
   return (

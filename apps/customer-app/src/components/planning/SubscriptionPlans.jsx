@@ -212,8 +212,8 @@ const SubscriptionPlans = () => {
     {
       id: 'bi-weekly',
       name: t('subscription.biWeeklyPlan'),
-      get price() { return `$${biWeeklyPricing.total.toFixed(2)}`; },
-      period: t('subscription.everyTwoWeeks'),
+      get price() { return biWeeklyPricing.total.toFixed(2); },
+      period: '/ month',
       description: t('subscription.perfectForRegular'),
       features: [
         t('subscription.daysOfPlanning14'),
@@ -229,8 +229,8 @@ const SubscriptionPlans = () => {
     {
       id: 'monthly',
       name: t('subscription.monthlyPlan'),
-      get price() { return `$${monthlyPricing.total.toFixed(2)}`; },
-      period: t('subscription.everyMonth'),
+      get price() { return monthlyPricing.total.toFixed(2); },
+      period: '/ month',
       description: t('subscription.bestValueConsistent'),
       features: [
         t('subscription.everythingInBiWeekly'),
@@ -386,7 +386,7 @@ const SubscriptionPlans = () => {
                   <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">{plan.description}</p>
                   <div className="mb-4 sm:mb-6">
                     <span className={`text-3xl sm:text-4xl font-bold ${colors.accent}`}>
-                      {plan.price}
+                      ${plan.price}
                     </span>
                     <span className="text-sm sm:text-base text-gray-600 ml-2">{plan.period}</span>
                   </div>

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useRef } from 'react';
 import { apiClient } from '../api/client.js';
 import partnerPushNotificationService from '../services/pushNotificationService';
 
@@ -201,11 +201,11 @@ const initializePartnerNotifications = async () => {
 
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
-  const [notificationsInitialized, setNotificationsInitialized] = useState(false);
+  const notificationsInitializedRef = useRef(false);
 
   // Initialize auth state from localStorage (SSR-safe)
   useEffect(() => {
-    const initializeAuth = () => {
+    const initializeAuth = async () => {
       // Skip initialization on server-side
       if (!isClient) {
         dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
@@ -218,18 +218,52 @@ export const AuthProvider = ({ children }) => {
         
         if (token && userStr) {
           const user = JSON.parse(userStr);
+          
           // Verify user has partner role
           if (user.roles && user.roles.includes('partner')) {
-            dispatch({
-              type: AUTH_ACTIONS.SET_USER,
-              payload: { user }
-            });
-            console.log('✅ Partner AuthContext: User authenticated from localStorage');
-            
-            // Initialize push notifications for returning user (only if not already initialized)
-            if (!notificationsInitialized) {
-              initializePartnerNotifications();
-              setNotificationsInitialized(true);
+            // Verify token with backend before authenticating
+            try {
+              const response = await apiClient.get('/auth/me');
+              
+              if (response.data && response.data.data && response.data.data.user) {
+                // Token is valid, update user data from backend
+                const freshUser = response.data.data.user;
+                
+                // Verify the fresh user still has partner role
+                if (freshUser.roles && freshUser.roles.includes('partner')) {
+                  // Update localStorage with fresh user data
+                  setStorageItem('user', JSON.stringify(freshUser));
+                  
+                  dispatch({
+                    type: AUTH_ACTIONS.SET_USER,
+                    payload: { user: freshUser }
+                  });
+                  console.log('✅ Partner AuthContext: User authenticated and token verified');
+                  
+                  // Initialize push notifications for returning user (only if not already initialized)
+                  if (!notificationsInitializedRef.current) {
+                    initializePartnerNotifications();
+                    notificationsInitializedRef.current = true;
+                  }
+                } else {
+                  // User lost partner role, clear storage
+                  removeStorageItem('accessToken');
+                  removeStorageItem('refreshToken');
+                  removeStorageItem('user');
+                  dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
+                  console.log('❌ Partner AuthContext: User lost partner role, cleared storage');
+                }
+              } else {
+                // Invalid token response, clear storage
+                throw new Error('Invalid token response');
+              }
+            } catch (verifyError) {
+              // Token verification failed, clear storage
+              console.warn('❌ Partner AuthContext: Token verification failed, clearing storage:', verifyError);
+              removeStorageItem('accessToken');
+              removeStorageItem('refreshToken');
+              removeStorageItem('user');
+              dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
             }
           } else {
             // User doesn't have partner role, clear storage
@@ -246,6 +280,10 @@ export const AuthProvider = ({ children }) => {
         }
       } catch (error) {
         console.error('Partner AuthContext initialization error:', error);
+        // Clear storage on any error to prevent stale state
+        removeStorageItem('accessToken');
+        removeStorageItem('refreshToken');
+        removeStorageItem('user');
         dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
       }
     };
@@ -303,9 +341,9 @@ export const AuthProvider = ({ children }) => {
         });
 
         // Initialize push notifications for partner (only if not already initialized)
-        if (!notificationsInitialized) {
+        if (!notificationsInitializedRef.current) {
           initializePartnerNotifications();
-          setNotificationsInitialized(true);
+          notificationsInitializedRef.current = true;
         }
 
         return { 
@@ -378,10 +416,10 @@ export const AuthProvider = ({ children }) => {
       });
 
       // Initialize push notifications for partner after successful signup
-      if (isSignup && !notificationsInitialized) {
+      if (isSignup && !notificationsInitializedRef.current) {
         setTimeout(async () => {
           await initializePartnerNotifications();
-          setNotificationsInitialized(true);
+          notificationsInitializedRef.current = true;
         }, 1500);
       }
 

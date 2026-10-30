@@ -36,6 +36,20 @@ class ErrorBoundary extends React.Component {
     });
   }
 
+  // Clear authentication state from localStorage
+  clearAuthState = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        console.log('✅ ErrorBoundary: Authentication state cleared');
+      } catch (error) {
+        console.error('❌ ErrorBoundary: Failed to clear auth state:', error);
+      }
+    }
+  };
+
   handleRefresh = () => {
     // Clear error state and try again
     this.setState({ 
@@ -48,6 +62,14 @@ class ErrorBoundary extends React.Component {
     if (this.props.reloadOnRefresh) {
       window.location.reload();
     }
+  };
+
+  handleGoHome = () => {
+    // Clear authentication state before redirecting to prevent login bypass
+    this.clearAuthState();
+    
+    // Redirect to home page
+    window.location.href = '/';
   };
 
   render() {
@@ -80,7 +102,7 @@ class ErrorBoundary extends React.Component {
               </button>
               
               <button
-                onClick={() => window.location.href = '/'}
+                onClick={this.handleGoHome}
                 className="w-full px-4 py-2 text-grub-red border border-grub-red rounded-lg hover:bg-red-50 transition-colors"
               >
                 Go Home

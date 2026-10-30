@@ -69,17 +69,17 @@ const Header = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-2 lg:space-x-3 xl:space-x-4">
+          <nav className="hidden xl:flex items-center space-x-2 lg:space-x-3 xl:space-x-4">
             {navigation.main
               .filter(item => !item.protected || isAuthenticated)
               .map((item) => (
               <NavLink
                 key={item.name}
                 to={item.href}
-                className={({ isActive }) => 
+                className={({ isActive }) =>
                   `flex items-center gap-1.5 lg:gap-2 px-2 lg:px-3 py-1.5 lg:py-2 text-xs lg:text-sm xl:text-base font-medium transition-colors duration-200 rounded-md
-                  ${isActive 
-                    ? 'text-grub-red bg-red-50' 
+                  ${isActive
+                    ? 'text-grub-red bg-red-50'
                     : 'text-gray-700 hover:text-grub-red hover:bg-gray-50'}`
                 }
               >
@@ -98,7 +98,7 @@ const Header = () => {
           </nav>
 
           {/* Desktop Auth Buttons & Language Switcher */}
-          <div className="hidden md:flex items-center space-x-3 lg:space-x-4 xl:space-x-6">
+          <div className="hidden xl:flex items-center space-x-3 lg:space-x-4 xl:space-x-6">
             <div className="border-r border-gray-200 pr-3 lg:pr-4 xl:pr-6 h-8 flex items-center">
               <LanguageSwitcher />
             </div>
@@ -108,7 +108,7 @@ const Header = () => {
           </div>
 
           {/* Mobile User Greeting & Menu Button */}
-          <div className="md:hidden flex items-center space-x-2 xs:space-x-3">
+          <div className="xl:hidden flex items-center space-x-2 xs:space-x-3">
             {/* Mobile User Greeting */}
             {isAuthenticated && user && (
               <div className="flex items-center space-x-1.5 xs:space-x-2 max-w-[140px] xs:max-w-[180px] sm:max-w-none">

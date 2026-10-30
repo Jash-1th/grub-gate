@@ -77,53 +77,63 @@ const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postal
       }`}></div>
       
       <div className="relative z-10">
-        {isActive ? (
-          <div className="text-center">
-            <div className="text-sm font-semibold text-green-700">{planningLabel}</div>
-          </div>
-        ) : hasItems ? (
-          <div className="space-y-1 sm:space-y-2">
-            <div className="flex items-center justify-between mb-1 sm:mb-3">
-              <div className="font-semibold text-grub-red truncate group-hover:text-grub-red transition-colors duration-200 text-xs sm:text-sm">
+        {hasItems ? (
+          <div className="space-y-1.5 sm:space-y-2">
+            {/* Item Thumbnail */}
+            {firstItem.image && (
+              <div className="relative w-full h-14 sm:h-18 rounded-lg overflow-hidden mb-1.5 sm:mb-2 shadow-sm">
+                <img
+                  src={firstItem.image}
+                  alt={firstItem.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
+
+            <div className="flex items-center justify-between mb-1 sm:mb-1.5">
+              <div className="font-semibold text-grub-red line-clamp-1 group-hover:text-grub-red transition-colors duration-200 text-[11px] sm:text-xs">
                 {firstItem.restaurantName}
               </div>
-              <div className="flex items-center space-x-1 sm:space-x-2">
+              <div className="flex items-center space-x-1 sm:space-x-1.5">
                 {actualMealItems.length > 1 && (
-                  <div className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-semibold shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-200">
+                  <div className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 px-1 sm:px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-200">
                     {actualMealItems.length}x
                   </div>
                 )}
                 <button
                   onClick={(e) => handleRemoveItem(e, firstItem.planId)}
-                  className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200 p-1 sm:p-1 rounded-full bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 touch-manipulation shadow-sm"
+                  className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200 p-0.5 sm:p-1 rounded-full bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 touch-manipulation shadow-sm"
                   aria-label="Remove item"
                 >
-                  <svg className="w-3 h-3 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
             </div>
-            
-            <div className="text-gray-700 truncate group-hover:text-gray-800 transition-colors duration-200 font-medium text-xs sm:text-sm">
+
+            <div className="text-gray-700 line-clamp-2 group-hover:text-gray-800 transition-colors duration-200 font-medium text-[11px] sm:text-xs leading-tight">
               {firstItem.name}
             </div>
-            
+
             <div className="flex items-center justify-between">
-              <div className="font-bold text-grub-red group-hover:text-grub-red transition-colors duration-200 text-sm sm:text-base">
+              <div className="font-bold text-grub-red group-hover:text-grub-red transition-colors duration-200 text-xs sm:text-sm">
                 ${firstItem.price}
               </div>
               {firstItem.preferences && firstItem.preferences.length > 0 && (
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-0.5">
                   {firstItem.preferences.slice(0, 2).map((pref, index) => (
-                    <span key={index} className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                    <span key={index} className="text-[10px] sm:text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">
                       {pref}
                     </span>
                   ))}
                 </div>
               )}
             </div>
-            
+
             {additionalCount > 0 && (
               <div className="text-xs text-gray-500 mt-1 sm:mt-2 group-hover:text-gray-600 transition-colors duration-200">
                 +{additionalCount} {t('weeklyMenu.more')}
@@ -269,6 +279,9 @@ const WeeklyMenuPage = () => {
   const [panelMenuItems, setPanelMenuItems] = useState([]);
   const [panelLoading, setPanelLoading] = useState(false);
   const [panelError, setPanelError] = useState(null);
+
+  // Cache for restaurant menus to avoid re-fetching
+  const menuCacheRef = useRef(new Map());
   const [dayCarouselStartIndex, setDayCarouselStartIndex] = useState(0);
   const [restaurantCarouselStartIndex, setRestaurantCarouselStartIndex] = useState(0);
   const dayCarouselViewportRef = useRef(null);
@@ -793,12 +806,33 @@ const WeeklyMenuPage = () => {
 
       try {
         const panelUserType = user?.userType || 'normal';
+
+        // Check cache first
+        const cacheKey = `${panelRestaurantId}-${panelUserType}-${panelDay}-${panelMealType}`;
+        const cachedData = menuCacheRef.current.get(cacheKey);
+
+        if (cachedData) {
+          // Use cached data
+          setPanelRestaurant(cachedData.restaurant);
+          setPanelMenuItems(cachedData.menuItems);
+          setPanelLoading(false);
+          return;
+        }
+
+        // Fetch from API if not in cache
         const [restaurantResult, menuResult] = await Promise.all([
           getRestaurant(panelRestaurantId),
           getRestaurantMenu(panelRestaurantId, { userType: panelUserType, day: panelDay, mealType: panelMealType })
         ]);
 
         if (restaurantResult?.success && menuResult?.success) {
+          const dataToCache = {
+            restaurant: restaurantResult.data,
+            menuItems: menuResult.data?.menuItems || []
+          };
+          // Store in cache
+          menuCacheRef.current.set(cacheKey, dataToCache);
+
           setPanelRestaurant(restaurantResult.data);
           setPanelMenuItems(menuResult.data?.menuItems || []);
         } else {
@@ -1204,6 +1238,12 @@ const WeeklyMenuPage = () => {
   // Check if user has planned any meals
   const hasPlannedMeals = totalItemsBothWeeks > 0;
 
+  // Calculate if all required slots are filled (14 slots per week: 7 days x 2 meals)
+  const totalSlotsPerWeek = 14;
+  const totalRequiredSlots = isWeek2Enabled ? totalSlotsPerWeek * 2 : totalSlotsPerWeek;
+  const allSlotsFilled = totalItemsBothWeeks >= totalRequiredSlots;
+  const slotsFilledPercentage = Math.min((totalItemsBothWeeks / totalRequiredSlots) * 100, 100);
+
   if (!isClient) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -1223,7 +1263,7 @@ const WeeklyMenuPage = () => {
   }
 
   return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+      <div className={`min-h-screen bg-gradient-to-br from-gray-50 to-white ${hasPlannedMeals && !subscriptionStatus.hasActiveSubscription ? 'pb-16 sm:pb-14' : ''}`}>
       {/* Header Section */}
       <div className="bg-gradient-to-r from-grub-red via-grub-red to-grub-red text-white">
         <div className="w-full max-w-none px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
@@ -2097,7 +2137,7 @@ const WeeklyMenuPage = () => {
 
         {/* Weekly Summary - Hidden when subscription is active */}
         {!subscriptionStatus.hasActiveSubscription && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-gray-900">{t('weeklyMenu.biWeeklySummary')}</h3>
@@ -2155,61 +2195,70 @@ const WeeklyMenuPage = () => {
                 </div>
               </div>
             </div>
-
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900">{t('weeklyMenu.quickActions')}</h3>
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-            </div>
-            <div className="space-y-4">
-
-              {/* View Calendar Button - Only show if user has planned meals */}
-              {hasPlannedMeals ? (
-                <button
-                  onClick={() => {
-                    const includeWeek2 = selectedWeek === 1 ? '1' : '0';
-                    navigate(`/meal-calendar?includeWeek2=${includeWeek2}`);
-                  }}
-                  className="group w-full text-left p-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 relative overflow-hidden"
-                >
-                  <div className="relative z-10">
-                    <div className="font-semibold text-white flex items-center text-base mb-1">
-                      <div className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center mr-3">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 4v10m6-10v10m-6-4h6" />
-                        </svg>
-                      </div>
-                      {t('weeklyMenu.viewMyCalendar')}
-                    </div>
-                    <div className="text-blue-100 ml-10 text-sm">{t('weeklyMenu.checkScheduledMeals')}</div>
-                  </div>
-                </button>
-              ) : (
-                <div className="w-full p-4 rounded-xl bg-gray-100 border-2 border-dashed border-gray-300">
-                  <div className="flex items-center text-gray-500">
-                    <div className="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 4v10m6-10v10m-6-4h6" />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-600 text-base mb-1">{t('weeklyMenu.planMealsToView')}</div>
-                      <div className="text-gray-500 text-sm">{t('weeklyMenu.addMealsFirst')}</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-            </div>
-          </div>
-
           </div>
         )}
       </div>
+
+      {/* Sticky Bottom Bar - Shows when meals are planned */}
+      {hasPlannedMeals && !subscriptionStatus.hasActiveSubscription && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-grub-red shadow-2xl z-50">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-2.5">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-3">
+              {/* Progress and Summary */}
+              <div className="flex items-center gap-3 flex-1">
+                {/* Progress Bar */}
+                <div className="hidden sm:block w-28">
+                  <div className="flex items-center justify-between text-[11px] text-gray-600 mb-0.5">
+                    <span>{totalItemsBothWeeks}/{totalRequiredSlots} slots</span>
+                    <span className="font-semibold text-grub-red">{slotsFilledPercentage.toFixed(0)}%</span>
+                  </div>
+                  <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-grub-red to-orange-500 transition-all duration-300"
+                      style={{ width: `${slotsFilledPercentage}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* Total Cost */}
+                <div className="flex items-center gap-1.5">
+                  <div className="text-[11px] sm:text-xs text-gray-600">{t('weeklyMenu.estCost')}:</div>
+                  <div className="text-lg sm:text-xl font-bold text-grub-red">
+                    ${totalCostBothWeeks.toFixed(2)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                {!allSlotsFilled && (
+                  <div className="text-[11px] sm:text-xs text-gray-500 flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Fill all slots for best value</span>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => {
+                    const includeWeek2 = isWeek2Enabled ? '1' : '0';
+                    navigate(`/meal-calendar?includeWeek2=${includeWeek2}`);
+                  }}
+                  className="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg font-bold text-white transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-1.5 bg-gradient-to-r from-grub-red via-grub-red to-grub-red hover:from-grub-red hover:via-grub-red hover:to-grub-red"
+                >
+                  <span className="text-xs sm:text-sm">
+                    {allSlotsFilled ? 'Continue to Checkout' : 'Review Plan'}
+                  </span>
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Restaurant Selection Modal */}
       <RestaurantSelectionModal

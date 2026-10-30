@@ -55,7 +55,7 @@ const MobileBottomNav = () => {
   const { isAuthenticated } = useAuth() || { isAuthenticated: false };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] pb-[max(env(safe-area-inset-bottom),0px)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 xl:hidden bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] pb-[max(env(safe-area-inset-bottom),0px)]">
       {/* Main Navigation */}
       <ul className="flex items-stretch justify-between px-2 py-2 overflow-hidden">
         {navigation.main
