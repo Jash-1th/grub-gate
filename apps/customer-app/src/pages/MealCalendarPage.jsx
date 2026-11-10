@@ -1780,7 +1780,7 @@ const MealCalendarPage = () => {
                           className="p-2 text-center border-r border-gray-200 align-top bg-white"
                         >
                           {mealCount > 0 ? (
-                            <div className="rounded-lg border border-orange-100 bg-orange-50/70 p-2.5 space-y-2 hover:border-orange-200 hover:shadow-sm transition-all duration-200 min-h-[76px]">
+                            <div className="rounded-lg border border-orange-100 bg-orange-50/70 p-2.5 space-y-2 hover:border-orange-200 hover:shadow-sm transition-all duration-200 min-h-[76px] overflow-hidden">
                               <div className="flex items-center justify-center gap-1.5">
                                 <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
                                   <span className="text-white text-xs font-bold">{mealCount}</span>
@@ -1789,14 +1789,14 @@ const MealCalendarPage = () => {
                                   {mealCount === 1 ? t('mealCalendar.item') : t('mealCalendar.items')}
                                 </div>
                               </div>
-                              <div className="flex items-center justify-center gap-2">
+                              <div className="flex flex-col items-center justify-center gap-1">
                                 <button
                                   onClick={() => handleMealDetailClick(date, 'lunch')}
-                                  className="px-2.5 py-1 text-xs text-white bg-blue-500 hover:bg-blue-600 rounded-md font-medium transition-colors whitespace-nowrap"
+                                  className="px-2 py-1 text-[10px] text-white bg-blue-500 hover:bg-blue-600 rounded-md font-medium transition-colors whitespace-nowrap w-full"
                                 >
                                   {t('mealCalendar.viewDetails')}
                                 </button>
-                                <div className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full">
+                                <div className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full">
                                 ${lunchMeals.reduce((total, meal) => {
                                   // Strict price extractor - NEVER use grand total
                                   const extractRawFoodCost = (meal) => {
@@ -1856,7 +1856,7 @@ const MealCalendarPage = () => {
                           className="p-2 text-center border-r border-gray-200 align-top bg-white"
                         >
                           {mealCount > 0 ? (
-                            <div className="rounded-lg border border-violet-100 bg-violet-50/70 p-2.5 space-y-2 hover:border-violet-200 hover:shadow-sm transition-all duration-200 min-h-[76px]">
+                            <div className="rounded-lg border border-violet-100 bg-violet-50/70 p-2.5 space-y-2 hover:border-violet-200 hover:shadow-sm transition-all duration-200 min-h-[76px] overflow-hidden">
                               <div className="flex items-center justify-center gap-1.5">
                                 <div className="w-5 h-5 bg-violet-600 rounded-full flex items-center justify-center">
                                   <span className="text-white text-xs font-bold">{mealCount}</span>
@@ -1865,14 +1865,14 @@ const MealCalendarPage = () => {
                                   {mealCount === 1 ? t('mealCalendar.item') : t('mealCalendar.items')}
                                 </div>
                               </div>
-                              <div className="flex items-center justify-center gap-2">
+                              <div className="flex flex-col items-center justify-center gap-1">
                                 <button
                                   onClick={() => handleMealDetailClick(date, 'dinner')}
-                                  className="px-2.5 py-1 text-xs text-white bg-purple-500 hover:bg-purple-600 rounded-md font-medium transition-colors whitespace-nowrap"
+                                  className="px-2 py-1 text-[10px] text-white bg-purple-500 hover:bg-purple-600 rounded-md font-medium transition-colors whitespace-nowrap w-full"
                                 >
                                   {t('mealCalendar.viewDetails')}
                                 </button>
-                                <div className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full">
+                                <div className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full">
                                 ${dinnerMeals.reduce((total, meal) => {
                                   // Debug: Log meal structure to understand what fields are available
                                   console.log('🔍 Dinner meal object:', meal);
@@ -1997,7 +1997,7 @@ const MealCalendarPage = () => {
                                     {t('mealCalendar.viewDetails')}
                                   </button>
                                 </div>
-                                <div className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full">
+                                <div className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full">
                                 ${lunchMeals.reduce((total, meal) => {
                                   // Strict price extractor - NEVER use grand total
                                   const extractRawFoodCost = (meal) => {
@@ -2048,7 +2048,7 @@ const MealCalendarPage = () => {
                                     {t('mealCalendar.viewDetails')}
                                   </button>
                                 </div>
-                                <div className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full">
+                                <div className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full">
                                 ${dinnerMeals.reduce((total, meal) => {
                                   // Strict price extractor - NEVER use grand total
                                   const extractRawFoodCost = (meal) => {

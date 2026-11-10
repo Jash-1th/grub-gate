@@ -140,9 +140,9 @@ const EnhancedMealSlot = ({ day, mealType, actualMealItems, onRemoveItem, postal
               </div>
             )}
 
-            <div className="mt-2 rounded-lg border border-green-300 bg-green-50 px-2 py-1">
-              <div className="text-[11px] font-semibold text-green-700">{t('weeklyMenu.planned')}</div>
-              <div className="text-[11px] text-green-700">{t('weeklyMenu.wantToAddMoreClickMe')}</div>
+            <div className="mt-2 rounded-lg border border-red-300 bg-red-50 px-2 py-1">
+              <div className="text-[11px] font-semibold text-red-700">{t('weeklyMenu.planned')}</div>
+              <div className="text-[11px] text-red-700">{t('weeklyMenu.wantToAddMoreClickMe')}</div>
             </div>
           </div>
         ) : (
@@ -280,8 +280,27 @@ const WeeklyMenuPage = () => {
   const [panelLoading, setPanelLoading] = useState(false);
   const [panelError, setPanelError] = useState(null);
 
+  // Add/Remove popover state
+  const [pendingAddItem, setPendingAddItem] = useState(null);
+  const [showAddPopover, setShowAddPopover] = useState(null); // Stores the ID of the item showing popover
+  const [pendingRemoveItem, setPendingRemoveItem] = useState(null);
+  const [showRemovePopover, setShowRemovePopover] = useState(null); // Stores the ID of the item showing popover
+
   // Cache for restaurant menus to avoid re-fetching
   const menuCacheRef = useRef(new Map());
+
+  // Click outside handler to close popovers
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showAddPopover || showRemovePopover) {
+        setShowAddPopover(null);
+        setShowRemovePopover(null);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showAddPopover, showRemovePopover]);
   const [dayCarouselStartIndex, setDayCarouselStartIndex] = useState(0);
   const [restaurantCarouselStartIndex, setRestaurantCarouselStartIndex] = useState(0);
   const dayCarouselViewportRef = useRef(null);
@@ -853,7 +872,7 @@ const WeeklyMenuPage = () => {
     loadPanelRestaurantData();
   }, [isSidePanelOpen, panelRestaurantId, panelDay, panelMealType, user]);
 
-  const handleAddItemFromSidePanel = async (item) => {
+  const handleAddItemFromSidePanel = (item, event) => {
     if (!isAuthenticated) {
       showError('Please log in to add items to your meal plan');
       return;
@@ -863,37 +882,148 @@ const WeeklyMenuPage = () => {
       return;
     }
 
+    // Toggle popover for this item
+    if (showAddPopover === item.id) {
+      setShowAddPopover(null);
+    } else {
+      setPendingAddItem(item);
+      setShowAddPopover(item.id);
+    }
+
+    event?.stopPropagation();
+  };
+
+  const handleAddItem = async (addToAll) => {
+    if (!pendingAddItem || !panelRestaurant || !panelDay || !panelMealType) {
+      return;
+    }
+
     try {
       const panelUserType = user?.userType || 'normal';
-      const result = await addItemToPlanWeek(
-        item,
-        panelDay,
-        panelMealType,
-        panelRestaurant.name,
-        selectedWeek,
-        panelUserType,
-        false,
-        panelRestaurant.id
-      );
 
-      if (!result?.success) {
-        showError('Error', result?.message || 'Failed to add item to meal plan');
+      if (addToAll) {
+        // Add item to ALL slots for the current meal type across all days in the selected week
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        const promises = [];
+
+        for (const day of days) {
+          // Add to all days regardless of whether slot is empty
+          promises.push(
+            addItemToPlanWeek(
+              pendingAddItem,
+              day,
+              panelMealType,
+              panelRestaurant.name,
+              selectedWeek,
+              panelUserType,
+              false,
+              panelRestaurant.id
+            )
+          );
+        }
+
+        const results = await Promise.all(promises);
+        const failedCount = results.filter(r => !r?.success).length;
+
+        if (failedCount > 0) {
+          showError('Partial Success', `Added to ${results.length - failedCount} days, ${failedCount} failed`);
+        } else {
+          showSuccess('Success', `Added ${pendingAddItem.name} to every ${panelMealType} this week`);
+        }
+      } else {
+        // Add to single slot
+        const result = await addItemToPlanWeek(
+          pendingAddItem,
+          panelDay,
+          panelMealType,
+          panelRestaurant.name,
+          selectedWeek,
+          panelUserType,
+          false,
+          panelRestaurant.id
+        );
+
+        if (!result?.success) {
+          showError('Error', result?.message || 'Failed to add item to meal plan');
+        }
       }
     } catch (e) {
       console.error('WeeklyMenuPage: failed adding item from side panel', e);
       showError('Error', 'Failed to add item to meal plan');
+    } finally {
+      setShowAddPopover(null);
+      setPendingAddItem(null);
     }
   };
 
-  const handleRemoveItemFromSidePanel = (item) => {
+  const handleRemoveItemFromSidePanel = (item, event) => {
     if (!panelDay || !panelMealType) {
       return;
     }
 
-    const mealItems = getWeekMealItems(panelDay, panelMealType, selectedWeek);
-    const mealPlanItem = mealItems.find(mealItem => mealItem.id === item.id);
-    if (mealPlanItem?.planId) {
-      removeItemFromPlanWeek(mealPlanItem.planId, panelDay, panelMealType, selectedWeek);
+    // Check if this item exists on multiple days for the current meal type
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const daysWithItem = [];
+
+    for (const day of days) {
+      const mealItems = getWeekMealItems(day, panelMealType, selectedWeek);
+      if (mealItems && mealItems.some(mi => mi.id === item.id)) {
+        daysWithItem.push(day);
+      }
+    }
+
+    if (daysWithItem.length > 1) {
+      // Item exists on multiple days - show popover
+      setPendingRemoveItem({ item, daysWithItem });
+      setShowRemovePopover(item.id);
+    } else {
+      // Item only exists on current day - remove immediately
+      const mealItems = getWeekMealItems(panelDay, panelMealType, selectedWeek);
+      const mealPlanItem = mealItems.find(mealItem => mealItem.id === item.id);
+      if (mealPlanItem?.planId) {
+        removeItemFromPlanWeek(mealPlanItem.planId, panelDay, panelMealType, selectedWeek);
+      }
+    }
+
+    event?.stopPropagation();
+  };
+
+  const handleRemoveItemConfirmation = async (removeFromAll) => {
+    if (!pendingRemoveItem || !panelMealType) {
+      return;
+    }
+
+    try {
+      const { item, daysWithItem } = pendingRemoveItem;
+
+      if (removeFromAll) {
+        // Remove from all days
+        const promises = [];
+        for (const day of daysWithItem) {
+          const mealItems = getWeekMealItems(day, panelMealType, selectedWeek);
+          const mealPlanItem = mealItems.find(mi => mi.id === item.id);
+          if (mealPlanItem?.planId) {
+            promises.push(
+              removeItemFromPlanWeek(mealPlanItem.planId, day, panelMealType, selectedWeek)
+            );
+          }
+        }
+        await Promise.all(promises);
+        showSuccess('Success', `Removed ${item.name} from all ${panelMealType} slots`);
+      } else {
+        // Remove only from current day
+        const mealItems = getWeekMealItems(panelDay, panelMealType, selectedWeek);
+        const mealPlanItem = mealItems.find(mealItem => mealItem.id === item.id);
+        if (mealPlanItem?.planId) {
+          removeItemFromPlanWeek(mealPlanItem.planId, panelDay, panelMealType, selectedWeek);
+        }
+      }
+    } catch (e) {
+      console.error('WeeklyMenuPage: failed removing item', e);
+      showError('Error', 'Failed to remove item from meal plan');
+    } finally {
+      setShowRemovePopover(null);
+      setPendingRemoveItem(null);
     }
   };
 
@@ -1213,7 +1343,7 @@ const WeeklyMenuPage = () => {
     navigate(`/plan/restaurants?source=plan&week=${selectedWeek}${postalParam}`);
     
     // Show success message
-    showSuccess('All meal plans cleared. Select a new restaurant!', 'success');
+    showSuccess('All meal plans cleared', 'Select a new restaurant!');
   };
 
   const handleCloseRestaurantSwitchModal = () => {
@@ -2116,8 +2246,8 @@ const WeeklyMenuPage = () => {
                     selectedMealType={panelMealType || 'lunch'}
                     restaurantName={panelRestaurant?.name || ''}
                     onItemClick={() => {}}
-                    onAddToPlan={(item) => handleAddItemFromSidePanel(item)}
-                    onRemoveFromPlan={handleRemoveItemFromSidePanel}
+                    onAddToPlan={(item, e) => handleAddItemFromSidePanel(item, e)}
+                    onRemoveFromPlan={(item, e) => handleRemoveItemFromSidePanel(item, e)}
                     isItemInPlan={isItemInSidePanelSlot}
                     getItemPlanEntries={getItemPlanEntriesForSidePanelSlot}
                     title="Menu Items"
@@ -2128,6 +2258,13 @@ const WeeklyMenuPage = () => {
                     compact={true}
                     gridClassName="grid grid-cols-1 sm:grid-cols-2 gap-3"
                     week={selectedWeek}
+                    showAddPopover={showAddPopover}
+                    showRemovePopover={showRemovePopover}
+                    pendingRemoveItem={pendingRemoveItem}
+                    handleAddItem={handleAddItem}
+                    handleRemoveItemConfirmation={handleRemoveItemConfirmation}
+                    panelDay={panelDay}
+                    panelMealType={panelMealType}
                   />
                 )}
               </div>

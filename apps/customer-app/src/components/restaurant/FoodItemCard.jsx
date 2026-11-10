@@ -135,14 +135,18 @@ const FoodItemCard = ({
   const handleDirectAdd = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    onAddToPlan && onAddToPlan(item, restaurantName);
+    if (isFromWeeklyMenu) {
+      onAddToPlan && onAddToPlan(item, e);
+    } else {
+      onAddToPlan && onAddToPlan(item, restaurantName);
+    }
   };
 
   // Direct remove handler for weekly menu flow
   const handleDirectRemove = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    onRemoveFromPlan && onRemoveFromPlan(item);
+    onRemoveFromPlan && onRemoveFromPlan(item, e);
   };
 
   const cardClassName = `group relative bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 h-full flex flex-col cursor-pointer${
@@ -233,8 +237,8 @@ const FoodItemCard = ({
         {isFromWeeklyMenu && (
           <>
             <div className="absolute bottom-2 left-2">
-              <div className="bg-white/90 backdrop-blur px-2.5 py-1 rounded-full shadow-md border border-white/30">
-                <span className="text-sm font-extrabold text-gray-900">
+              <div className="bg-grub-red/90 backdrop-blur px-2.5 py-1 rounded-full shadow-md border border-white/30">
+                <span className="text-sm font-extrabold text-white">
                   ${item.price}
                 </span>
               </div>
@@ -547,7 +551,11 @@ const FoodItemCard = ({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  onAddToPlan && onAddToPlan(item, restaurantName);
+                  if (isFromWeeklyMenu) {
+                    onAddToPlan && onAddToPlan(item, e);
+                  } else {
+                    onAddToPlan && onAddToPlan(item, restaurantName);
+                  }
                 }}
                 className="w-full font-semibold py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-lg hover:shadow-xl text-sm bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white focus:ring-green-500 touch-manipulation active:scale-95"
               >

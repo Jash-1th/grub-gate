@@ -21,7 +21,14 @@ const MenuItemsGrid = ({
   isMealPlanningEnabled = true,
   compact = false,
   gridClassName,
-  week = 0 // Add week parameter for week-aware meal plan checks
+  week = 0, // Add week parameter for week-aware meal plan checks
+  showAddPopover,
+  showRemovePopover,
+  pendingRemoveItem,
+  handleAddItem,
+  handleRemoveItemConfirmation,
+  panelDay,
+  panelMealType
 }) => {
   const { t } = useTranslation();
   const isPro = userType === 'pro';
@@ -86,13 +93,13 @@ const MenuItemsGrid = ({
       {/* Items Grid - Modern responsive layout */}
       <div className={gridClasses} data-items-section>
         {items.map((item) => (
-          <div 
-            key={`${item.id}-${selectedMealType}`} 
+          <div
+            key={`${item.id}-${selectedMealType}`}
             className="relative h-full"
           >
             <FoodItemCard
               item={item}
-              onAddToPlan={onAddToPlan ? () => onAddToPlan(item) : () => onItemClick(item)}
+              onAddToPlan={onAddToPlan ? (e) => onAddToPlan(item, e) : () => onItemClick(item)}
               onRemoveFromPlan={onRemoveFromPlan}
               onItemClick={onItemClick}
               selectedDay={selectedDay}
@@ -106,11 +113,47 @@ const MenuItemsGrid = ({
               isFromWeeklyMenu={isFromMenuSelection}
               week={week}
             />
-            
+
             {/* Pro Enhancement - Match Badge */}
             {showProBadges && isPro && (
               <div className="absolute top-2 right-2 bg-purple-600 text-white text-xs px-2 py-1 rounded-full">
                 Match: {selectedMealType === 'lunch' ? '92%' : '88%'}
+              </div>
+            )}
+
+            {/* Add Popover */}
+            {showAddPopover === item.id && (
+              <div className="absolute top-12 right-0 z-50 bg-white shadow-xl rounded-lg border border-gray-200 p-1 min-w-[180px] animate-fadeIn">
+                <button
+                  onClick={() => handleAddItem(false)}
+                  className="w-full px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                >
+                  Just {panelDay?.charAt(0).toUpperCase() + panelDay?.slice(1)}
+                </button>
+                <button
+                  onClick={() => handleAddItem(true)}
+                  className="w-full px-3 py-2 text-left text-sm font-medium text-grub-red hover:bg-red-50 rounded-md transition-colors"
+                >
+                  Every {panelMealType} this week
+                </button>
+              </div>
+            )}
+
+            {/* Remove Popover */}
+            {showRemovePopover === item.id && pendingRemoveItem && (
+              <div className="absolute top-12 right-0 z-50 bg-white shadow-xl rounded-lg border border-gray-200 p-1 min-w-[180px] animate-fadeIn">
+                <button
+                  onClick={() => handleRemoveItemConfirmation(false)}
+                  className="w-full px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                >
+                  Just {panelDay?.charAt(0).toUpperCase() + panelDay?.slice(1)}
+                </button>
+                <button
+                  onClick={() => handleRemoveItemConfirmation(true)}
+                  className="w-full px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                >
+                  All Days ({pendingRemoveItem.daysWithItem.length} days)
+                </button>
               </div>
             )}
           </div>

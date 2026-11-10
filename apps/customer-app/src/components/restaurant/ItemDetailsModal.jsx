@@ -237,7 +237,7 @@ const ItemDetailsModal = ({
           )}
           
           {/* Price Badge */}
-          <div className="absolute bottom-4 right-4 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 sm:px-5 sm:py-3 rounded-2xl shadow-2xl">
+          <div className="absolute bottom-4 right-4 bg-gradient-to-r from-grub-red to-red-600 text-white px-4 py-2 sm:px-5 sm:py-3 rounded-2xl shadow-2xl">
             <div className="text-2xl sm:text-3xl font-black">${item.price}</div>
           </div>
         </div>
