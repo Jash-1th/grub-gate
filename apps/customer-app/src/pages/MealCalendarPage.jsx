@@ -791,7 +791,7 @@ const MealCalendarPage = () => {
 
   const getWeekDates = (startDate) => {
     if (!isClient) return [];
-    
+
     console.log('🔍 getWeekDates called with:', {
       startDate,
       isSubscribed,
@@ -801,37 +801,37 @@ const MealCalendarPage = () => {
       userMealPlans_dates: userMealPlans?.dates ? 'YES' : 'NO',
       planStartDate: userMealPlans?.mealPlans?.[0]?.planStartDate || userMealPlans?.dates?.week0?.sunday
     });
-    
+
     const dates = [];
-    
+
     // For subscribed users, show the full subscription period (not just 7 days)
     if (isSubscribed && calendarData?.calendar?.subscriptionPeriod) {
       console.log('🎯 Taking SUBSCRIPTION path');
       const subscriptionStart = new Date(calendarData.calendar.subscriptionPeriod.startDate);
       const subscriptionEnd = new Date(calendarData.calendar.subscriptionPeriod.endDate);
-      
+
       console.log(`📅 Subscription mode: Generating dates from ${subscriptionStart.toDateString()} to ${subscriptionEnd.toDateString()}`);
-      
-      // Generate all dates in the subscription period
+
+      // Generate all dates in the subscription period (continuous window)
       const currentDate = new Date(subscriptionStart);
       while (currentDate <= subscriptionEnd) {
         dates.push(currentDate.toISOString().split('T')[0]);
         currentDate.setDate(currentDate.getDate() + 1);
       }
-      
+
       console.log(`📅 Generated subscription dates (${dates.length} days):`, dates);
       return dates;
     }
-    
-    // For weekly planned users, use their actual meal dates (not plan period)
-    if (!isSubscribed && (planRange?.startDate || hasPlannedMeals || 
+
+    // For weekly planned users, use their actual meal dates (continuous window based on plan duration)
+    if (!isSubscribed && (planRange?.startDate || hasPlannedMeals ||
         (userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate) ||
         userMealPlans?.dates?.week0?.sunday)) {
-      console.log('🎯 Taking WEEKLY PLAN (STORED MEALS) path');
-      
+      console.log('🎯 Taking WEEKLY PLAN (STORED MEALS) path - continuous window');
+
       let plannedStartDate = planRange?.startDate ? new Date(planRange.startDate) : null;
       let plannedEndDate = planRange?.endDate ? new Date(planRange.endDate) : null;
-      
+
       // If no planRange, try to get from userMealPlans (both formats)
       if (!plannedStartDate) {
         if (userMealPlans?.mealPlans?.length > 0 && userMealPlans.mealPlans[0].planStartDate) {
@@ -844,23 +844,24 @@ const MealCalendarPage = () => {
           plannedEndDate = new Date(userMealPlans.dates.week1?.saturday || userMealPlans.dates.week0.saturday);
         }
       }
-      
+
       const storedWeekStart = getEarliestStoredMealDate();
       const startDate = plannedStartDate || storedWeekStart;
       if (startDate) {
-        const msPerDay = 24 * 60 * 60 * 1000;
-        const dayCount = plannedEndDate && shouldShowWeek2
-          ? (Math.floor((new Date(plannedEndDate).setHours(0, 0, 0, 0) - new Date(startDate).setHours(0, 0, 0, 0)) / msPerDay) + 1)
+        // Use plan duration (14 days for bi-weekly) instead of calendar weeks
+        const planDurationDays = plannedEndDate
+          ? Math.floor((new Date(plannedEndDate).setHours(0, 0, 0, 0) - new Date(startDate).setHours(0, 0, 0, 0)) / (24 * 60 * 60 * 1000)) + 1
           : (shouldShowWeek2 ? 14 : 7);
 
-        console.log(`📅 Weekly plan mode: Generating ${dayCount} days from start date ${new Date(startDate).toDateString()}`);
-        
-        for (let i = 0; i < dayCount; i++) {
+        console.log(`📅 Weekly plan mode: Generating ${planDurationDays} days from plan start date ${new Date(startDate).toDateString()} (continuous window)`);
+
+        // Generate continuous window from plan start date
+        for (let i = 0; i < planDurationDays; i++) {
           const date = new Date(startDate);
           date.setDate(new Date(startDate).getDate() + i);
           dates.push(date.toISOString().split('T')[0]);
         }
-        
+
         console.log(`📅 Generated weekly plan dates from stored meals (${dates.length} days):`, dates);
         return dates;
       }
@@ -1587,8 +1588,8 @@ const MealCalendarPage = () => {
                   </h2>
                   <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
                     {isSubscribed && calendarData?.calendar?.subscriptionPeriod
-                      ? `Your subscription period: ${new Date(calendarData.calendar.subscriptionPeriod.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} to ${new Date(calendarData.calendar.subscriptionPeriod.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
-                      : isSubscribed 
+                      ? `Your subscription period: ${new Date(calendarData.calendar.subscriptionPeriod.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} to ${new Date(calendarData.calendar.subscriptionPeriod.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} (${Math.ceil((new Date(calendarData.calendar.subscriptionPeriod.endDate) - new Date(calendarData.calendar.subscriptionPeriod.startDate)) / (1000 * 60 * 60 * 24))} days)`
+                      : isSubscribed
                       ? 'Click on any date within your subscription period'
                       : (() => {
                           const planStart = planRange?.startDate
@@ -1605,7 +1606,8 @@ const MealCalendarPage = () => {
                                     end.setDate(planStart.getDate() + (week2Clickable ? 13 : 6));
                                     return end;
                                   })());
-                          return `Click on dates from ${planStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} to ${planEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} (${week2Clickable ? '2 weeks' : '1 week'})`;
+                          const planDays = Math.ceil((planEnd - planStart) / (1000 * 60 * 60 * 24)) + 1;
+                          return `Click on dates from ${planStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} to ${planEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} (${planDays} days)`;
                         })()
                     }
                   </p>

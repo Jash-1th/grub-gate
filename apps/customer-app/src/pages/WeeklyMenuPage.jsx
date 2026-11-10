@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMealPlan } from '../contexts/MealPlanContext_SSR_FIXED';
@@ -314,7 +314,16 @@ const WeeklyMenuPage = () => {
     return Number.isFinite(weekParam) && (weekParam === 0 || weekParam === 1) ? weekParam : 0;
   }); // 0 = current week, 1 = next week, etc.
   const [isWeek2Enabled, setIsWeek2Enabled] = useState(false);
-  
+
+  // Plan date range state - decoupled from calendar weeks
+  const [planStartDate, setPlanStartDate] = useState(null);
+  const [planEndDate, setPlanEndDate] = useState(null);
+  const [planDuration, setPlanDuration] = useState(14); // Default 14 days for bi-weekly
+
+  // Expired draft modal state
+  const [showExpiredDraftModal, setShowExpiredDraftModal] = useState(false);
+  const [expiredDraftInfo, setExpiredDraftInfo] = useState(null);
+
   // Subscription overlap state
   const [subscriptionStatus, setSubscriptionStatus] = useState({
     hasActiveSubscription: false,
@@ -483,6 +492,35 @@ const WeeklyMenuPage = () => {
     checkSubscriptionStatus();
   }, [isAuthenticated, user]);
 
+  // Initialize plan start date from meal plan context
+  useEffect(() => {
+    if (!isClient || !hasLoadedFromDatabase) return;
+
+    // Get plan start date from week0 data
+    const week0Plan = getWeekPlan(0);
+    let startDate = null;
+
+    if (week0Plan && week0Plan.sunday && week0Plan.sunday.date) {
+      startDate = week0Plan.sunday.date;
+      console.log('📅 Plan start date set from week0.sunday.date:', startDate);
+    } else {
+      // Fallback to next Sunday if no date in week0
+      const nextSunday = getNextSunday();
+      startDate = nextSunday.toISOString().split('T')[0];
+      console.log('📅 Plan start date set to next Sunday:', startDate);
+    }
+
+    setPlanStartDate(startDate);
+
+    // Calculate plan end date (14 days from start)
+    if (startDate) {
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + planDuration - 1);
+      setPlanEndDate(endDate.toISOString().split('T')[0]);
+      console.log('📅 Plan end date set:', endDate.toISOString().split('T')[0]);
+    }
+  }, [isClient, hasLoadedFromDatabase, getWeekPlan]);
+
 
   const selectedRestaurantId = selectedRestaurant?.id;
   const selectedRestaurantName = selectedRestaurant?.name;
@@ -539,11 +577,59 @@ const WeeklyMenuPage = () => {
   const getFirstWeekDateRange = () => getWeekDateRange(0); // First week starting from next Sunday
   const getSecondWeekDateRange = () => getWeekDateRange(1); // Second week
 
-  // Get specific day date for a week (SSR-safe) - Starting from next Sunday
-  const getDayDateForWeek = (dayName, weekOffset = 0) => {
+  // Calculate plan chunk based on plan start date and duration (decoupled from calendar weeks)
+  const calculatePlanChunk = (targetDate) => {
+    if (!planStartDate || !targetDate) return 0;
+
+    const startDate = new Date(planStartDate);
+    const date = new Date(targetDate);
+    startDate.setHours(0, 0, 0, 0);
+    date.setHours(0, 0, 0, 0);
+
+    // Calculate days difference from plan start
+    const daysDiff = Math.floor((date - startDate) / (1000 * 60 * 60 * 24));
+
+    // For a 14-day plan, chunk 0 = days 0-6, chunk 1 = days 7-13
+    const chunkSize = 7; // 7 days per chunk
+    const chunkIndex = Math.floor(daysDiff / chunkSize);
+
+    // Clamp to valid chunks (0 or 1 for 14-day plan)
+    return Math.max(0, Math.min(chunkIndex, 1));
+  };
+
+  // Get plan chunk label based on plan start date
+  const getPlanChunkLabel = (chunkIndex) => {
+    if (!planStartDate) return chunkIndex === 0 ? 'Week 1' : 'Week 2';
+
+    const startDate = new Date(planStartDate);
+    const chunkSize = 7;
+    const chunkStart = new Date(startDate);
+    chunkStart.setDate(startDate.getDate() + (chunkIndex * chunkSize));
+    const chunkEnd = new Date(chunkStart);
+    chunkEnd.setDate(chunkStart.getDate() + chunkSize - 1);
+
+    return `Days ${chunkIndex * chunkSize + 1}-${chunkIndex * chunkSize + chunkSize} (${chunkStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${chunkEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})`;
+  };
+
+  // Get plan chunk date range
+  const getPlanChunkDateRange = (chunkIndex) => {
+    if (!planStartDate) return '';
+
+    const startDate = new Date(planStartDate);
+    const chunkSize = 7;
+    const chunkStart = new Date(startDate);
+    chunkStart.setDate(startDate.getDate() + (chunkIndex * chunkSize));
+    const chunkEnd = new Date(chunkStart);
+    chunkEnd.setDate(chunkStart.getDate() + chunkSize - 1);
+
+    return `${chunkStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${chunkEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+  };
+
+  // Get specific day date for a week (SSR-safe) - Based on plan start date (decoupled from calendar weeks)
+  const getDayDateForWeek = useCallback((dayName, weekOffset = 0) => {
     if (!isClient) return ''; // Prevent SSR hydration mismatch
-    
-    // Map day names to Sunday-based index (Sunday = 0, Monday = 1, etc.)
+
+    // Map day names to index (Sunday = 0, Monday = 1, etc.)
     const dayNameToIndex = {
       'sunday': 0,
       'monday': 1,
@@ -553,18 +639,19 @@ const WeeklyMenuPage = () => {
       'friday': 5,
       'saturday': 6
     };
-    
+
     const dayIndex = dayNameToIndex[dayName.toLowerCase()];
     if (dayIndex === undefined) return '';
-    
-    const nextSunday = getNextSunday();
-    const startOfWeek = new Date(nextSunday);
-    startOfWeek.setDate(nextSunday.getDate() + (weekOffset * 7)); // Next Sunday + week offset
+
+    // Use plan start date if available, otherwise fall back to next Sunday
+    const baseDate = planStartDate ? new Date(planStartDate) : getNextSunday();
+    const startOfWeek = new Date(baseDate);
+    startOfWeek.setDate(baseDate.getDate() + (weekOffset * 7)); // Plan start + chunk offset
     const targetDay = new Date(startOfWeek);
-    targetDay.setDate(startOfWeek.getDate() + dayIndex); // Add day index (0=Sunday, 1=Monday, etc.)
-    
+    targetDay.setDate(startOfWeek.getDate() + dayIndex); // Add day index
+
     return targetDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
+  }, [planStartDate, isClient]);
 
   // Helper function to check if a date is in the future (for validation) - SSR-safe
   const isDateInFuture = (dayName, weekOffset = 0) => {
@@ -1054,6 +1141,107 @@ const WeeklyMenuPage = () => {
     }
   };
 
+  // Handle expired draft - Shift to next cycle
+  const handleShiftToNextCycle = async () => {
+    if (!expiredDraftInfo || !planStartDate) return;
+
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const oldPlanStart = new Date(expiredDraftInfo.oldStartDate);
+      oldPlanStart.setHours(0, 0, 0, 0);
+
+      // Calculate next valid start date (next Sunday)
+      const daysUntilSunday = today.getDay() === 0 ? 7 : 7 - today.getDay();
+      const nextSunday = new Date(today);
+      nextSunday.setDate(today.getDate() + daysUntilSunday);
+      nextSunday.setHours(0, 0, 0, 0);
+
+      const newStartDate = nextSunday.toISOString().split('T')[0];
+      const daysShift = Math.floor((nextSunday - oldPlanStart) / (1000 * 60 * 60 * 24));
+
+      console.log('🔄 Shifting plan to next cycle:', {
+        oldStartDate: expiredDraftInfo.oldStartDate,
+        newStartDate,
+        daysShift
+      });
+
+      // Get current meal plans for both weeks
+      const week0Plan = getWeekPlan(0);
+      const week1Plan = getWeekPlan(1);
+
+      // Update dates in both week plans by shifting each day's date
+      const updatePlanDates = (weekPlan) => {
+        if (!weekPlan) return weekPlan;
+        const updatedPlan = { ...weekPlan };
+        Object.keys(updatedPlan).forEach(day => {
+          if (updatedPlan[day] && updatedPlan[day].date) {
+            const oldDate = new Date(updatedPlan[day].date);
+            oldDate.setDate(oldDate.getDate() + daysShift);
+            updatedPlan[day].date = oldDate.toISOString().split('T')[0];
+          }
+        });
+        return updatedPlan;
+      };
+
+      const updatedWeek0 = updatePlanDates(week0Plan);
+      const updatedWeek1 = updatePlanDates(week1Plan);
+
+      // Log the updated plans for debugging
+      console.log('📅 Updated week0 dates:', updatedWeek0);
+      console.log('📅 Updated week1 dates:', updatedWeek1);
+
+      // Update plan start date state
+      setPlanStartDate(newStartDate);
+
+      // Recalculate plan end date
+      const newEndDate = new Date(nextSunday);
+      newEndDate.setDate(nextSunday.getDate() + planDuration - 1);
+      setPlanEndDate(newEndDate.toISOString().split('T')[0]);
+
+      // Close modal and show success
+      setShowExpiredDraftModal(false);
+      setExpiredDraftInfo(null);
+      showSuccess('Plan Shifted', `Your meal plan has been shifted to start on ${nextSunday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`);
+
+      // Note: The meal plan context will automatically save to the database when state changes
+      // The dates in the weeklyPlans will be updated on the next render cycle
+
+    } catch (error) {
+      console.error('❌ Error shifting plan to next cycle:', error);
+      showError('Error', 'Failed to shift your meal plan. Please try again.');
+    }
+  };
+
+  // Handle expired draft - Start fresh (delete)
+  const handleStartFresh = async () => {
+    try {
+      console.log('🗑️ Starting fresh - clearing all meal plans');
+
+      // Clear all meal plans from both weeks
+      clearAllPlan();
+
+      // Reset plan dates to next Sunday
+      const nextSunday = getNextSunday();
+      const newStartDate = nextSunday.toISOString().split('T')[0];
+      setPlanStartDate(newStartDate);
+
+      // Recalculate plan end date
+      const newEndDate = new Date(nextSunday);
+      newEndDate.setDate(nextSunday.getDate() + planDuration - 1);
+      setPlanEndDate(newEndDate.toISOString().split('T')[0]);
+
+      // Close modal and show success
+      setShowExpiredDraftModal(false);
+      setExpiredDraftInfo(null);
+      showSuccess('Plan Cleared', 'Your expired meal plan has been cleared. You can now start fresh.');
+
+    } catch (error) {
+      console.error('❌ Error clearing meal plan:', error);
+      showError('Error', 'Failed to clear your meal plan. Please try again.');
+    }
+  };
+
   const handleAddRestaurant = () => {
     console.log('🔍 handleAddRestaurant called - navigating to restaurants page');
     const postalParam = postalCode ? `&postal=${postalCode}` : '';
@@ -1129,6 +1317,10 @@ const WeeklyMenuPage = () => {
 
   // Weekly menu split-pane: clicking an empty slot opens side panel (no navigation / no lunch-dinner dropdowns UI)
   const handleShowRestaurantSelectionModal = (day, mealType) => {
+    // Prevent interaction if expired draft modal is open
+    if (showExpiredDraftModal) {
+      return;
+    }
     handleOpenSidePanel(day, mealType);
   };
 
@@ -1374,6 +1566,37 @@ const WeeklyMenuPage = () => {
   const allSlotsFilled = totalItemsBothWeeks >= totalRequiredSlots;
   const slotsFilledPercentage = Math.min((totalItemsBothWeeks / totalRequiredSlots) * 100, 100);
 
+  // Check for expired draft plans (moved here after totalItemsBothWeeks is declared)
+  useEffect(() => {
+    if (!isClient || !hasLoadedFromDatabase || !planStartDate) return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const planStart = new Date(planStartDate);
+    planStart.setHours(0, 0, 0, 0);
+
+    // Check if user has planned meals but no active subscription and plan has expired
+    const hasMeals = totalItemsBothWeeks > 0;
+    const isUnsubscribed = !subscriptionStatus.hasActiveSubscription;
+    const isExpired = planStart < today;
+
+    if (hasMeals && isUnsubscribed && isExpired) {
+      console.log('⚠️ Expired draft detected:', {
+        planStartDate,
+        today: today.toISOString(),
+        hasMeals,
+        isUnsubscribed,
+        isExpired
+      });
+
+      setExpiredDraftInfo({
+        oldStartDate: planStartDate,
+        daysExpired: Math.floor((today - planStart) / (1000 * 60 * 60 * 24))
+      });
+      setShowExpiredDraftModal(true);
+    }
+  }, [isClient, hasLoadedFromDatabase, planStartDate, totalItemsBothWeeks, subscriptionStatus.hasActiveSubscription]);
+
   if (!isClient) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -1588,14 +1811,14 @@ const WeeklyMenuPage = () => {
                     <svg className="w-4 h-4 text-grub-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    <span>{t('weeklyMenu.week1')}: {getFirstWeekDateRange()}</span>
+                    <span>{t('weeklyMenu.week1')}: {planStartDate ? getPlanChunkDateRange(0) : getFirstWeekDateRange()}</span>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center space-x-2">
                     <svg className="w-4 h-4 text-grub-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    <span>{t('weeklyMenu.week2')}: {getSecondWeekDateRange()}</span>
+                    <span>{t('weeklyMenu.week2')}: {planStartDate ? getPlanChunkDateRange(1) : getSecondWeekDateRange()}</span>
                   </div>
                 )
               )}
@@ -1837,7 +2060,7 @@ const WeeklyMenuPage = () => {
                         onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
                         isAuthenticated={isAuthenticated}
                         hasLoadedFromDatabase={hasLoadedFromDatabase}
-                        disabled={!hasAnySelectedRestaurant || subscriptionStatus.hasActiveSubscription}
+                        disabled={!hasAnySelectedRestaurant || subscriptionStatus.hasActiveSubscription || showExpiredDraftModal}
                         loading={subscriptionStatus.loading}
                         getSelectedRestaurantCount={getSelectedRestaurantCount}
                         getSelectedRestaurants={getSelectedRestaurants}
@@ -1864,7 +2087,7 @@ const WeeklyMenuPage = () => {
                         onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
                         isAuthenticated={isAuthenticated}
                         hasLoadedFromDatabase={hasLoadedFromDatabase}
-                        disabled={!hasAnySelectedRestaurant || subscriptionStatus.hasActiveSubscription}
+                        disabled={!hasAnySelectedRestaurant || subscriptionStatus.hasActiveSubscription || showExpiredDraftModal}
                         loading={subscriptionStatus.loading}
                         getSelectedRestaurantCount={getSelectedRestaurantCount}
                         getSelectedRestaurants={getSelectedRestaurants}
@@ -1926,7 +2149,7 @@ const WeeklyMenuPage = () => {
                     onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
                     isAuthenticated={isAuthenticated}
                     hasLoadedFromDatabase={hasLoadedFromDatabase}
-                    disabled={!hasAnySelectedRestaurant || subscriptionStatus.hasActiveSubscription}
+                    disabled={!hasAnySelectedRestaurant || subscriptionStatus.hasActiveSubscription || showExpiredDraftModal}
                     loading={subscriptionStatus.loading}
                     getSelectedRestaurantCount={getSelectedRestaurantCount}
                     getSelectedRestaurants={getSelectedRestaurants}
@@ -1958,7 +2181,7 @@ const WeeklyMenuPage = () => {
                     onShowRestaurantSelectionModal={handleShowRestaurantSelectionModal}
                     isAuthenticated={isAuthenticated}
                     hasLoadedFromDatabase={hasLoadedFromDatabase}
-                    disabled={!hasAnySelectedRestaurant || subscriptionStatus.hasActiveSubscription}
+                    disabled={!hasAnySelectedRestaurant || subscriptionStatus.hasActiveSubscription || showExpiredDraftModal}
                     loading={subscriptionStatus.loading}
                     getSelectedRestaurantCount={getSelectedRestaurantCount}
                     getSelectedRestaurants={getSelectedRestaurants}
@@ -2456,6 +2679,46 @@ const WeeklyMenuPage = () => {
         onClose={() => setShowSelectedRestaurantsModal(false)}
         restaurants={getSelectedRestaurants()}
       />
+
+      {/* Expired Draft Modal */}
+      {showExpiredDraftModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6 sm:p-8 animate-in fade-in zoom-in duration-200">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+                Plan Start Date Has Passed
+              </h3>
+              <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
+                Your planned start date ({expiredDraftInfo?.oldStartDate ? new Date(expiredDraftInfo.oldStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}) has passed. Would you like to shift this menu to the next cycle, or start fresh?
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={handleShiftToNextCycle}
+                className="w-full px-6 py-3 bg-grub-red text-white rounded-xl font-semibold hover:bg-grub-red transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 touch-manipulation"
+              >
+                Shift to Next Cycle
+              </button>
+              <button
+                onClick={handleStartFresh}
+                className="w-full px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-400 transition-colors duration-200 touch-manipulation"
+              >
+                Start Fresh
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-500 text-center mt-4">
+              Shifting will preserve your meal selections for the new dates.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
